@@ -39,7 +39,7 @@ import json
 from json import JSONEncoder
 
 #%% Importing morphoHeart packages
-from morphoHeart_funcBasics import alert, ask4input
+from morphoHeart_funcBasics import alert, ask4input, saveDict
 from morphoHeart_funcContours import save_s3s
 
 #%% class - NumpyArrayEncoder
@@ -157,47 +157,6 @@ def splitDicts(dict_obj):
         dicts_all.append(ext_dict)
         
     return dicts_all
-
-#%% func - saveDict
-def saveDict(filename, dict2save, name, dir2save):
-    
-    jsonDict_name = filename+"_"+name+".json"
-    json2save_dir = os.path.join(dir2save,jsonDict_name)
-    
-    with open(json2save_dir, "w") as write_file:
-        json.dump(dict2save, write_file, cls=NumpyArrayEncoder)
-    print("\t>> Dictionary saved correctly!\n\t> File: "+jsonDict_name); 
-    alert("countdown",1)
-
-#%% func - decodeDict
-def decodeDict (dict2classify, info):
-    # Decode dictionary
-    # - AnV
-    d_AnV = dict2classify['AnV']['d']
-    normal_AnV = dict2classify['AnV']['normal']
-    classSorted_AnV = dict2classify['AnV']['classSorted']
-    AnV = [d_AnV, normal_AnV, classSorted_AnV]
-    # - DnV_Atr
-    d_DnV_Atr = dict2classify['DnV_Atr']['d']
-    normal_DnV_Atr = dict2classify['DnV_Atr']['normal']
-    classSorted_DnV_Atr = dict2classify['DnV_Atr']['classSorted']
-    DnV_Atr = [d_DnV_Atr, normal_DnV_Atr, classSorted_DnV_Atr]
-    # - DnV_Vent
-    d_DnV_Vent = dict2classify['DnV_Vent']['d']
-    normal_DnV_Vent = dict2classify['DnV_Vent']['normal']
-    classSorted_DnV_Vent = dict2classify['DnV_Vent']['classSorted']
-    DnV_Vent = [d_DnV_Vent, normal_DnV_Vent, classSorted_DnV_Vent]
-    
-    # Pts to classify
-    pts_left = np.asarray(dict2classify['pts_Left'])
-    pts_whole = dict2classify['pts_Whole']
-    
-    meas_param = []
-    for i, inf in enumerate(info):
-        param = np.asarray(dict2classify['param_'+inf])
-        meas_param.append(param)
-    
-    return [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param]
 
 #%% func - addPlane2Dict
 def addPlane2Dict (plane, pl_centre, pl_normal, info, dict_planes, print_txt = True):

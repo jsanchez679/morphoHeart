@@ -11,7 +11,7 @@ import platform
 # Verify working dir
 def setWorkingDir (root_path):
     if platform.system() == 'Windows':
-        wd = r'D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\py_LSAnalysis\py_morphoHeart'
+        wd = r'D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\morphoHeart\py_morphoHeart'
     else: 
         wd = r'/Users/juliana/Dropbox/Dropbox_Juliana/PhD_Thesis/Data_ongoing/LS_ongoing/A_LS_Analysis/py_LSAnalysis/py_morphoHeart'
     if root_path != wd:
@@ -36,7 +36,7 @@ _, _, dir_lsOngoing, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
 df_dataset = fcBasics.exportDatasetCSV(dir_lsOngoing, dir_data2Analyse)
 # Get file to process and directories 
 folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
-# directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
+# directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
 dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
 # Import the metadata to know pixel size and distance between slices
 xy_Scaling_um, z_Scaling_um = fcBasics.metadataExt(filename,dir_data2Analyse)

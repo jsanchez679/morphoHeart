@@ -39,8 +39,21 @@ suffix = '%(index)d/%(max)d - %(elapsed)ds'
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', -1)
+pd.set_option('display.max_colwidth', None)
 
+#%% class - NumpyArrayEncoder
+# Definition of class to save dictionary
+class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyArrayEncoder, self).default(obj)
+        
 #%% func - alert
 def alert(sound, times):
     """
@@ -154,15 +167,22 @@ def getMainDirectories(root_path):
         Path to data2Analyse folder (LS_MorphoHeart).
 
     """
-    dir_pyLSAnalysis = Path(root_path).parent    
-    dir_lsAnalysis = Path(dir_pyLSAnalysis).parent
-    dir_lsOngoing = Path(dir_lsAnalysis).parent
-    dir_data2Analyse = Path(dir_lsAnalysis, "LS_MorphoHeart")
+    # dir_pyLSAnalysis = Path(root_path).parent    
+    # dir_lsAnalysis = Path(dir_pyLSAnalysis).parent
+    # dir_lsOngoing = Path(dir_lsAnalysis).parent
+    # dir_data2Analyse = Path(dir_lsAnalysis, "LS_MorphoHeart")
     
-    return dir_pyLSAnalysis, dir_lsAnalysis, dir_lsOngoing, dir_data2Analyse
+    dir_morphoHeart = Path(root_path).parent
+    dir_parent = Path(dir_morphoHeart).parent
+    # dir_lsOngoing = Path(dir_parent).parent
+    dir_im_morphoHeart = Path(dir_parent, "im_morphoHeart")
+    
+    
+    # return dir_pyLSAnalysis, dir_lsAnalysis, dir_lsOngoing, dir_data2Analyse
+    return dir_morphoHeart, dir_parent, dir_im_morphoHeart
 
 #%% func - exportDatasetCSV
-def exportDatasetCSV(dir_lsOngoing, dir_data2Analyse, end_name = '2A'):
+def exportDatasetCSV(dir_data2Analyse, end_name = '2A'):
     """
     Function that finds all the folders within the dir_data2Analyse folder whose name ends with 2A (a.k.a: to analyse)
     and creates a dataframe including the embryo information (strain, stage, manipulation, genotype and lightsheet ref)
@@ -186,7 +206,7 @@ def exportDatasetCSV(dir_lsOngoing, dir_data2Analyse, end_name = '2A'):
     
     # - Location of genotyping record 
     genot_file = 'LS_Genotyping Record.xlsx'
-    genot_dir = os.path.join(dir_lsOngoing, genot_file)
+    genot_dir = os.path.join(dir_data2Analyse, genot_file)
     # - Get general info of all LS Sessions
     info_cols = ['LS No','Strain','Stage','Manipulation']
     df_info = pd.read_excel(genot_dir, sheet_name = 'RAW_All', header = 0, 
@@ -368,23 +388,28 @@ def selectFile (df_dataset):
 
     """
     
+    df_datasetTemp = df_dataset.copy()
+    df_datasetTemp['Folder_2A'] = df_dataset['Folder'].str.slice(0,10)
+    df_datasetTemp['Gene A'] = df_dataset['Gene_A']+': '+df_dataset['Genotype_A']
+    df_datasetTemp['Gene B'] = df_dataset['Gene_B']+': '+df_dataset['Genotype_B']
+    
+    print('\n--- HEARTS TO BE PROCESSED ---')
+    df_datasetTemp = df_datasetTemp.sort_values(by=['Stage','Strain','Gene_A','Genotype_A','Gene_B','Genotype_B'],
+                                                ascending = (True, True, True, False, True, False))
+    print(df_datasetTemp[['Folder_2A','Strain','Stage','Gene A','Gene B']])
+    
     list_folder = df_dataset['Folder'].tolist()
     
-    print('\nFiles to process:')
-    for c, value in enumerate(list_folder, 1):
-        print('-',c-1,':\t', value)
+    # print('\nFiles to process:')
+    # for c, value in enumerate(list_folder, 1):
+    #     print('-',c-1,':\t', value)
         
     alert('beep',1)
     input_num = int(input('> Select the file you want to process: '))
-    
     filename = list_folder[input_num]
-    # stage = 
     
     print('\n\t\t\tFILE SELECTED ')
-    
     df_file = df_dataset.loc[df_dataset['Folder'] == filename]
-    #df_file = df_file.T
-    
     print(df_file.T,'\n')
     
     return filename, df_file, input_num
@@ -685,6 +710,23 @@ def saveDF(filename, df2save, df_name, dir2save):
     
     print('-', df_name, ' has been saved!')
     alert('wohoo',1)
+
+#%% func - saveDict
+def saveDict(filename, dict2save, name, dir2save):
+    
+    jsonDict_name = filename+"_"+name+".json"
+    json2save_dir = os.path.join(dir2save,jsonDict_name)
+    
+    with open(json2save_dir, "w") as write_file:
+        json.dump(dict2save, write_file, cls=NumpyArrayEncoder)
+    print("\t>> Dictionary saved correctly!\n\t> File: "+jsonDict_name); 
+    alert("countdown",1)
+
+#%% func - printTime
+def printTime(tic, toc, txt):
+    time = toc-tic
+    print("\t>> Total time taken to "+txt+" = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
+
 
 #%% func - changeDirName
 def changeDirName(filename, dir_o):

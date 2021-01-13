@@ -76,6 +76,36 @@ if save:
 
 
 #%% Functions
+#%% func - decodeDict
+def decodeDict (dict2classify, info):
+    # Decode dictionary
+    # - AnV
+    d_AnV = dict2classify['AnV']['d']
+    normal_AnV = dict2classify['AnV']['normal']
+    classSorted_AnV = dict2classify['AnV']['classSorted']
+    AnV = [d_AnV, normal_AnV, classSorted_AnV]
+    # - DnV_Atr
+    d_DnV_Atr = dict2classify['DnV_Atr']['d']
+    normal_DnV_Atr = dict2classify['DnV_Atr']['normal']
+    classSorted_DnV_Atr = dict2classify['DnV_Atr']['classSorted']
+    DnV_Atr = [d_DnV_Atr, normal_DnV_Atr, classSorted_DnV_Atr]
+    # - DnV_Vent
+    d_DnV_Vent = dict2classify['DnV_Vent']['d']
+    normal_DnV_Vent = dict2classify['DnV_Vent']['normal']
+    classSorted_DnV_Vent = dict2classify['DnV_Vent']['classSorted']
+    DnV_Vent = [d_DnV_Vent, normal_DnV_Vent, classSorted_DnV_Vent]
+    
+    # Pts to classify
+    pts_left = np.asarray(dict2classify['pts_Left'])
+    pts_whole = dict2classify['pts_Whole']
+    
+    meas_param = []
+    for i, inf in enumerate(info):
+        param = np.asarray(dict2classify['param_'+inf])
+        meas_param.append(param)
+    
+    return [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param]
+
 
 #%% func - classifyPlanesSides
 def classifyPlanesSides(filename, mesh, dict_planes):
