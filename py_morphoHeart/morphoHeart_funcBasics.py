@@ -142,6 +142,9 @@ def ask4input(text, type_response, keep = False):
             if keep == False:
                 response = response.lower()
             exit_now = True
+        elif type_response == bool:
+            response = bool(response)
+            exit_now = True
         
     return response
 
@@ -453,7 +456,7 @@ def selectHearts (df_dataset):
     print(df_datasetTemp[['Ref','Strain','Stage','Gene A','Gene B']])
     list_folder = df_dataset['Folder'].tolist()
     alert('beep',1)
-    input_num = ask4input('Select the hearts you want to plot: ', str)
+    input_num = ask4input('Enter the numbers of the hearts you want to plot: ', str)
     hearts_num = getInputNumbers(input_num, list_folder)
         
     print('\n-------- SELECTED HEARTS --------')
@@ -746,8 +749,8 @@ def changeDirName(filename, dir_o):
     None.
 
     """
-    change_name = ask4input("Are you done processing -"+filename+"- and want to change the folder's name? [0]: no / [1]: yes :", int)
-    if change_name == 1:
+    change_name = ask4input("Are you done processing -"+filename+"- and want to change the folder's name? [0]:no/[1]:yes: ", bool)
+    if change_name:
         dir_data2Analyse = Path(dir_o).parent
         new_name = 'R_'+filename
         dir_new = os.path.join(dir_data2Analyse, new_name)

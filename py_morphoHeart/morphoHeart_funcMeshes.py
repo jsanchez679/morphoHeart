@@ -1036,7 +1036,9 @@ def createExtLayerMesh(filename, s3_ext, resolution, layer, info, plotshow = Tru
     mesh_ext.rotateZ(-90).wireframe(True)        
     alert('clown',1)
     
-    if layer == 'Myoc' or layer == 'Endo':
+    layers_cut = ['Myoc', 'Endo']
+    
+    if layer in layers_cut:
         mesh_ext = mesh_ext.extractLargestRegion()
     
     if layer == 'CJ': 
@@ -1247,20 +1249,20 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
         mesh_1.legend('Left(A)')
         mesh_2.legend('Right(B)')
             
-        text = filename+"\n\n >> Resulting mesh after cutting with centreline \n >> Before closing the window make sure you confirm A: left, B: Right"
+        text = filename+"\n\n >> Resulting mesh after cutting with centreline \n >> Before closing the window make sure you confirm A (light blue): left, B (dark blue): Right"
         txt = Text2D(text, c=c, font=font)
         vp = Plotter(N=2, axes=7)
         vp.show(meshes2cutLR, cl_ribbon, txt, at=0)
         vp.show(mesh_1, mesh_2, at=1, zoom = 1.2, interactive=True)
         
-        q_happy = ask4input('Are meshes classified correctly [A: left, B: Right]? [0]:No / [1]:Yes: ', int)
-        if q_happy == 0:
-            leftMesh = ask4input('Select the mesh number that corresponds to the left side [1]:'+mesh_legend+'-(1) / [2]:'+mesh_legend+'-(2): ', int)
-            if leftMesh == 1:
+        q_happy = ask4input('Are meshes classified correctly [A (light blue): left, B (dark blue): Right ]? [0]:no/[1]:yes: ', bool)
+        if not q_happy:
+            leftMesh = ask4input('Select the mesh number that corresponds to the left side. [A]-'+mesh_legend+'/[B]:'+mesh_legend+': ', str, keep = True)
+            if leftMesh == 'A':
                 mesh_1.legend(mesh_legend+'-Left')
                 mesh_2.legend(mesh_legend+'-Right')
                 mesh_LnR = [mesh_1, mesh_2] 
-            elif leftMesh == 2:
+            elif leftMesh == 'B':
                 mesh_2.legend(mesh_legend+'-Left')
                 mesh_1.legend(mesh_legend+'-Right')
                 mesh_LnR = [mesh_2, mesh_1] 
@@ -1284,7 +1286,7 @@ def getChamberMeshes(filename, s3s2cut, names2cut, kspl_CL, mesh2cut, resolution
     # Plot spheres through centreline inside myocardium
     spheres_spl = sphInSpline(kspl_CL = kspl_CL)
     vp = Plotter(N=1, axes = 4)
-    text = filename+"\n\n >> Decide the centreline point number to use to initialise plane to divide chambers \n"
+    text = filename+"\n\n >> Decide the centreline point number to use to initialise plane to divide chambers \n [NOTE: Red spheres appear in centreline every 10 points, starting from outflow to inflow tract]"
     txt = Text2D(text, c="k", font= 'CallingCode')
     vp.show(mesh2cut.alpha(0.01), kspl_CL, spheres_spl, txt, at=0, azimuth = azimuth, interactive=True)
     
@@ -1375,8 +1377,8 @@ def getPlane (filename, type_cut, info, mesh_in, mesh_out, option = [True,True,T
         
         vp = Plotter(N=1, axes=4)
         vp.show(mesh_in, mesh_out, plane, plane_new, sph_centre, txt, at=0, viewup="y", azimuth=0, elevation=0, interactive=True)
-        happy = ask4input('Do you want to cut the '+type_cut+' with the defined plane? \n  [0]:no, I would like to define a new plane / [1]:yes, continue:', int)
-        if happy == 1:
+        happy = ask4input('Do you want to cut the '+type_cut+' with the defined plane? \n  [0]:no, I would like to define a new plane/[1]:yes, continue!: ', bool)
+        if happy:
             break
 
     return plane_new, pl_centre, normal_corrected
@@ -1490,8 +1492,8 @@ def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True
         txt = Text2D(text, c=c, font=font)
         vp = Plotter(N=1, axes=4)
         vp.show(mesh1, plane_Ch, plane_Ch_final, sph_centre, txt, at=0, viewup="y", azimuth=0, elevation=0, interactive=True)
-        happy = ask4input('Do you want to cut the '+type_cut+' with the defined plane? \n   [0]:no, I would like to define a new plane / [1]:yes, continue with the cut >> :', int)
-        if happy == 1:
+        happy = ask4input('Do you want to cut the '+type_cut+' with the defined plane? \n   [0]:no, I would like to define a new plane/[1]:yes, continue with the cut: ', bool)
+        if happy:
             break
 
     return plane_Ch_final, pl_Ch_centre, pl_Ch_normal_corrected
@@ -2012,8 +2014,8 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
     vp = Plotter(N=1, axes=4)
     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectNormRib,txt, at=0, azimuth = 0, interactive=1)
 
-    q_ventralDir = ask4input('Is the cyan arrow pointing towards the ventral side of the heart? [0]:no/[1]:yes : ', int)
-    if q_ventralDir == 0:
+    q_ventralDir = ask4input('Is the cyan arrow pointing towards the ventral side of the heart? [0]:no/[1]:yes: ', bool)
+    if q_ventralDir:
         pl_normCLRibbon = -120*pl_normCLRibbon
     else: 
         pl_normCLRibbon = 120*pl_normCLRibbon
@@ -2997,7 +2999,37 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
 #     elif rand_type == int:
 #         arr = [np.random.randint(low, high) for _ in range(size)]
 #     return  arr
+
+#%% func - decodeDict
+def decodeDict (dict2classify, info):
+    # Decode dictionary
+    # - AnV
+    d_AnV = dict2classify['AnV']['d']
+    normal_AnV = dict2classify['AnV']['normal']
+    classSorted_AnV = dict2classify['AnV']['classSorted']
+    AnV = [d_AnV, normal_AnV, classSorted_AnV]
+    # - DnV_Atr
+    d_DnV_Atr = dict2classify['DnV_Atr']['d']
+    normal_DnV_Atr = dict2classify['DnV_Atr']['normal']
+    classSorted_DnV_Atr = dict2classify['DnV_Atr']['classSorted']
+    DnV_Atr = [d_DnV_Atr, normal_DnV_Atr, classSorted_DnV_Atr]
+    # - DnV_Vent
+    d_DnV_Vent = dict2classify['DnV_Vent']['d']
+    normal_DnV_Vent = dict2classify['DnV_Vent']['normal']
+    classSorted_DnV_Vent = dict2classify['DnV_Vent']['classSorted']
+    DnV_Vent = [d_DnV_Vent, normal_DnV_Vent, classSorted_DnV_Vent]
     
+    # Pts to classify
+    pts_left = np.asarray(dict2classify['pts_Left'])
+    pts_whole = dict2classify['pts_Whole']
+    
+    meas_param = []
+    for i, inf in enumerate(info):
+        param = np.asarray(dict2classify['param_'+inf])
+        meas_param.append(param)
+    
+    return [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param]
+
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcMeshes")
 alert('jump',1)

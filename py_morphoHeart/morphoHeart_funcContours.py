@@ -72,13 +72,13 @@ def main_importImages (filename, channel, directories, n_rows):
                       dir_ims2Analyse = directories[5], filetype = filetype)
     stack, stack_o = maskStack(stack, stack_o, maskSt, filetype = filetype)
     # Show contours 
-    q_plot = ask4input('Do you want to plot initial contours of the imported stack [0]:no/[1]:yes?: ',int)
+    q_plot = ask4input('Do you want to plot initial contours of the imported stack? [0]:no/[1]:yes: ',bool)
     if q_plot: 
         showGridContours(myStack = stack, slices = (0,len(stack)), n_rows = n_rows)
     
     # >> Save contours v0
-    q_saveCont = ask4input('Do you want to save the images with overlay of contours [0]:no/[1]:yes?: ',int)
-    if q_saveCont == 1: 
+    q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
+    if q_saveCont: 
         savePltContours(dir_ims2Analyse = directories[5], filename = filename, 
                                       myStack = stack, chStr = channel, 
                                       slices = (0,len(stack)), contVersion = '0')
@@ -92,12 +92,12 @@ def main_importImages (filename, channel, directories, n_rows):
 #%% A. func - main_automCloseCont
 def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows):
     # >> Automatic contour closure 
-    q_autom = ask4input('Do you want to AUTOMATICALLY CLOSE THE CONTOURS of '+filename+' [0]:no/[1]:yes?: ',int)
-    if q_autom == 1:
+    q_autom = ask4input('Do you want to AUTOMATICALLY CLOSE THE CONTOURS of '+filename+'? [0]:no/[1]:yes: ',bool)
+    if q_autom:
         # Define the first and last slice in the channel where there are is heart tissue
         print('\nChannel: ',channel,'- Number of slices: ', stack.shape[0])
-        slc_first =ask4input('- Heart tissue layer starts appearing in slice (inclusive): ', int)
-        slc_last = ask4input('- .... and is no longer present from slice (inclusive) onwards: ',int)+1
+        slc_first =ask4input('- Heart tissue layer ('+channel+') starts appearing in slice (inclusive): ', int)
+        slc_last = ask4input('- .... and is no longer present from slice onwards: ',int)#+1???
 
         # Automatic close contours of stack
         stack_closed = createInitialClosedStack(myStack = stack, slices = (slc_first, slc_last))
@@ -108,8 +108,8 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
         showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows)
 
         # Save contours v1
-        q_saveCont = ask4input('Do you want to save the images with overlay of contours [0]:no/[1]:yes?: ',int)
-        if q_saveCont == 1: 
+        q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
+        if q_saveCont: 
             savePltContours(dir_ims2Analyse = directories[5], filename = filename, 
                                          myStack = stack_closed, chStr = channel, 
                                          slices = (0,len(stack_closed)), contVersion = '1')
@@ -145,10 +145,10 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
                 if os.path.exists(os.path.join(directories[1], filename+"_St_"+channel+"_closedCJ.npy")):
                     ch_processDict['G-LastProcessingStep'] = 'A'
         except: 
-            print('No slcDict found in txt_npy folder....')
-            print('\nChannel: ',channel,'- Number of slices: ', stack.shape[0])
-            slc_first =ask4input('- Heart tissue layer starts appearing in slice (inclusive): ', int)
-            slc_last = ask4input('- .... and is no longer present from slice (inclusive) onwards: ',int)+1
+            print('- No processDict found in txt_npy folder.... Creating processDict.')
+            print('\n- Channel: ',channel,'- Number of slices: ', stack.shape[0])
+            slc_first =ask4input('- Heart tissue layer ('+channel+') starts appearing in slice (inclusive): ', int)
+            slc_last = ask4input('- .... and is no longer present from slice onwards: ',int)#+1???
             
             processDict = dict()
             ch_processDict = processDict[channel] = dict()
@@ -167,12 +167,12 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
 #%% B. func - main_manuallyCloseContours
 def main_manuallyCloseContours(filename, channel, directories, stack_closed, stack_o, processDict, n_rows):
     # >> Manually close remaining contours
-    q_manual = ask4input('NEXT: Do you want to MANUALLY CLOSE THE CONTOURS of '+filename+' [0]:no/[1]:yes?: ',int)
-    if q_manual == 1:
+    q_manual = ask4input('NEXT: Do you want to MANUALLY CLOSE THE CONTOURS of '+filename+'? [0]:no/[1]:yes: ',bool)
+    if q_manual:
         try: 
             last_slc_closed = processDict[channel]['B-Slc_manuallyClosedLast']  
-            q_startFromLast = ask4input('Do you want to start closing the previously selected slice range ('+str(last_slc_closed)+'-'+str(processDict[channel]['G-Slc_tissueLayerLast'])+') [0]:no/[1]:yes?: ',int)
-            if q_startFromLast == 1:
+            q_startFromLast = ask4input('Do you want to start closing the previously selected slice range ('+str(last_slc_closed)+'-'+str(processDict[channel]['G-Slc_tissueLayerLast'])+')? [0]:no/[1]:yes: ',bool)
+            if q_startFromLast:
                 slc_first = last_slc_closed
                 slc_last = processDict[channel]['G-Slc_tissueLayerLast']
                 print('- Manually closing contours from the beginning of tissue layer ('+str(slc_first)+'-'+str(slc_last)+')')
@@ -192,25 +192,25 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
                                             stack_o = stack_o, slices =(slc_first, slc_last), 
                                             n_rows = n_rows, chStr = channel, exit_code = False)
         if exit_code: 
-            q_save = ask4input('EXIT: Do you want to save the stack you have closed so far [0]:no/[1]:yes?: ',int)
-            if q_save == 1:
+            processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
+            processDict[channel]['G-LastProcessingStep'] = 'B'
+            processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
+            q_save = ask4input('EXIT: Do you want to save the stack you have closed so far? [0]:no/[1]:yes: ',bool)
+            if q_save:
                 saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
-                processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
-                processDict[channel]['G-LastProcessingStep'] = 'B'
-                processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
                 saveDict(filename, processDict , 'processDict', directories[1])
         else:
             alert('wohoo', 1)
             print('- Manually closing contours done!')
             showGridContours(myStack = stack_closed, slices = (processDict[channel]['G-Slc_tissueLayerFirst'],processDict[channel]['G-Slc_tissueLayerLast']), n_rows = n_rows)
             # Save contours vMan
-            q_saveCont = ask4input('Do you want to save the images with overlay of contours [0]:no/[1]:yes?: ',int)
-            if q_saveCont == 1: 
+            q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
+            if q_saveCont: 
                 savePltContours(directories[5], filename, stack_closed, channel, 
                                               slices = (0,len(stack_closed)), contVersion = "mC")        
             # Save closed contours 
-            q_saveClosedCont = ask4input('Are you done manually closing the contours [0]:no/[1]:yes?: ',int)
-            if q_saveClosedCont == 1: 
+            q_saveClosedCont = ask4input('Are you done manually closing the contours? [0]:no/[1]:yes: ',bool)
+            if q_saveClosedCont: 
                 processDict[channel]['G-LastProcessingStep'] = 'B'
                 processDict[channel]['B-ManualCloseContours'] = 'DONE'
             else: 
@@ -221,8 +221,6 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
             processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
             saveDict(filename, processDict , 'processDict', directories[1])
             
-    else: 
-        stack_closed = stack
         
     return stack_closed, processDict
 
@@ -230,24 +228,24 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
 def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, processDict, n_rows):
     
     # >> Close inflow and outflow tract        
-    q_infOutf = ask4input('NEXT: Do you want to CLOSE the INFLOW/OUTFLOW tracts of '+filename+' [0]:no/[1]:yes?: ',int)
-    if q_infOutf == 1: 
+    q_infOutf = ask4input('NEXT: Do you want to CLOSE the INFLOW/OUTFLOW tracts of '+filename+'? [0]:no/[1]:yes: ',bool)
+    if q_infOutf: 
         for region in ['Inflow', 'Outflow']:
-            q_region = ask4input('>>> Do you want to close -'+region+'- tract [0]:no/[1]:yes?: ',int)
-            if q_region == 1:
+            q_region = ask4input('>>> Do you want to close -'+region+'- tract? [0]:no/[1]:yes: ',bool)
+            if q_region:
                 # Close Inflow and outflow tract
                 try: 
-                    slc_reg_first = processDict[channel]['C-Slc_closed'+region+'TractLast']
+                    slc_reg_first = processDict[channel]['C-Slc_closing'+region+'TractLast']
                     slc_reg_last = processDict[channel]['C-Slc_closed'+region+'TractLast']
-                    q_startFromLast = ask4input('Do you want to start closing from the last slice where the '+region+' tract was closed (Slc:'+str(slc_reg_first)+') [0]:no/[1]:yes?: ',int)
-                    if q_startFromLast == 1:
+                    q_startFromLast = ask4input('Do you want to start closing from the last slice where the '+region+' tract was closed (Slc:'+str(slc_reg_first)+')? [0]:no/[1]:yes: ',bool)
+                    if q_startFromLast:
                         continue
                     else: 
                         slc_reg_first =ask4input('- Close '+region+' tract starting from slice (inclusive): ',int)
                         
                 except:
                     slc_reg_first =ask4input('- Close '+region+' tract starting from slice (inclusive): ',int)
-                    slc_reg_last = ask4input('- .... until slice (inclusive): ',int)
+                    slc_reg_last = ask4input('- .... until slice (inclusive): ',int)+1
                     processDict[channel]['C-Slc_closed'+region+'TractFirst'] = slc_reg_first
                     processDict[channel]['C-Slc_closed'+region+'TractLast'] = slc_reg_last
                     
@@ -270,8 +268,8 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
             
                 # savePltContours(directories[5], filename, stack_closed, channel, 
                 #                                   slices = (0,len(stack_closed)), contVersion = "CJ")
-                q_save = ask4input('EXIT: Do you want to save the stack you have closed so far [0]:no/[1]:yes?: ',int)
-                if q_save == 1:
+                q_save = ask4input('EXIT: Do you want to save the stack you have closed so far? [0]:no/[1]:yes: ',bool)
+                if q_save:
                     saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
                 saveDict(filename, processDict , 'processDict', directories[1])
         alert('wohoo',1)
@@ -285,17 +283,19 @@ def openStack (filename, chStr, dir_ims2Analyse, dir_txtNnpy):
     file = filename+"_St_"+chStr+"_closedCJ.npy"
     dir_stack = os.path.join(dir_txtNnpy, file)
     if os.path.exists(dir_stack) == True:
-        q_file2Open = ask4input('There is already a processed stack for '+chStr+' - '+ file + ' - \n\t >> Do you want to continue processing this file? [0]: no, [1]: yes!: ', int)
-        if q_file2Open == 1:
+        q_file2Open = ask4input('There is already a processed stack for '+chStr+' - '+ file + ' - \n\t >> Do you want to continue processing this file? [0]:no/[1]:yes: ', bool)
+        if q_file2Open:
             filetype = 'npy'
             stack = np.load(dir_stack)
             stack_o = np.load(dir_stack)
         else: 
             filetype = 'tif'
             file = filename + "_"+chStr+"_EDC.tif"
-            dir_stack = os.path.join(dir_ims2Analyse,str(file))
-            stack = io.imread(dir_stack)
-            stack_o = io.imread(dir_stack)
+            q_tif = ask4input('Open '+file+' instead? [0]:no/[1]:yes: ', bool)
+            if q_tif:
+                dir_stack = os.path.join(dir_ims2Analyse,str(file))
+                stack = io.imread(dir_stack)
+                stack_o = io.imread(dir_stack)
     else: 
         filetype = 'tif'
         file = filename + "_"+chStr+"_EDC.tif"
@@ -405,7 +405,7 @@ def saveStShape (filename, dir_txtNnpy, stack_shape):
     
     if os.path.isdir(shape_dir) == False:
         np.save(shape_dir, stack_shape)
-        print(shape_txt, " file was created!")
+        print('- '+shape_txt, " file was created!")
     
 #%% func - selectChannel
 def selectChannel():
@@ -496,7 +496,7 @@ def showGridContours(myStack, slices, n_rows):
     if slices_last != slices[-1]:
         slices_last.append(slices[-1])
         
-    for i in range(shape(slices_first)[0]):
+    for i in range(len(slices_first)):
         slc_tuple = (slices_first[i], slices_last[i])
         plotSlcsRange(myStack, slc_tuple, 'Contours', slcs_per_im)
         
@@ -948,22 +948,30 @@ def getSlices (slc_tuple, text):
 #%% func - getSlicesContNum
 def getSlicesContNum(stack):
     
-    slcCont = []
-    numCont = []
-    
-    # q_slcCont = input('> Write the number of the first slice of each contour group separated by a comma\n(including 0 and len(stack)) >>>>> ')
-    q_slcCont = ask4input('Write the number of the first slice of each contour group separated by a comma\n(including 0 and '+str(len(stack))+') >>>>> ', str)
-    
-    q_slcCont = q_slcCont.split(',')
-    if int(q_slcCont[-1]) != len(stack):
-        q_slcCont.append(str(len(stack)))
+    q_happy = False
+    while not q_happy:
+        slcCont = []
+        numCont = []
         
-    for i in range(len(q_slcCont)):
-        slcCont.append(int(q_slcCont[i]))
-        if i >= 1:
-            # q_numCont = input('> Number of contours found between slices '+q_slcCont[i-1]+ '-'+ q_slcCont[i]+': ')
-            q_numCont = ask4input('Number of contours found between slices '+q_slcCont[i-1]+ '-'+ str(int(q_slcCont[i])-1)+': ', int)
-            numCont.append(q_numCont)
+        # q_slcCont = input('> Write the number of the first slice of each contour group separated by a comma\n(including 0 and len(stack)) >>>>> ')
+        q_slcCont = ask4input('Write the number of the first slice of each contour group separated by a comma\n(include 0 and '+str(len(stack))+') >>>>> ', str)
+        
+        q_slcCont = q_slcCont.split(',')
+        if int(q_slcCont[-1]) != len(stack):
+            q_slcCont.append(str(len(stack)))
+            
+        for i in range(len(q_slcCont)):
+            slcCont.append(int(q_slcCont[i]))
+            if i >= 1:
+                # q_numCont = input('> Number of contours found between slices '+q_slcCont[i-1]+ '-'+ q_slcCont[i]+': ')
+                q_numCont = ask4input('Number of contours found between slices '+q_slcCont[i-1]+ '-'+ str(int(q_slcCont[i])-1)+': ', int)
+                numCont.append(q_numCont)
+        
+        print('- Input revision:')
+        for n, numC in enumerate(numCont):
+            print('\t- Slices '+str(slcCont[n])+'-'+str(slcCont[n+1])+':\t\t'+str(numC))
+        
+        q_happy = ask4input('Is this correct? [0]:no/[1]:yes: ', bool)
     
     return slcCont, numCont
 
@@ -1028,6 +1036,32 @@ def tuple_pairs (numCont, slcCont, printshow, max_slc_diff):
     
     return tuple_slc, numContours_final, slcContours_final
 
+#%% func - update_tuple_pair
+def update_tuple_pair(tuple_slc, numCont, heartLayer):
+    
+    q_startFromLast = ask4input('Do you want to contiue selecting contours from slice -'+str(tuple_slc[0][0])+'- onwards? [0]:no/[1]:yes: ', bool) 
+    if q_startFromLast != 1:
+        numCont_o = heartLayer['info']['numCont_group']
+        slcCont_o = heartLayer['info']['slcCont_group']
+        q_startFrom = ask4input('> Start from: ', int)
+        try:
+            index_start = slcCont_o.index(q_startFrom)
+            slcCont_up = slcCont_o[index_start:]
+            numCont_up = numCont_o[index_start:]
+        except:
+            slcCont_add = slcCont_o
+            slcCont_add.append(q_startFrom)
+            slcCont_add.sort()
+            index_start = slcCont_o.index(q_startFrom)
+            slcCont_up = slcCont_o[index_start:]
+            numCont_up = numCont_o[index_start-1:]
+        tuple_slc_up, numCont_upf, _ = tuple_pairs(numCont_up, slcCont_up, False, 10)
+    else:
+        tuple_slc_up = tuple_slc
+        numCont_upf = numCont
+        
+    return tuple_slc_up, numCont_upf
+        
 #%% func - getClicks
 def getClicks (clicks, myIm, scale, text):
     """ getClicks
@@ -1043,14 +1077,15 @@ def getClicks (clicks, myIm, scale, text):
      Version: April 25, 2020
 
     """   
-    print("- Getting clicks...")
+
+    print("- Getting clicks... Press ENTER when done")
     
     window_width = int(myIm.shape[1] * scale)
     window_height = int(myIm.shape[0] * scale)
     
     def on_mouse(event, x, y, flags, params):
         if event == cv2.EVENT_LBUTTONDOWN:
-            print ('    Seed: ' + str(y) + ', ' + str(x), myIm[y,x])
+            #print ('\r    Seed: ' + str(y) + ', ' + str(x), myIm[y,x])
             clicks.append((y,x))
         
     cv2.namedWindow(text)#,cv2.WINDOW_NORMAL)
@@ -1486,8 +1521,8 @@ def manuallyCloseContours (stack_closed, stack_o, slices, n_rows, chStr, exit_co
             else: 
                 slc_list, slc_end = getSlices(slc_tuple, 'you would like to close')
                 
-        # if exit_code:
-        #     break
+        if exit_code:
+            break
         
     if slc_end == slices[1]:
         last_slc = slices[1]
@@ -1744,10 +1779,10 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
     for slc in list_slc:
         happy = False
         while not happy: #happy == False: 
-             stack_closed, q_happy, last_slc, exit_code = closeInfOutfTuple (stack_closed, (slc,slc+10), chStr, exit_code)
-             if q_happy == 0 and exit_code == False:
+             stack_closed, q_happy, last_slc, exit_code = closeInfOutfTuple (stack_closed, (slc,slc+11), chStr, exit_code)
+             if q_happy and exit_code == False:
                  stack_closed[slc:slc+10][:][:] = stack_o[slc:slc+10][:][:]
-             elif q_happy == 0 and exit_code == True:
+             elif q_happy and exit_code == True:
                  last_slc = slc
                  break
              else: 
@@ -1797,7 +1832,7 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
                 myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', plot_show = False)
             elif method == 'esc':
                 last_slc = slc; exit_code = True
-                q_happy = 0
+                q_happy = False
                 break
         
         # Use the previous selected method for the rest of the XX-1 slices
@@ -1814,7 +1849,7 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
             if slc == slices[1]-1:
                 #print('I am the last slice of the group')
                 showGridContours(myStack = stack_closed, slices = (slices[0], slices[1]), n_rows = 3)
-                q_happy = ask4input('Are you happy with the way the contours have been closed [0]:no/[1]:yes?: ',int)
+                q_happy = ask4input('Are you happy with the way the contours have been closed? \n\t\t [0]:no, let me select other method to close them/[1]:yes, continue!: ',bool)
                 last_slc = slices[0]
                     
         if exit_code:
@@ -2034,6 +2069,7 @@ def dictCreation (filename, file, minLenContour, chStr, slcCont, numCont,
      Version: April 17, 2020
      @author: juliana
     """
+    # global heartLayer
     
     #Create heartLayer dict
     if update == False:
@@ -2100,6 +2136,8 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
      Version: April 17, 2020
      @author: juliana
     """
+    
+    # global heartLayer
     exit_txt = False
     
     tic = perf_counter()
@@ -2161,7 +2199,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
                     # --selectContours_slc (ch, slc, myIm, cont_sort, num_contours, intNext, ask2save)
                     selectCont, txtSelect, propSelect, exit_txt = selectContours (myIm, slc, chNum, contours, numCont, numContours_pair, True)
                     if exit_txt: 
-                        print('- Exiting filling pair!')
+                        print('\r- Exiting filling pair!')
                         break
                     else: 
                         int_contNprops, ext_contNprops = shape_contNprops(selectCont, propSelect, False)
@@ -2175,7 +2213,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
                     #print("Get properties...")
                     props_all = getProperties (myIm, contours)
                     #print("Select contours automatically...")
-                    list_index = automSelectContours (propSelect, props_all)
+                    list_index = automSelectContours (propSelect, props_all, numContours_pair)
                     #print("list_index: ", list_index, " - slc:", slc)
                     contNprops = extractContours(list_index, contours, props_all, False, False)
                     #print("Group contours as int/ext -- slc:", slc)
@@ -2217,7 +2255,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
             bar.finish()
                 
         if exit_txt:
-            print('- Exiting filling tuples!')
+            print('\r- Exiting filling tuples!')
             tuple_slc = tuple_slc[num:]
             numContours = numContours[num:]
             break
@@ -2238,18 +2276,20 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
 
 #%% func - askModifyDict
 def askModifyDict(filename, stack, heartLayer, channel):
+    # global heartLayer
+    
     #% Check slices
     plotSelectedContours(imageEvery = 1, stack = stack, heartLayer = heartLayer)
     #% Correct dictionary if needed
-    q_modifyDict = ask4input("Do you want to modify the created dictionary (change any of the selected contours per slice manually) [0]:no/[1]:yes?: ",int)
-    if q_modifyDict == 1:
-        while q_modifyDict == 1:
+    q_modifyDict = ask4input("Do you want to modify the created dictionary (change any of the selected contours per slice manually)? [0]:no/[1]:yes: ",bool)
+    if q_modifyDict:
+        while q_modifyDict:
             heartLayer = modifyDict(stack = stack, chStr = channel, heartLayer = heartLayer, 
                                                   minLenContour = 250)  
-            q_modifyDict = ask4input("Do you want to modify any other part of the dictionary? [0]:no/[1]:yes?: ",int)
-            if q_modifyDict == 0:
-                q_plotAll = fcBasics.ask4input('Do you want to plot the final selected contour masks for '+channel+' [0]:no/[1]:yes?: ',int)
-                if q_plotAll == 1: 
+            q_modifyDict = ask4input("Do you want to modify any other part of the dictionary? [0]:no/[1]:yes: ",bool)
+            if not q_modifyDict:
+                q_plotAll = fcBasics.ask4input('Do you want to plot the final selected contour masks for '+channel+'? [0]:no/[1]:yes: ',bool)
+                if q_plotAll: 
                     imageEvery = fcBasics.ask4input('Plot every X number of slices. X= ',int)
                     plotSelectedContours(imageEvery = 1, stack = stack, heartLayer = heartLayer, plot_all = True)
                 break
@@ -2440,6 +2480,7 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
 #    ax.set_xticks([])
 #    ax.set_yticks([])
     ax.set(xlabel = "Channel "+str(chNum)+" / Slice "+str(slcNum) + " / Contours expected: "+ str(numContours_pair))
+    ax.set_title("Channel "+str(chNum)+" / Slice "+str(slcNum) + " \nContours expected: "+ str(numContours_pair), fontsize = 14, fontweight='bold')
         
     # Grid where subplots of each contour will be placed
     all_grid = outer_grid[1].subgridspec(rows, cols,  wspace=0.3, hspace=0.3)
@@ -2453,19 +2494,19 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
         props = maskContour(myIm, contList)  
         props_all[index] = props
         
-        #max_int = format(props[3], '.2f')
-        #mean_int = format(props[4], '.2f')
-        sol = format(props[6], '.2f')
+        max_int = format(props[2], '.2f')
+        mean_int = format(props[3], '.2f')
+        # sol = format(props[6], '.2f')
         per = format(props[5], '.0f')
         area = format(props[0], '.0f')
         #cx_area = format(props[2], '.0f')
-        lgth = format(props[4],'.0f')
+        # lgth = format(props[4],'.0f')
         
         ax = fig11.add_subplot(all_grid[index])
         ax.imshow(myIm, cmap=plt.cm.gray)
         ax.plot(contList[:, 1], contList[:, 0], linewidth=1.5, color = colors[index])
         ax.set_title("Contour "+str(index), fontsize=10, weight = 'semibold', color = colors[index])
-        ax.set(xlabel = "Area:"+str(area)+" / L:"+str(lgth), ylabel = "Sol:"+str(sol)+" / Per:"+str(per))
+        ax.set(xlabel = "Area:"+str(area)+" / Per:"+str(per), ylabel = "MaxInt:"+str(max_int)+" / MeanInt:"+str(mean_int))
         ax.set_xticks([])
         ax.set_yticks([])
         
@@ -2611,7 +2652,7 @@ def getProperties (myIm, contours):
 
 #%% func - automSelectContours
 # Function to automatically select contours by length, centroid and convex hull area
-def automSelectContours (propContSelected, propsAllCont):
+def automSelectContours (propContSelected, propsAllCont, numContours_pair):
     
     """ automSelectContours_slc
     Function to select all/int&ext contours per slice
@@ -2627,76 +2668,171 @@ def automSelectContours (propContSelected, propsAllCont):
      Version: April 15, 2020
 
     """
-    
-    maxNumCont = len(propContSelected[0])+len(propContSelected[1])
-    list_index = [None]*maxNumCont
-    
-    #print('list_index:',list_index)
-    #print(len(list_index))
-    scale_imp = [0.20,0.70,0.05,0.05]
-    
+    lenPropsAllCont = len(propsAllCont)
+    print('lenPropsAllCont:',lenPropsAllCont)
+    #0.area, 1.centroid, 2.meanInt, 3.perimeter
+    scale_imp = [0.20,0.70,0,0.10]
     numC = 0
-    #Iterate through the selected contours and find a match for each
+    
+    index = []
+    #Iterate through the selected contours of the previous slice and find a match for each
     for j in range(len(propContSelected)):
-        
-        #print('Number of contours to find match: ', len(propContSelected[j]))
         #Enter if there were actually contours selected
-        if len(propContSelected[j]) != 0 and numC < maxNumCont:
-            
+        if len(propContSelected[j]) != 0 and numC < numContours_pair:
             for numContSel, propContSel in enumerate(propContSelected[j]):
                 #print('numContours added: ', numC)
-                # Get properties of each of the contours selected
+                # Get properties of each of the selected processDict
                 area_sel = propContSel[0]
                 cent_sel = propContSel[1]
-                lgth_sel = propContSel[4]
-                per_sel = propContSel[5]
+                meanInt_sel = propContSel[3]
+                per_sel = propContSel[3]
               
                 # Create empty array to save distances
-                dif_area = np.ones(len(propsAllCont))*10000000
-                dif_cent = np.ones(len(propsAllCont))*10000000
-                dif_lgth = np.ones(len(propsAllCont))*10000000
-                dif_per = np.ones(len(propsAllCont))*10000000
+                bigNum = 10**20
+                dif_area = np.ones(lenPropsAllCont)*bigNum
+                dif_cent = np.ones(lenPropsAllCont)*bigNum
+                dif_meanInt = np.ones(lenPropsAllCont)*bigNum
+                dif_per = np.ones(lenPropsAllCont)*bigNum
                 
+                max_area = 0; max_cent = 0; #max_maxInt = 0; 
+                max_meanInt  = 0; max_per = 0
+                
+                tot = np.zeros(lenPropsAllCont)
                 for numCont, propCont in enumerate(propsAllCont):
-                    if not numCont in list_index:
+                    if not numCont in index:
                         # Get properties of each of the contours in next slide
                         area_cont = propCont[0]
                         cent_cont = propCont[1]
-                        lgth_cont = propCont[4]
+                        # maxInt_cont = propCont[2]
+                        meanInt_cont = propCont[3]
                         per_cont = propCont[5]
-            
+                        
                         # Save difference in properties
                         dif_area[numCont] = abs(area_sel-area_cont)
+                        if dif_area[numCont] > max_area:
+                            max_area = dif_area[numCont]
                         dif_cent[numCont] = abs(distance.euclidean(cent_sel, cent_cont))
-                        dif_lgth[numCont] = abs(lgth_sel-lgth_cont)
+                        if dif_cent[numCont] > max_cent:
+                            max_cent = dif_cent[numCont]
+                        dif_meanInt[numCont] = abs(meanInt_sel-meanInt_cont)
+                        if dif_meanInt[numCont] > max_meanInt:
+                            max_meanInt = dif_meanInt[numCont]
                         dif_per[numCont] = abs(per_sel-per_cont)
-                
-                dif_area = dif_area/max(dif_area)
-                dif_cent = dif_cent/max(dif_cent)
-                dif_lgth = dif_lgth/max(dif_lgth)
-                dif_per = dif_per/max(dif_per)
-                
-                #print("dif_area:", dif_area)
-                #print("dif_cent:", dif_cent)
-                #print("dif_lgth:", dif_lgth)
-                #print("dif_per:", dif_per)
-                
-                tot = np.zeros(len(propsAllCont))
-                for num in range(len(propsAllCont)):
-                    if not num in list_index:
-                        tot[num] = dif_area[num]*scale_imp[0]+dif_cent[num]*scale_imp[1]+dif_lgth[num]*scale_imp[2]+dif_per[num]*scale_imp[3]
-                    else:
-                        tot[num] = 10000000000000000000000
-                #print("tot:", tot)
+                        if dif_per[numCont] > max_per:
+                            max_per = dif_per[numCont]
                         
-                index = np.where(tot == min(tot))[0][0]
-                #print("index:", index)
+                dif_area = dif_area/max_area
+                dif_cent = dif_cent/max_cent
+                dif_meanInt = dif_meanInt/max_meanInt
+                dif_per = dif_per/max_per
                 
-                list_index[numC] = index
-                #print("list_index:", list_index)
-                numC += 1
-  
+                # print(dif_area)
+                # print(dif_cent)
+                # print(dif_maxInt)
+                # print(dif_meanInt)
+                # print(dif_per)
+                
+                for num in range(lenPropsAllCont):
+                    if not num in index:
+                        #0.area, 1.centroid, 2.meanInt, 3.perimeter
+                        tot[num] = dif_area[num]*scale_imp[0]+dif_cent[num]*scale_imp[1]+dif_meanInt[num]*scale_imp[2]+dif_per[num]*scale_imp[3]
+                    else:
+                        tot[num] = 10**30
+                # print('tot:', tot)
+                index.append(np.where(tot == min(tot))[0][0])
+                
+    # print('index:', index)
+    list_index = index[0:numContours_pair]
+    # print("\t- Selected contours:", list_index)
+
     return list_index
+
+# def automSelectContours (propContSelected, propsAllCont, numContours_pair):
+    
+#     """ automSelectContours_slc
+#     Function to select all/int&ext contours per slice
+    
+#     Parameters: 
+#         - propContSelected: list - list of numpy arrays with properties of each of the selected contours
+#         - propsAllCont: list - list of numpy arrays with properties associated to each contour 
+#                      [0. area, 1. centroid, 2. max_int, 3. mean_int, 4. lgth, 5. per, 6. sol, 7. bbox]
+        
+#     Returns: 
+#         - list_index: list - list of int with the indexes of the contours automatically selected
+                
+#      Version: April 15, 2020
+
+#     """
+    
+#     maxNumCont = len(propContSelected[0])+len(propContSelected[1])
+#     list_index = [None]*numContours_pair#maxNumCont
+    
+#     #print('list_index:',list_index)
+#     #print(len(list_index))
+#     scale_imp = [0.20,0.70,0.05,0.05]
+    
+#     numC = 0
+#     #Iterate through the selected contours of the previous slice and find a match for each
+#     for j in range(len(propContSelected)):
+#         #print('Number of contours to find match: ', len(propContSelected[j]))
+#         #Enter if there were actually contours selected
+#         if len(propContSelected[j]) != 0 and numC < maxNumCont:
+            
+#             for numContSel, propContSel in enumerate(propContSelected[j]):
+#                 #print('numContours added: ', numC)
+#                 # Get properties of each of the selected processDict
+#                 area_sel = propContSel[0]
+#                 cent_sel = propContSel[1]
+#                 lgth_sel = propContSel[4]
+#                 per_sel = propContSel[5]
+              
+#                 # Create empty array to save distances
+#                 dif_area = np.ones(len(propsAllCont))*10**20
+#                 dif_cent = np.ones(len(propsAllCont))*10**20
+#                 dif_lgth = np.ones(len(propsAllCont))*10**20
+#                 dif_per = np.ones(len(propsAllCont))*10**20
+                
+#                 for numCont, propCont in enumerate(propsAllCont):
+#                     if not numCont in list_index:
+#                         # Get properties of each of the contours in next slide
+#                         area_cont = propCont[0]
+#                         cent_cont = propCont[1]
+#                         lgth_cont = propCont[4]
+#                         per_cont = propCont[5]
+            
+#                         # Save difference in properties
+#                         dif_area[numCont] = abs(area_sel-area_cont)
+#                         dif_cent[numCont] = abs(distance.euclidean(cent_sel, cent_cont))
+#                         dif_lgth[numCont] = abs(lgth_sel-lgth_cont)
+#                         dif_per[numCont] = abs(per_sel-per_cont)
+                
+#                 dif_area = dif_area/max(dif_area)
+#                 dif_cent = dif_cent/max(dif_cent)
+#                 dif_lgth = dif_lgth/max(dif_lgth)
+#                 dif_per = dif_per/max(dif_per)
+                
+#                 #print("dif_area:", dif_area)
+#                 #print("dif_cent:", dif_cent)
+#                 #print("dif_lgth:", dif_lgth)
+#                 #print("dif_per:", dif_per)
+                
+#                 tot = np.zeros(len(propsAllCont))
+#                 for num in range(len(propsAllCont)):
+#                     if not num in list_index:
+#                         tot[num] = dif_area[num]*scale_imp[0]+dif_cent[num]*scale_imp[1]+dif_lgth[num]*scale_imp[2]+dif_per[num]*scale_imp[3]
+#                     else:
+#                         tot[num] = 10**30
+#                 #print("tot:", tot)
+                        
+#                 index = np.where(tot == min(tot))[0][0]
+#                 #print("index:", index)
+                
+#                 if numC <= maxNumCont-1:
+#                     list_index[numC] = index
+#                     print("\t- Selected contours:", list_index)
+#                     numC += 1
+  
+#     return list_index
 
 #%% func - extractContours
 # Function to get contours and properties of list_index
@@ -2757,7 +2893,7 @@ def classifyCont (propsCont2class):
     Parameters: 
         - cont2Extract: list - list of automatically selected contours
         - props2Extract: list - list of the properties of the automatically selected contours
-                [area, centroid, cx_area, ecc, lgth, per, sol, bbox]
+                -->>#2 [0. area, 1. centroid, 2. max_int, 3. mean_int, 4. lgth, 5. per, 6. sol, 7. bbox]
     
     Returns: 
         - int_contours: list - list of int with the indexes of the internal contours 
@@ -2799,25 +2935,36 @@ def classifyCont (propsCont2class):
     #Value to cut org_index array
     it = 0    
     for index_big in org_indexes:
-        #print("INDEX_BIG:",index_big)
-        # Get bounding box of the first region
-        [min_row_b, max_row_b, min_col_b, max_col_b] = bbox_region[index_big]         
-        
-        #Get the rest of the organised indexes to iterate through those
-        org_indexes_sm = org_indexes[it+1:]
-        #print(">> org_indexes_sm:", org_indexes_sm)
-        for index_sm in org_indexes_sm:
-            #print("INDEX_SM:",index_sm)
-            #Get the centroid of the small index
-            [cent_row_s, cent_col_s] = cent_region[index_sm]
+        if index_big not in int_contours:
+            #print("INDEX_BIG:",index_big)
+            # Get bounding box of the first region
+            [min_row_b, max_row_b, min_col_b, max_col_b] = bbox_region[index_big]
+            #Get the rest of the organised indexes to iterate through those
+            org_indexes_sm = org_indexes[it+1:]
+            #print(">> org_indexes_sm:", org_indexes_sm)
+            for index_sm in org_indexes_sm:
+                if index_big not in int_contours:
+                    #print("INDEX_SM:",index_sm)
+                    # Get bounding box of the small region
+                    [min_row_s, max_row_s, min_col_s, max_col_s] = bbox_region[index_sm]
+                    
+                    #Compare the bbox of the big index with the bbox of small index
+                    if min_row_s > min_row_b  and max_row_s < max_row_b:
+                        #print("     Row analysis: cont", index_big, "is outside cont", index_sm)
+                        if min_col_s > min_col_b  and max_col_s < max_col_b:
+                            #print("     Col analysis: cont", index_big, "is outside cont", index_sm)
+                            int_contours.append(index_sm)
+                            #print(" >>Internal:", index_sm, ", External:", index_big)     
             
-            #Compare the bbox of the big index with the centroid position of the small index
-            if cent_row_s > min_row_b  and cent_row_s < max_row_b:
-                #print("     Row analysis: cont", index_big, "is outside cont", index_sm)
-                if cent_col_s > min_col_b  and cent_col_s < max_col_b:
-                    #print("     Col analysis: cont", index_big, "is outside cont", index_sm)
-                    int_contours.append(index_sm)
-                    #print(" >>Internal:", index_sm, ", External:", index_big)     
+            #Get the centroid of the small index
+            # [cent_row_s, cent_col_s] = cent_region[index_sm]
+            # #Compare the bbox of the big index with the centroid position of the small index
+            # if cent_row_s > min_row_b  and cent_row_s < max_row_b:
+            #     #print("     Row analysis: cont", index_big, "is outside cont", index_sm)
+            #     if cent_col_s > min_col_b  and cent_col_s < max_col_b:
+            #         #print("     Col analysis: cont", index_big, "is outside cont", index_sm)
+            #         int_contours.append(index_sm)
+            #         #print(" >>Internal:", index_sm, ", External:", index_big)     
             #else: 
                 #print("     Contour", index_big, "is NOT related to contour ", index_sm)
 
@@ -2968,7 +3115,7 @@ def save_s3s_fromDict (filename, chStr, stack_shape, heartLayer, dir_txtNnpy, sa
     s3_all =  s3_create(stack_shape, "imAllFilledCont", heartLayer)
     print("- s3_created for all - [uint8]!")
     
-    if save == 1:
+    if save:
         # Export numpy file to create mesh
         # Internal
         s3_dir_int = os.path.join(dir_txtNnpy,s3_title_int)
