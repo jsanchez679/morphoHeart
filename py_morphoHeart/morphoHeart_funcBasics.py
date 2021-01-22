@@ -143,8 +143,13 @@ def ask4input(text, type_response, keep = False):
                 response = response.lower()
             exit_now = True
         elif type_response == bool:
-            response = bool(response)
-            exit_now = True
+            try:
+                if int(response) in [0,1]:
+                    response = bool(int(response))
+                    exit_now = True
+            except: 
+                print('ERROR: -'+response+'- The number entered needs to be a [0]:no or [1]:yes!')
+                pass
         
     return response
 
@@ -715,15 +720,16 @@ def saveDF(filename, df2save, df_name, dir2save):
     alert('wohoo',1)
 
 #%% func - saveDict
-def saveDict(filename, dict2save, name, dir2save):
+def saveDict(filename, dict2save, name, dir2save, print_txt = True):
     
     jsonDict_name = filename+"_"+name+".json"
     json2save_dir = os.path.join(dir2save,jsonDict_name)
     
     with open(json2save_dir, "w") as write_file:
         json.dump(dict2save, write_file, cls=NumpyArrayEncoder)
-    print("\t>> Dictionary saved correctly!\n\t> File: "+jsonDict_name); 
-    alert("countdown",1)
+    if print_txt:
+        print("\t>> Dictionary saved correctly!\n\t> File: "+jsonDict_name); 
+        alert("countdown",1)
 
 #%% func - printTime
 def printTime(tic, toc, txt):

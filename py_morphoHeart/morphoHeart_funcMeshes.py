@@ -17,13 +17,11 @@ import os
 
 from itertools import count
 
-from skimage import measure, io
-import numpy as np
+from skimage import measure#, io
 from scipy.interpolate import splprep, splev
 import pandas as pd
 
 from datetime import datetime
-from time import perf_counter
 from progress.bar import Bar
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
@@ -36,10 +34,10 @@ from time import perf_counter
 embedWindow(False)
 
 import json
-from json import JSONEncoder
+#from json import JSONEncoder
 
 #%% Importing morphoHeart packages
-from morphoHeart_funcBasics import alert, ask4input, saveDict
+from morphoHeart_funcBasics import alert, ask4input#, saveDict
 from morphoHeart_funcContours import save_s3s
 
 #%% class - NumpyArrayEncoder

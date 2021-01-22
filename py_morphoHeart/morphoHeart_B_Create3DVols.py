@@ -6,7 +6,6 @@ morphoHeart - B. CREATE 3D VOLUMES AND MESHES TO EXTRACT CENTRELINE
 
 #%% Importing python packages
 import os
-import platform
 from vtkplotter import *
 from vtkplotter import embedWindow
 embedWindow(False)
@@ -25,7 +24,6 @@ def setWorkingDir (root_path, init):
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd(),init)
-initial_runD = True
 save = True
 
 if init: 
@@ -47,7 +45,8 @@ if init:
     # Initialise variables
     plotshow = False
     dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict()
-    
+    txt = Text2D(filename, c="k", font= 'CallingCode')
+
     #%% Load stacks
     s3s, stackShape = fcCont.loadStacks(filename = filename, dir_txtNnpy = directories[1], 
                                         end_name = ['ch0_int','ch0_ext','ch0_all','ch1_int','ch1_ext','ch1_all' ])
@@ -55,25 +54,25 @@ if init:
     
     #%% Clean endocardium
     # Plot s3s - channel side by side
-    fcCont.plt_s3(start_slc = 0, end_slc = s3_ch0.shape[2]-1, im_every = 10, 
+    fcCont.plt_s3(start_slc = 0, end_slc = s3_ch0.shape[2]-1, im_every = 5, 
                       s3_int = s3_ch0, s3_ext = s3_ch1, plotshow = plotshow, option = "both ch")
     # Create Ext Myocardial mesh - Ch0
     myoc_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch0_ext, resolution = res, layer = 'Myoc', info = 'Original', plotshow = plotshow)
     # Create Ext Endocardial mesh - Ch1
     endo_o = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext, resolution = res, layer = 'Endo', info = 'Original', plotshow = plotshow)
     # Clean Endocardium
-    s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = '')
-    fcCont.ch_clean_plt(mask_s3 = s3_ch0, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
+    s3_endo_rem, s3_ch1_cl, s3_invExtMyoc = fcCont.clean_wInvExtMyoc(s3_ch0_ext, s3_ch1)
+    fcCont.ch_clean_plt(mask_s3 = s3_invExtMyoc, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
                               cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
     # Clean Ext Endocardium
-    s3_ch1_rem, s3_ch1_ext_cl = fcCont.ch_clean(mask_s3 = s3_ch0, toClean_s3 = s3_ch1_ext, option = "clean")
+    _, s3_ch1_ext_cl, _ = fcCont.clean_wInvExtMyoc(s3_ch0_ext, s3_ch1_ext)
     # Re-Create Ext Endocardial mesh - Ch1
     endo_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
     
     # Plot Ext Myocardium and Clean Ext Endocardium
-    myoc_ext.alpha(0.01); endo_o.color('mediumorchid').legend('Orig.Ext.Endo')
+    myoc_ext.alpha(0.1); endo_o.color('mediumorchid').legend('Orig.Ext.Endo')
     vp = Plotter(N=4, axes=4)
-    vp.show(endo_o, at=0, zoom=1)
+    vp.show(endo_o, txt, at=0, zoom=1)
     vp.show(myoc_ext, endo_o, at=1, zoom=1)
     vp.show(endo_ext, at=2, zoom=1)
     vp.show(myoc_ext, endo_ext, at=3, zoom=1, interactive=True)
@@ -86,16 +85,16 @@ if init:
                                         dir_txtNnpy = directories[1], save = save)
     
     myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext = meshes_cut
+    s3_ch0_int_cut, _, _, _, s3_ch1_ext_cut, _ = s3s_cut
     
     # vp = Plotter(N=6, axes=7)
-    # vp.show(myoc_cut, at=0, zoom=1)
+    # vp.show(myoc_cut, txt, at=0, zoom=1)
     # vp.show(myoc_cut_int, at=1, zoom=1)
     # vp.show(myoc_cut_ext, at=2,  zoom=1)
     # vp.show(endo_cut, at=3,  zoom=1)
     # vp.show(endo_cut_int, at=4)
     # vp.show(endo_cut_ext, at=5, zoom=1, interactive=True)
     
-    s3_ch0_int_cut, _, _, _, s3_ch1_ext_cut, _ = s3s_cut
     if save:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext],
                             names = ['myoc', 'myoc_int', 'myoc_ext', 'endo', 'endo_int', 'endo_ext'], dict_colour = dict_colour,
@@ -122,7 +121,7 @@ if init:
     
     # Plot all layers
     vp = Plotter(N=6, axes=7)
-    vp.show(myoc_cut, at=0, zoom=1)
+    vp.show(myoc_cut, txt, at=0, zoom=1)
     vp.show(endo_cut, at=1, zoom=1)
     vp.show(myoc_cut_int.color('turquoise'), at=2,  zoom=1)
     vp.show(cj_all.clone().alpha(0.05), at=3,  zoom=1)
@@ -158,7 +157,7 @@ if init:
     
     #%% Plot and save all meshes 
     vp = Plotter(N=6, axes=7)
-    vp.show(myoc_cut, at=0, zoom=1)
+    vp.show(myoc_cut, txt, at=0, zoom=1)
     vp.show(endo_cut, at=1, zoom=1)
     vp.show(myoc_int_CL, at=2,  zoom=1)
     vp.show(cj_all, at=3,  zoom=1)

@@ -57,12 +57,13 @@ if init:
         azimuth = -90
     # Initialise variables
     dict_shapes = dict()
+    txt = Text2D(filename, c="k", font= 'CallingCode')
     
     #%% Load data
     # Import dictionaries
     [dict_obj, myoc_int_npcl, endo_ext_npcl] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj','myoc_int_npcl','endo_ext_npcl'],
                                                                     directories = [directories[0], directories[3], directories[3]])
-    [dict_planes, dict_pts, dict_kspl, dict_colour, _] = fcMeshes.splitDicts(dict_obj)
+    [dict_planes, dict_pts, dict_kspl, dict_colour] = fcMeshes.splitDicts(dict_obj)
     # Import meshes
     [m_myoc, m_endo, m_cj, m_cjOut, m_cjIn] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc','endo','cj','cj_out','cj_in'],
                                                                   extension = 'vtk', dir_stl = directories[2],
@@ -137,16 +138,16 @@ if init:
                             dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
     
     #%% Get chambers and heart orientation (sph_valve has the position of the cutting point in cl)
-    plane_Ch = Plane(pos=dict_planes['pl2CutMesh_Chamber']['pl_centre'],normal=dict_planes['pl2CutMesh_Chamber']['pl_normal'], sx=500)
-    # Cut cl with plane
-    ksplCL_cut = kspl_CL[0].clone().cutWithMesh(plane_Ch)
-    # Find point of centreline closer to last point of kspline cut
-    ksplCL_cutPt, num_pt = fcMeshes.findClosestPt(ksplCL_cut.points()[0], kspl_CL[0].points())
-    dict_pts['numPt_CLChamberCut'] = num_pt
-    m_names = ['myoc_atr','myoc_vent','endo_atr','endo_vent','cj_atr','cj_vent','cj_in']
-    m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk', 
-                                dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
-    m_atrMyoc, m_ventMyoc, m_atrEndo, m_ventEndo, m_atrCJ, m_ventCJ, m_cjIn = m_all
+    # plane_Ch = Plane(pos=dict_planes['pl2CutMesh_Chamber']['pl_centre'],normal=dict_planes['pl2CutMesh_Chamber']['pl_normal'], sx=500)
+    # # Cut cl with plane
+    # ksplCL_cut = kspl_CL[0].clone().cutWithMesh(plane_Ch)
+    # # Find point of centreline closer to last point of kspline cut
+    # ksplCL_cutPt, num_pt = fcMeshes.findClosestPt(ksplCL_cut.points()[0], kspl_CL[0].points())
+    # dict_pts['numPt_CLChamberCut'] = num_pt
+    # m_names = ['myoc_atr','myoc_vent','endo_atr','endo_vent','cj_atr','cj_vent','cj_in']
+    # m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk', 
+    #                             dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
+    # m_atrMyoc, m_ventMyoc, m_atrEndo, m_ventEndo, m_atrCJ, m_ventCJ, m_cjIn = m_all
     
     sph_orient, lines_orient, dict_pts, dict_kspl, df_res = fcMeshes.getChambersOrientation(filename = filename, file_num = file_num, num_pt = num_pt, kspl_CL2use = kspl_CL[0], 
                                                                                     myoc_meshes = [m_myoc, m_atrMyoc, m_ventMyoc], linLine = linLines[0],
@@ -171,9 +172,9 @@ if init:
     
     if plot: 
         vp = Plotter(N=3, axes=10)
-        vp.show(m_cjTh.alpha(0.1), m_cjIn.color('white'), scale_cube, txt, at=0)
-        vp.show(m_myocTh.alpha(0.1), m_myocInt.color('white'), at=1)
-        vp.show(m_endoTh.alpha(0.1), m_endoInt.color('white'), at=2, zoom=1, azimuth = azimuth, elevation = elevation, interactive=True)
+        vp.show(m_cjTh.alpha(1), scale_cube, txt, at=0)
+        vp.show(m_myocTh.alpha(1), at=1)
+        vp.show(m_endoTh.alpha(1), at=2, zoom=1, azimuth = azimuth, elevation = elevation, interactive=True)
     
     if save:
         fcMeshes.saveThickness(filename = filename, arrays2save = [cj_thickness, myoc_thickness, endo_thickness], 
@@ -213,7 +214,7 @@ if init:
         vp.show(m_myocInt.alpha(0.01), m_myocExt.alpha(0.01), sph_ballonning, at=2)
         vp.show(m_myocIntBall.alpha(0.01), sph_ballonning, at=3)
         vp.show(m_myocExtBall.alpha(0.01), sph_ballonning, at=4)
-        vp.show(m_cjIn, m_cjTh, scale_cube, at=5, azimuth = azimuth, elevation = elevation, interactive = True)
+        vp.show(m_cjTh, scale_cube, at=5, azimuth = azimuth, elevation = elevation, zoom = 2, interactive = True)
     
     #%% Define planes and ribbons to divide heart into sections (Left/Right; Atr/Vent; Dors/Vent) (earlier stages???)
     # Create Coronal Planes for each chamber
@@ -224,16 +225,18 @@ if init:
                                                                  mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
     
     #%% TO DELETEEE
-    mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_extBall']
-    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1])
-    m_cjTh, m_myocTh, m_endoTh, m_myocIntBall, m_myocExtBall = m_thAll
+    # cl_ribbon, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0], 
+                                                                  # mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
+    # mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_extBall']
+    # [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1])
+    # m_cjTh, m_myocTh, m_endoTh, m_myocIntBall, m_myocExtBall = m_thAll
     
-    # Dictionary and decode it
-    [dict_cjThNmyocIntBall] = fcBasics.loadDicts(filename = filename, dicts_name = ['cjTh_myocIntBall2class'], directories = [directories[0]])
-    [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param] = fcMeshes.decodeDict (dict2classify = dict_cjThNmyocIntBall, 
-                                                                                     info = ['cj_thickness','myoc_intBall'])
-    # npy arrays
-    cj_thickness, myoc_intBall = meas_param
+    # # Dictionary and decode it
+    # [dict_cjThNmyocIntBall] = fcBasics.loadDicts(filename = filename, dicts_name = ['cjTh_myocIntBall2class'], directories = [directories[0]])
+    # [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param] = fcMeshes.decodeDict (dict2classify = dict_cjThNmyocIntBall, 
+    #                                                                                  info = ['cj_thickness','myoc_intBall'])
+    # # npy arrays
+    # cj_thickness, myoc_intBall = meas_param
     
     #%% Divide meshes using ribbon (Left/Right) 
     [m_cjThLnR, m_myocExtLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh, m_myocExtBall], cl_ribbon = cl_ribbon)
@@ -245,8 +248,8 @@ if init:
                                             pts_whole = m_cjTh.points(), pts_left = m_cjThLnR[0].points(), 
                                             data = [cj_thickness, myoc_intBall], names_data = ['cj_thickness', 'myoc_intBall'], plot_show = True)
     
-    # if save: 
-    #     fcBasics.saveDF(filename = filename, df2save = df_cjThNmyocIntBall, df_name = 'df_cjThNmyocIntBall2', dir2save = dir_results)
+    if save: 
+        fcBasics.saveDF(filename = filename, df2save = df_cjThNmyocIntBall, df_name = 'df_cjThNmyocIntBall2', dir2save = dir_results)
         
     #%% Save all results
     if save: 
