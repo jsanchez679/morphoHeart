@@ -30,11 +30,11 @@ save = True
 #%% Start B_Create3DVols
 if init:
     # Importing morphoHeart packages
-    import morphoHeart_funcBasics as fcBasics
-    import morphoHeart_funcContours as fcCont
-    import morphoHeart_funcMeshes as fcMeshes
+    from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
+    from morphoHeart_modules import morphoHeart_funcContours as fcCont
+    from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
     tic = perf_counter()
-    
+
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
@@ -153,7 +153,7 @@ if init:
                                      dicts = [dict_planes, dict_pts, dict_kspl], plotshow = True)
     myoc_int_CL, endo_ext_CL = meshes4clf
 
-    #%% Save 
+    #%% Save
     if save:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [myoc_int_CL, endo_ext_CL], names =['myoc_int_cut4cl','endo_ext_cut4cl'],
                                       dict_colour = dict_colour, dir_stl = directories[3], extension='stl')

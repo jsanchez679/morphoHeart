@@ -28,9 +28,9 @@ initial_runD = True
 #%% Start A_Contours
 if init:
     # Importing morphoHeart packages
-    import morphoHeart_funcBasics as fcBasics
-    import morphoHeart_funcContours as fcCont
-    from morphoHeart_funcMeshes import createLayerMesh
+    from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
+    from morphoHeart_modules import morphoHeart_funcContours as fcCont
+    from morphoHeart_modules.morphoHeart_funcMeshes import createLayerMesh
 
     # Creating global variable
     global heartLayer

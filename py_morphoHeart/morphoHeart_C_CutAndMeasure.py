@@ -35,11 +35,11 @@ azimuth = 0
 #%% Start C_CutAndMeasure
 if init:
     # Importing morphoHeart packages
-    import morphoHeart_funcBasics as fcBasics
-    import morphoHeart_funcContours as fcCont
-    import morphoHeart_funcMeshes as fcMeshes
+    from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
+    from morphoHeart_modules import morphoHeart_funcContours as fcCont
+    from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
     tic = perf_counter()
-    
+
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
@@ -68,9 +68,9 @@ if init:
     dict_obj = fcMeshes.splitDicts(dict_obj)
     if len(dict_obj) == 4:
         [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
-    else: 
+    else:
         [dict_planes, dict_pts, dict_kspl, dict_colour,_] = dict_obj
-        
+
     # Import meshes
     [m_myoc, m_endo, m_cj, m_cjOut, m_cjIn] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc','endo','cj','cj_out','cj_in'],
                                                                   extension = 'vtk', dir_stl = directories[2],
@@ -109,21 +109,21 @@ if init:
         vp.show(m_endo.alpha(0.01), sph_CL_colour[1], at=1)
         vp.show(m_myoc.alpha(0.01), sph_CL[0], at=2)
         vp.show(m_endo.alpha(0.01), sph_CL[1], at=3, azimuth = azimuth, interactive=True)
-    
+
     #%% Cut layers into chambers
     # CHANGE!!! - Ellipsoid instead?? - https://stackoverflow.com/questions/7819498/plotting-ellipsoid-with-matplotlib
     # Divide heart layers into chambers and save data
-    pl_Chambers, dict_planes, dict_pts, num_pt = fcMeshes.getInfo2CutChambers(filename = filename, kspl_CL = kspl_CL[0], 
+    pl_Chambers, dict_planes, dict_pts, num_pt = fcMeshes.getInfo2CutChambers(filename = filename, kspl_CL = kspl_CL[0],
                                                                               mesh2cut = m_myoc, dict_planes = dict_planes, dict_pts = dict_pts)
-    
-    m_atr, m_vent = fcMeshes.getChamberMeshes(filename = filename, dir_txtNnpy = directories[1], 
-                                                end_name = ['ch0_cut', 'ch1_cut', 'cj', 'ch0_cut_ext', 'ch1_cut_int'], 
-                                                names2cut = ['Myoc','Endo', 'CJ', 'Ext.Myoc', 'Int.Endo'], 
+
+    m_atr, m_vent = fcMeshes.getChamberMeshes(filename = filename, dir_txtNnpy = directories[1],
+                                                end_name = ['ch0_cut', 'ch1_cut', 'cj', 'ch0_cut_ext', 'ch1_cut_int'],
+                                                names2cut = ['Myoc','Endo', 'CJ', 'Ext.Myoc', 'Int.Endo'],
                                                 kspl_CL = kspl_CL[0], num_pt = num_pt, dict_planes = dict_planes, resolution = res)
-            
+
     m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd = m_atr
     m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd = m_vent
-    
+
     if plot:
         vp = Plotter(N=6, axes = 10)
         vp.show(m_atr[0:3], pl_Chambers.alpha(0.05), txt, at = 0)
@@ -205,7 +205,7 @@ if init:
         vp.show(m_myocInt.alpha(0.01).color(dict_colour['myoc_int']['colour']), sph_ballonning, txt,  at=0)
         vp.show(m_myocExt.alpha(0.01).color('teal'), sph_ballonning, at=1)
         vp.show(m_myocInt, m_myocExt, sph_ballonning, scale_cube, at=2, zoom = 2, elevation = elevation, interactive = True)
-        
+
     print('- Extracting ballooning information for Internal and External Myocardium... \n\tit takes about 10-15 to process each mesh...')
     myoc_intBall, m_myocIntBall, [myoIntmin, myoIntmax] = fcMeshes.getDistance2Mesh(filename = filename, m_int = sph_ballonning, m_ext = m_myocInt,
                                                                                         title = 'Internal Myocardium Ballooning', alpha = 1)
@@ -280,7 +280,7 @@ if init:
                     info = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_extBall'],
                     meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1),m_myocExtBall.alpha(1)],
                     rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False)
-        
+
         toc = perf_counter()
         fcBasics.printTime(tic, toc, 'Cut and Measure')
 

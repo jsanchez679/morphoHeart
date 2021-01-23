@@ -1,0 +1,2267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>morphoHeart_modules.morphoHeart_funcBasics API documentation</title>
+<meta name="description" content="morphoHeart_funcBasics …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>morphoHeart_modules.morphoHeart_funcBasics</code></h1>
+</header>
+<section id="section-intro">
+<p>morphoHeart_funcBasics</p>
+<p>Version: Jan 22, 2021
+@author: Juliana Sanchez-Posada</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+morphoHeart_funcBasics
+
+Version: Jan 22, 2021
+@author: Juliana Sanchez-Posada
+
+&#34;&#34;&#34;
+
+#%% Importing python packages
+import os
+import pandas as pd
+from playsound import playsound
+from pathlib import Path
+import numpy as np
+from progress.bar import Bar
+from itertools import count
+import json
+import shutil
+import psutil
+
+suffix = &#39;%(index)d/%(max)d - %(elapsed)ds&#39;
+
+#https://thispointer.com/python-pandas-how-to-display-full-dataframe-i-e-print-all-rows-columns-without-truncation/
+pd.set_option(&#39;display.max_rows&#39;, None)
+pd.set_option(&#39;display.max_columns&#39;, None)
+pd.set_option(&#39;display.width&#39;, None)
+pd.set_option(&#39;display.max_colwidth&#39;, None)
+
+#%% class - NumpyArrayEncoder
+# Definition of class to save dictionary
+class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyArrayEncoder, self).default(obj)
+
+#%% func - alert
+def alert(sound, times):
+    &#34;&#34;&#34;
+    Function to play selected sound as an alert 
+
+    Parameters
+    ----------
+    sound : str
+        &#39;frog&#39;/&#39;clown&#39;/&#39;countdown&#39;/&#39;wohoo&#39;/&#39;whistle&#39;/&#39;jump&#39;/&#39;beep&#39;, etc.
+    times : int
+        number of times to play the sound.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    if sound == &#39;frog&#39;:
+        sound2play =&#39;Sounds/Frog-sound-ribbit.mp3&#39;
+    elif sound == &#39;clown&#39;:
+        sound2play = &#39;Sounds/Mistake-sound-effect.mp3&#39;
+    elif sound == &#39;countdown&#39;:
+        sound2play =&#39;Sounds/Countdown-start.mp3&#39;
+    elif sound == &#39;wohoo&#39;:
+        sound2play = &#39;Sounds/Cartoon-woohoo.mp3&#39;
+    elif sound == &#39;whistle&#39;:
+        sound2play = &#39;Sounds/Swanee-whistle-down.mp3&#39;
+    elif sound == &#39;jump&#39;:
+        sound2play = &#39;Sounds/Jumping-sound-effect.mp3&#39;
+    elif sound == &#39;beep&#39;:
+        sound2play = &#39;Sounds/Error-beep-sound-effect.mp3&#39;
+    elif sound == &#39;bubble&#39;:
+        sound2play = &#39;Sounds/Bubble-sound-effect.mp3&#39;
+    elif sound == &#39;dig_camera&#39;:
+        sound2play = &#39;Sounds/Digital-camera-click-sound.mp3&#39;
+    elif sound == &#39;dig_pocket&#39;:
+        sound2play = &#39;Sounds/Digital-pocket-camera-click-sound.mp3&#39;
+    elif sound == &#39;light&#39;:
+        sound2play = &#39;Sounds/Light-speed-sound-effect.mp3&#39;
+    else:
+        sound2play = &#39;Sounds/Error-sound.mp3&#39;
+
+    for i in range(times):
+        playsound(sound2play)
+
+#%% func - getUsedRAM
+def getUsedRAM():
+    &#34;&#34;&#34;
+    Funtion that prints RAM memory being used
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    memoryUse = py.memory_info()[0]/2.**30  # memory use in GB...I think
+    print(&#39;RAM Memory Use:&#39;, memoryUse)
+    
+#%% func - ask4input
+def ask4input(text, type_response, keep = False):
+    &#34;&#34;&#34;
+    Function that ask for user input and transforms it into the expected type
+
+    Parameters
+    ----------
+    text : str
+        Text asking the question and giving possible options.
+    type_response : data types int/str/float/boolean
+        data type of the expected response
+    keep : Boolean
+        If True, leaves the string as it is (with upper and lower cases), else, changes the whole string to lower case.
+
+    Returns
+    -------
+    response : int/str/float/bool
+        returns an object with the corresponding type_response given as input.
+
+    &#34;&#34;&#34;
+    alert(&#39;beep&#39;,1)
+    exit_now = False
+    while exit_now == False:
+        response = input(&#39;&gt; &#39;+text+&#39; &#39;)
+        if type_response == int:
+            try:
+                response = int(response)
+                exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be an integer!&#39;)
+                pass
+        elif type_response == float:
+            try:
+                response = float(response)
+                exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be a float!&#39;)
+                pass
+        elif type_response == str:
+            if keep == False:
+                response = response.lower()
+            exit_now = True
+        elif type_response == bool:
+            try:
+                if int(response) in [0,1]:
+                    response = bool(int(response))
+                    exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be a [0]:no or [1]:yes!&#39;)
+                pass
+
+    return response
+
+#%% func - getMainDirectories
+def getMainDirectories(root_path):
+    &#34;&#34;&#34;
+    Function to get the main directories of py_morphoHeart
+
+    Parameters
+    ----------
+    root_path : path
+        Path to py_morphoHeart folder.
+
+    Returns
+    -------
+    dir_pyLSAnalysis : path
+        Path to py_LSAnalysis folder.
+    dir_lsAnalysis : path
+        Path to lsAnalysis folder.
+    dir_lsOngoing : path
+        Path to lsOngoing folder.
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+
+    &#34;&#34;&#34;
+    # dir_pyLSAnalysis = Path(root_path).parent
+    # dir_lsAnalysis = Path(dir_pyLSAnalysis).parent
+    # dir_lsOngoing = Path(dir_lsAnalysis).parent
+    # dir_data2Analyse = Path(dir_lsAnalysis, &#34;LS_MorphoHeart&#34;)
+
+    dir_morphoHeart = Path(root_path).parent
+    dir_parent = Path(dir_morphoHeart).parent
+    # dir_lsOngoing = Path(dir_parent).parent
+    dir_im_morphoHeart = Path(dir_parent, &#34;im_morphoHeart&#34;)
+
+
+    # return dir_pyLSAnalysis, dir_lsAnalysis, dir_lsOngoing, dir_data2Analyse
+    return dir_morphoHeart, dir_parent, dir_im_morphoHeart
+
+#%% func - exportDatasetCSV
+def exportDatasetCSV(dir_data2Analyse, end_name = &#39;2A&#39;):
+    &#34;&#34;&#34;
+    Function that finds all the folders within the dir_data2Analyse folder whose name ends with 2A (a.k.a: to analyse)
+    and creates a dataframe including the embryo information (strain, stage, manipulation, genotype and lightsheet ref)
+    The resulting dataframe is saved as a &#39;.csv&#39; file within the dir_data2Analyse folder.
+
+    Parameters
+    ----------
+    dir_lsOngoing : path
+        Path to lsOngoing folder where the genotyping record is saved
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+    end_name : str
+        String telling which type of folder to look for.
+
+    Returns
+    -------
+    df_dataset : dataframe
+        Resulting dataframe containing all the embryos information of the folders &#39;_2A&#39;.
+
+    &#34;&#34;&#34;
+
+    # - Location of genotyping record
+    genot_file = &#39;LS_Genotyping Record.xlsx&#39;
+    genot_dir = os.path.join(dir_data2Analyse, genot_file)
+    # - Get general info of all LS Sessions
+    info_cols = [&#39;LS No&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Manipulation&#39;]
+    df_info = pd.read_excel(genot_dir, sheet_name = &#39;RAW_All&#39;, header = 0,
+                            usecols=info_cols)
+    df_info = df_info.set_index(&#39;LS No&#39;)
+    # - Get genotyping data of all LS Sessions
+    df_genot = pd.read_excel(genot_dir, sheet_name = &#39;All_Genotype&#39;, header = 1)
+    df_genot = df_genot.set_index(&#39;Pos&#39;)
+
+    if end_name == &#39;R&#39;:
+        glob_txt = &#39;*R_L*&#39;
+    else:
+        glob_txt = &#39;*_2A*&#39;
+
+    df_dataset = pd.DataFrame()
+    for folder_2A in dir_data2Analyse.glob(glob_txt):
+        folder = os.path.basename(folder_2A)
+        # print(folder)
+        # folder = str(folder)
+        if end_name == &#39;2A&#39;:
+            ls_Session = folder.split(&#39;_&#39;)[0]
+            fish_ref = folder.split(&#39;_&#39;)[1]
+        elif end_name == &#39;R&#39;:
+            ls_Session = folder.split(&#39;_&#39;)[1]
+            fish_ref = folder.split(&#39;_&#39;)[2]
+        # print(ls_Session, fish_ref)
+
+        stage = df_info.loc[ls_Session,&#39;Stage&#39;]
+        strain = df_info.loc[ls_Session,&#39;Strain&#39;]
+        manip = df_info.loc[ls_Session,&#39;Manipulation&#39;]
+
+        # - Get genotype(s) of fish
+        genotype_A = df_genot.loc[fish_ref,ls_Session]
+        gene_A = df_genot.loc[&#39;Gene&#39;,ls_Session]
+
+        ls_Session_B = ls_Session + &#39;.1&#39;
+        if ls_Session_B in df_genot.columns:
+            genotype_B = df_genot.loc[fish_ref,ls_Session_B]
+            gene_B = df_genot.loc[&#39;Gene&#39;,ls_Session_B]
+        else:
+            genotype_B = &#39;-&#39;
+            gene_B = &#39;-&#39;
+
+        new_row = {&#39;Folder&#39;: folder, &#39;LS_Session&#39;: ls_Session, &#39;Fish_ref&#39;: fish_ref,
+                    &#39;Strain&#39;: strain, &#39;Stage&#39;: stage, &#39;Manip&#39;: manip,
+                    &#39;Gene_A&#39;: gene_A, &#39;Genotype_A&#39;: genotype_A,
+                    &#39;Gene_B&#39;: gene_B, &#39;Genotype_B&#39;: genotype_B}
+
+        df_dataset = df_dataset.append(new_row, ignore_index=True)
+        df_dataset = df_dataset[[&#39;Folder&#39;,&#39;LS_Session&#39;, &#39;Fish_ref&#39;,&#39;Strain&#39;,&#39;Stage&#39;, &#39;Manip&#39;,
+                                  &#39;Gene_A&#39;, &#39;Genotype_A&#39;,&#39;Gene_B&#39;, &#39;Genotype_B&#39;]]
+
+        dir_dfDataset = os.path.join(dir_data2Analyse,&#39;df_dataset&#39;+end_name+&#39;.csv&#39;)
+
+    df_dataset.to_csv(dir_dfDataset)
+
+    return df_dataset
+
+#%% func - loadDF
+def loadDF(filename, file, dir_results):
+    &#34;&#34;&#34;
+    Function that loads a dataframe
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    file : str
+        Particular name given to the dataframe that wants to be loaded (e.g. ResultsDF).
+    dir_results : path
+        Path to the folder where the dataframe is saved.
+
+    Returns
+    -------
+    df_results : dataframe
+        Loaded dataframe.
+
+    &#34;&#34;&#34;
+
+    name_csv = filename+&#39;_&#39;+file+&#39;.csv&#39;
+    dir_filledDF = os.path.join(dir_results, name_csv)
+    df_results = pd.read_csv(dir_filledDF, index_col=0)
+
+    return df_results
+
+#%% func - loadNPY
+def loadNPY(filename, names, dir_txtNnpy):
+    &#34;&#34;&#34;
+    Function that loads a (group of) npy array(s)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    names : list of str
+        List of particular names given to the npy arrays that want to be loaded (e.g. [&#39;stackShape&#39;, &#39;s3_ch0&#39;]).
+    dir_txtNnpy :  path
+        Path to the npy arrays folder.
+
+    Returns
+    -------
+    npys : list of arrays
+        List of Loaded array(s).
+
+    &#34;&#34;&#34;
+    # print(&#39;- Loading np arrays...&#39;)
+    npys = []
+    bar = Bar(&#39;- Loading np arrays&#39;, max=len(names), suffix = suffix, check_tty=False, hide_cursor=False)
+    for i, name in enumerate(names):
+        npy_title = filename+&#39;_&#39;+name+&#39;.npy&#39;
+        npy_dir = os.path.join(dir_txtNnpy, npy_title)
+        npy = np.load(npy_dir)
+        npys.append(np.asarray(npy))
+        bar.next()
+
+    bar.finish()
+    alert(&#39;jump&#39;,1)
+
+    return npys
+
+#%% func - loadDicts
+def loadDicts(filename, dicts_name, directories, print_txt = True):
+    &#34;&#34;&#34;
+    Function that loads a (group of) dictionary(ies)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dicts_name :  list of str
+        List of particular names given to the dictionaries that want to be loaded (e.g. [&#39;dict_obj&#39;]).
+    directories : list of paths
+        List of paths to the folders where the dictionaries are saved.
+
+    Returns
+    -------
+    dicts_out : list of dictionaries
+        List of Loaded dictionaries.
+
+    &#34;&#34;&#34;
+    if print_txt:
+        print(&#39;- Importing dictionaries&#39;)
+    dicts_out = []
+    for i, name, sp_dir in zip(count(), dicts_name, directories):
+
+        jsonDict_name = filename+&#34;_&#34;+name+&#34;.json&#34;
+        json2open_dir = os.path.join(sp_dir,jsonDict_name)
+        #print(&#34;Started Reading JSON file&#34;)
+        with open(json2open_dir, &#34;r&#34;) as read_file:
+            if print_txt:
+                print(&#34;\t&gt;&gt; &#34;+name+&#34;: Converting JSON encoded data into Numpy Array&#34;)
+            decodedArray = json.load(read_file)
+
+        dicts_out.append(decodedArray)
+
+    alert(&#39;jump&#39;,1)
+
+    return dicts_out
+
+#%% func - selectFile
+def selectFile (df_dataset):
+    &#34;&#34;&#34;
+    Function that allows the user to select the file to be processed, printing the names of all the folders in the
+    input dataframe and prompting the user to input the file number to process.
+
+    Parameters
+    ----------
+    df_dataset : dataframe
+        Dataframe containing all the embryos information of the folders &#39;_2A&#39;.
+
+    Returns
+    -------
+    filename : str
+        Reference name given to the images of the embryo selected to be processed (LSXX_FXX_X_XX_XXXX).
+    df_file : dataframe
+        Dataframe just with the information of the filename selected by the user.
+    input_num :  int
+        Index number selected from the input dataframe.
+
+    &#34;&#34;&#34;
+
+    df_datasetTemp = df_dataset.copy()
+    df_datasetTemp[&#39;Folder_2A&#39;] = df_dataset[&#39;Folder&#39;].str.slice(0,10)
+    df_datasetTemp[&#39;Gene A&#39;] = df_dataset[&#39;Gene_A&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_A&#39;]
+    df_datasetTemp[&#39;Gene B&#39;] = df_dataset[&#39;Gene_B&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_B&#39;]
+
+    print(&#39;\n--- HEARTS TO BE PROCESSED ---&#39;)
+    df_datasetTemp = df_datasetTemp.sort_values(by=[&#39;Stage&#39;,&#39;Strain&#39;,&#39;Gene_A&#39;,&#39;Genotype_A&#39;,&#39;Gene_B&#39;,&#39;Genotype_B&#39;],
+                                                ascending = (True, True, True, False, True, False))
+    print(df_datasetTemp[[&#39;Folder_2A&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Gene A&#39;,&#39;Gene B&#39;]])
+
+    list_folder = df_dataset[&#39;Folder&#39;].tolist()
+
+    # print(&#39;\nFiles to process:&#39;)
+    # for c, value in enumerate(list_folder, 1):
+    #     print(&#39;-&#39;,c-1,&#39;:\t&#39;, value)
+
+    alert(&#39;beep&#39;,1)
+    input_num = int(input(&#39;&gt; Select the file you want to process: &#39;))
+    filename = list_folder[input_num]
+
+    print(&#39;\n\t\t\tFILE SELECTED &#39;)
+    df_file = df_dataset.loc[df_dataset[&#39;Folder&#39;] == filename]
+    print(df_file.T,&#39;\n&#39;)
+
+    return filename, df_file, input_num
+
+#%% func - selectHearts
+def selectHearts (df_dataset):
+    &#34;&#34;&#34;
+    Function that allows the user to select the hearts to plot, printing a modified version of the 
+    input dataframe and prompting the user to input the file number(s)
+
+    Parameters
+    ----------
+    df_dataset : dataframe
+        Dataframe containing all the embryos information of the folders &#39;R_&#39;.
+
+    Returns
+    -------
+    df_file : dataframe
+        Dataframe just with the information of the filename(s) selected by the user
+
+    &#34;&#34;&#34;
+    
+
+    df_datasetTemp = df_dataset.copy()
+    df_datasetTemp[&#39;Ref&#39;] = df_dataset[&#39;Folder&#39;].str.slice(2,10)
+    df_datasetTemp[&#39;Gene A&#39;] = df_dataset[&#39;Gene_A&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_A&#39;]
+    df_datasetTemp[&#39;Gene B&#39;] = df_dataset[&#39;Gene_B&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_B&#39;]
+
+    # q_filter = ask4input(&#39;Do you want to filter hearts by genotype and/or stage? \n\t[0]:yes, genotype / [1]:yes, stage / [2]:yes, both / [3]:no, manually select hearts: &#39;, int)
+    # if q_filter in [0,2]:
+    #     genes = df_dataset[[&#34;Gene_A&#34;, &#34;Gene_B&#34;]].values.ravel()
+    #     genes = pd.unique(genes)
+    #     genes = genes.tolist()
+    #     genes.remove(&#39;-&#39;)
+
+    #     print(&#39;\nGenes:&#39;)
+    #     for c, value in enumerate(genes, 1):
+    #         print(&#39;-&#39;,c-1,&#39;:\t&#39;, value)
+    #     input_var = input(&#39;Select the genes by which you would like to filter: &#39;)
+    #     genes_num = getInputNumbers(input_var, genes)
+    #     genes_selected = [genes[num] for i, num in enumerate(genes_num)]
+
+    #     numOfGenes = len(genes_selected)
+    #     if numOfGenes == 1:
+    #         df_filtered = df_dataset[(df_dataset[&#39;Gene_A&#39;] == genes_selected[0]) &amp; (df_dataset[&#39;Gene_B&#39;] == &#39;-&#39;)]
+    #     elif numOfGenes == 2:
+    #         df_filtered = df_dataset[(df_dataset[&#39;Gene_A&#39;] == genes_selected[0]) &amp; (df_dataset[&#39;Gene_B&#39;] ==  genes_selected[1])]
+
+    #     q_plotWtHtMt = ask4input(&#34;- Which genotypes would you like to include? \n\t-(e.g. write &#39;wt,ht,mt&#39; if you want them all, or &#39;wt&#39; in case you only want wild-types) : &#34;,str)
+    #     ### CONTINUE...
+    #     #END list_folder
+
+    # elif q_filter == 3:
+    print(&#39;-------- PROCESSED HEARTS --------&#39;)
+    df_datasetTemp = df_datasetTemp.sort_values(by=[&#39;Stage&#39;,&#39;Strain&#39;,&#39;Gene_A&#39;,&#39;Genotype_A&#39;,&#39;Gene_B&#39;,&#39;Genotype_B&#39;],
+                                                ascending = (True, True, True, False, True, False))
+    print(df_datasetTemp[[&#39;Ref&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Gene A&#39;,&#39;Gene B&#39;]])
+    list_folder = df_dataset[&#39;Folder&#39;].tolist()
+    alert(&#39;beep&#39;,1)
+    input_num = ask4input(&#39;Enter the numbers of the hearts you want to plot: &#39;, str)
+    hearts_num = getInputNumbers(input_num, list_folder)
+
+    print(&#39;\n-------- SELECTED HEARTS --------&#39;)
+    df_file = df_dataset.loc[hearts_num, :]
+
+    print(df_file.T,&#39;\n&#39;)
+
+    return df_file
+
+#%% func - getInputNumbers
+def getInputNumbers(input_var, variables):
+    &#34;&#34;&#34;
+    Function that gets the variables corresponding to the user input.
+
+    Parameters
+    ----------
+    input_var : str
+        String with input given by the user.
+    variables : list of str
+        List with variables to select.
+
+    Returns
+    -------
+    var_num : list of str
+        List of selected variables.
+
+    &#34;&#34;&#34;
+    if input_var == &#39;all&#39;:
+        var_num = list(range(0,len(variables),1))
+
+    else:
+        var_num = []
+        comma_split = input_var.split(&#39;,&#39;)
+
+        for string in comma_split:
+            if &#39;-&#39; in string:
+                minus_split = string.split(&#39;-&#39;)
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+
+    return var_num
+
+#%% func - createDirectories2Save
+def createDirectories2Save (filename, dir_data2Analyse, end_name):
+    &#34;&#34;&#34;
+    Function to create directories to save data within original folder (v. Sept 03, 2020)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+    end_name : str
+        String with &#39;2A&#39; or &#39;R&#39;, according to the type of folder in which the other directories are to be created.
+
+    Returns
+    -------
+    dir_results : path
+        Path to the Results directory.
+    directories : list of paths
+        List of paths: 0. dir_dict, 1. dir_txtNnpy, 2. dir_stl, 3. dir_cl, 4. dir_imsNvideos, 5. dir_ims2Analyse, 6. dir_folder2A.
+
+    &#34;&#34;&#34;
+
+    res_folder = &#34;Results_&#34;+filename
+
+    if end_name == &#39;2A&#39;:
+        folder2A = filename+&#39;_&#39;+end_name
+    elif end_name == &#39;R&#39;:
+        folder2A = end_name+&#39;_&#39;+filename
+
+    dir_folder2A = os.path.join(dir_data2Analyse, folder2A)
+    dir_results = os.path.join(dir_data2Analyse, folder2A, res_folder)
+    if os.path.isdir(dir_results) == False:
+        os.mkdir(dir_results)
+        print(res_folder, &#34; was created as a directory!&#34;)
+    else:
+        print(res_folder, &#34; is an existing directory!\n&#34;)
+
+    dirsResults = [&#34;dictionaries&#34;, &#34;txt_npy&#34;, &#34;meshes&#34;, &#34;centreline&#34;, &#34;imgs_videos&#34;]
+    directories = []
+
+    for num, direc in enumerate(dirsResults):
+        dir2create = os.path.join(dir_data2Analyse, folder2A, res_folder, direc)
+        directories.append(dir2create)
+        if os.path.isdir(dir2create) == False:
+            os.mkdir(dir2create)
+            print(&#34;\t-&#34;,direc, &#34; was created as a directory!&#34;)
+        # else:
+        #     print(&#34;\t-&#34;,direc, &#34; is an existing directory!&#34;)
+
+    dir_ims2Analyse = os.path.join(dir_data2Analyse,folder2A,&#39;Im_&#39;+filename)
+    directories.append(dir_ims2Analyse)
+    directories.append(dir_folder2A)
+
+    dir_dict, dir_txtNnpy, dir_stl, dir_cl, dir_imsNvideos, dir_ims2Analyse, dir_folder2A = directories
+
+    return dir_results, directories
+
+#%% func - metadataExt
+def metadataExt (filename, dir_data2Analyse):
+    &#34;&#34;&#34;
+    Function that gets the metadata from the filename given as input and exports the x, y and z spacing as a npy array. (v. April 17, 2020)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+
+    Returns
+    -------
+    xy_Scaling_um : float
+        x and y scaling taken from the metadata of the file.
+    z_Scaling_um : float
+        z scaling taken from the metadata of the file.
+
+    &#34;&#34;&#34;
+
+    Metadata = &#34;METADATA_RAW_&#34;+filename[0:4]+&#34;.txt&#34;
+    dir_Metadata = os.path.join(dir_data2Analyse,&#39;Z_METADATA&#39;,str(Metadata))
+    usecols_MD = [&#34;ImageTitle&#34;,&#34;FileName&#34;, &#34;ScalingX&#34;, &#34;ScalingY&#34;, &#34;ScalingZ&#34;, &#34;DimensionZ&#34;]
+    df_Metadata = pd.read_csv(dir_Metadata, delimiter=&#34;\t&#34;, header = 1, index_col = 0, usecols = usecols_MD)
+    index_stack =  filename+&#34;.czi&#34;
+
+    # xyz scaling from Metadata
+    xy_Scaling = df_Metadata.at[index_stack, &#34;ScalingX&#34;]
+    z_Scaling = df_Metadata.at[index_stack, &#34;ScalingZ&#34;]
+    # xyz scaling in micrometers (um)
+    xy_Scaling_um = xy_Scaling*(10**6)
+    z_Scaling_um = z_Scaling*(10**6)
+
+    return xy_Scaling_um, z_Scaling_um
+
+#%% func - code4vmtkCL (Changes needed - list/for)
+def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
+    &#34;&#34;&#34;
+    Function that gets directories information and prints a series of instructions to process the meshes to obtain centreline and
+    run the vmtk code.
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh_name : list of str
+        List of mesh names.
+    dir_cl : path
+        Path to the centreline directory.
+    printshow : Bool
+        True if text is to be printed, else False.
+
+    Returns
+    -------
+    cl_dirA : path
+        Path to the &#39;.vtp&#39; file for the internal myoc
+    cl_dirB : path
+        Path to the &#39;.vtp&#39; file for the external endoc
+
+    &#34;&#34;&#34;
+
+    mesh_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cut4cl.stl&#34;
+    mesh_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cut4cl.stl&#34;
+    # mesh_dirA = &#39;&#34;&#39;+os.path.join(dir_cl, mesh_titleA)+&#39;&#34;&#39;
+    # mesh_dirB = &#39;&#34;&#39;+os.path.join(dir_cl, mesh_titleB)+&#39;&#34;&#39;
+
+    meshML_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cut4clML.stl&#34;
+    meshML_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cut4clML.stl&#34;
+    meshML_dirA = &#39;&#34;&#39;+os.path.join(dir_cl, meshML_titleA)+&#39;&#34;&#39;
+    meshML_dirB = &#39;&#34;&#39;+os.path.join(dir_cl, meshML_titleB)+&#39;&#34;&#39;
+
+    cl_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cl.vtp&#34;
+    cl_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cl.vtp&#34;
+    cl_dirA = os.path.join(dir_cl, cl_titleA)
+    cl_dirB = os.path.join(dir_cl, cl_titleB)
+    cl_dirA_str = &#39;&#34;&#39;+cl_dirA+&#39;&#34;&#39;
+    cl_dirB_str = &#39;&#34;&#39;+cl_dirB+&#39;&#34;&#39;
+
+    if printshow:
+        print(&#34;You are done in python now... to get the centreline with each of the meshes follow the next steps:&#34;)
+        print(&#34;&gt;&gt;&gt; 1. Open the files:  -&#34;, mesh_titleA,&#34;, &#34;, mesh_titleB+&#34; - in Meshlab&#34;)
+        print(&#34;&gt;&gt;&gt; 2. Run Filters &gt; Remeshing, Simpl.. &gt; Screened Poisson Surf Reco (check Pre-clean)&#34;)
+        print(&#34;&gt;&gt;&gt; 3. Cut outflow tract if needed and export the resulting surface adding &#39;ML&#39; after _cut4cl in the same folder&#34;)
+        print(&#34;&gt;&gt;&gt; 4. Open VMTK, copy the next text and run it...&#34;)
+        vmtktxtA = &#34;vmtksurfacereader -ifile &#34;+ meshML_dirA +&#34; --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile&#34;+ cl_dirA_str+ &#34; --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius&#34;
+        vmtktxtB = &#34;vmtksurfacereader -ifile &#34;+ meshML_dirB +&#34; --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile&#34;+ cl_dirB_str+ &#34; --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius&#34;
+        print(str(vmtktxtA), &#39;\n\n\n&#39;, str(vmtktxtB))
+
+    alert(&#34;wohoo&#34;,1)
+
+    return cl_dirA, cl_dirB
+
+#%% func - saveFilledDF
+def saveFilledDF(filename, df_res, dir2save):
+    &#34;&#34;&#34;
+    Function that exports the filled dataframe containing all the measured data obtained in the processing of the images
+    (e.g. surface area, volumes, orientation angles, etc) as a &#39;.csv&#39; file in the directory given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    df_res : dataframe
+        Dataframe containing all the measured data.
+    dir2save : path
+        Path to the folder where the dataframe is to  be saved.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    print(&#39;\n\t\t\tFile dataframe &#39;)
+    print(df_res.T.head(10),&#39;\n&#39;)
+
+    name_csv = filename+&#39;_ResultsDF.csv&#39;
+    dir_filledDF = os.path.join(dir2save, name_csv)
+    df_res.to_csv(dir_filledDF)
+
+    print(&#39;-&#39;, name_csv, &#39; has been saved!&#39;)
+    alert(&#39;wohoo&#39;,1)
+
+#%% func - saveDF
+def saveDF(filename, df2save, df_name, dir2save):
+    &#34;&#34;&#34;
+    Function that exports a dataframe given as input as a &#39;.csv&#39; file in the directory given as input as well.
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    df2save : dataframe
+        Dataframe to save.
+    df_name : str
+        Specific name given to the dataframe to be saved.
+    dir2save : path
+        Path to the folder where the dataframe is to  be saved.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    name_csv = filename+&#39;_&#39;+df_name+&#39;.csv&#39;
+    dir_DF = os.path.join(dir2save, name_csv)
+    df2save.to_csv(dir_DF)
+
+    print(&#39;-&#39;, df_name, &#39; has been saved!&#39;)
+    alert(&#39;wohoo&#39;,1)
+
+#%% func - saveDict
+def saveDict(filename, dict2save, name, dir2save, print_txt = True):
+    &#34;&#34;&#34;
+    Functions that saves dict given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dict2save : dict
+        Dictionary to be saved.
+    name :  str
+        Specific name given to the dictionary to be saved.
+    dir2save : path
+        Path to the folder where the dictionary is to be saved.
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    
+    jsonDict_name = filename+&#34;_&#34;+name+&#34;.json&#34;
+    json2save_dir = os.path.join(dir2save,jsonDict_name)
+
+    with open(json2save_dir, &#34;w&#34;) as write_file:
+        json.dump(dict2save, write_file, cls=NumpyArrayEncoder)
+    if print_txt:
+        print(&#34;\t&gt;&gt; Dictionary saved correctly!\n\t&gt; File: &#34;+jsonDict_name);
+        alert(&#34;countdown&#34;,1)
+
+#%% func - printTime
+def printTime(tic, toc, txt):
+    &#34;&#34;&#34;
+    Function that prints a text with the time taken to perform a process
+
+    Parameters
+    ----------
+    tic : float
+        Time for starting stopwatch.
+    toc : float
+        Time for ending stopwatch.
+    txt : str
+        Process being performed
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    time = toc-tic
+    print(&#34;\t&gt;&gt; Total time taken to &#34;+txt+&#34; = &#34;,format(time,&#39;.2f&#39;), &#34;s/&#34;, format(time/60,&#39;.2f&#39;), &#34;m/&#34;, format(time/3600,&#39;.2f&#39;), &#34;h&#34;)
+
+
+#%% func - changeDirName
+def changeDirName(filename, dir_o):
+    &#34;&#34;&#34;
+    Function that changes the name of the folder_2A to R_folder, once the processing of that particular file is complete
+    (points have been classified into regions and all measurements have been made)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_o : path
+        Path of the original folder.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    change_name = ask4input(&#34;Are you done processing -&#34;+filename+&#34;- and want to change the folder&#39;s name? [0]:no/[1]:yes: &#34;, bool)
+    if change_name:
+        dir_data2Analyse = Path(dir_o).parent
+        new_name = &#39;R_&#39;+filename
+        dir_new = os.path.join(dir_data2Analyse, new_name)
+        shutil.move(dir_o, dir_new)
+
+        print(&#39;- Processed folder has changed name - &#39;, new_name)
+
+#%% Code to create documentation
+# from pathlib import Path
+# # pdoc --html &lt;path to code&gt; --output-dir &lt;path to documentation&gt;
+# path_2_code = Path(&#39;D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\Sounds&#39;).parent
+# path_2_doc = Path(&#39;D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\docs_morphoHeart&#39;)
+                   
+# pdoc --html path_2_code --output-dir path_2_doc
+
+#%% - ALERT WHEN IMPORTED
+print (&#34;IMPORTED: morphoHeart_funcBasics&#34;)
+alert(&#39;jump&#39;,1)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.alert"><code class="name flex">
+<span>def <span class="ident">alert</span></span>(<span>sound, times)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to play selected sound as an alert </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sound</code></strong> :&ensp;<code>str</code></dt>
+<dd>'frog'/'clown'/'countdown'/'wohoo'/'whistle'/'jump'/'beep', etc.</dd>
+<dt><strong><code>times</code></strong> :&ensp;<code>int</code></dt>
+<dd>number of times to play the sound.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def alert(sound, times):
+    &#34;&#34;&#34;
+    Function to play selected sound as an alert 
+
+    Parameters
+    ----------
+    sound : str
+        &#39;frog&#39;/&#39;clown&#39;/&#39;countdown&#39;/&#39;wohoo&#39;/&#39;whistle&#39;/&#39;jump&#39;/&#39;beep&#39;, etc.
+    times : int
+        number of times to play the sound.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    if sound == &#39;frog&#39;:
+        sound2play =&#39;Sounds/Frog-sound-ribbit.mp3&#39;
+    elif sound == &#39;clown&#39;:
+        sound2play = &#39;Sounds/Mistake-sound-effect.mp3&#39;
+    elif sound == &#39;countdown&#39;:
+        sound2play =&#39;Sounds/Countdown-start.mp3&#39;
+    elif sound == &#39;wohoo&#39;:
+        sound2play = &#39;Sounds/Cartoon-woohoo.mp3&#39;
+    elif sound == &#39;whistle&#39;:
+        sound2play = &#39;Sounds/Swanee-whistle-down.mp3&#39;
+    elif sound == &#39;jump&#39;:
+        sound2play = &#39;Sounds/Jumping-sound-effect.mp3&#39;
+    elif sound == &#39;beep&#39;:
+        sound2play = &#39;Sounds/Error-beep-sound-effect.mp3&#39;
+    elif sound == &#39;bubble&#39;:
+        sound2play = &#39;Sounds/Bubble-sound-effect.mp3&#39;
+    elif sound == &#39;dig_camera&#39;:
+        sound2play = &#39;Sounds/Digital-camera-click-sound.mp3&#39;
+    elif sound == &#39;dig_pocket&#39;:
+        sound2play = &#39;Sounds/Digital-pocket-camera-click-sound.mp3&#39;
+    elif sound == &#39;light&#39;:
+        sound2play = &#39;Sounds/Light-speed-sound-effect.mp3&#39;
+    else:
+        sound2play = &#39;Sounds/Error-sound.mp3&#39;
+
+    for i in range(times):
+        playsound(sound2play)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.ask4input"><code class="name flex">
+<span>def <span class="ident">ask4input</span></span>(<span>text, type_response, keep=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that ask for user input and transforms it into the expected type</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>Text asking the question and giving possible options.</dd>
+<dt><strong><code>type_response</code></strong> :&ensp;<code>data types int/str/float/boolean</code></dt>
+<dd>data type of the expected response</dd>
+<dt><strong><code>keep</code></strong> :&ensp;<code>Boolean</code></dt>
+<dd>If True, leaves the string as it is (with upper and lower cases), else, changes the whole string to lower case.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>response</code></strong> :&ensp;<code>int/str/float/bool</code></dt>
+<dd>returns an object with the corresponding type_response given as input.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ask4input(text, type_response, keep = False):
+    &#34;&#34;&#34;
+    Function that ask for user input and transforms it into the expected type
+
+    Parameters
+    ----------
+    text : str
+        Text asking the question and giving possible options.
+    type_response : data types int/str/float/boolean
+        data type of the expected response
+    keep : Boolean
+        If True, leaves the string as it is (with upper and lower cases), else, changes the whole string to lower case.
+
+    Returns
+    -------
+    response : int/str/float/bool
+        returns an object with the corresponding type_response given as input.
+
+    &#34;&#34;&#34;
+    alert(&#39;beep&#39;,1)
+    exit_now = False
+    while exit_now == False:
+        response = input(&#39;&gt; &#39;+text+&#39; &#39;)
+        if type_response == int:
+            try:
+                response = int(response)
+                exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be an integer!&#39;)
+                pass
+        elif type_response == float:
+            try:
+                response = float(response)
+                exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be a float!&#39;)
+                pass
+        elif type_response == str:
+            if keep == False:
+                response = response.lower()
+            exit_now = True
+        elif type_response == bool:
+            try:
+                if int(response) in [0,1]:
+                    response = bool(int(response))
+                    exit_now = True
+            except:
+                print(&#39;ERROR: -&#39;+response+&#39;- The number entered needs to be a [0]:no or [1]:yes!&#39;)
+                pass
+
+    return response</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.changeDirName"><code class="name flex">
+<span>def <span class="ident">changeDirName</span></span>(<span>filename, dir_o)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that changes the name of the folder_2A to R_folder, once the processing of that particular file is complete
+(points have been classified into regions and all measurements have been made)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>dir_o</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path of the original folder.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def changeDirName(filename, dir_o):
+    &#34;&#34;&#34;
+    Function that changes the name of the folder_2A to R_folder, once the processing of that particular file is complete
+    (points have been classified into regions and all measurements have been made)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_o : path
+        Path of the original folder.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    change_name = ask4input(&#34;Are you done processing -&#34;+filename+&#34;- and want to change the folder&#39;s name? [0]:no/[1]:yes: &#34;, bool)
+    if change_name:
+        dir_data2Analyse = Path(dir_o).parent
+        new_name = &#39;R_&#39;+filename
+        dir_new = os.path.join(dir_data2Analyse, new_name)
+        shutil.move(dir_o, dir_new)
+
+        print(&#39;- Processed folder has changed name - &#39;, new_name)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.code4vmtkCL"><code class="name flex">
+<span>def <span class="ident">code4vmtkCL</span></span>(<span>filename, mesh_name, dir_cl, printshow=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that gets directories information and prints a series of instructions to process the meshes to obtain centreline and
+run the vmtk code.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>mesh_name</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>List of mesh names.</dd>
+<dt><strong><code>dir_cl</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the centreline directory.</dd>
+<dt><strong><code>printshow</code></strong> :&ensp;<code>Bool</code></dt>
+<dd>True if text is to be printed, else False.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>cl_dirA</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the '.vtp' file for the internal myoc</dd>
+<dt><strong><code>cl_dirB</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the '.vtp' file for the external endoc</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
+    &#34;&#34;&#34;
+    Function that gets directories information and prints a series of instructions to process the meshes to obtain centreline and
+    run the vmtk code.
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh_name : list of str
+        List of mesh names.
+    dir_cl : path
+        Path to the centreline directory.
+    printshow : Bool
+        True if text is to be printed, else False.
+
+    Returns
+    -------
+    cl_dirA : path
+        Path to the &#39;.vtp&#39; file for the internal myoc
+    cl_dirB : path
+        Path to the &#39;.vtp&#39; file for the external endoc
+
+    &#34;&#34;&#34;
+
+    mesh_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cut4cl.stl&#34;
+    mesh_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cut4cl.stl&#34;
+    # mesh_dirA = &#39;&#34;&#39;+os.path.join(dir_cl, mesh_titleA)+&#39;&#34;&#39;
+    # mesh_dirB = &#39;&#34;&#39;+os.path.join(dir_cl, mesh_titleB)+&#39;&#34;&#39;
+
+    meshML_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cut4clML.stl&#34;
+    meshML_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cut4clML.stl&#34;
+    meshML_dirA = &#39;&#34;&#39;+os.path.join(dir_cl, meshML_titleA)+&#39;&#34;&#39;
+    meshML_dirB = &#39;&#34;&#39;+os.path.join(dir_cl, meshML_titleB)+&#39;&#34;&#39;
+
+    cl_titleA = filename+&#34;_&#34;+mesh_name[0]+&#34;_cl.vtp&#34;
+    cl_titleB = filename+&#34;_&#34;+mesh_name[1]+&#34;_cl.vtp&#34;
+    cl_dirA = os.path.join(dir_cl, cl_titleA)
+    cl_dirB = os.path.join(dir_cl, cl_titleB)
+    cl_dirA_str = &#39;&#34;&#39;+cl_dirA+&#39;&#34;&#39;
+    cl_dirB_str = &#39;&#34;&#39;+cl_dirB+&#39;&#34;&#39;
+
+    if printshow:
+        print(&#34;You are done in python now... to get the centreline with each of the meshes follow the next steps:&#34;)
+        print(&#34;&gt;&gt;&gt; 1. Open the files:  -&#34;, mesh_titleA,&#34;, &#34;, mesh_titleB+&#34; - in Meshlab&#34;)
+        print(&#34;&gt;&gt;&gt; 2. Run Filters &gt; Remeshing, Simpl.. &gt; Screened Poisson Surf Reco (check Pre-clean)&#34;)
+        print(&#34;&gt;&gt;&gt; 3. Cut outflow tract if needed and export the resulting surface adding &#39;ML&#39; after _cut4cl in the same folder&#34;)
+        print(&#34;&gt;&gt;&gt; 4. Open VMTK, copy the next text and run it...&#34;)
+        vmtktxtA = &#34;vmtksurfacereader -ifile &#34;+ meshML_dirA +&#34; --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile&#34;+ cl_dirA_str+ &#34; --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius&#34;
+        vmtktxtB = &#34;vmtksurfacereader -ifile &#34;+ meshML_dirB +&#34; --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile&#34;+ cl_dirB_str+ &#34; --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius&#34;
+        print(str(vmtktxtA), &#39;\n\n\n&#39;, str(vmtktxtB))
+
+    alert(&#34;wohoo&#34;,1)
+
+    return cl_dirA, cl_dirB</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.createDirectories2Save"><code class="name flex">
+<span>def <span class="ident">createDirectories2Save</span></span>(<span>filename, dir_data2Analyse, end_name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to create directories to save data within original folder (v. Sept 03, 2020)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>dir_data2Analyse</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to data2Analyse folder (LS_MorphoHeart).</dd>
+<dt><strong><code>end_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>String with '2A' or 'R', according to the type of folder in which the other directories are to be created.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>dir_results</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the Results directory.</dd>
+<dt><strong><code>directories</code></strong> :&ensp;<code>list</code> of <code>paths</code></dt>
+<dd>List of paths: 0. dir_dict, 1. dir_txtNnpy, 2. dir_stl, 3. dir_cl, 4. dir_imsNvideos, 5. dir_ims2Analyse, 6. dir_folder2A.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def createDirectories2Save (filename, dir_data2Analyse, end_name):
+    &#34;&#34;&#34;
+    Function to create directories to save data within original folder (v. Sept 03, 2020)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+    end_name : str
+        String with &#39;2A&#39; or &#39;R&#39;, according to the type of folder in which the other directories are to be created.
+
+    Returns
+    -------
+    dir_results : path
+        Path to the Results directory.
+    directories : list of paths
+        List of paths: 0. dir_dict, 1. dir_txtNnpy, 2. dir_stl, 3. dir_cl, 4. dir_imsNvideos, 5. dir_ims2Analyse, 6. dir_folder2A.
+
+    &#34;&#34;&#34;
+
+    res_folder = &#34;Results_&#34;+filename
+
+    if end_name == &#39;2A&#39;:
+        folder2A = filename+&#39;_&#39;+end_name
+    elif end_name == &#39;R&#39;:
+        folder2A = end_name+&#39;_&#39;+filename
+
+    dir_folder2A = os.path.join(dir_data2Analyse, folder2A)
+    dir_results = os.path.join(dir_data2Analyse, folder2A, res_folder)
+    if os.path.isdir(dir_results) == False:
+        os.mkdir(dir_results)
+        print(res_folder, &#34; was created as a directory!&#34;)
+    else:
+        print(res_folder, &#34; is an existing directory!\n&#34;)
+
+    dirsResults = [&#34;dictionaries&#34;, &#34;txt_npy&#34;, &#34;meshes&#34;, &#34;centreline&#34;, &#34;imgs_videos&#34;]
+    directories = []
+
+    for num, direc in enumerate(dirsResults):
+        dir2create = os.path.join(dir_data2Analyse, folder2A, res_folder, direc)
+        directories.append(dir2create)
+        if os.path.isdir(dir2create) == False:
+            os.mkdir(dir2create)
+            print(&#34;\t-&#34;,direc, &#34; was created as a directory!&#34;)
+        # else:
+        #     print(&#34;\t-&#34;,direc, &#34; is an existing directory!&#34;)
+
+    dir_ims2Analyse = os.path.join(dir_data2Analyse,folder2A,&#39;Im_&#39;+filename)
+    directories.append(dir_ims2Analyse)
+    directories.append(dir_folder2A)
+
+    dir_dict, dir_txtNnpy, dir_stl, dir_cl, dir_imsNvideos, dir_ims2Analyse, dir_folder2A = directories
+
+    return dir_results, directories</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.exportDatasetCSV"><code class="name flex">
+<span>def <span class="ident">exportDatasetCSV</span></span>(<span>dir_data2Analyse, end_name='2A')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that finds all the folders within the dir_data2Analyse folder whose name ends with 2A (a.k.a: to analyse)
+and creates a dataframe including the embryo information (strain, stage, manipulation, genotype and lightsheet ref)
+The resulting dataframe is saved as a '.csv' file within the dir_data2Analyse folder.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dir_lsOngoing</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to lsOngoing folder where the genotyping record is saved</dd>
+<dt><strong><code>dir_data2Analyse</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to data2Analyse folder (LS_MorphoHeart).</dd>
+<dt><strong><code>end_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>String telling which type of folder to look for.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df_dataset</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Resulting dataframe containing all the embryos information of the folders '_2A'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exportDatasetCSV(dir_data2Analyse, end_name = &#39;2A&#39;):
+    &#34;&#34;&#34;
+    Function that finds all the folders within the dir_data2Analyse folder whose name ends with 2A (a.k.a: to analyse)
+    and creates a dataframe including the embryo information (strain, stage, manipulation, genotype and lightsheet ref)
+    The resulting dataframe is saved as a &#39;.csv&#39; file within the dir_data2Analyse folder.
+
+    Parameters
+    ----------
+    dir_lsOngoing : path
+        Path to lsOngoing folder where the genotyping record is saved
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+    end_name : str
+        String telling which type of folder to look for.
+
+    Returns
+    -------
+    df_dataset : dataframe
+        Resulting dataframe containing all the embryos information of the folders &#39;_2A&#39;.
+
+    &#34;&#34;&#34;
+
+    # - Location of genotyping record
+    genot_file = &#39;LS_Genotyping Record.xlsx&#39;
+    genot_dir = os.path.join(dir_data2Analyse, genot_file)
+    # - Get general info of all LS Sessions
+    info_cols = [&#39;LS No&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Manipulation&#39;]
+    df_info = pd.read_excel(genot_dir, sheet_name = &#39;RAW_All&#39;, header = 0,
+                            usecols=info_cols)
+    df_info = df_info.set_index(&#39;LS No&#39;)
+    # - Get genotyping data of all LS Sessions
+    df_genot = pd.read_excel(genot_dir, sheet_name = &#39;All_Genotype&#39;, header = 1)
+    df_genot = df_genot.set_index(&#39;Pos&#39;)
+
+    if end_name == &#39;R&#39;:
+        glob_txt = &#39;*R_L*&#39;
+    else:
+        glob_txt = &#39;*_2A*&#39;
+
+    df_dataset = pd.DataFrame()
+    for folder_2A in dir_data2Analyse.glob(glob_txt):
+        folder = os.path.basename(folder_2A)
+        # print(folder)
+        # folder = str(folder)
+        if end_name == &#39;2A&#39;:
+            ls_Session = folder.split(&#39;_&#39;)[0]
+            fish_ref = folder.split(&#39;_&#39;)[1]
+        elif end_name == &#39;R&#39;:
+            ls_Session = folder.split(&#39;_&#39;)[1]
+            fish_ref = folder.split(&#39;_&#39;)[2]
+        # print(ls_Session, fish_ref)
+
+        stage = df_info.loc[ls_Session,&#39;Stage&#39;]
+        strain = df_info.loc[ls_Session,&#39;Strain&#39;]
+        manip = df_info.loc[ls_Session,&#39;Manipulation&#39;]
+
+        # - Get genotype(s) of fish
+        genotype_A = df_genot.loc[fish_ref,ls_Session]
+        gene_A = df_genot.loc[&#39;Gene&#39;,ls_Session]
+
+        ls_Session_B = ls_Session + &#39;.1&#39;
+        if ls_Session_B in df_genot.columns:
+            genotype_B = df_genot.loc[fish_ref,ls_Session_B]
+            gene_B = df_genot.loc[&#39;Gene&#39;,ls_Session_B]
+        else:
+            genotype_B = &#39;-&#39;
+            gene_B = &#39;-&#39;
+
+        new_row = {&#39;Folder&#39;: folder, &#39;LS_Session&#39;: ls_Session, &#39;Fish_ref&#39;: fish_ref,
+                    &#39;Strain&#39;: strain, &#39;Stage&#39;: stage, &#39;Manip&#39;: manip,
+                    &#39;Gene_A&#39;: gene_A, &#39;Genotype_A&#39;: genotype_A,
+                    &#39;Gene_B&#39;: gene_B, &#39;Genotype_B&#39;: genotype_B}
+
+        df_dataset = df_dataset.append(new_row, ignore_index=True)
+        df_dataset = df_dataset[[&#39;Folder&#39;,&#39;LS_Session&#39;, &#39;Fish_ref&#39;,&#39;Strain&#39;,&#39;Stage&#39;, &#39;Manip&#39;,
+                                  &#39;Gene_A&#39;, &#39;Genotype_A&#39;,&#39;Gene_B&#39;, &#39;Genotype_B&#39;]]
+
+        dir_dfDataset = os.path.join(dir_data2Analyse,&#39;df_dataset&#39;+end_name+&#39;.csv&#39;)
+
+    df_dataset.to_csv(dir_dfDataset)
+
+    return df_dataset</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.getInputNumbers"><code class="name flex">
+<span>def <span class="ident">getInputNumbers</span></span>(<span>input_var, variables)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that gets the variables corresponding to the user input.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>input_var</code></strong> :&ensp;<code>str</code></dt>
+<dd>String with input given by the user.</dd>
+<dt><strong><code>variables</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>List with variables to select.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>var_num</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>List of selected variables.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getInputNumbers(input_var, variables):
+    &#34;&#34;&#34;
+    Function that gets the variables corresponding to the user input.
+
+    Parameters
+    ----------
+    input_var : str
+        String with input given by the user.
+    variables : list of str
+        List with variables to select.
+
+    Returns
+    -------
+    var_num : list of str
+        List of selected variables.
+
+    &#34;&#34;&#34;
+    if input_var == &#39;all&#39;:
+        var_num = list(range(0,len(variables),1))
+
+    else:
+        var_num = []
+        comma_split = input_var.split(&#39;,&#39;)
+
+        for string in comma_split:
+            if &#39;-&#39; in string:
+                minus_split = string.split(&#39;-&#39;)
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+
+    return var_num</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.getMainDirectories"><code class="name flex">
+<span>def <span class="ident">getMainDirectories</span></span>(<span>root_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to get the main directories of py_morphoHeart</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>root_path</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to py_morphoHeart folder.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>dir_pyLSAnalysis</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to py_LSAnalysis folder.</dd>
+<dt><strong><code>dir_lsAnalysis</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to lsAnalysis folder.</dd>
+<dt><strong><code>dir_lsOngoing</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to lsOngoing folder.</dd>
+<dt><strong><code>dir_data2Analyse</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to data2Analyse folder (LS_MorphoHeart).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMainDirectories(root_path):
+    &#34;&#34;&#34;
+    Function to get the main directories of py_morphoHeart
+
+    Parameters
+    ----------
+    root_path : path
+        Path to py_morphoHeart folder.
+
+    Returns
+    -------
+    dir_pyLSAnalysis : path
+        Path to py_LSAnalysis folder.
+    dir_lsAnalysis : path
+        Path to lsAnalysis folder.
+    dir_lsOngoing : path
+        Path to lsOngoing folder.
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+
+    &#34;&#34;&#34;
+    # dir_pyLSAnalysis = Path(root_path).parent
+    # dir_lsAnalysis = Path(dir_pyLSAnalysis).parent
+    # dir_lsOngoing = Path(dir_lsAnalysis).parent
+    # dir_data2Analyse = Path(dir_lsAnalysis, &#34;LS_MorphoHeart&#34;)
+
+    dir_morphoHeart = Path(root_path).parent
+    dir_parent = Path(dir_morphoHeart).parent
+    # dir_lsOngoing = Path(dir_parent).parent
+    dir_im_morphoHeart = Path(dir_parent, &#34;im_morphoHeart&#34;)
+
+
+    # return dir_pyLSAnalysis, dir_lsAnalysis, dir_lsOngoing, dir_data2Analyse
+    return dir_morphoHeart, dir_parent, dir_im_morphoHeart</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.getUsedRAM"><code class="name flex">
+<span>def <span class="ident">getUsedRAM</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Funtion that prints RAM memory being used</p>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getUsedRAM():
+    &#34;&#34;&#34;
+    Funtion that prints RAM memory being used
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    memoryUse = py.memory_info()[0]/2.**30  # memory use in GB...I think
+    print(&#39;RAM Memory Use:&#39;, memoryUse)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.loadDF"><code class="name flex">
+<span>def <span class="ident">loadDF</span></span>(<span>filename, file, dir_results)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that loads a dataframe</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>file</code></strong> :&ensp;<code>str</code></dt>
+<dd>Particular name given to the dataframe that wants to be loaded (e.g. ResultsDF).</dd>
+<dt><strong><code>dir_results</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the folder where the dataframe is saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df_results</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Loaded dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loadDF(filename, file, dir_results):
+    &#34;&#34;&#34;
+    Function that loads a dataframe
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    file : str
+        Particular name given to the dataframe that wants to be loaded (e.g. ResultsDF).
+    dir_results : path
+        Path to the folder where the dataframe is saved.
+
+    Returns
+    -------
+    df_results : dataframe
+        Loaded dataframe.
+
+    &#34;&#34;&#34;
+
+    name_csv = filename+&#39;_&#39;+file+&#39;.csv&#39;
+    dir_filledDF = os.path.join(dir_results, name_csv)
+    df_results = pd.read_csv(dir_filledDF, index_col=0)
+
+    return df_results</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.loadDicts"><code class="name flex">
+<span>def <span class="ident">loadDicts</span></span>(<span>filename, dicts_name, directories, print_txt=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that loads a (group of) dictionary(ies)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>dicts_name</code></strong> :&ensp;<code> list</code> of <code>str</code></dt>
+<dd>List of particular names given to the dictionaries that want to be loaded (e.g. ['dict_obj']).</dd>
+<dt><strong><code>directories</code></strong> :&ensp;<code>list</code> of <code>paths</code></dt>
+<dd>List of paths to the folders where the dictionaries are saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>dicts_out</code></strong> :&ensp;<code>list</code> of <code>dictionaries</code></dt>
+<dd>List of Loaded dictionaries.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loadDicts(filename, dicts_name, directories, print_txt = True):
+    &#34;&#34;&#34;
+    Function that loads a (group of) dictionary(ies)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dicts_name :  list of str
+        List of particular names given to the dictionaries that want to be loaded (e.g. [&#39;dict_obj&#39;]).
+    directories : list of paths
+        List of paths to the folders where the dictionaries are saved.
+
+    Returns
+    -------
+    dicts_out : list of dictionaries
+        List of Loaded dictionaries.
+
+    &#34;&#34;&#34;
+    if print_txt:
+        print(&#39;- Importing dictionaries&#39;)
+    dicts_out = []
+    for i, name, sp_dir in zip(count(), dicts_name, directories):
+
+        jsonDict_name = filename+&#34;_&#34;+name+&#34;.json&#34;
+        json2open_dir = os.path.join(sp_dir,jsonDict_name)
+        #print(&#34;Started Reading JSON file&#34;)
+        with open(json2open_dir, &#34;r&#34;) as read_file:
+            if print_txt:
+                print(&#34;\t&gt;&gt; &#34;+name+&#34;: Converting JSON encoded data into Numpy Array&#34;)
+            decodedArray = json.load(read_file)
+
+        dicts_out.append(decodedArray)
+
+    alert(&#39;jump&#39;,1)
+
+    return dicts_out</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.loadNPY"><code class="name flex">
+<span>def <span class="ident">loadNPY</span></span>(<span>filename, names, dir_txtNnpy)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that loads a (group of) npy array(s)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>List of particular names given to the npy arrays that want to be loaded (e.g. ['stackShape', 's3_ch0']).</dd>
+<dt><strong><code>dir_txtNnpy</code></strong> :&ensp;<code> path</code></dt>
+<dd>Path to the npy arrays folder.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>npys</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>List of Loaded array(s).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loadNPY(filename, names, dir_txtNnpy):
+    &#34;&#34;&#34;
+    Function that loads a (group of) npy array(s)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    names : list of str
+        List of particular names given to the npy arrays that want to be loaded (e.g. [&#39;stackShape&#39;, &#39;s3_ch0&#39;]).
+    dir_txtNnpy :  path
+        Path to the npy arrays folder.
+
+    Returns
+    -------
+    npys : list of arrays
+        List of Loaded array(s).
+
+    &#34;&#34;&#34;
+    # print(&#39;- Loading np arrays...&#39;)
+    npys = []
+    bar = Bar(&#39;- Loading np arrays&#39;, max=len(names), suffix = suffix, check_tty=False, hide_cursor=False)
+    for i, name in enumerate(names):
+        npy_title = filename+&#39;_&#39;+name+&#39;.npy&#39;
+        npy_dir = os.path.join(dir_txtNnpy, npy_title)
+        npy = np.load(npy_dir)
+        npys.append(np.asarray(npy))
+        bar.next()
+
+    bar.finish()
+    alert(&#39;jump&#39;,1)
+
+    return npys</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.metadataExt"><code class="name flex">
+<span>def <span class="ident">metadataExt</span></span>(<span>filename, dir_data2Analyse)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that gets the metadata from the filename given as input and exports the x, y and z spacing as a npy array. (v. April 17, 2020)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>dir_data2Analyse</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to data2Analyse folder (LS_MorphoHeart).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>xy_Scaling_um</code></strong> :&ensp;<code>float</code></dt>
+<dd>x and y scaling taken from the metadata of the file.</dd>
+<dt><strong><code>z_Scaling_um</code></strong> :&ensp;<code>float</code></dt>
+<dd>z scaling taken from the metadata of the file.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def metadataExt (filename, dir_data2Analyse):
+    &#34;&#34;&#34;
+    Function that gets the metadata from the filename given as input and exports the x, y and z spacing as a npy array. (v. April 17, 2020)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_data2Analyse : path
+        Path to data2Analyse folder (LS_MorphoHeart).
+
+    Returns
+    -------
+    xy_Scaling_um : float
+        x and y scaling taken from the metadata of the file.
+    z_Scaling_um : float
+        z scaling taken from the metadata of the file.
+
+    &#34;&#34;&#34;
+
+    Metadata = &#34;METADATA_RAW_&#34;+filename[0:4]+&#34;.txt&#34;
+    dir_Metadata = os.path.join(dir_data2Analyse,&#39;Z_METADATA&#39;,str(Metadata))
+    usecols_MD = [&#34;ImageTitle&#34;,&#34;FileName&#34;, &#34;ScalingX&#34;, &#34;ScalingY&#34;, &#34;ScalingZ&#34;, &#34;DimensionZ&#34;]
+    df_Metadata = pd.read_csv(dir_Metadata, delimiter=&#34;\t&#34;, header = 1, index_col = 0, usecols = usecols_MD)
+    index_stack =  filename+&#34;.czi&#34;
+
+    # xyz scaling from Metadata
+    xy_Scaling = df_Metadata.at[index_stack, &#34;ScalingX&#34;]
+    z_Scaling = df_Metadata.at[index_stack, &#34;ScalingZ&#34;]
+    # xyz scaling in micrometers (um)
+    xy_Scaling_um = xy_Scaling*(10**6)
+    z_Scaling_um = z_Scaling*(10**6)
+
+    return xy_Scaling_um, z_Scaling_um</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.printTime"><code class="name flex">
+<span>def <span class="ident">printTime</span></span>(<span>tic, toc, txt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that prints a text with the time taken to perform a process</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tic</code></strong> :&ensp;<code>float</code></dt>
+<dd>Time for starting stopwatch.</dd>
+<dt><strong><code>toc</code></strong> :&ensp;<code>float</code></dt>
+<dd>Time for ending stopwatch.</dd>
+<dt><strong><code>txt</code></strong> :&ensp;<code>str</code></dt>
+<dd>Process being performed</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def printTime(tic, toc, txt):
+    &#34;&#34;&#34;
+    Function that prints a text with the time taken to perform a process
+
+    Parameters
+    ----------
+    tic : float
+        Time for starting stopwatch.
+    toc : float
+        Time for ending stopwatch.
+    txt : str
+        Process being performed
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    time = toc-tic
+    print(&#34;\t&gt;&gt; Total time taken to &#34;+txt+&#34; = &#34;,format(time,&#39;.2f&#39;), &#34;s/&#34;, format(time/60,&#39;.2f&#39;), &#34;m/&#34;, format(time/3600,&#39;.2f&#39;), &#34;h&#34;)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.saveDF"><code class="name flex">
+<span>def <span class="ident">saveDF</span></span>(<span>filename, df2save, df_name, dir2save)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that exports a dataframe given as input as a '.csv' file in the directory given as input as well.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>df2save</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe to save.</dd>
+<dt><strong><code>df_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Specific name given to the dataframe to be saved.</dd>
+<dt><strong><code>dir2save</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the folder where the dataframe is to
+be saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def saveDF(filename, df2save, df_name, dir2save):
+    &#34;&#34;&#34;
+    Function that exports a dataframe given as input as a &#39;.csv&#39; file in the directory given as input as well.
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    df2save : dataframe
+        Dataframe to save.
+    df_name : str
+        Specific name given to the dataframe to be saved.
+    dir2save : path
+        Path to the folder where the dataframe is to  be saved.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    name_csv = filename+&#39;_&#39;+df_name+&#39;.csv&#39;
+    dir_DF = os.path.join(dir2save, name_csv)
+    df2save.to_csv(dir_DF)
+
+    print(&#39;-&#39;, df_name, &#39; has been saved!&#39;)
+    alert(&#39;wohoo&#39;,1)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.saveDict"><code class="name flex">
+<span>def <span class="ident">saveDict</span></span>(<span>filename, dict2save, name, dir2save, print_txt=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Functions that saves dict given as input</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>dict2save</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary to be saved.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code> str</code></dt>
+<dd>Specific name given to the dictionary to be saved.</dd>
+<dt><strong><code>dir2save</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the folder where the dictionary is to be saved.</dd>
+<dt><strong><code>print_txt</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>True if confirmation of action is needed, else False. The default is True.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def saveDict(filename, dict2save, name, dir2save, print_txt = True):
+    &#34;&#34;&#34;
+    Functions that saves dict given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dict2save : dict
+        Dictionary to be saved.
+    name :  str
+        Specific name given to the dictionary to be saved.
+    dir2save : path
+        Path to the folder where the dictionary is to be saved.
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+    
+    jsonDict_name = filename+&#34;_&#34;+name+&#34;.json&#34;
+    json2save_dir = os.path.join(dir2save,jsonDict_name)
+
+    with open(json2save_dir, &#34;w&#34;) as write_file:
+        json.dump(dict2save, write_file, cls=NumpyArrayEncoder)
+    if print_txt:
+        print(&#34;\t&gt;&gt; Dictionary saved correctly!\n\t&gt; File: &#34;+jsonDict_name);
+        alert(&#34;countdown&#34;,1)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.saveFilledDF"><code class="name flex">
+<span>def <span class="ident">saveFilledDF</span></span>(<span>filename, df_res, dir2save)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that exports the filled dataframe containing all the measured data obtained in the processing of the images
+(e.g. surface area, volumes, orientation angles, etc) as a '.csv' file in the directory given as input</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>df_res</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe containing all the measured data.</dd>
+<dt><strong><code>dir2save</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the folder where the dataframe is to
+be saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def saveFilledDF(filename, df_res, dir2save):
+    &#34;&#34;&#34;
+    Function that exports the filled dataframe containing all the measured data obtained in the processing of the images
+    (e.g. surface area, volumes, orientation angles, etc) as a &#39;.csv&#39; file in the directory given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    df_res : dataframe
+        Dataframe containing all the measured data.
+    dir2save : path
+        Path to the folder where the dataframe is to  be saved.
+
+    Returns
+    -------
+    None.
+
+    &#34;&#34;&#34;
+
+    print(&#39;\n\t\t\tFile dataframe &#39;)
+    print(df_res.T.head(10),&#39;\n&#39;)
+
+    name_csv = filename+&#39;_ResultsDF.csv&#39;
+    dir_filledDF = os.path.join(dir2save, name_csv)
+    df_res.to_csv(dir_filledDF)
+
+    print(&#39;-&#39;, name_csv, &#39; has been saved!&#39;)
+    alert(&#39;wohoo&#39;,1)</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.selectFile"><code class="name flex">
+<span>def <span class="ident">selectFile</span></span>(<span>df_dataset)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that allows the user to select the file to be processed, printing the names of all the folders in the
+input dataframe and prompting the user to input the file number to process.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df_dataset</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe containing all the embryos information of the folders '_2A'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo selected to be processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>df_file</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe just with the information of the filename selected by the user.</dd>
+<dt><strong><code>input_num</code></strong> :&ensp;<code> int</code></dt>
+<dd>Index number selected from the input dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def selectFile (df_dataset):
+    &#34;&#34;&#34;
+    Function that allows the user to select the file to be processed, printing the names of all the folders in the
+    input dataframe and prompting the user to input the file number to process.
+
+    Parameters
+    ----------
+    df_dataset : dataframe
+        Dataframe containing all the embryos information of the folders &#39;_2A&#39;.
+
+    Returns
+    -------
+    filename : str
+        Reference name given to the images of the embryo selected to be processed (LSXX_FXX_X_XX_XXXX).
+    df_file : dataframe
+        Dataframe just with the information of the filename selected by the user.
+    input_num :  int
+        Index number selected from the input dataframe.
+
+    &#34;&#34;&#34;
+
+    df_datasetTemp = df_dataset.copy()
+    df_datasetTemp[&#39;Folder_2A&#39;] = df_dataset[&#39;Folder&#39;].str.slice(0,10)
+    df_datasetTemp[&#39;Gene A&#39;] = df_dataset[&#39;Gene_A&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_A&#39;]
+    df_datasetTemp[&#39;Gene B&#39;] = df_dataset[&#39;Gene_B&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_B&#39;]
+
+    print(&#39;\n--- HEARTS TO BE PROCESSED ---&#39;)
+    df_datasetTemp = df_datasetTemp.sort_values(by=[&#39;Stage&#39;,&#39;Strain&#39;,&#39;Gene_A&#39;,&#39;Genotype_A&#39;,&#39;Gene_B&#39;,&#39;Genotype_B&#39;],
+                                                ascending = (True, True, True, False, True, False))
+    print(df_datasetTemp[[&#39;Folder_2A&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Gene A&#39;,&#39;Gene B&#39;]])
+
+    list_folder = df_dataset[&#39;Folder&#39;].tolist()
+
+    # print(&#39;\nFiles to process:&#39;)
+    # for c, value in enumerate(list_folder, 1):
+    #     print(&#39;-&#39;,c-1,&#39;:\t&#39;, value)
+
+    alert(&#39;beep&#39;,1)
+    input_num = int(input(&#39;&gt; Select the file you want to process: &#39;))
+    filename = list_folder[input_num]
+
+    print(&#39;\n\t\t\tFILE SELECTED &#39;)
+    df_file = df_dataset.loc[df_dataset[&#39;Folder&#39;] == filename]
+    print(df_file.T,&#39;\n&#39;)
+
+    return filename, df_file, input_num</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.selectHearts"><code class="name flex">
+<span>def <span class="ident">selectHearts</span></span>(<span>df_dataset)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that allows the user to select the hearts to plot, printing a modified version of the
+input dataframe and prompting the user to input the file number(s)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df_dataset</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe containing all the embryos information of the folders 'R_'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df_file</code></strong> :&ensp;<code>dataframe</code></dt>
+<dd>Dataframe just with the information of the filename(s) selected by the user</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def selectHearts (df_dataset):
+    &#34;&#34;&#34;
+    Function that allows the user to select the hearts to plot, printing a modified version of the 
+    input dataframe and prompting the user to input the file number(s)
+
+    Parameters
+    ----------
+    df_dataset : dataframe
+        Dataframe containing all the embryos information of the folders &#39;R_&#39;.
+
+    Returns
+    -------
+    df_file : dataframe
+        Dataframe just with the information of the filename(s) selected by the user
+
+    &#34;&#34;&#34;
+    
+
+    df_datasetTemp = df_dataset.copy()
+    df_datasetTemp[&#39;Ref&#39;] = df_dataset[&#39;Folder&#39;].str.slice(2,10)
+    df_datasetTemp[&#39;Gene A&#39;] = df_dataset[&#39;Gene_A&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_A&#39;]
+    df_datasetTemp[&#39;Gene B&#39;] = df_dataset[&#39;Gene_B&#39;]+&#39;: &#39;+df_dataset[&#39;Genotype_B&#39;]
+
+    # q_filter = ask4input(&#39;Do you want to filter hearts by genotype and/or stage? \n\t[0]:yes, genotype / [1]:yes, stage / [2]:yes, both / [3]:no, manually select hearts: &#39;, int)
+    # if q_filter in [0,2]:
+    #     genes = df_dataset[[&#34;Gene_A&#34;, &#34;Gene_B&#34;]].values.ravel()
+    #     genes = pd.unique(genes)
+    #     genes = genes.tolist()
+    #     genes.remove(&#39;-&#39;)
+
+    #     print(&#39;\nGenes:&#39;)
+    #     for c, value in enumerate(genes, 1):
+    #         print(&#39;-&#39;,c-1,&#39;:\t&#39;, value)
+    #     input_var = input(&#39;Select the genes by which you would like to filter: &#39;)
+    #     genes_num = getInputNumbers(input_var, genes)
+    #     genes_selected = [genes[num] for i, num in enumerate(genes_num)]
+
+    #     numOfGenes = len(genes_selected)
+    #     if numOfGenes == 1:
+    #         df_filtered = df_dataset[(df_dataset[&#39;Gene_A&#39;] == genes_selected[0]) &amp; (df_dataset[&#39;Gene_B&#39;] == &#39;-&#39;)]
+    #     elif numOfGenes == 2:
+    #         df_filtered = df_dataset[(df_dataset[&#39;Gene_A&#39;] == genes_selected[0]) &amp; (df_dataset[&#39;Gene_B&#39;] ==  genes_selected[1])]
+
+    #     q_plotWtHtMt = ask4input(&#34;- Which genotypes would you like to include? \n\t-(e.g. write &#39;wt,ht,mt&#39; if you want them all, or &#39;wt&#39; in case you only want wild-types) : &#34;,str)
+    #     ### CONTINUE...
+    #     #END list_folder
+
+    # elif q_filter == 3:
+    print(&#39;-------- PROCESSED HEARTS --------&#39;)
+    df_datasetTemp = df_datasetTemp.sort_values(by=[&#39;Stage&#39;,&#39;Strain&#39;,&#39;Gene_A&#39;,&#39;Genotype_A&#39;,&#39;Gene_B&#39;,&#39;Genotype_B&#39;],
+                                                ascending = (True, True, True, False, True, False))
+    print(df_datasetTemp[[&#39;Ref&#39;,&#39;Strain&#39;,&#39;Stage&#39;,&#39;Gene A&#39;,&#39;Gene B&#39;]])
+    list_folder = df_dataset[&#39;Folder&#39;].tolist()
+    alert(&#39;beep&#39;,1)
+    input_num = ask4input(&#39;Enter the numbers of the hearts you want to plot: &#39;, str)
+    hearts_num = getInputNumbers(input_num, list_folder)
+
+    print(&#39;\n-------- SELECTED HEARTS --------&#39;)
+    df_file = df_dataset.loc[hearts_num, :]
+
+    print(df_file.T,&#39;\n&#39;)
+
+    return df_file</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder"><code class="flex name class">
+<span>class <span class="ident">NumpyArrayEncoder</span></span>
+<span>(</span><span>*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extensible JSON <a href="http://json.org">http://json.org</a> encoder for Python data structures.</p>
+<p>Supports the following objects and types by default:</p>
+<p>+-------------------+---------------+
+| Python
+| JSON
+|
++===================+===============+
+| dict
+| object
+|
++-------------------+---------------+
+| list, tuple
+| array
+|
++-------------------+---------------+
+| str
+| string
+|
++-------------------+---------------+
+| int, float
+| number
+|
++-------------------+---------------+
+| True
+| true
+|
++-------------------+---------------+
+| False
+| false
+|
++-------------------+---------------+
+| None
+| null
+|
++-------------------+---------------+</p>
+<p>To extend this to recognize other objects, subclass and implement a
+<code>.default()</code> method with another method that returns a serializable
+object for <code>o</code> if possible, otherwise it should call the superclass
+implementation (to raise <code>TypeError</code>).</p>
+<p>Constructor for JSONEncoder, with sensible defaults.</p>
+<p>If skipkeys is false, then it is a TypeError to attempt
+encoding of keys that are not str, int, float or None.
+If
+skipkeys is True, such items are simply skipped.</p>
+<p>If ensure_ascii is true, the output is guaranteed to be str
+objects with all incoming non-ASCII characters escaped.
+If
+ensure_ascii is false, the output can contain non-ASCII characters.</p>
+<p>If check_circular is true, then lists, dicts, and custom encoded
+objects will be checked for circular references during encoding to
+prevent an infinite recursion (which would cause an OverflowError).
+Otherwise, no such check takes place.</p>
+<p>If allow_nan is true, then NaN, Infinity, and -Infinity will be
+encoded as such.
+This behavior is not JSON specification compliant,
+but is consistent with most JavaScript based encoders and decoders.
+Otherwise, it will be a ValueError to encode such floats.</p>
+<p>If sort_keys is true, then the output of dictionaries will be
+sorted by key; this is useful for regression tests to ensure
+that JSON serializations can be compared on a day-to-day basis.</p>
+<p>If indent is a non-negative integer, then JSON array
+elements and object members will be pretty-printed with that
+indent level.
+An indent level of 0 will only insert newlines.
+None is the most compact representation.</p>
+<p>If specified, separators should be an (item_separator, key_separator)
+tuple.
+The default is (', ', ': ') if <em>indent</em> is <code>None</code> and
+(',', ': ') otherwise.
+To get the most compact JSON representation,
+you should specify (',', ':') to eliminate whitespace.</p>
+<p>If specified, default is a function that gets called for objects
+that can't otherwise be serialized.
+It should return a JSON encodable
+version of the object or raise a <code>TypeError</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyArrayEncoder, self).default(obj)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>json.encoder.JSONEncoder</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder.default"><code class="name flex">
+<span>def <span class="ident">default</span></span>(<span>self, obj)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implement this method in a subclass such that it returns
+a serializable object for <code>o</code>, or calls the base implementation
+(to raise a <code>TypeError</code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this::</p>
+<pre><code>def default(self, o):
+    try:
+        iterable = iter(o)
+    except TypeError:
+        pass
+    else:
+        return list(iterable)
+    # Let the base class default method raise the TypeError
+    return JSONEncoder.default(self, o)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def default(self, obj):
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+        return super(NumpyArrayEncoder, self).default(obj)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="morphoHeart_modules" href="index.html">morphoHeart_modules</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.alert" href="#morphoHeart_modules.morphoHeart_funcBasics.alert">alert</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.ask4input" href="#morphoHeart_modules.morphoHeart_funcBasics.ask4input">ask4input</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.changeDirName" href="#morphoHeart_modules.morphoHeart_funcBasics.changeDirName">changeDirName</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.code4vmtkCL" href="#morphoHeart_modules.morphoHeart_funcBasics.code4vmtkCL">code4vmtkCL</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.createDirectories2Save" href="#morphoHeart_modules.morphoHeart_funcBasics.createDirectories2Save">createDirectories2Save</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.exportDatasetCSV" href="#morphoHeart_modules.morphoHeart_funcBasics.exportDatasetCSV">exportDatasetCSV</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.getInputNumbers" href="#morphoHeart_modules.morphoHeart_funcBasics.getInputNumbers">getInputNumbers</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.getMainDirectories" href="#morphoHeart_modules.morphoHeart_funcBasics.getMainDirectories">getMainDirectories</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.getUsedRAM" href="#morphoHeart_modules.morphoHeart_funcBasics.getUsedRAM">getUsedRAM</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.loadDF" href="#morphoHeart_modules.morphoHeart_funcBasics.loadDF">loadDF</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.loadDicts" href="#morphoHeart_modules.morphoHeart_funcBasics.loadDicts">loadDicts</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.loadNPY" href="#morphoHeart_modules.morphoHeart_funcBasics.loadNPY">loadNPY</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.metadataExt" href="#morphoHeart_modules.morphoHeart_funcBasics.metadataExt">metadataExt</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.printTime" href="#morphoHeart_modules.morphoHeart_funcBasics.printTime">printTime</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.saveDF" href="#morphoHeart_modules.morphoHeart_funcBasics.saveDF">saveDF</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.saveDict" href="#morphoHeart_modules.morphoHeart_funcBasics.saveDict">saveDict</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.saveFilledDF" href="#morphoHeart_modules.morphoHeart_funcBasics.saveFilledDF">saveFilledDF</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.selectFile" href="#morphoHeart_modules.morphoHeart_funcBasics.selectFile">selectFile</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.selectHearts" href="#morphoHeart_modules.morphoHeart_funcBasics.selectHearts">selectHearts</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder" href="#morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder">NumpyArrayEncoder</a></code></h4>
+<ul class="">
+<li><code><a title="morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder.default" href="#morphoHeart_modules.morphoHeart_funcBasics.NumpyArrayEncoder.default">default</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

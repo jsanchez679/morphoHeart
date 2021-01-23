@@ -24,7 +24,7 @@ def setWorkingDir (root_path, init):
             root_path = os.getcwd()
     init = True
     print("Current working directory: {0}".format(os.getcwd()))
-    
+
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd(),init)
@@ -38,21 +38,21 @@ s_cube = 350
 #%% Start F_MultiPlot
 if init:
     # Importing morphoHeart packages
-    import morphoHeart_funcBasics as fcBasics
-    import morphoHeart_funcPlot as fcPlot
-    
-    #%% Get directories and file 
+    from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
+    from morphoHeart_modules import morphoHeart_funcPlot as fcPlot
+
+    #%% Get directories and file
     _, _, dir_lsOngoing, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_lsOngoing, dir_data2Analyse, end_name = 'R')
-    
+
     #%% Select hearts to plot
     df_files = fcBasics.selectHearts(df_dataset)
-    
+
     #%% Plot A - One plot per heart
     objs = fcPlot.selectObjects()
     dict_paths = fcPlot.createDictPaths(objs, df_files, dir_data2Analyse)
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
-    
+
     vp = Plotter(shape = (1, len(dict_paths)), axes=7, sharecam = True); m = 0
     for i, n, file in zip(count(), range(len(dict_paths)), df_files['Folder'].tolist()):
         txt = fcPlot.plotTitle(file, df_files)
@@ -63,12 +63,12 @@ if init:
         else:
             vp.show(meshes[m:m+len(objs)],scale_cube, txt, at=n, zoom = 1.5, interactive=True)
             # screenshot(filename='screenshot.png', scale=None, returnNumpy=False)
-            
+
     #%% Plot B - One heart per row, objects plotted in different columns
     objs = fcPlot.selectObjects()#['myoc','endo', 'cj']
     dict_paths = fcPlot.createDictPaths(objs, df_files, dir_data2Analyse)
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
-    
+
     vp = Plotter(shape = (len(dict_paths), len(objs)), axes=7, sharecam = True); m = 0
     numbs = np.arange(0,len(dict_paths)*len(objs),len(objs)).tolist()
     for i, n in zip(count(), range(len(dict_paths)*len(objs))):
@@ -81,10 +81,8 @@ if init:
         if n != len(dict_paths)*len(objs)-1:
             if m in numbs:
                 vp.show(meshes[m], scale_cube, txt, at=n)
-            else: 
+            else:
                 vp.show(meshes[m], scale_cube, at=n)
             m += 1
         else:
             vp.show(meshes[m], scale_cube, at=n, zoom = 1.5, interactive=True)
-            
-            
