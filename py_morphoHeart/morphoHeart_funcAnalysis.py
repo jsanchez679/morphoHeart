@@ -14,6 +14,22 @@ from morphoHeart_funcBasics import alert
 
 #%% func - getVariables
 def getVariables (list_vars, name):
+    """
+    
+
+    Parameters
+    ----------
+    list_vars : TYPE
+        DESCRIPTION.
+    name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    variables2loop : TYPE
+        DESCRIPTION.
+
+    """
     
     print('\nVariables:')
     for c, value in enumerate(variables, 1):

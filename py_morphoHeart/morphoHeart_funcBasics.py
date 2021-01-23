@@ -819,6 +819,14 @@ def changeDirName(filename, dir_o):
 
         print('- Processed folder has changed name - ', new_name)
 
+#%% Code to create documentation
+# from pathlib import Path
+# # pdoc --html <path to code> --output-dir <path to documentation>
+# path_2_code = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\Sounds').parent
+# path_2_doc = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\docs_morphoHeart')
+                   
+# pdoc --html path_2_code --output-dir path_2_doc
+
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcBasics")
 alert('jump',1)

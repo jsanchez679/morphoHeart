@@ -30,9 +30,9 @@ def setWorkingDir (root_path, init):
 
 root_path, init = setWorkingDir(os.getcwd(),init)
 
-
-if init: 
-    #%% Class to save dictionary
+#%% Start B_VMTK
+if init:
+    # Class to save dictionary
     class NumpyArrayEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, np.integer):

@@ -30,6 +30,24 @@ from morphoHeart_funcMeshes import splitDicts
 
 #%% func - createDictPaths
 def createDictPaths(names, df_files, dir_data2Analyse):
+    """
+    
+
+    Parameters
+    ----------
+    names : TYPE
+        DESCRIPTION.
+    df_files : TYPE
+        DESCRIPTION.
+    dir_data2Analyse : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    dict_paths : TYPE
+        DESCRIPTION.
+
+    """
     
     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
                     'endo','endo_int','endo_ext','endo_atr','endo_vent',
@@ -69,6 +87,25 @@ def createDictPaths(names, df_files, dir_data2Analyse):
 
 #%% func - plotTitle
 def plotTitle(file, df_files, additional_title = ''):
+    """
+    
+
+    Parameters
+    ----------
+    file : TYPE
+        DESCRIPTION.
+    df_files : TYPE
+        DESCRIPTION.
+    additional_title : TYPE, optional
+        DESCRIPTION. The default is ''.
+
+    Returns
+    -------
+    txt : TYPE
+        DESCRIPTION.
+
+    """
+    
     file_num = df_files[df_files['Folder']==file].index.values[0] 
     text_file = file[2:]
     text_strain = "\n >> Strain: " + df_files.loc[file_num,'Strain'] 
@@ -89,6 +126,15 @@ def plotTitle(file, df_files, additional_title = ''):
 
 #%% func - selectObjects
 def selectObjects ():
+    """
+    
+
+    Returns
+    -------
+    objs2loop : TYPE
+        DESCRIPTION.
+
+    """
     
     objs = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
               'endo','endo_int','endo_ext','endo_atr','endo_vent',
@@ -168,6 +214,22 @@ def list_columns(obj, cols=4, columnwise=True, gap=4):
     
 #%% func - loadMultMeshes # CONTINUE!!!
 def loadMultMeshes(names, dict_paths):
+    """
+    
+
+    Parameters
+    ----------
+    names : TYPE
+        DESCRIPTION.
+    dict_paths : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    list_meshes : TYPE
+        DESCRIPTION.
+
+    """
     
     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
                     'endo','endo_int','endo_ext','endo_atr','endo_vent',
@@ -270,8 +332,24 @@ def loadMultMeshes(names, dict_paths):
         
     return list_meshes
     
-#%% 
+#%% func - yieldMultMeshes
 def yieldMultMeshes(names, dict_paths):
+    """
+    
+
+    Parameters
+    ----------
+    names : TYPE
+        DESCRIPTION.
+    dict_paths : TYPE
+        DESCRIPTION.
+
+    Yields
+    ------
+    list_meshes : TYPE
+        DESCRIPTION.
+
+    """
     #https://www.programiz.com/python-programming/generator
     
     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',

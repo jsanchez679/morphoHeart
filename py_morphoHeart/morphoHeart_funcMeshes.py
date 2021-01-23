@@ -1776,7 +1776,7 @@ def getPlane(filename, type_cut, info, mesh_in, mesh_out, option = [True,True,Tr
 #%% func - getPlanePos
 def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
     """
-    Function that shows a plot so that the user can define a plane
+    Function that shows a plot so that the user can define a plane (mesh opacity can be changed)
 
     Parameters
     ----------
@@ -1860,22 +1860,22 @@ def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
     
     if option[0]: #sliderX
         vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0], 
-                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x position > +", c="crimson" )
+                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
     if option[1]: #sliderY
         vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1], 
-                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y position > +", c="dodgerblue" )
+                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
     if option[2]: #sliderZ
         vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2], 
-                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z position > +", c="limegreen")
+                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
     if option[3]: #sliderRotX
         vp.addSlider2D(sliderRotX, -1, +1, value=0, 
-                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x rotation > +", c="deeppink")
+                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x rotation > +", c="deeppink")
     if option[4]: #sliderRotY
         vp.addSlider2D(sliderRotY, -1, +1, value=0, 
-                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y rotation > +", c="gold")
+                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y rotation > +", c="gold")
     if option[5]: #sliderRotZ
         vp.addSlider2D(sliderRotZ, -1, +1, value=0, 
-                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z rotation > +", c="teal")
+                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z rotation > +", c="teal")
     
     vp.addSlider2D(sliderAlphaMeshOut, xmin=0.01, xmax=0.99, value=0.01,
                pos=[(0.95,0.25), (0.95,0.45)], c="blue", title="Ext.Mesh Opacity)")
@@ -1952,7 +1952,7 @@ def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True
 #%% func - modifyPlane
 def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, option):
     """
-    Function that shows a plot so that the user can redefine a plane
+    Function that shows a plot so that the user can define a plane
 
     Parameters
     ----------
@@ -2031,23 +2031,23 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
     plane = Plane(pos=pl_centre, normal=pl_normal, sx=box_size*1.2).color("gainsboro").alpha(1)
     
     if option[0]: #sliderX
-        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=pl_centre[0], 
-                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x position > +", c="crimson" )
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0], 
+                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
     if option[1]: #sliderY
-        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=pl_centre[1], 
-                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y position > +", c="dodgerblue" )
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1], 
+                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
     if option[2]: #sliderZ
-        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=pl_centre[2], 
-                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z position > +", c="limegreen")
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2], 
+                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
     if option[3]: #sliderRotX
         vp.addSlider2D(sliderRotX, -1, +1, value=0, 
-                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x rotation > +", c="deeppink")
+                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x rotation > +", c="deeppink")
     if option[4]: #sliderRotY
         vp.addSlider2D(sliderRotY, -1, +1, value=0, 
-                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y rotation > +", c="gold")
+                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y rotation > +", c="gold")
     if option[5]: #sliderRotZ
         vp.addSlider2D(sliderRotZ, -1, +1, value=0, 
-                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z rotation > +", c="teal")
+                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z rotation > +", c="teal")
     
     text = filename+"\n\n >> Define plane position to make cut ("+type_cut+")\n >> Close the window when done"
     txt = Text2D(text, c="k", font= 'CallingCode')
@@ -3895,7 +3895,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
     
     return cl_dirA, cl_dirB
 
-#%% Others (back-up)
+#%% Others (back-up / developing)
 # import numpy as np
 # def random_arr(low, high, size, rand_type):
 #     if rand_type == float:
@@ -3951,6 +3951,125 @@ def decodeDict (dict2classify, info):
         meas_param.append(param)
     
     return [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param]
+
+#%% func - getEllipsoid
+def getEllipsoid (filename, type_cut, mesh, kspl, xyz_bounds, option):
+    """
+    Function that shows a plot so that the user can define a plane (mesh opacity can be changed)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    type_cut : str
+        Text defining the type of cut that is going to be made with the defined plane
+    mesh_in : mesh
+        Internal mesh (vedo Mesh)
+    mesh_out : mesh
+        External mesh (vedo Mesh)
+    xyz_bounds : list of floats
+        x,y,z boundaries of mesh_out
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+
+    Returns
+    -------
+    plane : Plane
+        Final plane defined by the user
+    normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal 
+    rotX : list of floats
+        List of angles (deg) of the resulting rotation around the x-axis.
+    rotY : list of floats
+        List of angles (deg) of the resulting rotation around the y-axis.
+    rotZ : list of floats
+        List of angles (deg) of the resulting rotation around the z-axis.
+
+    """
+    
+    xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
+    x_size = xmax - xmin
+    y_size = ymax - ymin
+    z_size = zmax - zmin
+
+    box_size = max(x_size, y_size, z_size)*1.2
+    centre = kspl[len(kspl)*3//4]
+    end_inflow = kspl[-1]
+    normal = (0,1,0)
+    #print("centre:", centre)
+    
+    rotX = [0]
+    rotY = [0]
+    rotZ = [0]
+
+    # Functions to move and rotate plane
+    def sliderX(widget, event):
+        valueX = widget.GetRepresentation().GetValue()
+        ellipsoid.x(valueX)
+    
+    def sliderY(widget, event):
+        valueY = widget.GetRepresentation().GetValue()
+        ellipsoid.y(valueY)
+        
+    def sliderZ(widget, event):
+        valueZ = widget.GetRepresentation().GetValue()
+        ellipsoid.z(valueZ)
+        
+    def sliderRotX(widget, event):
+        valueRX = widget.GetRepresentation().GetValue()
+        rotX.append(valueRX)
+        ellipsoid.rotateX(valueRX, rad=False)
+        
+    def sliderRotY(widget, event):
+        valueRY = widget.GetRepresentation().GetValue()
+        rotY.append(valueRY)
+        ellipsoid.rotateY(valueRY, rad=False)
+        
+    def sliderRotZ(widget, event):
+        valueRZ = widget.GetRepresentation().GetValue()
+        rotZ.append(valueRZ)
+        ellipsoid.rotateZ(valueRZ, rad=False)
+        
+    def sliderAlphaMeshOut(widget, event):
+        valueAlpha = widget.GetRepresentation().GetValue()
+        ellipsoid.alpha(valueAlpha)
+    
+    vp = Plotter(N=1, axes=8)
+    axis1 = (200,0,0)
+    axis2 = (0,400,0)
+    axis3 = (0,0,200)
+    ellipsoid = Ellipsoid(pos=centre, axis1=axis1, axis2=axis2, axis3=axis3, c='r', alpha=0.5, res=24)
+    # plane = Plane(pos=centre, normal=normal, sx=box_size*1.2).color("gainsboro").alpha(1)
+    
+    if option[0]: #sliderX
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0], 
+                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
+    if option[1]: #sliderY
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1], 
+                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
+    if option[2]: #sliderZ
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2], 
+                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
+    if option[3]: #sliderRotX
+        vp.addSlider2D(sliderRotX, -1, +1, value=0, 
+                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x rotation > +", c="deeppink")
+    if option[4]: #sliderRotY
+        vp.addSlider2D(sliderRotY, -1, +1, value=0, 
+                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y rotation > +", c="gold")
+    if option[5]: #sliderRotZ
+        vp.addSlider2D(sliderRotZ, -1, +1, value=0, 
+                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z rotation > +", c="teal")
+    
+    vp.addSlider2D(sliderAlphaMeshOut, xmin=0.01, xmax=0.99, value=0.05,
+               pos=[(0.95,0.25), (0.95,0.45)], c="blue", title="Ext.Mesh Opacity)")
+    
+    text = filename+"\n\n >> Define plane position to make cut ("+type_cut+")\n >> Close the window when done"
+    txt = Text2D(text, c="k", font= 'CallingCode')
+    vp.show(mesh.alpha(1), ellipsoid, txt, viewup="y", zoom=1, interactive=True)
+    #azimuth=-90, elevation=0,
+    
+    return ellipsoid, rotX, rotY, rotZ
 
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcMeshes")
