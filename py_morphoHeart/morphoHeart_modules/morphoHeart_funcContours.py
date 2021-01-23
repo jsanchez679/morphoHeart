@@ -216,8 +216,8 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
             ch_processDict['G-Slc_tissueLayerLast'] = slc_last
             ch_processDict['A-AutomCloseContours'] = 'DONE'
             ch_processDict['B-ManualCloseContours'] = 'NO'
-            ch_processDict['C-ClosedInfTract'] = 'NO'
-            ch_processDict['C-ClosedOutfTract'] = 'NO'
+            ch_processDict['C-ClosedInflowTract'] = 'NO'
+            ch_processDict['C-ClosedOutflowTract'] = 'NO'
             ch_processDict['G-LastProcessingStep'] = 'A'
 
     saveDict(filename, processDict , 'processDict', directories[1], False)

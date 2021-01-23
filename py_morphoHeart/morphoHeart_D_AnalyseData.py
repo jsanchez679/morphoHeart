@@ -191,260 +191,260 @@ if init:
 
 
     #%%
-    import pandas as pd
-    import matplotlib.pyplot as plt
-
-    # Import Data
-    df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
-
-    # Plot
-    fig, axes = plt.subplots(1, 5, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
-    colors = ['tab:red', 'tab:blue', 'tab:green', 'tab:pink', 'tab:olive']
-
-    for i, (ax, cut) in enumerate(zip(axes.flatten(), df.cut.unique())):
-        print(cut)
-        x = df.loc[df.cut==cut, 'depth']
-        ax.hist(x, alpha=0.5, bins=100, density=True, stacked=True, label=str(cut), color=colors[i])
-        ax.set_title(cut)
-
-    plt.suptitle('Probability Histogram of Diamond Depths', y=1.05, size=16)
-    ax.set_xlim(50, 70); ax.set_ylim(0, 1);
-    plt.tight_layout();
-
-    import seaborn as sns
-    sns.set_style("white")
-
-    # Import data
-    #df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
-    x1 = df.loc[df.cut=='Ideal', 'depth']
-    x2 = df.loc[df.cut=='Fair', 'depth']
-    x3 = df.loc[df.cut=='Good', 'depth']
-
-    # Plot
-    kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
-
-    plt.figure(figsize=(10,7), dpi= 80)
-    sns.distplot(x1, color="dodgerblue", label="Compact", **kwargs)
-    sns.distplot(x2, color="orange", label="SUV", **kwargs)
-    sns.distplot(x3, color="deeppink", label="minivan", **kwargs)
-    plt.xlim(50,75)
-    plt.legend();
-
-
-    #%%
-    g = sns.catplot(x="Stage", y="SurfArea_Myoc", hue="Genotype_A", data=df_all)
-
-                    col="diet",
-
-
-    fig, axs = plt.subplots(2,5, figsize=(15, 6), facecolor='w', edgecolor='k')
-    fig.subplots_adjust(hspace = .5, wspace=.001)
-
-    axs = axs.ravel()
-
-    for i in range(10):
-
-        axs[i].contourf(np.random.rand(10,10),5,cmap=plt.cm.Oranges)
-        axs[i].set_title(str(250+i))
-    #%%
-    fig = plt.figure()
-    fig.add_subplot(2,2,1)   #top left
-    fig.add_subplot(2,2,2)   #top right
-    fig.add_subplot(2,2,3)   #bottom left
-    fig.add_subplot(2,2,4)   #bottom right
-    plt.show()
-
-    import seaborn as sns
-
-    sns.set_theme(style="ticks")
-
-    exercise = sns.load_dataset("exercise")
-
-    g = sns.catplot(x="time", y="pulse", hue="kind", data=exercise)
-
-    #%%
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import numpy as np
-    from sklearn.datasets import load_iris
-
-    data = load_iris()
-    fig, axes = plt.subplots(nrows=2, ncols=2)
-    fig.subplots_adjust(hspace=0.5)
-    fig.suptitle('Distributions of Iris Features')
-
-    for ax, feature, name in zip(axes.flatten(), data.data.T, data.feature_names):
-        sns.distplot(feature, ax=ax, bins=len(np.unique(data.data.T[0]))//2)
-        ax.set(title=name[:-4].upper(), xlabel='cm')
-
-
-    #%% Old codes
-    ax1 = sns.countplot(x="LeftRight""," data=df_ptsAtr)
-    #%%
-    g = sns.catplot(x="DorsVent", hue="LeftRight",# col="survived",
-                    data=df_ptsAtr, kind="count",
-                    height=4, aspect=.7);
-
-    # ax = df_ptsAtr.hist(column='Thickness', by='LeftRight', bins=10, grid=False,
-    #              figsize=(8,10), layout=(3,1), sharex=True, color='#86bf91',
-    #              zorder=2, rwidth=0.9)
-
-    # for i,x in enumerate(ax):
-
-    #     # Despine
-    #     x.spines['right'].set_visible(False)
-    #     x.spines['top'].set_visible(False)
-    #     x.spines['left'].set_visible(False)
-
-    #     # Switch off ticks
-    #     x.tick_params(axis="both", which="both", bottom="off", top="off",
-    #                   labelbottom="on", left="off", right="off", labelleft="on")
-
-    #     # Draw horizontal axis lines
-    #     vals = x.get_yticks()
-    #     for tick in vals:
-    #         x.axhline(y=tick, linestyle='dashed', alpha=0.4, color='#eeeeee', zorder=1)
-
-    #     # Set x-axis label
-    #     x.set_xlabel("Thickness", labelpad=20, weight='bold', size=12)
-
-    #     # Set y-axis label
-    #     if i == 1:
-    #         x.set_ylabel("Left-Right", labelpad=50, weight='bold', size=12)
-
-    #     # Format y-axis label
-    #     x.yaxis.set_major_formatter(StrMethodFormatter('{x:,g}'))
-    #     x.tick_params(axis='x', rotation=0)
-
-    #%% Filter dataframe #cardiac jelly thickness
-    df_filtThick = df_ptsClassAll[df_ptsClassAll['Thickness'] > 0]
-    df_filtThick.sample(20)
-
-    classif_list = []
-
-    for index, row in df_filtThick.iterrows():
-        classif = ''
-        AorV = row['Atr-Vent']
-        #Get Atrium
-        if AorV == 'atrium':
-            classif = classif +'A_'
-            #Dorsal-Ventral
-            DorV = row['Dors-Vent_Atr']
-            if DorV == 'dorsal':
-                classif = classif +'d'
-            else:
-                classif = classif +'v'
-        #Get Ventricle
-        if AorV == 'ventricle':
-            classif = classif +'V_'
-            #Dorsal-Ventral
-            DorV = row['Dors-Vent_Vent']
-            if DorV == 'dorsal':
-                classif = classif +'d'
-            else:
-                classif = classif +'v'
-
-        #Left-right
-        LorR = row['Left-Right']
-        if LorR == 'left':
-            classif = classif +'L'
-        else:
-            classif = classif +'R'
-
-        classif_list.append(classif)
-    cjf4.alert("wohoo",1)
-
-    df_filtThick['Class'] = classif_list
-    df_filtThick.drop(columns=['X_pts_cjOut', 'Y_pts_cjOut', 'Z_pts_cjOut'])
-
-    df_filtThick_title = filename[0]+'_df_filtThick.csv'
-    df_filtThick_dir = os.path.join(dir_txtNnpy, df_filtThick_title)
-    df_filtThick.to_csv(df_filtThick_dir)
-    cjf4.alert("countdown",1)
-
-    #%% Plot
-    df_filtAtr = df_filtThick[df_filtThick['Atr-Vent']=='atrium']
-
-    #%%
-    fig, axes = plt.subplots(1, 4, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
-    colors = ['tab:blue', 'tab:orange', 'tab:pink', 'tab:green', 'tab:olive']
-
-    for i, (ax, Class) in enumerate(zip(axes.flatten(), df_filtAtr.Class.unique())):
-        print(Class)
-        x = df_filtAtr.loc[df_filtAtr.Class==Class, 'Thickness']
-        ax.hist(x, alpha=0.7, bins=100, density=True, stacked=True, label=str(Class), color=colors[i])
-        ax.set_title(Class)
-
-    title = filename[0] + ' - Probability Histogram of Thickness'
-    plt.suptitle(title, y=1.05, size=12)
-    ax.set_xlim(-5, 25);
-    ax.set_ylim(0, 0.6);
-    plt.tight_layout();
-
-    #%%
-    sns.set_style("white")
-    A_vL = df_filtAtr.loc[df_filtAtr.Class=='A_vL', 'Thickness']
-    A_vR = df_filtAtr.loc[df_filtAtr.Class=='A_vR', 'Thickness']
-    A_dL = df_filtAtr.loc[df_filtAtr.Class=='A_dL', 'Thickness']
-    A_dR = df_filtAtr.loc[df_filtAtr.Class=='A_dR', 'Thickness']
-
-    # Plot
-    kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
-
-    plt.figure(figsize=(10,7), dpi= 80)
-    sns.distplot(A_vL, color="dodgerblue", label="A_vL", **kwargs)
-    sns.distplot(A_vR, color="orange", label="A_vR", **kwargs)
-    sns.distplot(A_dL, color="deeppink", label="A_dL", **kwargs)
-    sns.distplot(A_dR, color="lime", label="A_dR", **kwargs)
-    plt.xlim(-5,25)
-    plt.ylim(0,0.6)
-    plt.suptitle(title, y=0.95, size=12)
-    plt.legend();
-
-    #%%
-    # import pandas as pd
-    # import matplotlib.pyplot as plt
-
-    # # Import Data
-    # df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
-
-    # # Plot
-    # fig, axes = plt.subplots(1, 5, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
-    # colors = ['tab:red', 'tab:blue', 'tab:green', 'tab:pink', 'tab:olive']
-
-    # for i, (ax, cut) in enumerate(zip(axes.flatten(), df.cut.unique())):
-    #     print(cut)
-    #     x = df.loc[df.cut==cut, 'depth']
-    #     ax.hist(x, alpha=0.5, bins=100, density=True, stacked=True, label=str(cut), color=colors[i])
-    #     ax.set_title(cut)
-
-    # plt.suptitle('Probability Histogram of Diamond Depths', y=1.05, size=16)
-    # ax.set_xlim(50, 70); ax.set_ylim(0, 1);
-    # plt.tight_layout();
-
-    # import seaborn as sns
-    # sns.set_style("white")
-
-    # # Import data
-    # #df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
-    # x1 = df.loc[df.cut=='Ideal', 'depth']
-    # x2 = df.loc[df.cut=='Fair', 'depth']
-    # x3 = df.loc[df.cut=='Good', 'depth']
-
-    # # Plot
-    # kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
-
-    # plt.figure(figsize=(10,7), dpi= 80)
-    # sns.distplot(x1, color="dodgerblue", label="Compact", **kwargs)
-    # sns.distplot(x2, color="orange", label="SUV", **kwargs)
-    # sns.distplot(x3, color="deeppink", label="minivan", **kwargs)
-    # plt.xlim(50,75)
-    # plt.legend();
-
-    #%%
-    # #Hi @jsanchez679 ,
-    # have you already tried using vmin and vmax ? As in:
-    # https://github.com/marcomusy/vedo/blob/master/vedo/examples/basic/mesh_sharemap.py
-
-    # Another way could be using:
-    # mesh.mapper().SetScalarRange(x0,x1)
+#     import pandas as pd
+#     import matplotlib.pyplot as plt
+#
+#     # Import Data
+#     df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
+#
+#     # Plot
+#     fig, axes = plt.subplots(1, 5, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
+#     colors = ['tab:red', 'tab:blue', 'tab:green', 'tab:pink', 'tab:olive']
+#
+#     for i, (ax, cut) in enumerate(zip(axes.flatten(), df.cut.unique())):
+#         print(cut)
+#         x = df.loc[df.cut==cut, 'depth']
+#         ax.hist(x, alpha=0.5, bins=100, density=True, stacked=True, label=str(cut), color=colors[i])
+#         ax.set_title(cut)
+#
+#     plt.suptitle('Probability Histogram of Diamond Depths', y=1.05, size=16)
+#     ax.set_xlim(50, 70); ax.set_ylim(0, 1);
+#     plt.tight_layout();
+#
+#     import seaborn as sns
+#     sns.set_style("white")
+#
+#     # Import data
+#     #df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
+#     x1 = df.loc[df.cut=='Ideal', 'depth']
+#     x2 = df.loc[df.cut=='Fair', 'depth']
+#     x3 = df.loc[df.cut=='Good', 'depth']
+#
+#     # Plot
+#     kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
+#
+#     plt.figure(figsize=(10,7), dpi= 80)
+#     sns.distplot(x1, color="dodgerblue", label="Compact", **kwargs)
+#     sns.distplot(x2, color="orange", label="SUV", **kwargs)
+#     sns.distplot(x3, color="deeppink", label="minivan", **kwargs)
+#     plt.xlim(50,75)
+#     plt.legend();
+#
+# #  -------------------------- REVISAMEEEEE ------------------------- pallollito
+#     # #%%
+#     # g = sns.catplot(x="Stage", y="SurfArea_Myoc", hue="Genotype_A", data=df_all)
+#     #
+#     #                 col="diet",
+#
+#
+#     fig, axs = plt.subplots(2,5, figsize=(15, 6), facecolor='w', edgecolor='k')
+#     fig.subplots_adjust(hspace = .5, wspace=.001)
+#
+#     axs = axs.ravel()
+#
+#     for i in range(10):
+#
+#         axs[i].contourf(np.random.rand(10,10),5,cmap=plt.cm.Oranges)
+#         axs[i].set_title(str(250+i))
+#     #%%
+#     fig = plt.figure()
+#     fig.add_subplot(2,2,1)   #top left
+#     fig.add_subplot(2,2,2)   #top right
+#     fig.add_subplot(2,2,3)   #bottom left
+#     fig.add_subplot(2,2,4)   #bottom right
+#     plt.show()
+#
+#     import seaborn as sns
+#
+#     sns.set_theme(style="ticks")
+#
+#     exercise = sns.load_dataset("exercise")
+#
+#     g = sns.catplot(x="time", y="pulse", hue="kind", data=exercise)
+#
+#     #%%
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#     import numpy as np
+#     from sklearn.datasets import load_iris
+#
+#     data = load_iris()
+#     fig, axes = plt.subplots(nrows=2, ncols=2)
+#     fig.subplots_adjust(hspace=0.5)
+#     fig.suptitle('Distributions of Iris Features')
+#
+#     for ax, feature, name in zip(axes.flatten(), data.data.T, data.feature_names):
+#         sns.distplot(feature, ax=ax, bins=len(np.unique(data.data.T[0]))//2)
+#         ax.set(title=name[:-4].upper(), xlabel='cm')
+#
+#
+#     #%% Old codes
+#     ax1 = sns.countplot(x="LeftRight""," data=df_ptsAtr)
+#     #%%
+#     g = sns.catplot(x="DorsVent", hue="LeftRight",# col="survived",
+#                     data=df_ptsAtr, kind="count",
+#                     height=4, aspect=.7);
+#
+#     # ax = df_ptsAtr.hist(column='Thickness', by='LeftRight', bins=10, grid=False,
+#     #              figsize=(8,10), layout=(3,1), sharex=True, color='#86bf91',
+#     #              zorder=2, rwidth=0.9)
+#
+#     # for i,x in enumerate(ax):
+#
+#     #     # Despine
+#     #     x.spines['right'].set_visible(False)
+#     #     x.spines['top'].set_visible(False)
+#     #     x.spines['left'].set_visible(False)
+#
+#     #     # Switch off ticks
+#     #     x.tick_params(axis="both", which="both", bottom="off", top="off",
+#     #                   labelbottom="on", left="off", right="off", labelleft="on")
+#
+#     #     # Draw horizontal axis lines
+#     #     vals = x.get_yticks()
+#     #     for tick in vals:
+#     #         x.axhline(y=tick, linestyle='dashed', alpha=0.4, color='#eeeeee', zorder=1)
+#
+#     #     # Set x-axis label
+#     #     x.set_xlabel("Thickness", labelpad=20, weight='bold', size=12)
+#
+#     #     # Set y-axis label
+#     #     if i == 1:
+#     #         x.set_ylabel("Left-Right", labelpad=50, weight='bold', size=12)
+#
+#     #     # Format y-axis label
+#     #     x.yaxis.set_major_formatter(StrMethodFormatter('{x:,g}'))
+#     #     x.tick_params(axis='x', rotation=0)
+#
+#     #%% Filter dataframe #cardiac jelly thickness
+#     df_filtThick = df_ptsClassAll[df_ptsClassAll['Thickness'] > 0]
+#     df_filtThick.sample(20)
+#
+#     classif_list = []
+#
+#     for index, row in df_filtThick.iterrows():
+#         classif = ''
+#         AorV = row['Atr-Vent']
+#         #Get Atrium
+#         if AorV == 'atrium':
+#             classif = classif +'A_'
+#             #Dorsal-Ventral
+#             DorV = row['Dors-Vent_Atr']
+#             if DorV == 'dorsal':
+#                 classif = classif +'d'
+#             else:
+#                 classif = classif +'v'
+#         #Get Ventricle
+#         if AorV == 'ventricle':
+#             classif = classif +'V_'
+#             #Dorsal-Ventral
+#             DorV = row['Dors-Vent_Vent']
+#             if DorV == 'dorsal':
+#                 classif = classif +'d'
+#             else:
+#                 classif = classif +'v'
+#
+#         #Left-right
+#         LorR = row['Left-Right']
+#         if LorR == 'left':
+#             classif = classif +'L'
+#         else:
+#             classif = classif +'R'
+#
+#         classif_list.append(classif)
+#     cjf4.alert("wohoo",1)
+#
+#     df_filtThick['Class'] = classif_list
+#     df_filtThick.drop(columns=['X_pts_cjOut', 'Y_pts_cjOut', 'Z_pts_cjOut'])
+#
+#     df_filtThick_title = filename[0]+'_df_filtThick.csv'
+#     df_filtThick_dir = os.path.join(dir_txtNnpy, df_filtThick_title)
+#     df_filtThick.to_csv(df_filtThick_dir)
+#     cjf4.alert("countdown",1)
+#
+#     #%% Plot
+#     df_filtAtr = df_filtThick[df_filtThick['Atr-Vent']=='atrium']
+#
+#     #%%
+#     fig, axes = plt.subplots(1, 4, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
+#     colors = ['tab:blue', 'tab:orange', 'tab:pink', 'tab:green', 'tab:olive']
+#
+#     for i, (ax, Class) in enumerate(zip(axes.flatten(), df_filtAtr.Class.unique())):
+#         print(Class)
+#         x = df_filtAtr.loc[df_filtAtr.Class==Class, 'Thickness']
+#         ax.hist(x, alpha=0.7, bins=100, density=True, stacked=True, label=str(Class), color=colors[i])
+#         ax.set_title(Class)
+#
+#     title = filename[0] + ' - Probability Histogram of Thickness'
+#     plt.suptitle(title, y=1.05, size=12)
+#     ax.set_xlim(-5, 25);
+#     ax.set_ylim(0, 0.6);
+#     plt.tight_layout();
+#
+#     #%%
+#     sns.set_style("white")
+#     A_vL = df_filtAtr.loc[df_filtAtr.Class=='A_vL', 'Thickness']
+#     A_vR = df_filtAtr.loc[df_filtAtr.Class=='A_vR', 'Thickness']
+#     A_dL = df_filtAtr.loc[df_filtAtr.Class=='A_dL', 'Thickness']
+#     A_dR = df_filtAtr.loc[df_filtAtr.Class=='A_dR', 'Thickness']
+#
+#     # Plot
+#     kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
+#
+#     plt.figure(figsize=(10,7), dpi= 80)
+#     sns.distplot(A_vL, color="dodgerblue", label="A_vL", **kwargs)
+#     sns.distplot(A_vR, color="orange", label="A_vR", **kwargs)
+#     sns.distplot(A_dL, color="deeppink", label="A_dL", **kwargs)
+#     sns.distplot(A_dR, color="lime", label="A_dR", **kwargs)
+#     plt.xlim(-5,25)
+#     plt.ylim(0,0.6)
+#     plt.suptitle(title, y=0.95, size=12)
+#     plt.legend();
+#
+#     #%%
+#     # import pandas as pd
+#     # import matplotlib.pyplot as plt
+#
+#     # # Import Data
+#     # df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
+#
+#     # # Plot
+#     # fig, axes = plt.subplots(1, 5, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
+#     # colors = ['tab:red', 'tab:blue', 'tab:green', 'tab:pink', 'tab:olive']
+#
+#     # for i, (ax, cut) in enumerate(zip(axes.flatten(), df.cut.unique())):
+#     #     print(cut)
+#     #     x = df.loc[df.cut==cut, 'depth']
+#     #     ax.hist(x, alpha=0.5, bins=100, density=True, stacked=True, label=str(cut), color=colors[i])
+#     #     ax.set_title(cut)
+#
+#     # plt.suptitle('Probability Histogram of Diamond Depths', y=1.05, size=16)
+#     # ax.set_xlim(50, 70); ax.set_ylim(0, 1);
+#     # plt.tight_layout();
+#
+#     # import seaborn as sns
+#     # sns.set_style("white")
+#
+#     # # Import data
+#     # #df = pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/diamonds.csv')
+#     # x1 = df.loc[df.cut=='Ideal', 'depth']
+#     # x2 = df.loc[df.cut=='Fair', 'depth']
+#     # x3 = df.loc[df.cut=='Good', 'depth']
+#
+#     # # Plot
+#     # kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
+#
+#     # plt.figure(figsize=(10,7), dpi= 80)
+#     # sns.distplot(x1, color="dodgerblue", label="Compact", **kwargs)
+#     # sns.distplot(x2, color="orange", label="SUV", **kwargs)
+#     # sns.distplot(x3, color="deeppink", label="minivan", **kwargs)
+#     # plt.xlim(50,75)
+#     # plt.legend();
+#
+#     #%%
+#     # #Hi @jsanchez679 ,
+#     # have you already tried using vmin and vmax ? As in:
+#     # https://github.com/marcomusy/vedo/blob/master/vedo/examples/basic/mesh_sharemap.py
+#
+#     # Another way could be using:
+#     # mesh.mapper().SetScalarRange(x0,x1)
