@@ -6,6 +6,7 @@ morphoHeart - B. CREATE 3D VOLUMES AND MESHES TO EXTRACT CENTRELINE
 
 #%% Importing python packages
 import os
+from time import perf_counter
 from vtkplotter import *
 from vtkplotter import embedWindow
 embedWindow(False)
@@ -26,12 +27,14 @@ def setWorkingDir (root_path, init):
 root_path, init = setWorkingDir(os.getcwd(),init)
 save = True
 
+#%% Start B_Create3DVols
 if init:
     # Importing morphoHeart packages
     import morphoHeart_funcBasics as fcBasics
     import morphoHeart_funcContours as fcCont
     import morphoHeart_funcMeshes as fcMeshes
-
+    tic = perf_counter()
+    
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
@@ -150,12 +153,12 @@ if init:
                                      dicts = [dict_planes, dict_pts, dict_kspl], plotshow = True)
     myoc_int_CL, endo_ext_CL = meshes4clf
 
-    #%% Save meshes 4 centreline
+    #%% Save 
     if save:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [myoc_int_CL, endo_ext_CL], names =['myoc_int_cut4cl','endo_ext_cut4cl'],
                                       dict_colour = dict_colour, dir_stl = directories[3], extension='stl')
 
-    #%% Plot and save all meshes
+    # Plot and save all meshes
     vp = Plotter(N=6, axes=7)
     vp.show(myoc_cut, txt, at=0, zoom=1)
     vp.show(endo_cut, at=1, zoom=1)
@@ -164,10 +167,15 @@ if init:
     vp.show(myoc_cut, endo_cut, cj_all, at=4)
     vp.show(endo_ext_CL, at=5, zoom=1, interactive=True)
 
-    #%% Merge and save all dictionaries
-    dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour],
+    # Merge and save all dictionaries
+    if save:
+        dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour],
                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'], dir2save = directories[0])
 
-    #%% Instructions for VMTK
+    # Instructions for VMTK
     fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
                            dir_cl = directories[3], printshow = True)
+    toc = perf_counter()
+    fcBasics.printTime(tic, toc, 'Create 3D Volumes')
+
+init = True

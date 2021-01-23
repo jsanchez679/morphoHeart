@@ -307,6 +307,78 @@ def classifyPts(AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, info):
     
     return pts_classFinal
 
+#%% func - classifyPtAtSidesofPlane
+def classifyPtAtSidesofPlane(pt, d, normal, classes_sorted):
+    """
+    
+
+    Parameters
+    ----------
+    pt : TYPE
+        DESCRIPTION.
+    d : TYPE
+        DESCRIPTION.
+    normal : TYPE
+        DESCRIPTION.
+    classes_sorted : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    pts_class : TYPE
+        DESCRIPTION.
+
+    """
+    x,y,z = pt
+    a,b,c = normal
+    
+    dotProd_pt = dot((a,b,c), (x,y,z))
+    #print("dotProd_pt:", dotProd_pt)
+    if dotProd_pt < d:
+        pts_class = classes_sorted[0]
+    else:
+        pts_class = classes_sorted[-1]
+    #print("Point classified as:", pts_class)
+    
+    return pts_class
+
+#%% func - intersecOfSets
+def intersecOfSets(arr1, arr2, arr3): 
+    """
+    
+
+    Parameters
+    ----------
+    arr1 : TYPE
+        DESCRIPTION.
+    arr2 : TYPE
+        DESCRIPTION.
+    arr3 : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    final_list : TYPE
+        DESCRIPTION.
+
+    """
+    
+    # https://www.geeksforgeeks.org/python-program-find-common-elements-three-lists-using-sets/
+    # Converting the arrays into sets 
+    s1 = set(arr1) 
+    s2 = set(arr2) 
+    s3 = set(arr3) 
+      
+    # Calculates intersection of sets on s1 and s2 
+    set1 = s1.intersection(s2) 
+    # Calculates intersection of sets on set1 and s3 
+    result_set = set1.intersection(s3)
+    # Converts resulting set to list 
+    final_list = list(result_set) 
+    #print(final_list) 
+    
+    return final_list
+
 #%% func - ptsClass2df 
 def ptsClass2df(pts_classFinal, meas_param, names):
     

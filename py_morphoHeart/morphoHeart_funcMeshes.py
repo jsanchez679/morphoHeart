@@ -38,7 +38,7 @@ import json
 
 #%% Importing morphoHeart packages
 from morphoHeart_funcBasics import alert, ask4input#, saveDict
-from morphoHeart_funcContours import save_s3s
+from morphoHeart_funcContours import save_s3s, loadStacks
 
 #%% class - NumpyArrayEncoder
 # Definition of class to save dictionary
@@ -56,6 +56,30 @@ class NumpyArrayEncoder(json.JSONEncoder):
 #%% - LOADING 
 #%% func - openMeshes
 def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
+    """
+    Function to load a list of meshes
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes_names : list of strings 
+        List with the names of the meshes to load.
+    extension : str
+        Extension to saved mesh 'vtk'/'stl'.
+    dir_stl : path
+        Path to the folder where the meshes are saved.
+    alpha : list of floats 
+        List of opacity values to assign to each mesh
+    dict_colour : dictionary
+        dictionary with information about the meshes colour 
+
+    Returns
+    -------
+    meshes_out : list of meshes
+        output List of meshes in same order as meshes_names.
+
+    """
     
     names_all = ['myoc','myoc_ext','myoc_int','myoc_atr','myoc_vent',
                   'endo','endo_ext','endo_int','endo_atr','endo_vent', 
@@ -88,6 +112,30 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
 
 #%% func - openThicknessMeshes 
 def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy):
+    """
+    Function to load a list of meshes that are coloured by a particular property (e.g. thickness, ballooning)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes_names : list of strings 
+        List with the names of the meshes to load.
+    extension : str
+        Extension to saved mesh 'vtk'/'stl'.
+    dir_stl :  path
+        Path to the folder where the meshes are saved.
+    dir_txtNnpy :  path
+        Path to the folder where the np arrays are saved.
+
+    Returns
+    -------
+    meshes_out : list of meshes
+        output List of meshes in same order as meshes_names.
+    colour_arrays : list of numpy arrays 
+        list of numpy arrays containing information of thickness/ballooning to color meshes
+
+    """
     
     names_all = ['myoc_intBall', 'myoc_extBall', 'myoc_thickness','endo_thickness','cj_thickness']
     legend_all = ['Int.Myoc Ball.','Ext.Myoc Ball.','Myoc.Thickness','Endo.Thickness','CJ.Thickness']
@@ -129,7 +177,26 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy)
 #%% - DICTIONARIES 
 #%% func - fillNsaveObjDict
 def fillNsaveObjDict(filename, dicts, names, dir2save):
-    
+    """
+    Function to create an object dictionary of all the objects created for each of the analysed hearts
+
+    Parameters
+    ----------
+    filename :  str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dicts : list of dictionaries
+        [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+    names : list of names for dicts
+        List of the names to use as keys to create a dict of dicts  ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'(, 'dict_shapes')].
+    dir2save : path
+        Path to the folder where the dictionaries are saved.
+
+    Returns
+    -------
+    dict_obj : dictionary
+        Dictionary of dictionaries [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+
+    """
     print('- Merging dictionaries...')
     dict_obj = dict()
     for i, sp_dict, name in zip(count(), dicts, names):
@@ -148,6 +215,20 @@ def fillNsaveObjDict(filename, dicts, names, dir2save):
 
 #%% func - splitDicts
 def splitDicts(dict_obj):
+    """
+    Function that splits the dictionary of dictionaries into a list of dictionaries
+
+    Parameters
+    ----------
+    dict_obj : dictionary
+        Dictionary of dictionaries [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+
+    Returns
+    -------
+    dicts_all : list of dictionaries
+        [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+
+    """
     
     dicts_all = []
     for i, name in enumerate(list(dict_obj.keys())):
@@ -156,8 +237,32 @@ def splitDicts(dict_obj):
         
     return dicts_all
 
-#%% func - addPlane2Dict
+#%% func - addPlane2Dict (TO REMOVE)
 def addPlane2Dict (plane, pl_centre, pl_normal, info, dict_planes, print_txt = True):
+    """
+    Function that adds a plane to dict_planes
+
+    Parameters
+    ----------
+    plane : Plane 
+        Plane to add to dict - (vedo Plane)
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre 
+    pl_normal : list of floats
+        List with the x,y,z coordinates of the plane's normal
+    info : str
+        Additional text to include in the plane name.
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_planes : dictionary
+        Resulting dictionary where 'plane' was added
+
+    """
     
     if info =='':
         specific_plane = dict_planes[plane.legend()]= dict()
@@ -175,6 +280,30 @@ def addPlane2Dict (plane, pl_centre, pl_normal, info, dict_planes, print_txt = T
 
 #%% func - addPlanes2Dict
 def addPlanes2Dict (planes, pls_centre, pls_normal, info, dict_planes, print_txt = True):
+    """
+     Function that adds a list of planes to dict_planes
+
+    Parameters
+    ----------
+    planes : List of Plane 
+        Planes to add to dict - (vedo Planes)
+    pls_centre : list of list of floats
+        list of List with the x,y,z coordinates of each of the planes' centre 
+    pls_normal : list of list of floats
+        list of List with the x,y,z coordinatesof each of the planes' normal
+    info :  str
+        Additional text to include in the planes names.
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    print_txt :  bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_planes : dictionary
+        Resulting dictionary with planes information updated
+
+    """
     
     for i, plane, inf in zip(count(), planes, info):
         if inf =='':
@@ -191,8 +320,28 @@ def addPlanes2Dict (planes, pls_centre, pls_normal, info, dict_planes, print_txt
     
     return dict_planes
 
-#%% func - addPoint2Dict
+#%% func - addPoint2Dict (TO REMOVE)
 def addPoint2Dict (sphere, info, dict_pts, print_txt = True):
+    """
+    Function that adds a sphere to dict_pts
+
+    Parameters
+    ----------
+    sphere : Sphere 
+        Sphere to add to dict - (vedo Sphere)
+    info : str
+        Additional text to include in the planes names.
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    print_txt :  bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_pts : dictionary
+        Resulting dictionary where 'sphere' was added
+
+    """
     
     if info =='':
         specific_pt = dict_pts[sphere.legend()]= dict()
@@ -209,6 +358,26 @@ def addPoint2Dict (sphere, info, dict_pts, print_txt = True):
 
 #%% func - addPoints2Dict
 def addPoints2Dict (spheres, info, dict_pts, print_txt = True):
+    """
+    Function that adds a list of spheres to dict_pts
+
+    Parameters
+    ----------
+    spheres : List of Spheres 
+        List of Spheres to add to dict - (vedo Spheres)
+    info : str
+        Additional text to include in the planes names.
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    print_txt :  bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_pts : dictionary
+        Resulting dictionary where the list of 'spheres' was added
+
+    """
     
     for i, sph, inf in zip(count(), spheres, info):
         if inf =='':
@@ -224,8 +393,28 @@ def addPoints2Dict (spheres, info, dict_pts, print_txt = True):
     
     return dict_pts
 
-#%% func - addKSpline2Dict
+#%% func - addKSpline2Dict (TO REMOVE)
 def addKSpline2Dict (kspl, info, dict_kspl, print_txt = True):
+    """
+    Function that adds a splines to dict_kspl
+
+    Parameters
+    ----------
+    kspl : Ksplines 
+        Kspline to add to dict (vedo KSplines)
+    info : str
+        Additional text to include in the planes names.
+    dict_kspl : dictionary
+        Initialised dictionary with kspline information
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_kspl : TYPE
+        DESCRIPTION.
+
+    """
     
     if info =='':
         specific_kspl = dict_kspl[kspl.legend()]= dict()
@@ -242,6 +431,26 @@ def addKSpline2Dict (kspl, info, dict_kspl, print_txt = True):
 
 #%% func - addKSplines2Dict
 def addKSplines2Dict (kspls, info, dict_kspl, print_txt = True):
+    """
+    Function that adds a list of splines to dict_kspl
+
+    Parameters
+    ----------
+    kspls : List of Ksplines 
+        List of Kspline to add to dict (vedo KSplines)
+    info : str
+        Additional text to include in the planes names.
+    dict_kspl : dictionary
+        Initialised dictionary with kspline information
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_kspl : dictionary
+        Resulting dictionary where the list of 'ksplines' was added
+
+    """
     
     for i, kspl, inf in zip(count(), kspls, info):
         #print(i)
@@ -260,6 +469,28 @@ def addKSplines2Dict (kspls, info, dict_kspl, print_txt = True):
 
 #%% func - addShapes2Dict 
 def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
+    """
+    Function that adds a list of shapes to dict_kspl
+
+    Parameters
+    ----------
+    shapes : list of shapes
+        List of shapes (ribbons, spheres, etc) to add to dict- (vedo Objects) 
+    info : str
+        Additional text to include in the planes names.
+    dict_shapes : dictionary
+        Initialised dictionary with kspline information
+    radius : list of floats
+        List of floats with the radii of the spheres (if applicable)
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    dict_shapes : dictionary
+        Resulting dictionary where the list of 'shapes' was added
+
+    """
     
     for i, sp_shape, inf, radii in zip(count(), shapes, info, radius):
         if inf =='':
@@ -281,6 +512,25 @@ def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
 #%% - DATAFRAMES
 #%% func - addSurfArea2df
 def addSurfArea2df (df_res, file_num,  meshes):
+    """
+    Function that measures the surface area of a list of meshes given as input and adds it to an existing dataframe 
+
+    Parameters
+    ----------
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+    file_num : int
+        Index number of the selected heart being processed.
+    meshes : list of meshes (vedo Meshes)
+        List of meshes from which the surface area wants to be measured.
+
+    Returns
+    -------
+    df_resFilled : dataframe
+        Dataframe with the updated measured information of the heart being processed.
+
+    """
+    
     names = ['Myoc', 'Int.Myoc', 'Ext.Myoc', 'Endo', 'Int.Endo', 'Ext.Endo', 'CJ', 'Int.CJ', 'Ext.CJ']
     df_resFilled = df_res
     
@@ -295,6 +545,25 @@ def addSurfArea2df (df_res, file_num,  meshes):
 
 #%% func - addLayersVolume2df
 def addLayersVolume2df (df_res, file_num,  meshes):
+    """
+    Function that measures the volume of a list of meshes given as input and adds it to an existing dataframe 
+
+    Parameters
+    ----------
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+    file_num : int
+        Index number of the selected heart being processed.
+    meshes :  list of meshes (vedo Meshes)
+        List of meshes from which the volume wants to be measured.
+
+    Returns
+    -------
+    df_resFilled : dataframe
+        Resulting dataframe where the volume information was added.
+
+    """
+    
     names = ['Myoc', 'Atr.Myoc', 'Vent.Myoc','Atr.ExtMyoc', 'Vent.ExtMyoc', 
              'Endo', 'Atr.Endo', 'Vent.Endo', 'Atr.IntEndo', 'Vent.IntEndo', 
              'CJ', 'Atr.CJ', 'Vent.CJ']
@@ -329,6 +598,24 @@ def addLayersVolume2df (df_res, file_num,  meshes):
 
 #%% func - addIntExtVol2df
 def addIntExtVol2df(df_res, file_num,  meshes):
+    """
+    Function that measures the volume of a list of external meshes given as input and adds it to an existing dataframe 
+
+    Parameters
+    ----------
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+    file_num : int
+        Index number of the selected heart being processed.
+    meshes : list of meshes (vedo Meshes)
+        List of meshes from which the volume wants to be measured.
+
+    Returns
+    -------
+    df_resFilled : dataframe
+        Resulting dataframe where the volume information was added.
+
+    """
     names = ['Int.Myoc', 'Ext.Myoc', 'Int.Endo', 'Ext.Endo']
     df_resFilled = df_res
     
@@ -341,7 +628,26 @@ def addIntExtVol2df(df_res, file_num,  meshes):
 
 #%% func - addLinearMeas2df
 def addLinearMeas2df(df_res, file_num, lines, kspl_CL):
-    
+    """
+    Function that measures the length of a list of lines/ksplines given as input and adds it to an existing dataframe 
+
+    Parameters
+    ----------
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+    file_num : int
+        Index number of the selected heart being processed.
+    lines : list of lines (vedo Lines)
+        List of lines from which the length wants to be measured.
+    kspl_CL : list of ksplines (vedo KSplines)
+        List of ksplines from which the length wants to be measured.
+
+    Returns
+    -------
+    df_resFilled :  dataframe
+        Resulting dataframe where the length measurements were added.
+
+    """
     df_resFilled = df_res
     for nl, line in enumerate(lines):
         length_l = line.length()
@@ -357,6 +663,26 @@ def addLinearMeas2df(df_res, file_num, lines, kspl_CL):
 
 #%% func - addOrientationAngles2df
 def addOrientationAngles2df(df_res, file_num, angles, names):
+    """
+    Function that adds a list of angles (orientations) to an existing dataframe 
+
+    Parameters
+    ----------
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+    file_num : int
+        Index number of the selected heart being processed.
+    angles : list of floats
+        List with the angle values to be added to dataframe.
+    names : list of str
+        List with the names that will be given to the angle values in the dataframe.
+
+    Returns
+    -------
+    df_resFilled : dataframe
+        Resulting dataframe where the angle measurements were added.
+
+    """
     
     df_resFilled = df_res
     for i, angle, name in zip(count(), angles, names):
@@ -367,6 +693,30 @@ def addOrientationAngles2df(df_res, file_num, angles, names):
 #%% - S3s MANIPULATION
 #%% func - maskChamberS3s 
 def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
+    """
+    Function used to cut the heart into chambers (atrium and ventricle). 
+    For this, the s3_mask given as input is cut with a plane whose normal and centre are also given, creating two 
+    new arrays containing each of the chambers.
+
+    Parameters
+    ----------
+    s3_mask : numpy array of booleans
+        Array with information about the heart layer (int/ext/all). The size of this array corresponds to the size of the original stack.
+    pl_normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre 
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+
+    Returns
+    -------
+    s3_atr : numpy array of booleans
+        Resulting array with information of the atrium of the heart. Final size is same size as the input array. 
+    s3_vent : numpy array of booleans
+        Resulting array with information of the ventricle of the heart. Final size is same size as the input array. 
+
+    """
     
     # Get dimensions of stack
     xdim, ydim, zdim = s3_mask.shape
@@ -384,7 +734,9 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     d_pve_pix_um = s3_mask_v*d_pix_um
     # Duplicate s3_mask_v to initialise atrium and ventricle
     s3_vent_v = np.copy(s3_mask_v)
+    s3_vent_v = s3_vent_v.astype('uint8')
     s3_atr_v = np.copy(s3_mask_v)
+    s3_atr_v = s3_atr_v.astype('uint8')
     # Find all positions in d_pve_pix_um that are at either side of the plane
     pos_atr = np.where(d_pve_pix_um < 0)[0]
     pos_vent = np.where(d_pve_pix_um > 0)[0]
@@ -394,50 +746,6 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     # Reshape vector into matrix/stack
     s3_vent = s3_vent_v.reshape((xdim, ydim, zdim))
     s3_atr = s3_atr_v.reshape((xdim, ydim, zdim))
-    
-    # OLD VERSION
-    # s3_atr =  np.zeros_like(s3_mask, dtype='bool')
-    # s3_vent =  np.zeros_like(s3_mask, dtype='bool')
-    
-    # #print('Masking Chambers s3 - ' + option)
-    # # Get coordinates of pixels that have a value = 1
-    # pix_coord_pos = np.where(s3_mask == 1)
-    # # Make normal of plane unitary 
-    # normal_unit = unit_vector(pl_normal)
-    # normalx10 = [k*100 for k in normal_unit]
-    # # Create points at either side of the plane
-    # pt_atr = pl_centre+normalx10
-    # pt_vent = pl_centre-normalx10
-    
-    # # Get plane values
-    # d = normal_unit.dot(pl_centre)
-    # a, b, c = normal_unit
-    # #print("Normal_unit", normal_unit)
-    # #print("Plane d", d)
-    
-    # x_atr,y_atr,z_atr = pt_atr
-    # dotProd_pt_atr = dot((a,b,c), (x_atr,y_atr,z_atr))
-    # #print("dotProd_pt_atr:", dotProd_pt_atr)
-    # x_vent,y_vent,z_vent = pt_vent
-    # dotProd_pt_vent = dot((a,b,c), (x_vent,y_vent,z_vent))
-    # #print("dotProd_pt_vent:", dotProd_pt_vent)
-    
-    # bar = Bar('Masking Chambers s3', max = 100, suffix = suffix, check_tty=False, hide_cursor=False)
-    # num_pts = round(len(pix_coord_pos[0])/100)
-    # for i, x, y, z in zip(count(), pix_coord_pos[0], pix_coord_pos[1], pix_coord_pos[2]):
-    #     # Pix coordinates = [x,y,z]
-    #     # [x,y,z] * resolution = Coordinates in um [x_um, y_um, z_um]
-    #     pt_um = [x,y,z]*np.array(resolution)
-    #     x_um, y_um, z_um = pt_um
-    #     # Find dot product to know on which side of the plane each pix is
-    #     dotProd_pt = dot((a,b,c), (x_um, y_um, z_um))
-    #     if dotProd_pt > d and dotProd_pt_atr > d or dotProd_pt < d and dotProd_pt_atr < d:
-    #         s3_atr[x,y,z] = 1
-    #     elif dotProd_pt > d and dotProd_pt_vent > d or dotProd_pt < d and dotProd_pt_vent < d:
-    #         s3_vent[x,y,z] = 1
-            
-    #     if i % num_pts == 0:
-    #         bar.next()
         
     # bar.finish()
     alert('wohoo',1)
@@ -446,6 +754,38 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
 
 #%% func - selectCutS3sOptMx
 def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
+    """
+    Function used to cut inflow and/or outflow tract of the s3 masks (s3s2cut) given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    s3s2cut : list of numpy arrays
+        list containing the masks of all the different tissue layers that want to be cut
+    m_endo : mesh
+        Endocardial mesh. (vedo Mesh)
+    m_myoc : mesh
+        Myicardial mesh. (vedo Mesh)
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    save : boolean
+        True if you want to save the final masks, else False.
+
+    Returns
+    -------
+    s3s_cut :  list of numpy arrays
+        resulting list containing the cut masks
+    meshes_cut : list of meshes (vedo Meshes)
+        List of all the surface reconstructions created with the cut masks
+    dict_planes :  dictionary
+        Resulting dictionary with planes information updated
+
+    """
     
     s3_ch0_int, s3_ch0_ext, s3_ch0, s3_ch1_int, s3_ch1_ext_cl, s3_ch1_cl = s3s2cut
     
@@ -593,186 +933,30 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
     
     return s3s_cut, meshes_cut, dict_planes
 
-# OLD VERSION
-# #%% func - selectCutS3sOpt
-# def selectCutS3sOpt(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
-    
-#     s3_ch0_int, s3_ch0_ext, s3_ch0, s3_ch1_int, s3_ch1_ext_cl, s3_ch1_cl = s3s2cut
-    
-#     # Create new s3s to save cuts
-#     s3_ch0_cut = s3_ch0; s3_ch0_int_cut = s3_ch0_int; s3_ch0_ext_cut = s3_ch0_ext
-#     s3_ch1_cut = s3_ch1_cl; s3_ch1_int_cut = s3_ch1_int; s3_ch1_ext_cut = s3_ch1_ext_cl
-    
-#     cut_type = ['inflow', 'outflow']
-#     cuts = []
-#     pls_normal = []
-#     pls_centre = []
-#     cuts_selected = []
-    
-#     # Define what to cut from each layer
-#     myoc_cuts = []; endo_cuts = []
-    
-#     for cut in cut_type:
-#         text = filename+"\n\n >> Take a closer look at the -" +cut + "- of both meshes \n\tto decide which layer to cut\n >> [0]:myoc/[1]:endo/[2]:both/[3]:none\n >> Close the window when done"
-#         txt = Text2D(text, c="k", font= 'CallingCode')
-#         vp = Plotter(N=3, axes=4)
-#         vp.show(m_myoc, txt, at=0, zoom=1)
-#         vp.show(m_endo, at=1, zoom=1)
-#         vp.show(m_myoc, m_endo, at=2, zoom=1, interactive=True)
-        
-#         q_cuts = ask4input('Select the layer from which you want to cut the -'+ cut + '- tract \n  [0]:myoc/[1]:endo/[2]:both/[3]:none?: ',int)
-#         cuts.append(q_cuts)
-        
-#         if q_cuts == 0 or q_cuts == 1 or q_cuts == 2:
-#             cuts_selected.append(cut)
-#             # Get plane to cut
-#             plane_cut, pl_cut_centre, pl_cut_normal = getPlane(filename = filename, type_cut = cut, info = '', mesh_in = m_endo, 
-#                                                                         mesh_out = m_myoc)
-#             # Reorient plane to images (s3)
-#             plane_im, pl_im_centre, pl_im_normal = rotatePlane2Images(pl_cut_centre, pl_cut_normal, type_cut = cut)
-#             pls_normal.append(pl_im_normal); pls_centre.append(pl_im_centre)
-#             #Save planes to dict
-#             dict_planes = addPlanes2Dict(planes = [plane_cut, plane_im], pls_centre = [pl_cut_centre ,pl_im_centre], 
-#                                                     pls_normal = [pl_cut_normal, pl_im_normal], info = ['',''], dict_planes = dict_planes)
-#             if q_cuts == 0 or q_cuts == 2:
-#                 myoc_cuts.append(cut)
-#             if q_cuts == 1 or q_cuts == 2:
-#                 endo_cuts.append(cut)
-                
-#     # Get data from cutting planes
-#     # d_cuts, normal_cuts, d_red, d_green = getCuttingPlanesInfoMx(pls_normal, pls_centre)
-    
-#     # Cut Myocardial layers
-#     if len(myoc_cuts) == 2:
-#         # Cut myocardial s3_all, s3_int, s3_ext
-#         # s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut = cutInfAndOutfOpt(s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut, 
-#         #                                                             d_cuts, normal_cuts, d_red, d_green, resolution, '(Myoc)')
-#         s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut = cutInfAndOutfOptMx(s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut, 
-#                                                                     pls_normal, pls_centre, resolution, '(Myoc)')
-#     elif len(myoc_cuts) == 1:
-#         index_myoc = cuts_selected.index(myoc_cuts[0])
-#         # Cut myocardial s3_all, s3_int, s3_ext
-#         # s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut = cutInfOrOutfOpt (s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut, 
-#         #                                                               d_cut = d_cuts[index_myoc], normal_cut = normal_cuts[index_myoc], 
-#         #                                                               d_red = d_red[index_myoc], d_green = d_green[index_myoc], resolution = resolution, 
-#         #                                                               option = myoc_cuts[0], mesh_name = '(Myoc)')
-#         s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut = cutInfOrOutfOptMx(s3_ch0_cut, s3_ch0_int_cut, s3_ch0_ext_cut, 
-#                                                                       pls_normal[index_myoc], pls_centre[index_myoc], resolution = resolution, 
-#                                                                       option = myoc_cuts[0], mesh_name = '(Myoc)')
-#     else: 
-#         print('- No cuts made to Myocardium!')
-    
-#     # Cut Endocardial layers
-#     if len(endo_cuts) == 2:
-#         # Cut endocardial s3_all
-#         # s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut  = cutInfAndOutfOpt(s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut, 
-#         #                                                               d_cuts, normal_cuts, d_red, d_green, resolution, '(Endo)')
-#         s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut  = cutInfAndOutfOptMx(s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut, 
-#                                                                       pls_normal, pls_centre, resolution, '(Endo)')
-        
-#     elif len(endo_cuts) == 1:
-#         index_endo = cuts_selected.index(endo_cuts[0])
-#         # Cut myocardial s3_all
-#         # s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut = cutInfOrOutfOpt (s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut, 
-#         #                                                               d_cut = d_cuts[index_endo], normal_cut = normal_cuts[index_endo], 
-#         #                                                               d_red = d_red[index_endo], d_green = d_green[index_endo], resolution = resolution, 
-#         #                                                               option = endo_cuts[0], mesh_name = '(Endo)')
-#         s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut = cutInfOrOutfOptMx(s3_ch1_cut, s3_ch1_int_cut, s3_ch1_ext_cut, 
-#                                                                       pls_normal[index_endo], pls_centre[index_endo], resolution = resolution, 
-#                                                                       option = endo_cuts[0], mesh_name = '(Endo)')
-#     else: 
-#         print('- No cuts made to Endocardium!')
-        
-#     alert('whistle', 1)
-#     # Create meshes
-#     # Myocardial layers
-#     if any(x in cuts for x in [0, 2]):
-#         #Create new mesh myocardial s3_all
-#         myoc_cut = getCutMesh(filename = filename, s3_cut = s3_ch0_cut, resolution = resolution, 
-#                                         mesh_original = m_myoc, layer = 'Myoc', plotshow = True)
-#         #Create new mesh myocardial s3_int
-#         myoc_cut_int = getCutMesh(filename = filename, s3_cut = s3_ch0_int_cut, resolution = resolution, 
-#                                         mesh_original = '', layer = 'Int.Myoc', plotshow = False)
-#         #Create new mesh myocardial s3_ext
-#         myoc_cut_ext = getCutMesh(filename = filename, s3_cut = s3_ch0_ext_cut, resolution = resolution, 
-#                                         mesh_original = '', layer = 'Ext.Myoc', plotshow = False)
-#         if save:
-#             save_s3s(filename = filename, s3_all = s3_ch0_cut, s3_int = s3_ch0_int_cut, s3_ext = s3_ch0_ext_cut, 
-#                     dir_txtNnpy = dir_txtNnpy, layer = 'ch0_cut')
-#     else:
-#         myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0, s3_in = s3_ch0_int,
-#                                     s3_out = s3_ch0_ext, resolution = resolution, layer = 'Myoc')
-#     # Endocardial layers
-#     if any(x in cuts for x in [1, 2]):
-#         #Create new mesh endocardial s3_all
-#         endo_cut = getCutMesh(filename = filename, s3_cut = s3_ch1_cut, resolution = resolution, 
-#                                                     mesh_original = m_endo, layer = 'Endo', plotshow = False)
-#         #Create new mesh endocardial s3_int
-#         endo_cut_int = getCutMesh(filename = filename, s3_cut = s3_ch1_int_cut, resolution = resolution, 
-#                                         mesh_original = '', layer = 'Int.Endo', plotshow = False)
-#         #Create new mesh endocardial s3_ext
-#         endo_cut_ext = getCutMesh(filename = filename, s3_cut = s3_ch1_ext_cut, resolution = resolution, 
-#                                         mesh_original = '', layer = 'Ext.Endo', plotshow = False)
-#         if save:
-#             save_s3s(filename = filename, s3_all = s3_ch1_cut, s3_int = s3_ch1_int_cut, s3_ext = s3_ch1_ext_cut, 
-#                     dir_txtNnpy = dir_txtNnpy, layer = 'ch1_cut')
-#     else:
-#         endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cl, s3_in = s3_ch1_int,
-#                                     s3_out = s3_ch1_ext_cl, resolution = resolution, layer = 'Endo')
-        
-#     s3s_cut = [s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut]
-#     meshes_cut = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext]
-#     alert('jump', 1)
-    
-#     text= filename+"\n\n >> Resulting meshes"
-#     txt = Text2D(text, c="k", font= 'CallingCode')
-#     vp = Plotter(N=6, axes=10)
-#     for i, mesh in enumerate(meshes_cut):
-#         if i == 0:
-#             vp.show(mesh, txt, at = i, zoom = 1.2)
-#         elif i > 0 and i < 5:
-#             vp.show(mesh, at = i, zoom = 1.2)
-#         else:
-#             vp.show(mesh, at = i, zoom = 1.2, interactive = True)
-    
-#     return s3s_cut, meshes_cut, dict_planes
-
-#%% func - getCuttingPlanesInfo
-def getCuttingPlanesInfo(pls_normal, pls_centre):
-    
-    d_cuts = []
-    normal_cuts = []
-    d_red = []
-    d_green = []
-    
-    for i in range(len(pls_normal)):
-        pl_normal = pls_normal[i]
-        pl_centre = pls_centre[i]
-        
-        # Make normal of plane unitary 
-        normal_unit = unit_vector(pl_normal)
-        normal_cuts.append(normal_unit)
-        normalx10 = [k*100 for k in normal_unit]
-        # Create points at either side of the plane
-        pt_red = pl_centre+normalx10
-        pt_green = pl_centre-normalx10
-        
-        # Get plane values
-        d = normal_unit.dot(pl_centre)
-        d_cuts.append(d)
-        a, b, c = normal_unit
-        
-        x_red,y_red,z_red = pt_red
-        dotProd_pt_red = dot((a,b,c), (x_red,y_red,z_red))
-        d_red.append(dotProd_pt_red)
-        x_green,y_green,z_green = pt_green
-        dotProd_pt_green = dot((a,b,c), (x_green,y_green,z_green))
-        d_green.append(dotProd_pt_green)
-        
-    return d_cuts, normal_cuts, d_red, d_green
-
 #%% func - cutInfAndOutfOptMx
 def cutInfAndOutfOptMx(s3_cut, pls_normal, pls_centre, resolution, mesh_name):
+    """
+    Function used to cut inflow AND outflow tract of the s3 mask (s3_cut) given as input
+
+    Parameters
+    ----------
+    s3_cut : numpy array
+        Mask of the tissue layer that wants to be cut
+    pls_normal : list of list of floats
+        list of List with the x,y,z coordinatesof each of the planes' normal
+    pls_centre : list of list of floats
+        list of List with the x,y,z coordinates of each of the planes' centre 
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    mesh_name : str
+        Names of the mesh being cut
+
+    Returns
+    -------
+    s3f_cut : numpy array
+        Final mask of the cut tissue layer
+
+    """
     
     # print('- Cutting s3 - inf&outf '+mesh_name)
     
@@ -820,67 +1004,33 @@ def cutInfAndOutfOptMx(s3_cut, pls_normal, pls_centre, resolution, mesh_name):
     alert('wohoo',1)
     
     return s3f_cut
-    
-# OLD VERSION
-# #%% func - cutInfAndOutfOpt
-# def cutInfAndOutfOpt(s3_cut, s3_cut_int, s3_cut_ext, d_cuts, normal_cuts, d_red, d_green, resolution, mesh_name):
-    
-#     # Get coordinates of pixels that have a value = 1
-#     pix_coord_pos = np.where(s3_cut_ext == 1)
-    
-#     # Assign classes to points according to option
-#     #   Inflow removal: red remove, green keep
-#     #   Outflow removal: green remove, red keep
-    
-#     a_inf, b_inf, c_inf = normal_cuts[0]
-#     a_outf, b_outf, c_outf = normal_cuts[1]
-#     d_inf, d_outf = d_cuts
-#     red_inf, red_outf = d_red
-#     green_inf, green_outf = d_green 
-    
-#     # Cut 
-#     bar = Bar('Cutting s3 - inf&outf '+mesh_name, max = 100, suffix = suffix, check_tty=False, hide_cursor=False)
-#     num_pts = round(len(pix_coord_pos[0])/100)
-#     for i, x, y, z in zip(count(), pix_coord_pos[0], pix_coord_pos[1], pix_coord_pos[2]):
-#         # Pix coordinates = [x,y,z]
-#         # [x,y,z] * resolution = Coordinates in um [x_um, y_um, z_um]
-#         pt_um = [x,y,z]*np.array(resolution)
-#         x_um, y_um, z_um = pt_um
-#         # Find dot product to know on which side of the plane each pix is (INFLOW)
-#         dotProd_pt_inf = dot((a_inf,b_inf,c_inf), (x_um, y_um, z_um))
-#         # - Classify point at side of inflow
-#         # --> inside mesh, looking from inflow cutting plane
-#         if dotProd_pt_inf > d_inf and red_inf > d_inf or dotProd_pt_inf < d_inf and red_inf < d_inf: 
-#             do_inf = "inside"
-#         # --> outside mesh, looking from inflow cutting plane
-#         elif dotProd_pt_inf > d_inf and green_inf > d_inf or dotProd_pt_inf < d_inf and green_inf < d_inf: 
-#             do_inf = "outside"
-        
-#         # Find dot product to know on which side of the plane each pix is (INFLOW)
-#         dotProd_pt_outf = dot((a_outf, b_outf, c_outf), (x_um, y_um, z_um))
-#         # - Classify point at side of outflow
-#         # --> inside mesh, looking from outflow cutting plane
-#         if dotProd_pt_outf > d_outf and red_outf > d_outf or dotProd_pt_outf < d_outf and red_outf < d_outf: 
-#             do_outf = "outside"
-#         # --> outside mesh, looking from outflow cutting plane
-#         elif dotProd_pt_outf > d_outf and green_outf > d_outf or dotProd_pt_outf < d_outf and green_outf < d_outf: 
-#             do_outf = "inside"
-        
-#         if do_inf == 'outside' or do_outf == 'outside':
-#             s3_cut[x,y,z] = 0
-#             s3_cut_int[x,y,z] = 0
-#             s3_cut_ext[x,y,z] = 0
-            
-#         if i % num_pts == 0:
-#             bar.next()
-        
-#     # bar.finish()
-#     alert('wohoo',1)
-    
-#     return s3_cut, s3_cut_int, s3_cut_ext
 
 #%% func - cutInfOrOutfOptMx
 def cutInfOrOutfOptMx (s3_cut, pls_normal, pls_centre, resolution, option, mesh_name):
+    """
+    Function used to cut inflow OR outflow tract of the s3 mask (s3_cut) given as input
+
+    Parameters
+    ----------
+    s3_cut : numpy array
+        Mask of the tissue layer that wants to be cut
+    pls_normal : list of floats
+        List with the x,y,z coordinatesof each the plane's normal
+    pls_centre : list of floats
+        List with the x,y,z coordinatesof each the plane's centre
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. 
+    option : str
+        'Inflow'/'Outflow', depending on the type fo cut being made to the mask/mesh.
+    mesh_name : str
+        Names of the mesh being cut
+
+    Returns
+    -------
+    s3f_cut : numpy array
+        Final mask of the cut tissue layer
+
+    """
     
     # print('- Cutting s3 - ' + option+' '+mesh_name)
     
@@ -921,55 +1071,38 @@ def cutInfOrOutfOptMx (s3_cut, pls_normal, pls_centre, resolution, option, mesh_
             
     return s3f_cut
 
-# OLD VERSION
-# #%% func - cutInfOrOutfOpt
-# def cutInfOrOutfOpt (s3_cut, s3_cut_int, s3_cut_ext, d_cut, normal_cut, d_red, d_green, resolution, option, mesh_name):
-    
-#     # Get coordinates of pixels that have a value = 1
-#     pix_coord_pos = np.where(s3_cut_ext == 1)
-    
-#     # Assign classes to points according to option
-#     #   Inflow removal: red remove, green keep
-#     #   Outflow removal: green remove, red keep
-#     if option == "outflow":
-#         class_red = "remove"
-#         class_green = "keep"
-#     elif option == "inflow":
-#         class_red = "keep"
-#         class_green = "remove"
-    
-#     a, b, c = normal_cut
-#     bar = Bar('Cutting s3 - ' + option+' '+mesh_name, max = 100, suffix = suffix, check_tty=False, hide_cursor=False)
-#     num_pts = round(len(pix_coord_pos[0])/100)
-#     for i, x, y, z in zip(count(), pix_coord_pos[0], pix_coord_pos[1], pix_coord_pos[2]):
-#         # Pix coordinates = [x,y,z]
-#         # [x,y,z] * resolution = Coordinates in um [x_um, y_um, z_um]
-#         pt_um = [x,y,z]*np.array(resolution)
-#         x_um, y_um, z_um = pt_um
-#         # Find dot product to know on which side of the plane each pix is
-#         dotProd_pt = dot((a,b,c), (x_um, y_um, z_um))
-#         if dotProd_pt > d_cut and d_red > d_cut or dotProd_pt < d_cut and d_red < d_cut:
-#             do = class_red
-#         elif dotProd_pt > d_cut and d_green > d_cut or dotProd_pt < d_cut and d_green < d_cut:
-#             do = class_green
-        
-#         if do == 'remove':
-#             s3_cut[x,y,z] = 0
-#             s3_cut_int[x,y,z] = 0
-#             s3_cut_ext[x,y,z] = 0
-            
-#         if i % num_pts == 0:
-#             bar.next()
-        
-#     bar.finish()
-#     alert('wohoo',1)
-            
-#     return s3_cut, s3_cut_int, s3_cut_ext
-
 #%% - CREATE/MODIFY OBJECTS 
 #%% >>> MESHES
 #%% func - createAll3LayerMeshes
 def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
+    """
+    Function that creates the 3 meshes of a heart layer (int, ext, all), using the masks given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    s3_all : numpy array
+        Mask of the tissue layer 
+    s3_in : numpy array
+        Mask of the internal contours of the tissue layer 
+    s3_out : numpy array
+        Mask of the external contours of the tissue layer 
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    layer : str
+        Name of the heart layer being reconstructed
+
+    Returns
+    -------
+    mesh_all : mesh 
+        Mesh of the heart layer. (vedo Mesh)
+    mesh_in : mesh 
+        Mesh of the filled internal contours of the heart layer. (vedo Mesh)
+    mesh_out : mesh 
+        Mesh of the filled external contours of the heart layer. (vedo Mesh)
+
+    """
     
     print('- Creating surface reconstruction of '+ layer +' ')
     
@@ -1023,6 +1156,30 @@ def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
 
 #%% func - createExtLayerMesh
 def createExtLayerMesh(filename, s3_ext, resolution, layer, info, plotshow = True):
+    """
+    Function that creates the external mesh of a heart layer, using the mask given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    s3_ext : numpy array
+        Mask of the external contours of the tissue layer 
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    layer : str
+        Name of the heart layer being reconstructed
+    info : str
+        Text with additional information.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is True.
+
+    Returns
+    -------
+    mesh_ext : mesh 
+        Mesh of the filled external contours of the heart layer. (vedo Mesh)
+
+    """
     
     print('- Creating surface reconstruction of '+ layer +' ('+info+')')
     
@@ -1056,6 +1213,34 @@ def createExtLayerMesh(filename, s3_ext, resolution, layer, info, plotshow = Tru
 
 #%% func - createLayerMesh
 def createLayerMesh(filename, s3, resolution, layer, name, colour, alpha, plotshow = False):
+    """
+    Function that creates the mesh of a heart layer, using the masks given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    s3 : numpy array
+        Mask of the tissue layer 
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    layer : str
+        Name of the heart layer being reconstructed
+    name : str
+        Name of the heart layer being reconstructed
+    colour : str
+        Colour
+    alpha : float
+        Opacity value.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is False.
+
+    Returns
+    -------
+    mesh : mesh 
+        Mesh of the heart layer. (vedo Mesh)
+
+    """
     
     print('- Creating surface reconstructions of '+ name )
     
@@ -1080,21 +1265,32 @@ def createLayerMesh(filename, s3, resolution, layer, name, colour, alpha, plotsh
     
     return mesh
 
-#%% func - colorMesh
-def colorMesh(mesh, m_name, alpha = [1, 1, 1, 1, 1]):
-
-    meshes_names = np.array(['myoc', 'endo', 'cj', 'cjOut', 'cjIn'])
-    colors = ['darkcyan','darkmagenta','darkorange','limegreen','gold']
-    legend = ['Myocardium','Endocardium','Cardiac Jelly','CJ (Out)','CJ (In)']
-    
-    num = np.where(meshes_names == m_name)[0][0]
-    
-    mesh.alpha(alpha[num]).legend(legend[num]).wireframe().color(colors[num])
-    
-    return mesh    
-
 #%% func - getCutMesh
 def getCutMesh(filename, s3_cut, resolution, mesh_original, layer, plotshow):
+    """
+    Function to create surface reconstruction of the cut mask (s3_cut) given as input.
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    s3_cut : numpy array
+        Mask of the tissue layer.
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+    mesh_original : mesh 
+        Original mesh of the heart layer. (vedo Mesh).
+    layer :  str
+        Name of the heart layer being reconstructed.
+    plotshow : boolean
+        True if you want to see the resulting mesh in a plot, else False.
+
+    Returns
+    -------
+    mesh_cut : mesh 
+        Resulting mesh. (vedo Mesh).
+
+    """
     
     print('- Creating surface reconstructions of cut '+ layer)
     
@@ -1127,6 +1323,28 @@ def getCutMesh(filename, s3_cut, resolution, mesh_original, layer, plotshow):
 
 #%% func - createMeshes4CL
 def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
+    """
+    Function that cleans and smooths meshes given as input to get centreline using VMTK 
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes
+        List of meshes to .
+    names : list of str
+        List of names for cleaned and smoothed meshes
+    mesh_colors : list of str
+        List of colours
+    plotshow : boolean
+        True if you want to see the resulting mesh in a plot, else False. 
+
+    Returns
+    -------
+    meshes4cl_out : list of meshes
+        List of cleaned and smoothed meshes. (vedo Mesh)
+
+    """
     
     meshes4cl = []
 
@@ -1168,6 +1386,38 @@ def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
 
 #%% func - cutMeshes4CL
 def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh_colors, dicts, plotshow):
+    """
+    Funtion that cuts the inflow and outflow tract of meshes from which the centreline will be obtained. 
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes
+        List of cleaned and smoothed meshes. (vedo Mesh)
+    names : list of str
+        List of names of cleaned and smoothed meshes
+    cuts : list of str
+        List with type of cuts ['inflow', 'outflow']
+    cut_direction : list of booleans
+        list of booleans indicating the cut direction depending on the 'cuts'
+    mark_colors : list of str
+        List of colours for marks 
+    mesh_colors : list of str
+        List of colours
+    dicts : list of dicts
+        [dict_planes, dict_pts, dict_kspl].
+    plotshow : boolean
+        True if you want to see the resulting mesh in a plot, else False.
+
+    Returns
+    -------
+    meshes[-2:] : list of meshes
+        List of cut meshes. (vedo Mesh)
+    dicts_f :  list of dicts
+        List of updated dictionaries 
+
+    """
     
     dict_planes, dict_pts, dict_kspl = dicts 
     ksplines = []; spheres = []
@@ -1229,6 +1479,24 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
 
 #%% func - divideMeshesLnR
 def divideMeshesLnR(filename, meshes, cl_ribbon):
+    """
+    Function that divides meshes into Left and Right using the extended centreline (ribbon)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes 
+        List of meshes to divide. (vedo Mesh)
+    cl_ribbon : ribbon 
+        Dorso-ventral extended centreline (vedo Ribbon)
+
+    Returns
+    -------
+    meshes_LnR : list of list of meshes 
+        List of list of the divided meshes [left, right] (vedo Mesh)
+
+    """
     
     meshes_LnR = []
     for i, mesh in enumerate(meshes):
@@ -1273,8 +1541,116 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
     return meshes_LnR
 
 #%% func - getChamberMeshes
-def getChamberMeshes(filename, s3s2cut, names2cut, kspl_CL, mesh2cut, resolution, dict_planes, dict_pts):
+def getChamberMeshes(filename, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt, dict_planes, resolution):
+    """
+    Function to cut meshes and get its chambers (atrium/ventricle) using the plane information given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    end_name : list of str
+        List of names given to the s3 masks saved in dir_txtNnpy
+    names2cut : list of str
+        List of mesh names being cut
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the meshes into the two chambers. 
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file. 
+
+    Returns
+    -------
+    atr_meshes : list of meshes
+        List of atrial meshes (vedo Meshes)
+    vent_meshes : list of meshes
+        List of ventricular meshes (vedo Meshes)
+
+    """
     
+    dORv = filename[9:10]
+    if dORv == 'D':
+        azimuth = -90
+    else: 
+        azimuth = 0
+        
+    # Get plane info from dict_planes
+    pl_imCh_normal = dict_planes['pl2CutIm_Chamber']['pl_normal']
+    pl_imCh_centre = dict_planes['pl2CutIm_Chamber']['pl_centre']
+    
+    sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCut')
+    
+    # Create empty lists to save atrium and ventricles
+    atr_meshes = []
+    atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo']
+    vent_meshes = []
+    vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue']
+    
+    tic = perf_counter()
+    vp = Plotter (N=3, axes=10)
+    text2 = filename+"\n\n >>  Result of dividing heart layers into chambers"
+    txt2 = Text2D(text2, c="k", font= 'CallingCode')
+    for n, s3_name, name in zip(count(), end_name, names2cut):
+        # Mask s3s vent and atrium
+        print('- Cutting s3 (', name,')')
+        [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+        s3_vent, s3_atr = maskChamberS3s(s3_mask = s3, pl_normal = pl_imCh_normal, pl_centre = pl_imCh_centre, resolution = resolution)
+        # Create chamber meshes 
+        atr = createLayerMesh(filename = filename, s3 = s3_atr, resolution = resolution, layer = name, name = name+'_Atr',
+                                       colour = atr_color[n], alpha = 0.01, plotshow = False)
+        atr_meshes.append(atr)
+        vent = createLayerMesh(filename = filename, s3 = s3_vent, resolution = resolution, layer = name, name = name+'_Vent',
+                                        colour = vent_color[n], alpha = 0.01, plotshow = False)
+        vent_meshes.append(vent)
+        if n == 0:
+            vp.show(atr, vent, kspl_CL, sph_cut, txt2, at=n)
+        elif n == 1:
+            vp.show(atr, vent, kspl_CL, sph_cut, at=n)
+        elif n == 2:
+            vp.show(atr, vent, kspl_CL, sph_cut, at=n, azimuth = azimuth, interactive = True)
+            
+    toc = perf_counter()
+    time = toc-tic
+    print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
+    alert('jump', 1)
+    
+    return atr_meshes, vent_meshes
+    
+#%% func - getPl2CutChambers
+def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
+    """
+    Function to define the plane needed to cut the meshes into atrium and ventricle
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    mesh2cut : mesh
+        Myocardial mesh used to plot and define plane to cut meshes into chambers
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    dict_pts : dictionary
+        Initialised dictionary with points information
+
+    Returns
+    -------
+    plane_Ch : Plane
+        Plane defined to cut meshes into chambers
+    dict_planes : dictionary
+        Resulting dictionary with planes information updated
+    dict_pts : dictionary
+        Resulting dictionary with points information updated
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the meshes into the two chambers. 
+
+    """
     dORv = filename[9:10]
     if dORv == 'D':
         azimuth = -90
@@ -1308,43 +1684,28 @@ def getChamberMeshes(filename, s3s2cut, names2cut, kspl_CL, mesh2cut, resolution
     dict_pts = addPoint2Dict (sphere = sph_cut, info = '', dict_pts = dict_pts)
     dict_pts['numPt_CLChamberCut'] = num_pt
     
-    # Create empty lists to save atrium and ventricles
-    atr_meshes = []
-    atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo']
-    vent_meshes = []
-    vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue']
-    
-    tic = perf_counter()
-    vp = Plotter (N=3, axes=10)
-    text2 = filename+"\n\n >>  Result of dividing heart layers into chambers"
-    txt2 = Text2D(text2, c="k", font= 'CallingCode')
-    for n, s3, name in zip(count(), s3s2cut, names2cut):
-        # Mask s3s vent and atrium
-        print('- Cutting s3 (', name,')')
-        s3_vent, s3_atr = maskChamberS3s(s3_mask = s3, pl_normal = pl_imCh_normal, pl_centre = pl_imCh_centre, resolution = resolution)
-        # Create chamber meshes 
-        atr = createLayerMesh(filename = filename, s3 = s3_atr, resolution = resolution, layer = name, name = name+'_Atr',
-                                       colour = atr_color[n], alpha = 0.01, plotshow = False)
-        atr_meshes.append(atr)
-        vent = createLayerMesh(filename = filename, s3 = s3_vent, resolution = resolution, layer = name, name = name+'_Vent',
-                                        colour = vent_color[n], alpha = 0.01, plotshow = False)
-        vent_meshes.append(vent)
-        if n == 0:
-            vp.show(atr, vent, kspl_CL, spheres_spl, sph_cut, txt2, at=n)
-        elif n == 1:
-            vp.show(atr, vent, kspl_CL, spheres_spl, sph_cut, at=n)
-        elif n == 2:
-            vp.show(atr, vent, kspl_CL, spheres_spl, sph_cut, at=n, azimuth = azimuth, interactive = True)
-    toc = perf_counter()
-    time = toc-tic
-    print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
-    alert('jump', 1)
-    
-    return atr_meshes, vent_meshes, plane_Ch, dict_planes, dict_pts, num_pt
+    return plane_Ch, dict_planes, dict_pts, num_pt
 
 #%% >>> PLANES
 #%% func - createPlane
 def createPlane(dict_planes, name):
+    """
+    Function that creates the 'name' plane from the dict_plane
+
+    Parameters
+    ----------
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    name : str
+        Plane name.
+
+    Returns
+    -------
+    plane_out : Plane
+        vedo Plane.
+
+    """
+    
     normal = dict_planes[name]['pl_normal'] 
     centre = dict_planes[name]['pl_centre'] 
     color = dict_planes[name]['color']
@@ -1355,7 +1716,38 @@ def createPlane(dict_planes, name):
     return plane_out
 
 #%% func - getPlane
-def getPlane (filename, type_cut, info, mesh_in, mesh_out, option = [True,True,True,True,True,True]):
+def getPlane(filename, type_cut, info, mesh_in, mesh_out, option = [True,True,True,True,True,True]):
+    """
+    Function that creates a plane defined by the user
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    type_cut : str
+        Text defining the type of cut that is going to be made with the defined plane
+    info : str
+        Text with additional information to name plane.
+    mesh_in : mesh
+        Internal mesh (vedo Mesh)
+    mesh_out : mesh
+        External mesh (vedo Mesh)
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ] 
+        The default is [True,True,True,True,True,True].
+
+    Returns
+    -------
+    plane_new : Plane
+        Final plane defined by the user
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre 
+    normal_corrected : list of floats
+        List with the x,y,z coordinatesof the plane's normal rotated in 3D
+
+    """
+    
     print('- Getting plane to cut '+ type_cut)
     #mesh1.alpha(0.05); mesh2.alpha(0.05)
     while True:
@@ -1383,6 +1775,39 @@ def getPlane (filename, type_cut, info, mesh_in, mesh_out, option = [True,True,T
 
 #%% func - getPlanePos
 def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
+    """
+    Function that shows a plot so that the user can define a plane
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    type_cut : str
+        Text defining the type of cut that is going to be made with the defined plane
+    mesh_in : mesh
+        Internal mesh (vedo Mesh)
+    mesh_out : mesh
+        External mesh (vedo Mesh)
+    xyz_bounds : list of floats
+        x,y,z boundaries of mesh_out
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+
+    Returns
+    -------
+    plane : Plane
+        Final plane defined by the user
+    normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal 
+    rotX : list of floats
+        List of angles (deg) of the resulting rotation around the x-axis.
+    rotY : list of floats
+        List of angles (deg) of the resulting rotation around the y-axis.
+    rotZ : list of floats
+        List of angles (deg) of the resulting rotation around the z-axis.
+
+    """
     
     xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
     x_size = xmax - xmin
@@ -1464,6 +1889,34 @@ def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
 
 #%% func - getPlane4ChDivision
 def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True,True,True,True,True]):
+    """
+    Function that gets plane for chamber division
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    type_cut : str
+        Text defining the type of cut that is going to be made with the defined plane
+    mesh1 : mesh
+        Myocardial mesh to use as background to define plane
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+
+    Returns
+    -------
+    plane_Ch_final : Plane
+        Final plane defined by the user
+    pl_Ch_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre 
+    pl_Ch_normal_corrected :  list of floats
+        List with the x,y,z coordinatesof the plane's normal
+
+    """
+    
     print('- Getting plane to divide '+ type_cut)
     mesh1.alpha(0.05)
     while True:
@@ -1498,6 +1951,39 @@ def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True
 
 #%% func - modifyPlane
 def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, option):
+    """
+    Function that shows a plot so that the user can redefine a plane
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    pl_normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre 
+    type_cut : str
+        Text defining the type of cut that is going to be made with the modified plane
+    mesh1 : mesh
+        Myocardial mesh to use as background to define plane
+    xyz_bounds : list of floats
+        x,y,z boundaries of mesh_out
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+
+    Returns
+    -------
+    plane : Plane
+        Final plane defined by the user
+    rotX : list of floats
+        List of angles (deg) of the resulting rotation around the x-axis.
+    rotY : list of floats
+        List of angles (deg) of the resulting rotation around the y-axis.
+    rotZ : list of floats
+        List of angles (deg) of the resulting rotation around the z-axis.
+
+    """
     
     xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
     x_size = xmax - xmin
@@ -1572,6 +2058,25 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
 
 #%% func - getPlaneNormal2Pt
 def getPlaneNormal2Pt (pt_num, spline_pts):
+    """
+    Funtion that gets a plane normal to a point in a spline
+
+    Parameters
+    ----------
+    pt_num : int
+        Index of the centreline point closer to the plane that cuts the meshes into the two chambers. 
+    spline_pts : list of x,y,z points coordinates
+        x,y,z points coordinates of spline
+
+    Returns
+    -------
+    normal : list of floats
+        List with the x,y,z coordinatesof the final plane's normal 
+    pt_centre : list of floats
+        List with the x,y,z coordinates of the final plane's centre
+
+    """
+    
     pt_centre = spline_pts[pt_num]
     normal = spline_pts[pt_num-1]-spline_pts[pt_num+1]
     
@@ -1579,6 +2084,29 @@ def getPlaneNormal2Pt (pt_num, spline_pts):
 
 #%% func - rotatePlane2Images
 def rotatePlane2Images (pl_centre, pl_normal, type_cut):
+    """
+    Function that rotates the planes defined in the surface reconstructions to the images mask
+
+    Parameters
+    ----------
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre defined in the mesh
+    pl_normal : list of floats
+        List with the x,y,z coordinates of the plane's normal defined in the mesh
+    type_cut : str
+        Text defining the type of cut that is going to be made with the defined plane
+
+    Returns
+    -------
+    plane_im : Plane
+        Final plane to cut masks
+    pl_im_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre to cut the masks
+    pl_im_normal : list of floats
+        List with the x,y,z coordinates of the plane's normal to cut the masks
+
+    """
+    
     pl_im_centre = (np.dot(rotation_matrix(axis = [0,0,1], theta = np.radians(90)), pl_centre)) 
     pl_im_normal = (np.dot(rotation_matrix(axis = [0,0,1], theta = np.radians(90)), pl_normal)) 
     
@@ -1588,6 +2116,32 @@ def rotatePlane2Images (pl_centre, pl_normal, type_cut):
 
 #%% func - createDVPlanes
 def createDVPlanes(filename, sph_orient, mesh, kspl_CL, orient_lines, dict_planes):
+    """
+    Function that creates the dorso-ventral planes dividing each of the heart chambers
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    sph_orient : list of spheres
+        list of spheres positioned in particular regions of the heart [sph_atr, sph_vent, sph_outf, sph_inf, sph_valve]
+    mesh : mesh
+        Mesh (vedo Mesh)
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    orient_lines : list of lines
+        List of lines defining the orientation of each chamber
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+
+    Returns
+    -------
+    pl_DnV : list of planes
+        [dorso-ventral plane for the atrium, dorso-ventral plane for the ventricle] 
+    dict_planes : dictionary
+        Resulting dictionary with planes information updated
+
+    """
     
     sph_atr, sph_vent, sph_outf, sph_inf, sph_valve = sph_orient
     
@@ -1619,6 +2173,24 @@ def createDVPlanes(filename, sph_orient, mesh, kspl_CL, orient_lines, dict_plane
 #%% >>> SHAPES
 #%% func - sphInSpline
 def sphInSpline(kspl_CL, name = '', every = 10):
+    """
+    Function that creates a group of spheres through a spline given as input.
+
+    Parameters
+    ----------
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    name : str, optional
+        Name given to the group of spheres. The default is ''.
+    every : int (1) or float, optional
+        Value that defines how close together the created spheres will be. The default is 10.
+
+    Returns
+    -------
+    spheres_spline : list of spheres/Spheres
+        list of spheres (vedo Sphere) / Spheres (vedo Sphere)
+        
+    """
     
     if every > 1:
         spheres_spline = []
@@ -1635,7 +2207,24 @@ def sphInSpline(kspl_CL, name = '', every = 10):
     return spheres_spline
 
 #%% func - createKSpls
-def createKSpls(dict_kspl, kspl_list):#, colors):
+def createKSpls(dict_kspl, kspl_list):
+    """
+    Function that creates a KSpline using the points given as input in the dict_kspl
+
+    Parameters
+    ----------
+    dict_kspl :  dictionary
+        Initialised dictionary with kspline information
+    kspl_list : list of str
+        List of names of the ksplines to create
+
+    Returns
+    -------
+    kSplines_out : List of Ksplines
+        Resulting list of ksplines created
+
+    """
+    
     print('- Creating ksplines...')
     kSplines_out = []
     for num, kspl_name in enumerate(list(dict_kspl.keys())):
@@ -1658,7 +2247,24 @@ def createKSpls(dict_kspl, kspl_list):#, colors):
     return kSplines_out
 
 #%% func - createSpheres
-def createSpheres(dict_pts, pts_list):#, colors):
+def createSpheres(dict_pts, pts_list):
+    """
+    Function that creates spheres using the points given as input in the dict_pts
+
+    Parameters
+    ----------
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    pts_list : list of str
+        List of names of the spheres to create
+
+    Returns
+    -------
+    sph_out : list of spheres
+        list of resulting spheres (vedo Sphere)
+
+    """
+    
     print('- Creating spheres...')
     sph_out = []
     for num, pt_name in enumerate(list(dict_pts.keys())):
@@ -1677,6 +2283,38 @@ def createSpheres(dict_pts, pts_list):#, colors):
 
 #%% func - createCLs
 def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
+    """
+    Function that creates the centrelines using the points given as input in the dict_cl
+
+    Parameters
+    ----------
+    dict_cl : dictionary
+        Initialised dictionary with centreline information.
+    dict_pts : dictionary
+        Initialised dictionary with points information.
+    dict_kspl :  dictionary
+        Initialised dictionary with kspline information.
+    dict_shapes : dictionary
+        Initialised dictionary with shapes information.
+    colors : list of str
+        List of colours.
+
+    Returns
+    -------
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    linLines : Linear lines
+        Lines (vedo Line)
+    spheres_CL : Spheres
+        Group of spheres with maximum inscribed centreline radius and positions given by VMTK and color coded by actual sphere radius.
+    spheres_CL_col : Spheres
+        Group of spheres with actual sphere radius in the positions given by VMTK.
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated.
+    dict_kspl : dictionary
+        Resulting dictionary with ksplines information updated.
+
+    """
     
     print('- Creating centreline and associated objects...')
     kspl_CL = []
@@ -1730,6 +2368,38 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
 
 #%% func - createCLRibbon
 def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes):
+    """
+    Function that creates dorso-ventral extended centreline ribbon
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    kspl_CL2use : Kspline
+        Centreline (vedo KSpline)
+    linLine : Line
+        Line defining the linear length of the heart (inflow-outflow)
+    mesh : mesh
+        Mesh (vedo Mesh)
+    dict_kspl :  dictionary
+        Initialised dictionary with kspline information
+    dict_shapes :  dictionary
+        Initialised dictionary with shapes information
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+
+    Returns
+    -------
+    cl_ribbon : ribbon 
+        Dorso-ventral extended centreline (vedo Ribbon)
+    dict_kspl : dictionary
+        Resulting dictionary with ksplines information updated
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated
+    dict_planes : dictionary
+        Resulting dictionary with planes information updated
+
+    """
         
     pts_cl = kspl_CL2use.points()
     # Extended centreline
@@ -1778,92 +2448,47 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
     
     return cl_ribbon, dict_kspl, dict_shapes, dict_planes
 
-#%% func - createBalloonedHeart # NOT WORKING
-# def createBalloonedHeart(dictLayer):
-    
-#     pts_cl = np.asarray(dictLayer['Points'])
-#     sphData_cl = np.asarray(dictLayer['PointData']['MaximumInscribedSphereRadius'])
-    
-#     for n, pt_pos, radius in zip(count(), pts_cl, sphData_cl):
-#         print('n:',n)
-#         sph2add = Sphere(pos=pt_pos, r=radius, c='red')
-#         if n == 0:
-#             sph_whole = sph2add
-#         elif n > 1:
-#             sph_whole = booleanOperation(sph2add, "plus", sph_whole.clone())
-     
-#     sph_1 = Sphere(pos=pts_cl[1], r=sphData_cl[1], c='red')
-    
-#     sph_whole = booleanOperation(sph_1, "plus", sph_whole.clone())
-#     sph_whole = sph_whole.color('coral').legend('FilledBalloon')
-    
-#     return sph_all, sph_whole
-
-#%% - OBJECTS
-#%% func - rotateObjects
-def rotateObjects(objects, angles, first):
-    angX, angY, angZ = angles
-    objects_out = []
-    
-    if first:
-        for i, obj in enumerate(objects):
-            obj.rotateX(angX).rotateY(angY).rotate(angZ)
-            
-            objects_out.append(obj)
-    
-        first = False
-    #print('- Objects have been rotated (x,y,z): ' + str(angles)+'!')
-    
-    return objects_out, first
-
-#%% func - rotateAll
-def rotateAll (objects_all, angles, first):
-    
-    objects_out = []
-    for j, obj_list in enumerate(objects_all):
-        obj_list, _ = rotateObjects(objects = obj_list, angles = angles, first = first)
-        objects_out.append(obj_list)
-        
-        if j == len(objects_all)-1:
-            first_out = False
-    print('- All objects have been rotated (x,y,z): ' + str(angles)+'!')
-        
-    return objects_out, first_out
-
 #%% - MEASURE
-#%% func - getMeshInclinationAngle 
-def getMeshInclinationAngle(filename, dict_pts, m_myoc):
-    
-    pts = ['Sph_CL_inflow-Int.Myoc','Sph_CL_outflow-Int.Myoc']
-    pts_pos = []
-    
-    for num, pt_name in enumerate(pts):
-        pt_pos = dict_pts[pt_name]['sph_position']
-        pts_pos.append(pt_pos)
-    
-    linearLine = Line(pts_pos[0], pts_pos[1], c='magenta', lw=3).legend('linLine (LL)') 
-    _, y_inf, z_inf = pts_pos[0]
-    _, y_outf, z_outf = pts_pos[1]
-            
-    linLineX = linearLine.clone().projectOnPlane('x').c('deeppink').x(-20).legend('LL (ProjX)') 
-
-    angle = math.degrees(math.atan2((y_outf-y_inf),(z_outf-z_inf)))-90
-    angle_print = format(angle, '.1f')
-    print('- Angle to rotate meshes (deg):', angle_print)
-    
-    m_myoc.alpha(0.01)
-    text = filename+"\n\n >> Angle to rotate meshes (deg):"+angle_print
-    txt = Text2D(text, c="k", font= 'CallingCode')
-    text2 = ">> Rotated mesh"
-    txt2 = Text2D(text2, c="k", font= 'CallingCode')
-    vp = Plotter(N=2, axes=1, sharecam = False)
-    vp.show(m_myoc, linearLine, linLineX, txt, at=0)
-    vp.show(m_myoc.clone().rotateX(angle), linearLine.clone().rotateX(angle), linLineX.clone().rotateX(angle), txt2, viewup="y", at=1, interactive = True)
-    
-    return angle
-    
 #%% func - getChambersOrientation
 def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes, linLine, dict_pts, dict_kspl, df_res):
+    """
+    Function to get chambers orientation
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    file_num : int
+        Index number of the selected heart being processed.
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the meshes into the two chambers. 
+    kspl_CL2use : Kspline
+        Centreline (vedo KSpline)
+    myoc_meshes : list of meshes
+        Myocardial meshes [m_myoc, m_atrMyoc, m_ventMyoc]
+    linLine : Line
+        Line defining the linear length of the heart (inflow-outflow)
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    dict_kspl :  dictionary
+        Initialised dictionary with kspline information
+    df_res : dataframe
+        Dataframe with the measured information of the heart being processed.
+
+    Returns
+    -------
+    sph_orient : TYPE
+        DESCRIPTION.
+    lines_orient : TYPE
+        DESCRIPTION.
+    dict_pts : dictionary
+        Resulting dictionary with points information updated
+    dict_kspl : dictionary
+        Resulting dictionary with ksplines information updated
+    df_res : dataframe
+        Dataframe with the updated measured information of the heart being processed.
+
+    """
     
     print('- Measuring chamber orientations')
     m_myoc, m_atrMyoc, m_ventMyoc = myoc_meshes
@@ -1945,6 +2570,34 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
 
 #%% func - getDistance2Mesh
 def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True):
+    """
+    Function that gets the distance between m_ext and m_int and color codes m_ext accordingly
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    m_int : Mesh/Object
+        Internal mesh/object (vedo Mesh/Object)
+    m_ext : Mesh
+        External mesh (vedo Mesh)
+    title : str
+        Name given to the distance being calculated
+    alpha : float, optional
+        Opacity value. The default is 0.1.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is True.
+
+    Returns
+    -------
+    thickness : array of floats
+        Numpy array with distance being measured
+    m_ext_out : Mesh
+        Final external mesh color coded (vedo Mesh)
+    min_max : list of floats
+        List with [min,max] values of the measured distance
+
+    """
     
     thickness_meshes = ['Cardiac Jelly Thickness', 'Myoc.Thickness', 'Endo.Thickness']
     tic = perf_counter()
@@ -1994,6 +2647,36 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
 
 #%% func - unloopHeart
 def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, plotshow = False, tol=0.05):
+    """
+    Function to unloop the heart
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh : mesh
+        Color coded mesh that will be unlooped
+    kspl_CL2use : Kspline
+        Centreline (vedo KSpline)
+    cl_ribbon : ribbon 
+        Dorso-ventral extended centreline (vedo Ribbon)
+    no_planes : int
+        Number of planes that will be used to get transverse sections of heart
+    pl_CLRibbon : Plane
+        Plane used to extend dorso-ventrally the centreline
+    param : array of floats
+        Numpy array with distance that wants to be unlooped
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is False.
+    tol : float, optional
+        Tolerance defined to get points in plane. The default is 0.05.
+
+    Returns
+    -------
+    matrix_unlooped : numpy array
+        Array with data of the unlooped heart
+
+    """
     
     # Create matrix with all data
     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7: param
@@ -2259,144 +2942,129 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
 #     return matrix_unlooped
 
 #%% func - unloopHeart-BU
-def unloopHeart2(mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, tol=0.05):
+# def unloopHeart2(mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, tol=0.05):
     
-    # Create matrix with all data
-    n_param = 1#param.shape[1]
-    dims = 7+n_param
-    #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-    matrix_unlooped = np.zeros((len(mesh.points()),dims))
-    matrix_unlooped[:,0:3] = mesh.points()
-    matrix_unlooped[:,dims-1] = param #-n_param:dims] = param
+#     # Create matrix with all data
+#     n_param = 1#param.shape[1]
+#     dims = 7+n_param
+#     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+#     matrix_unlooped = np.zeros((len(mesh.points()),dims))
+#     matrix_unlooped[:,0:3] = mesh.points()
+#     matrix_unlooped[:,dims-1] = param #-n_param:dims] = param
     
-    # Get info cl_ribbon and plane with which it was created
-    matrix_clRibbon = np.asarray(cl_ribbon.points())
-    # - Get unitary normal of plane
-    pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
+#     # Get info cl_ribbon and plane with which it was created
+#     matrix_clRibbon = np.asarray(cl_ribbon.points())
+#     # - Get unitary normal of plane
+#     pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
     
-    print('pl_normCLRibbon ', pl_normCLRibbon)
-    pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
-    plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color('skyblue').alpha(0.5)
-    arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon['pl_normal'])*20, s = 0.1, c = 'cyan')
-    pos_pt = pl_centCLRibbon+200
-    sph_pos = Sphere(pos_pt, r=2, c='orangered')
-    # - d value of clr_plane
-    d_clr = np.dot(pl_normCLRibbon, pl_centCLRibbon)
-    d_clr_pve = np.dot(pl_normCLRibbon,pos_pt)-d_clr
-    print('d_clr_pve:', d_clr_pve)
-    if d_clr_pve > 0:
-        criteria = 'positive'
-    else:
-        criteria = 'negative'
+#     print('pl_normCLRibbon ', pl_normCLRibbon)
+#     pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
+#     plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color('skyblue').alpha(0.5)
+#     arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon['pl_normal'])*20, s = 0.1, c = 'cyan')
+#     pos_pt = pl_centCLRibbon+200
+#     sph_pos = Sphere(pos_pt, r=2, c='orangered')
+#     # - d value of clr_plane
+#     d_clr = np.dot(pl_normCLRibbon, pl_centCLRibbon)
+#     d_clr_pve = np.dot(pl_normCLRibbon,pos_pt)-d_clr
+#     print('d_clr_pve:', d_clr_pve)
+#     if d_clr_pve > 0:
+#         criteria = 'positive'
+#     else:
+#         criteria = 'negative'
     
-    # Get normals and centres of planes 
-    pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL2use.points())
-    pl_normals = pl_normals[1:-2]
-    pl_centres = pl_centres[1:-2]
-    # print(pl_normals)
+#     # Get normals and centres of planes 
+#     pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL2use.points())
+#     pl_normals = pl_normals[1:-2]
+#     pl_centres = pl_centres[1:-2]
+#     # print(pl_normals)
     
-    plane_num = np.linspace(0,1,no_planes)
+#     plane_num = np.linspace(0,1,no_planes)
     
-    # Iterate through each plane
-    for i, normal, centre in zip(count(), pl_normals, pl_centres):
-        print('normal', normal)
-        # A. Get cut plane info 
-        # - Info Plane
-        d = normal.dot(centre)
-        arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
+#     # Iterate through each plane
+#     for i, normal, centre in zip(count(), pl_normals, pl_centres):
+#         print('normal', normal)
+#         # A. Get cut plane info 
+#         # - Info Plane
+#         d = normal.dot(centre)
+#         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
         
-        # B. Get vector that defines 0 deg angle
-        # - Get points of cl_ribbon that intersect plane to cut
-        d_clRpts = np.dot(matrix_clRibbon,normal)-d
-        # - Get d values of cl_ribbon with respect to plane of cl extension
-        d_clRpts2 = np.dot(matrix_clRibbon,pl_centCLRibbon)-d_clr
-        # - Find the indexes of the cl_ribbon points where the d values fit the plane to cut and have positive d_clr values
-        if criteria == 'positive':
-            index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 > 0))
-        else: 
-            index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 < 0))
-        print('len:', len(index_clRAtPlanes))   
-        cut_matrix = matrix_clRibbon[index_clRAtPlanes]
-        index_v = np.where(d_clRpts2[index_clRAtPlanes] == min(d_clRpts2[index_clRAtPlanes]))
-        # - Point that defines the vector with which 0 deg is defined
-        v_vectXYZ = cut_matrix[index_v]
-        print('v_vectXYZ:', v_vectXYZ)
-        print('d_vXYZ: ', d_clRpts2[index_v])
-        # - Coordinates of vector with respect to centre point in cl
-        v_vectC = v_vectXYZ[0] - centre
-        v_unitvectC = unit_vector(v_vectC)
+#         # B. Get vector that defines 0 deg angle
+#         # - Get points of cl_ribbon that intersect plane to cut
+#         d_clRpts = np.dot(matrix_clRibbon,normal)-d
+#         # - Get d values of cl_ribbon with respect to plane of cl extension
+#         d_clRpts2 = np.dot(matrix_clRibbon,pl_centCLRibbon)-d_clr
+#         # - Find the indexes of the cl_ribbon points where the d values fit the plane to cut and have positive d_clr values
+#         if criteria == 'positive':
+#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 > 0))
+#         else: 
+#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 < 0))
+#         print('len:', len(index_clRAtPlanes))   
+#         cut_matrix = matrix_clRibbon[index_clRAtPlanes]
+#         index_v = np.where(d_clRpts2[index_clRAtPlanes] == min(d_clRpts2[index_clRAtPlanes]))
+#         # - Point that defines the vector with which 0 deg is defined
+#         v_vectXYZ = cut_matrix[index_v]
+#         print('v_vectXYZ:', v_vectXYZ)
+#         print('d_vXYZ: ', d_clRpts2[index_v])
+#         # - Coordinates of vector with respect to centre point in cl
+#         v_vectC = v_vectXYZ[0] - centre
+#         v_unitvectC = unit_vector(v_vectC)
         
-        # Create stuff to plot 
-        pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
-        sph_C = Sphere(centre, r=2, c='red')
-        sph_VXYZ = Sphere(v_vectXYZ[0], r=2, c='green')
-        arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
-        # if i == 0:
-        vp = Plotter(N=1, axes=1)#8)
-        vp.show(mesh, sph_pos, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, plane_CLRibbon, at=0, azimuth = 0, interactive=1)
+#         # Create stuff to plot 
+#         pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
+#         sph_C = Sphere(centre, r=2, c='red')
+#         sph_VXYZ = Sphere(v_vectXYZ[0], r=2, c='green')
+#         arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
+#         # if i == 0:
+#         vp = Plotter(N=1, axes=1)#8)
+#         vp.show(mesh, sph_pos, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, plane_CLRibbon, at=0, azimuth = 0, interactive=1)
 
-        # C. Get points of mesh at plane
-        d_points = np.absolute(np.dot(matrix_unlooped[:,0:3],normal)-d)
-        # Find the indexes where the d values fit the plane and are not yet taken
-        index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0))
+#         # C. Get points of mesh at plane
+#         d_points = np.absolute(np.dot(matrix_unlooped[:,0:3],normal)-d)
+#         # Find the indexes where the d values fit the plane and are not yet taken
+#         index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0))
         
-        # Define new matrix just with the points on plane
-        new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
-        # - Get points of mesh that are on plane, centered on centreline point
-        ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
-        # - Get the radius of those points
-        radius = [np.linalg.norm(x) for x in ptsC]
-        # - Get angle
-        av = np.dot(ptsC,v_unitvectC)
-        cosTheta = np.divide(av, radius) 
-        theta = np.arccos(cosTheta)*180/np.pi
+#         # Define new matrix just with the points on plane
+#         new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
+#         # - Get points of mesh that are on plane, centered on centreline point
+#         ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
+#         # - Get the radius of those points
+#         radius = [np.linalg.norm(x) for x in ptsC]
+#         # - Get angle
+#         av = np.dot(ptsC,v_unitvectC)
+#         cosTheta = np.divide(av, radius) 
+#         theta = np.arccos(cosTheta)*180/np.pi
         
-        # - Save all obtained values in matrix_unlooped
-        for num, index in enumerate(index_ptsAtPlane[0]):
-            #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-            matrix_unlooped[index,3] = 1
-            matrix_unlooped[index,4] = plane_num[i]
-            matrix_unlooped[index,5] = theta[num]
-            matrix_unlooped[index,6] = radius[num]
-            matrix_unlooped[index,dims-1] = param[num]
+#         # - Save all obtained values in matrix_unlooped
+#         for num, index in enumerate(index_ptsAtPlane[0]):
+#             #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+#             matrix_unlooped[index,3] = 1
+#             matrix_unlooped[index,4] = plane_num[i]
+#             matrix_unlooped[index,5] = theta[num]
+#             matrix_unlooped[index,6] = radius[num]
+#             matrix_unlooped[index,dims-1] = param[num]
     
-    return matrix_unlooped
+#     return matrix_unlooped
 
 #%% - PROCESS DATA
-#%% func - newNormal
-def newNormal (normal, rotX):
-    alpha = np.radians(sum(rotX))
-  
-    new_normal = normal
-    if alpha != 0:
-        #Define rotation matrix
-        r = np.array(((np.cos(alpha), -np.sin(alpha)),
-               (np.sin(alpha),  np.cos(alpha))))
-        #Define vector yz
-        v = np.array((new_normal[1],new_normal[2]))
-        #Apply rotation matrix
-        new_v = r.dot(v)
-        
-        new_normal =  np.asarray((normal[0], new_v[0], new_v[1]))
-        
-    return new_normal
-
 #%% func - rotation_matrix
 def rotation_matrix(axis, theta):
     """
-    Return the rotation matrix associated with counterclockwise rotation about
+    Returns the rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
     https://stackoverflow.com/questions/6802577/rotation-of-3d-vector
-    
-    e.g.I have two vectors as Python lists and an angle:
-        v = [3,5,0]
-        axis = [4,4,1]
-        theta = 1.2 #radian
-    What is the best/easiest way to get the resulting vector when rotating 
-    the v vector around the axis?
-    
-    print(np.dot(rotation_matrix(axis, theta), v)) 
-    # [ 2.74911638  4.77180932  1.91629719]
+
+    Parameters
+    ----------
+    axis : numpy array
+        np array with the x,y,z coordinates of the original's plane axis 
+    theta : float
+        Angle of rotation around the axis.
+
+    Returns
+    -------
+    numpy array
+        Rotation matrix.
+
     """
     
     axis = np.asarray(axis)
@@ -2412,6 +3080,21 @@ def rotation_matrix(axis, theta):
 
 #%% func - unit_vector
 def unit_vector(v): 
+    """
+    Function that returns the unit vector of the vector given as input
+
+    Parameters
+    ----------
+    v : numpy array
+        np array with the x,y,z coordinates of a plane axis 
+
+    Returns
+    -------
+    numpy array
+        np array with the x,y,z coordinates of a unitary plane axis 
+
+    """
+    
     #mag = math.sqrt(sum(i**2 for i in x))
     sqrs = [i**2 for i in v]
     mag = math.sqrt(sum(sqrs))
@@ -2421,6 +3104,27 @@ def unit_vector(v):
 
 #%% func - newNormal3DRot
 def newNormal3DRot (normal, rotX, rotY, rotZ):
+    """
+    Function that returns a vector rotated around X, Y and Z axis
+
+    Parameters
+    ----------
+    normal : numpy array
+        np array with the x,y,z coordinates of the original's plane axis 
+    rotX : list of floats
+        List of angles (deg) of the resulting rotation around the x-axis.
+    rotY : list of floats
+        List of angles (deg) of the resulting rotation around the Y-axis.
+    rotZ : list of floats
+        List of angles (deg) of the resulting rotation around the Z-axis.
+
+    Returns
+    -------
+    normal_rotZ : numpy array
+        np array with the x,y,z coordinates of the rotated axis
+
+    """
+    
     ang_X = np.radians(sum(rotX))
     ang_Y = np.radians(sum(rotY))
     ang_Z = np.radians(sum(rotZ))
@@ -2434,6 +3138,25 @@ def newNormal3DRot (normal, rotX, rotY, rotZ):
 
 #%% func - findClosestPt
 def findClosestPt(pt_o, pts):
+    """
+    Function that finds the closest point of the centreline where a plane cuts it
+
+    Parameters
+    ----------
+    pt_o : numpy array
+        np array with the x,y,z coordinates of the point that cuts kspline
+    pts : array of coordinates
+        Array with x,y,z coordinates of the centreline points
+
+    Returns
+    -------
+    pt_out : numpy array
+        np array with the x,y,z coordinates of the centreline point closest to the kspline cut
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the kspline. 
+
+    """
+    
     min_dist = 9999999
     for n in range(len(pts)):
         pt = pts[n]
@@ -2449,14 +3172,49 @@ def findClosestPt(pt_o, pts):
 
 #%% func - findDist
 def findDist(pt1, pt2):
+    """
+    Function that returns the distance between two points given as input
+
+    Parameters
+    ----------
+    pt1 : numpy array
+        np array with the x,y,z coordinates of a point
+    pt2 : numpy array
+        np array with the x,y,z coordinates of a point
+
+    Returns
+    -------
+    dist : int
+        Resulting distance between pt1 and pt2
+
+    """
     squared_dist = np.sum((pt1-pt2)**2, axis=0)
     dist = np.sqrt(squared_dist)
     
     return dist
 
 #%% func - getPointsAtPlane 
-# Function to get points within mesh at certain heights (y positions) to create kspline
 def getPointsAtPlane (points, pl_normal, pl_centre, tol=2):
+    """
+    Function to get points within mesh at certain heights (y positions) to create kspline
+
+    Parameters
+    ----------
+    points : array of coordinates
+        Array with x,y,z coordinates of the mesh4cl points
+    pl_normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal
+    pl_centre : list of floats
+        List with the x,y,z coordinatesof the plane's centre
+    tol : float, optional
+        Tolerance defined to get points in plane. The default is 2.
+
+    Returns
+    -------
+    pts_cut : array of coordinates
+        Array with x,y,z coordinates of the mesh4cl points that are cut by plane
+
+    """
     
     pts_cut = []
         
@@ -2476,40 +3234,24 @@ def getPointsAtPlane (points, pl_normal, pl_centre, tol=2):
     
     return pts_cut
 
-#%% func - getPointsAtPlaneAddParam 
-# Function to get points within mesh at certain heights (y positions) to create kspline
-# def getPointsAtPlaneAddParam (points, pl_normal, pl_centre, taken, assigned_plane, tol=0.05):
-    
-#     d = pl_normal.dot(pl_centre)
-#     #print('d for tol:', d)
-#     d_range = [d-tol, d+tol]
-#     #print('d range:', d_range)
-#     d_range.sort()
-    
-#     d_points = np.dot(points,pl_normal)
-#     index_ptsAtPlane = np.where((d_points >= -tol) & (d_points <= tol))[0]
-    
-#     for index in index_ptsAtPlane:
-#         if taken[index] != 1:
-            
-            
-#     for num, pt in enumerate(points):
-#         d_pt = pl_normal.dot(pt)
-#         if d_pt>d_range[0] and d_pt<d_range[1]:
-#             isTaken = taken[num]
-#             if isTaken == 0:
-#                 param_cut.append(param[num])
-#                 pts_cut.append(pt)
-#                 taken[num] = 1
-    
-#     pts_cut = np.asarray(pts_cut)
-#     param_cut = np.asarray(param_cut)
-#     taken = np.asarray(taken)
-    
-#     return pts_cut, param_cut, taken
-
 #%% func - order_pts
 def order_pts (points):
+    """
+    Function that returns an ordered array of points 
+
+    Parameters
+    ----------
+    points :  array of coordinates
+        Array with x,y,z coordinates to order
+
+    Returns
+    -------
+    ordered_pts : array of coordinates
+        Array with the ordered x,y,z coordinates 
+    angle_deg : list of floats
+        List with the associated angle of each of the ordered points
+
+    """
     
     center_pt = np.mean(points, axis=0)
     cent_pts = np.zeros_like(points)
@@ -2528,33 +3270,24 @@ def order_pts (points):
     
     return ordered_pts, angle_deg
 
-#%% func - order_ptsAddParam
-def order_ptsAddParam (points, center_pt, param, taken):
-    
-    cent_pts = np.zeros_like(points)
-    for num in range(len(points)):
-        cent_pts[num][0]=points[num][0]-center_pt[0]
-        cent_pts[num][2]=points[num][2]-center_pt[2]
-    
-    angle_deg = np.zeros((len(points),1))
-    for num, pt in enumerate(cent_pts):
-        angle_deg[num] = np.arctan2(pt[2],pt[0])*(180/np.pi)
-    
-    index_sort = np.argsort(angle_deg, axis=0)
-    ordered_pts = np.zeros_like(points)
-    ordered_param = np.zeros_like(param)
-    ordered_angle = np.zeros_like(angle_deg)
-    #ordered_taken = np.zeros_like(taken)
-    for i, pos in enumerate(index_sort):
-        ordered_pts[i]=points[pos]
-        ordered_angle[i] = angle_deg[pos]
-        ordered_param[i] = param[pos]
-        #ordered_taken[i] = taken[pos] # keep the info of taken this far?
-    
-    return ordered_pts, ordered_angle, ordered_param#, ordered_taken
-
 #%% func - getInterpolatedPts
 def getInterpolatedPts(points, nPoints):
+    """
+    Function that interpolates input points 
+
+    Parameters
+    ----------
+    points : array of coordinates
+        Array with original x,y,z coordinates of points
+    nPoints : int
+        Number of final points in spline
+
+    Returns
+    -------
+    pts_interp : array of coordinates
+        Final array with interpolated x,y,z coordinates of points
+
+    """
    
     minx, miny, minz = np.min(points, axis=0)
     maxx, maxy, maxz = np.max(points, axis=0)
@@ -2581,6 +3314,22 @@ def getInterpolatedPts(points, nPoints):
 
 #%% func - findAngleBtwVectors
 def findAngleBtwVectors(pts1, pts2):
+    """
+    Function that returns the angle between two vectors given as input
+
+    Parameters
+    ----------
+    pts1 : array of coordinates defining a vector
+        Coordinates defining the head and tail of vector
+    pts2 : array of coordinates defining a vector
+        Coordinates defining the head and tail of vector
+
+    Returns
+    -------
+    angle : float
+        Angle between vectors 
+
+    """
     
     mag_v1 = findDist(pts1[0],pts1[1])
     mag_v2 = findDist(pts2[0],pts2[1])
@@ -2596,6 +3345,21 @@ def findAngleBtwVectors(pts1, pts2):
 
 #%% func - orientVectors
 def orientVectors(line):
+    """
+    Function that orients the input line in a particular direction
+
+    Parameters
+    ----------
+    line : line
+        Line defining orientation (vedo line)
+
+    Returns
+    -------
+    pts_line : array of coordinates defining a vector
+        Coordinates defining the head and tail of the reoriented vector
+
+    """
+    
     if line.legend()  == 'lin_OrientAtr(ProjX)':
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()]
@@ -2613,21 +3377,21 @@ def orientVectors(line):
 #%% func - classifyPtsMx
 def classifyPtsMx(dict_planes, pl_name, pts_whole):
     """
-    
+    Function that classifies the input points (pts_whole) as atrium/ventricle or dorsal/ventral depending on the rest of the inputs given
 
     Parameters
     ----------
-    dict_planes : TYPE
-        DESCRIPTION.
-    pl_name : TYPE
-        DESCRIPTION.
-    pts_whole : TYPE
-        DESCRIPTION.
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    pl_name : str
+        Name of the plane to use - this defines the type of classification that will be made
+    pts_whole : array of coordinates
+        Array with x,y,z coordinates of whole mesh
 
     Returns
     -------
-    pts_classFinal : TYPE
-        DESCRIPTION.
+    pts_classFinal : list of str
+        List with the final classification for each of the points given as input
 
     """
     
@@ -2668,6 +3432,34 @@ def classifyPtsMx(dict_planes, pl_name, pts_whole):
 
 #%% func - classifyHeartPts
 def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, names_data, plot_show = True):
+    """
+    Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right 
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh : mesh
+        Mesh whose points are going to be classified
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    pts_whole : array of coordinates
+        Array with x,y,z coordinates of whole mesh
+    pts_left : array of coordinates
+        Array with x,y,z coordinates of left mesh
+    data : list of arrays
+        List of arrays with distance data to be classified
+    names_data : list of str
+        List with the names of the data corresponding to each point 
+    plot_show : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is True.
+
+    Returns
+    -------
+    df_classPts : dataframe
+        Dataframe including the points classification and corresponding distance data 
+
+    """
     
     print('- Classifying points for ', names_data)
     tic = perf_counter()
@@ -2722,41 +3514,26 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, nam
     
     return df_classPts
     
-#%% func - intersecOfSets
-def intersecOfSets(arr1, arr2, arr3): 
-    # https://www.geeksforgeeks.org/python-program-find-common-elements-three-lists-using-sets/
-    # Converting the arrays into sets 
-    s1 = set(arr1) 
-    s2 = set(arr2) 
-    s3 = set(arr3) 
-      
-    # Calculates intersection of sets on s1 and s2 
-    set1 = s1.intersection(s2) 
-    # Calculates intersection of sets on set1 and s3 
-    result_set = set1.intersection(s3)
-    # Converts resulting set to list 
-    final_list = list(result_set) 
-    #print(final_list) 
-    
-    return final_list
-        
-#%% func - classifyPtAtSidesofPlane
-def classifyPtAtSidesofPlane(pt, d, normal, classes_sorted):
-    x,y,z = pt
-    a,b,c = normal
-    
-    dotProd_pt = dot((a,b,c), (x,y,z))
-    #print("dotProd_pt:", dotProd_pt)
-    if dotProd_pt < d:
-        pts_class = classes_sorted[0]
-    else:
-        pts_class = classes_sorted[-1]
-    #print("Point classified as:", pts_class)
-    
-    return pts_class
-
 #%% func - getPlaneNormals
 def getPlaneNormals (no_planes, spline_pts):
+    """
+    Function that returns a list with normal vectors to create cutting planes 
+
+    Parameters
+    ----------
+    no_planes : int
+        Number of planes that will be used to get transverse sections of heart
+    spline_pts : list of coordinates 
+        List of centreline coordinates
+
+    Returns
+    -------
+    normals : list of list of floats
+        list of List with the x,y,z coordinates of each of the planes' normal
+    pt_centre : list of list of floats
+        list of List with the x,y,z coordinates of each of the planes' centre
+
+    """
         
     normals = []
     pt_centre = []
@@ -2771,6 +3548,27 @@ def getPlaneNormals (no_planes, spline_pts):
 #%% - SAVING  
 #%% func - saveMesh
 def saveMesh(filename, mesh, mesh_name, dir_stl, extension):
+    """
+    Function to save mesh
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh : mesh
+        Mesh to save (vedo Mesh)
+    mesh_name : str
+        Mesh name
+    dir_stl : path
+        Path to the folder where the meshes are saved.
+    extension : str
+        Extension to saved mesh 'vtk'/'stl'.
+
+    Returns
+    -------
+    None.
+
+    """
         
     mesh_title = filename+"_"+mesh_name+"."+extension
     mesh_dir = os.path.join(dir_stl, mesh_title)
@@ -2780,6 +3578,30 @@ def saveMesh(filename, mesh, mesh_name, dir_stl, extension):
     
 #%% func - saveMeshes 
 def saveMeshes(filename, meshes, names, dict_colour, dir_stl, extension):
+    """
+    Function to save meshes
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes
+        List of meshes to save (vedo Meshes)
+    names : list of str
+        List of meshes names
+    dict_colour : dictionary
+        dictionary with information about the meshes colour 
+    dir_stl : path
+        Path to the folder where the meshes are saved.
+    extension : str
+        Extension to saved mesh 'vtk'/'stl'.
+
+    Returns
+    -------
+    dict_colour : dictionary
+        Updated dictionary with information about the meshes colour 
+
+    """
     
     for i, mesh, name in zip(count(), meshes, names):
         mesh_title = filename+"_"+name+"."+extension
@@ -2796,6 +3618,31 @@ def saveMeshes(filename, meshes, names, dict_colour, dir_stl, extension):
     
 #%% func - saveLayertMeshes
 def saveLayerMeshes (filename, mesh_all, mesh_in, mesh_out, layer_name, dir_mesh, extension):
+    """
+    Function to save internal, external and actual heart layer mesh
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh_all : mesh 
+        Mesh of the heart layer. (vedo Mesh)
+    mesh_in : mesh 
+        Mesh of the filled internal contours of the heart layer. (vedo Mesh)
+    mesh_out : mesh 
+        Mesh of the filled external contours of the heart layer. (vedo Mesh)
+    layer_name : list of str
+        List of meshes names
+    dir_mesh : path
+        Path to the folder where the meshes are saved.
+    extension : str
+        Extension to saved mesh 'vtk'/'stl'.
+
+    Returns
+    -------
+    None.
+
+    """
     
     print('- Saving '+ layer_name + ' meshes (All/In/Out) ')
     mesh_all_title = filename+"_"+layer_name+"."+extension
@@ -2815,6 +3662,25 @@ def saveLayerMeshes (filename, mesh_all, mesh_in, mesh_out, layer_name, dir_mesh
     
 #%% func - saveThickness 
 def saveThickness(filename, arrays2save, names, dir2save):
+    """
+    Function to save distance information about mesh
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    arrays2save : array 
+        Array with distance data to save
+    names : str
+        Name of data to save
+    dir2save : path
+        Path to the folder where the dictionaries are saved.
+
+    Returns
+    -------
+    None.
+
+    """
     
     for i, arrayTh, name in zip(count(), arrays2save, names):
         thickness_title = filename+"_"+name
@@ -2826,6 +3692,31 @@ def saveThickness(filename, arrays2save, names, dir2save):
     
 #%% func - saveVideo 
 def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, duration = 15):
+    """
+    Function that saves video of rotating mesh
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    info : str
+        Text with additional information to print.
+    meshes4video : list of meshes
+        List of meshes to include in video
+    rotAngle : float
+        Heart inclination angle
+    dir2save : path
+        Path to the folder where the videos will be saved.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is True.
+    duration : int, optional
+        Video duration in seconds. The default is 15.
+
+    Returns
+    -------
+    None.
+
+    """
     
     if rotAngle > 90:
         rotAngle = 180 - rotAngle
@@ -2868,6 +3759,29 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
 
 #%% func- saveMultVideos
 def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
+    """
+    Function that saves videos of rotating mesh given as input (meshes4video)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    info : str
+        Text with additional information to print.
+    meshes4video : list of list of meshes
+        lisf of List of meshes to include in video
+    rotAngle : floats
+        Heart inclination angle
+    dir2save : path
+        Path to the folder where the videos will be saved.
+    plotshow : boolean
+        True if you want to see the resulting mesh in a plot, else False.
+
+    Returns
+    -------
+    None.
+
+    """
     
     print('Saving videos... this might take a while... (about 2min/video')
     bar = Bar('Saving' , max = len(info), suffix = suffix, check_tty=False, hide_cursor=False)
@@ -2881,6 +3795,25 @@ def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
 #%% - PLOTTERS
 #%% func - plotPtClassif
 def plotPtClassif(filename, mesh, pts_whole, pts_class):
+    """
+    Function that plots a subset of the classified points 
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh : mesh
+        Mesh whose points were classified
+    pts_whole : array of coordinates
+        Array with x,y,z coordinates of whole mesh
+    pts_class : list of str
+        List with the final classification for points
+
+    Returns
+    -------
+    None.
+
+    """
     
     [pts_classAnV, pts_classDnV, pts_classLnR] = pts_class
     names_class = [['atrium', 'ventricle'],['dorsal', 'ventral'],['left', 'right']]
@@ -2905,61 +3838,34 @@ def plotPtClassif(filename, mesh, pts_whole, pts_class):
             vp.show(mesh, sph_first, sph_second, at = i+1)
         else: 
             vp.show(mesh, sph_first, sph_second, at = i+1, interactive = True)
-            
-#%% func - plotterIndivAlpha
-def plotterIndivAlpha(filename, N, meshes, alpha):
-    
-    vp = Plotter(N=N, axes=7)
-    
-    text = str(filename)
-    txt = Text2D(text, c=c, font=font)
-    for num, mesh in enumerate(meshes):
-        #If object is a mesh
-        if not isinstance(mesh, list):
-            mesh.alpha(alpha[num])
-        #If object is a list of meshes
-        else: 
-            for num_i, mesh_i in enumerate(mesh):
-                mesh_i.alpha(alpha[num][num_i])
-        if num == 0:
-            vp.show(mesh, txt, at=num)
-        elif num != N-1 or num !=0:
-            vp.show(mesh, at=num)
-        else:
-            vp.show(mesh, at=num, interactive=True)
 
-#%% func - plotterIndiv
-def plotterIndiv(filename, N, meshes):
-    
-    vp = Plotter(N=N, axes=7)
-    text = str(filename)
-    txt = Text2D(text, c=c, font=font)
-    for num, mesh in enumerate(meshes):
-        if num == 0:
-            vp.show(mesh, txt, at=num)
-        elif num != N-1 or num !=0:
-            vp.show(mesh, at=num)
-        else:
-            vp.show(mesh, at=num, interactive=True)
-            
-#%% func - plotterAll
-def plotterAll(filename, meshes, alpha):
-    
-    text = str(filename)
-    txt = Text2D(text, c=c, font=font)
-    
-    meshes_alpha = []
-    vp = Plotter(N=1, axes=7)
-    for num, mesh in enumerate(meshes):
-        mesh.alpha(alpha[num])
-        meshes_alpha.append(mesh)
-        
-    vp.show(meshes_alpha, txt, at=0, interactive=True)
 
 #%% - PRINT
 #%% func - code4vmtkCL
 def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
+    """
+    Function that prints the instructions that should be followed to get vmtk centreline data
 
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh_name : list of str
+        List of meshes names 
+    dir_cl : path
+        Path to the folder where the centreline data is saved.
+    printshow : boolean
+        True if you want to print the instructions, else False.
+
+    Returns
+    -------
+    cl_dirA : path
+        Path to the vtp file with centreline data A
+    cl_dirB : path
+        Path to the vtp file with centreline data B
+
+    """
+    
     mesh_titleA = filename+"_"+mesh_name[0]+".stl"
     mesh_titleB = filename+"_"+mesh_name[1]+".stl"
     # mesh_dirA = '"'+os.path.join(dir_cl, mesh_titleA)+'"'
@@ -3000,6 +3906,24 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
 
 #%% func - decodeDict
 def decodeDict (dict2classify, info):
+    """
+    Function to decode dictionary used to classify points 
+
+    Parameters
+    ----------
+    dict2classify : dict
+        Dictionary with data to be classified
+    info : list of str
+        List of names of the data added to the dict (cj_thickness, myoc_intBall)
+
+    Returns
+    -------
+    list
+        List with information of the planes being added to the dictionary
+        [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param].
+
+    """
+    
     # Decode dictionary
     # - AnV
     d_AnV = dict2classify['AnV']['d']

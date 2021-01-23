@@ -25,6 +25,7 @@ def setWorkingDir (root_path, init):
 root_path, init = setWorkingDir(os.getcwd(),init)
 initial_runD = True
 
+#%% Start A_Contours
 if init:
     # Importing morphoHeart packages
     import morphoHeart_funcBasics as fcBasics

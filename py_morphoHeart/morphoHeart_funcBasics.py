@@ -1,23 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 morphoHeart_funcBasics
-Functions included:
-    - alert(sound, times)
-    - ask4input(text, type_response)
-    - getMainDirectories(root_path)
-    - exportDatasetCSV(dir_lsOngoing, dir_data2Analyse)
-    - loadDF(filename, file, dir_results)
-    - loadNPY(filename, names, dir_txtNnpy)
-    - loadDicts(filename, dicts_name, directories)
-    - selectFile (df_dataset)
-    - createDirectories2Save (filename, dir_data2Analyse, end_name)
-    - metadataExt (filename, dir_data2Analyse)
-    - code4vmtkCL(filename, mesh_name, dir_cl, printshow = True)
-    - saveFilledDF(filename, df_res, dir2save)
-    - saveDF(filename, df2save, df_name, dir2save)
-    - changeDirName(filename, dir_o)
 
-Version: Nov 16, 2020
+Version: Jan 22, 2021
 @author: Juliana Sanchez-Posada
 
 """
@@ -32,6 +17,7 @@ from progress.bar import Bar
 from itertools import count
 import json
 import shutil
+import psutil
 
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
@@ -57,7 +43,7 @@ class NumpyArrayEncoder(json.JSONEncoder):
 #%% func - alert
 def alert(sound, times):
     """
-    Function to play selected sound as an alert (v: April 14, 2020)
+    Function to play selected sound as an alert 
 
     Parameters
     ----------
@@ -100,24 +86,39 @@ def alert(sound, times):
     for i in range(times):
         playsound(sound2play)
 
+#%% func - getUsedRAM
+def getUsedRAM():
+    """
+    Funtion that prints RAM memory being used
+
+    Returns
+    -------
+    None.
+
+    """
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    memoryUse = py.memory_info()[0]/2.**30  # memory use in GB...I think
+    print('RAM Memory Use:', memoryUse)
+    
 #%% func - ask4input
 def ask4input(text, type_response, keep = False):
     """
-    Function used to ask for input from the user (v: July, 2020)
+    Function that ask for user input and transforms it into the expected type
 
     Parameters
     ----------
     text : str
         Text asking the question and giving possible options.
-    type_response : data types int/str/float
+    type_response : data types int/str/float/boolean
         data type of the expected response
     keep : Boolean
         If True, leaves the string as it is (with upper and lower cases), else, changes the whole string to lower case.
 
     Returns
     -------
-    response : int or str
-        returns an int or an str depending on the type_response given as input.
+    response : int/str/float/bool
+        returns an object with the corresponding type_response given as input.
 
     """
     alert('beep',1)
@@ -365,7 +366,7 @@ def loadDicts(filename, dicts_name, directories, print_txt = True):
         #print("Started Reading JSON file")
         with open(json2open_dir, "r") as read_file:
             if print_txt:
-                print("\t>> "+name+": Converting JSON encoded data into Numpy Array\n")
+                print("\t>> "+name+": Converting JSON encoded data into Numpy Array")
             decodedArray = json.load(read_file)
 
         dicts_out.append(decodedArray)
@@ -424,6 +425,22 @@ def selectFile (df_dataset):
 
 #%% func - selectHearts
 def selectHearts (df_dataset):
+    """
+    Function that allows the user to select the hearts to plot, printing a modified version of the 
+    input dataframe and prompting the user to input the file number(s)
+
+    Parameters
+    ----------
+    df_dataset : dataframe
+        Dataframe containing all the embryos information of the folders 'R_'.
+
+    Returns
+    -------
+    df_file : dataframe
+        Dataframe just with the information of the filename(s) selected by the user
+
+    """
+    
 
     df_datasetTemp = df_dataset.copy()
     df_datasetTemp['Ref'] = df_dataset['Folder'].str.slice(2,10)
@@ -474,19 +491,19 @@ def selectHearts (df_dataset):
 #%% func - getInputNumbers
 def getInputNumbers(input_var, variables):
     """
-
+    Function that gets the variables corresponding to the user input.
 
     Parameters
     ----------
-    input_var : TYPE
-        DESCRIPTION.
-    variables : TYPE
-        DESCRIPTION.
+    input_var : str
+        String with input given by the user.
+    variables : list of str
+        List with variables to select.
 
     Returns
     -------
-    var_num : TYPE
-        DESCRIPTION.
+    var_num : list of str
+        List of selected variables.
 
     """
     if input_var == 'all':
@@ -721,7 +738,28 @@ def saveDF(filename, df2save, df_name, dir2save):
 
 #%% func - saveDict
 def saveDict(filename, dict2save, name, dir2save, print_txt = True):
+    """
+    Functions that saves dict given as input
 
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dict2save : dict
+        Dictionary to be saved.
+    name :  str
+        Specific name given to the dictionary to be saved.
+    dir2save : path
+        Path to the folder where the dictionary is to be saved.
+    print_txt : bool, optional
+        True if confirmation of action is needed, else False. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    
     jsonDict_name = filename+"_"+name+".json"
     json2save_dir = os.path.join(dir2save,jsonDict_name)
 
@@ -733,6 +771,23 @@ def saveDict(filename, dict2save, name, dir2save, print_txt = True):
 
 #%% func - printTime
 def printTime(tic, toc, txt):
+    """
+    Function that prints a text with the time taken to perform a process
+
+    Parameters
+    ----------
+    tic : float
+        Time for starting stopwatch.
+    toc : float
+        Time for ending stopwatch.
+    txt : str
+        Process being performed
+
+    Returns
+    -------
+    None.
+
+    """
     time = toc-tic
     print("\t>> Total time taken to "+txt+" = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
 
