@@ -28,8 +28,8 @@ suffix = '%(index)d/%(max)d - %(elapsed)ds'
 c="k"
 font= 'CallingCode'
 
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 from time import perf_counter
 embedWindow(False)
 
@@ -787,11 +787,11 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
 
     """
 
-    s3_ch0_int, s3_ch0_ext, s3_ch0, s3_ch1_int, s3_ch1_ext_cl, s3_ch1_cl = s3s2cut
+    s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut = s3s2cut
 
     # Create new s3s to save cuts
-    s3_ch0_cut = s3_ch0; s3_ch0_int_cut = s3_ch0_int; s3_ch0_ext_cut = s3_ch0_ext
-    s3_ch1_cut = s3_ch1_cl; s3_ch1_int_cut = s3_ch1_int; s3_ch1_ext_cut = s3_ch1_ext_cl
+    # s3_ch0_cut = s3_ch0_cut; s3_ch0_int_cut = s3_ch0_int_cut; s3_ch0_ext_cut = s3_ch0_ext_cut
+    # s3_ch1_cut = s3_ch1_cut; s3_ch1_int_cut = s3_ch1_int_cut; s3_ch1_ext_cut = s3_ch1_ext_cut
 
     cut_type = ['inflow', 'outflow']
     cuts = []
@@ -896,8 +896,8 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
             save_s3s(filename = filename, s3_all = s3_ch0_cut, s3_int = s3_ch0_int_cut, s3_ext = s3_ch0_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = 'ch0_cut')
     else:
-        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0, s3_in = s3_ch0_int,
-                                    s3_out = s3_ch0_ext, resolution = resolution, layer = 'Myoc')
+        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0_cut, s3_in = s3_ch0_int_cut,
+                                    s3_out = s3_ch0_ext_cut, resolution = resolution, layer = 'Myoc')
     # Endocardial layers
     if any(x in cuts for x in [1, 2]):
         #Create new mesh endocardial s3_all
@@ -913,8 +913,8 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
             save_s3s(filename = filename, s3_all = s3_ch1_cut, s3_int = s3_ch1_int_cut, s3_ext = s3_ch1_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = 'ch1_cut')
     else:
-        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cl, s3_in = s3_ch1_int,
-                                    s3_out = s3_ch1_ext_cl, resolution = resolution, layer = 'Endo')
+        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cut, s3_in = s3_ch1_int_cut,
+                                    s3_out = s3_ch1_ext_cut, resolution = resolution, layer = 'Endo')
 
     s3s_cut = [s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut]
     meshes_cut = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext]

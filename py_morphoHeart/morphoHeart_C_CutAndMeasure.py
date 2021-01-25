@@ -8,8 +8,8 @@ morphoHeart - C. CUT ALL HEART LAYERS (ATRIUM/VENTRICLE, DORSAL/VENTRAL, LEFT/RI
 import os
 import psutil
 from time import perf_counter
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 
 init = False

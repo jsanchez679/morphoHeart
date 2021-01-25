@@ -7,8 +7,8 @@ morphoHeart - B. CREATE 3D VOLUMES AND MESHES TO EXTRACT CENTRELINE
 #%% Importing python packages
 import os
 from time import perf_counter
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 
 init = False
@@ -19,7 +19,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -129,7 +129,7 @@ if init:
     vp.show(myoc_cut_int.color('turquoise'), at=2,  zoom=1)
     vp.show(cj_all.clone().alpha(0.05), at=3,  zoom=1)
     vp.show(myoc_cut.clone().alpha(0.1), endo_cut, cj_all, at=4)
-    vp.show(endo_cut_ext.color('orchid'), at=5, zoom=1, interactive=True)
+    vp.show(endo_cut_ext.color('orchid'), at=5, zoom=1, interactive=True).screenshot('pic.png')
 
     #%% Save all meshes and plane dict
     # Save SurfArea and Int/Ext Volume of meshes to dataframe and save df
@@ -173,9 +173,31 @@ if init:
                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'], dir2save = directories[0])
 
     # Instructions for VMTK
-    fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
+    mesh_title, meshML_title, vmtktxt, cl_dir = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
                            dir_cl = directories[3], printshow = True)
+                           
     toc = perf_counter()
     fcBasics.printTime(tic, toc, 'Create 3D Volumes')
 
 init = True
+
+# C:\Users\mdp18js>D:\Applications\MeshLab\meshlab.exe "D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\im_morphoHeart\LS17_F09_V_SR_1708_2A\Results_LS17_F09_V_SR_1708\centreline\LS17_F09_V_SR_1708_myoc_int_cut4clML.stl"
+
+# from vmtk import pypes
+# from vmtk import vmtkscripts
+
+# myArguments = 'vmtksurfacereader -ifile "D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\im_morphoHeart\LS17_F09_V_SR_1708_2A\Results_LS17_F09_V_SR_1708\centreline\LS17_F09_V_SR_1708_myoc_int_cut4clML2.stl" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\im_morphoHeart\LS17_F09_V_SR_1708_2A\Results_LS17_F09_V_SR_1708\centreline\LS17_F09_V_SR_1708_myoc_int_cl2.vtp" --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius'
+
+# # myArguments = 'vmtkmarchingcubes -ifile myimage.vti -l 800 --pipe vmtksurfaceviewer'
+# myPype = pypes.PypeRun(myArguments)
+
+# mySurface = myPype.GetScriptObject('vmtkmarchingcubes','0').Surface
+# mySmoother = vmtkscripts.vmtkSurfaceSmoothing()
+# mySmoother.Surface = mySurface
+# mySmoother.PassBand = 0.1
+# mySmoother.NumberOfIterations = 30
+# mySmoother.Execute()
+# myWriter = vmtkscripts.vmtkSurfaceWriter()
+# myWriter.Surface = mySmoother.Surface
+# myWriter.OutputFileName = 'mysurface.vtp'
+# myWriter.Execute()

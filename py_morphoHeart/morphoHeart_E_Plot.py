@@ -12,8 +12,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from itertools import count
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 
 init = False
@@ -75,6 +75,18 @@ if init:
                                   dir_stl = directories[2], dir_txtNnpy = directories[1])
     m_cjTh, m_myocTh, m_endoTh, m_myocIntBall, m_myocExtBall = m_thAll
 
+    #%%
+
+    
+    m_names = ['myoc_int']
+    m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
+                                dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
+    [m_myoc_int] = m_all
+    
+    vp = Plotter(N=1, axes=7)
+    vp.show(m_myoc_int, at=0, interactive=True)
+    
+    fcMeshes.saveMesh(filename, m_myoc_int, 'myoc_int', directories[2], 'stl')
     #%%
     # plot_dir = os.path.join(directories[4], filename+"_")
     vp = Plotter(N=9, axes=7)

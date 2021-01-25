@@ -43,7 +43,7 @@ class NumpyArrayEncoder(json.JSONEncoder):
 #%% func - alert
 def alert(sound, times):
     """
-    Function to play selected sound as an alert 
+    Function to play selected sound as an alert
 
     Parameters
     ----------
@@ -100,7 +100,7 @@ def getUsedRAM():
     py = psutil.Process(pid)
     memoryUse = py.memory_info()[0]/2.**30  # memory use in GB...I think
     print('RAM Memory Use:', memoryUse)
-    
+
 #%% func - ask4input
 def ask4input(text, type_response, keep = False):
     """
@@ -219,10 +219,10 @@ def exportDatasetCSV(dir_data2Analyse, end_name = '2A'):
     # - Get general info of all LS Sessions
     info_cols = ['LS No','Strain','Stage','Manipulation']
     df_info = pd.read_excel(genot_dir, sheet_name = 'RAW_All', header = 0,
-                            usecols=info_cols)
+                            usecols=info_cols, engine='openpyxl')
     df_info = df_info.set_index('LS No')
     # - Get genotyping data of all LS Sessions
-    df_genot = pd.read_excel(genot_dir, sheet_name = 'All_Genotype', header = 1)
+    df_genot = pd.read_excel(genot_dir, sheet_name = 'All_Genotype', header = 1, engine='openpyxl')
     df_genot = df_genot.set_index('Pos')
 
     if end_name == 'R':
@@ -426,7 +426,7 @@ def selectFile (df_dataset):
 #%% func - selectHearts
 def selectHearts (df_dataset):
     """
-    Function that allows the user to select the hearts to plot, printing a modified version of the 
+    Function that allows the user to select the hearts to plot, printing a modified version of the
     input dataframe and prompting the user to input the file number(s)
 
     Parameters
@@ -440,7 +440,7 @@ def selectHearts (df_dataset):
         Dataframe just with the information of the filename(s) selected by the user
 
     """
-    
+
 
     df_datasetTemp = df_dataset.copy()
     df_datasetTemp['Ref'] = df_dataset['Folder'].str.slice(2,10)
@@ -674,7 +674,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
 
     alert("wohoo",1)
 
-    return cl_dirA, cl_dirB
+    return [mesh_titleA, mesh_titleB], [meshML_titleA, meshML_titleB], [vmtktxtA, vmtktxtB], [cl_dirA, cl_dirB]
 
 #%% func - saveFilledDF
 def saveFilledDF(filename, df_res, dir2save):
@@ -759,7 +759,7 @@ def saveDict(filename, dict2save, name, dir2save, print_txt = True):
     None.
 
     """
-    
+
     jsonDict_name = filename+"_"+name+".json"
     json2save_dir = os.path.join(dir2save,jsonDict_name)
 
@@ -824,7 +824,7 @@ def changeDirName(filename, dir_o):
 # # pdoc --html <path to code> --output-dir <path to documentation>
 # path_2_code = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\Sounds').parent
 # path_2_doc = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\docs_morphoHeart')
-                   
+
 # pdoc --html path_2_code --output-dir path_2_doc
 
 #%% - ALERT WHEN IMPORTED

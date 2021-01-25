@@ -10,8 +10,8 @@ import os
 import platform
 import numpy as np
 from skimage import measure
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 
 import pandas as pd
@@ -44,7 +44,7 @@ if init:
     # import morphoHeart_funcMeshes as fcMeshes
 
     #%% Get main directories (check which ones are actually used)
-    _, _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
+    _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     dir_R_All = os.path.join(dir_data2Analyse,'R_All')
 
     #%% Get directories
@@ -107,7 +107,7 @@ if init:
     sns.set_context('poster', font_scale = 0.5, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
                                                     "ytick.labelsize":'small', "lines.linewidth": 1.5})
 
-    fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col, figsize=(size_col, size_row), sharex=False, sharey=True)
+    fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col, figsize=(size_col, size_row), sharex=False, sharey=False)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.suptitle(title)
 

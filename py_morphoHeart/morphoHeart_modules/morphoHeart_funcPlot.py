@@ -17,8 +17,8 @@ import math
 from progress.bar import Bar
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 
 c="k"
@@ -391,7 +391,38 @@ def yieldMultMeshes(names, dict_paths):
 
         yield list_meshes
 
+#%% func - getVariables
+def getVarsANDLabels (variables, labels):
+    
+    print('\nVariables:')
+    for c, value in enumerate(variables, 1):
+        print(c-1, value)
+    input_var = input('Select the variables you would like to process: ')
+    
+    if input_var == 'All':
+        var_num = list(range(0,len(variables),1))
+   
+    else:
+        var_num = []
+        comma_split = input_var.split(',')
+              
+        for string in comma_split:
+            if '-' in string:
+                minus_split = string.split('-')
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+   
+    vars2loop = []
+    labels2loop = []
+    for i, num in enumerate(var_num):
+        vars2loop.append(variables[num])
+        labels2loop.append(labels[num])
 
+    return vars2loop, labels2loop
 
 
 #%% - ALERT WHEN IMPORTED

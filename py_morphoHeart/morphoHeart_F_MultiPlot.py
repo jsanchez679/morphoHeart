@@ -9,8 +9,8 @@ morphoHeart - F. MULTIPLOT HEARTS
 import os
 import numpy as np
 from itertools import count
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
 #settings.useParallelProjection=True
 
@@ -22,7 +22,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -42,8 +42,8 @@ if init:
     from morphoHeart_modules import morphoHeart_funcPlot as fcPlot
 
     #%% Get directories and file
-    _, _, dir_lsOngoing, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_lsOngoing, dir_data2Analyse, end_name = 'R')
+    _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R')
 
     #%% Select hearts to plot
     df_files = fcBasics.selectHearts(df_dataset)
@@ -86,3 +86,5 @@ if init:
             m += 1
         else:
             vp.show(meshes[m], scale_cube, at=n, zoom = 1.5, interactive=True)
+
+init = True

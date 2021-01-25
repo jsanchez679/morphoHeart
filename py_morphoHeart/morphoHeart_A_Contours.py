@@ -17,7 +17,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -135,3 +135,5 @@ if others:
 
     #%% Plot the selected contours (masks) of all the slices to double check
     fcCont.plotSelectedContours(imageEvery = 1, stack = stack_closed, heartLayer = heartLayer)
+
+init = True

@@ -9,11 +9,6 @@ Version: Jan 22, 2021
 #%% Importing python packages
 import os
 import numpy as np
-#import pandas as pd
-
-from skimage import measure, io
-from skimage.measure import label, regionprops
-from skimage.draw import line_aa
 
 from scipy.spatial import distance
 from scipy.spatial.distance import cdist
@@ -33,11 +28,14 @@ from datetime import datetime
 from time import perf_counter
 
 import json
-# from json import JSONEncoder
 
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow
 embedWindow(False)
+
+from skimage import measure, io
+from skimage.measure import label, regionprops
+from skimage.draw import line_aa
 
 #%% Importing morphoHeart packages
 from .morphoHeart_funcBasics import alert, ask4input, saveDict, loadDicts
@@ -548,7 +546,7 @@ def openMask (filename, chStr, dir_ims2Analyse, filetype):
     maskSt = np.array(maskSt, dtype=bool)
 
     if filetype == 'tif':
-        print("Using: \n\t- mask: ", maskfile)
+        print("-Using: \n\t- mask: ", maskfile)
 
     return maskSt
 
@@ -1300,7 +1298,7 @@ def getSlices (slc_tuple, text):
     """
 
     slc_list = []
-    input_slc = ask4input('Select the slices '+text+' from -('+str(slc_tuple[0])+','+str(slc_tuple[1]-1)+')- (e.g. 5,9-11/[all/ ]:all/[N/n]:none): ', str)
+    input_slc = ask4input('Select the slices '+text+' from -('+str(slc_tuple[0])+','+str(slc_tuple[1]-1)+')- (e.g. to close slices 5, 9, 10, and 11 type: 5,9-11)/[all/ ]:all/[N/n]:none): ', str)
 
     if input_slc == 'all' or input_slc == '':
         slc_list = list(range(slc_tuple[0],slc_tuple[1],1))
@@ -1860,7 +1858,7 @@ def maskContour (myIm, contour):
     sol = props[0].solidity
     bbox = props[0].bbox
 
-    props_all = np.array([area, centroid, max_int, mean_int, lgth, per, sol, bbox])
+    props_all = np.array([area, centroid, max_int, mean_int, lgth, per, sol, bbox], dtype=object)
 
     return props_all
 

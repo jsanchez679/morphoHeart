@@ -13,6 +13,7 @@ import os
 import platform
 import numpy as np
 import json
+from vmtk import pypes
 from vmtk import vmtkscripts
 
 init = False
@@ -57,11 +58,16 @@ if init:
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
 
     #%% Get vtp files and export them as np.arrays
-    cl_dir = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
-                           dir_cl = directories[3], printshow = False)
-
+    mesh_title, meshML_title, vmtktxt, cl_dir = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
+                                                dir_cl = directories[3], printshow = False)
+    
+    #%%
     mesh_name = ['myoc_int','endo_ext']
     for n, mesh in enumerate(mesh_name):
+        #Create centrelines
+        myArguments = vmtktxt[n]
+        myPype = pypes.PypeRun(myArguments)
+
         # Read the vtp file as a dictionary
         centerlineReader = vmtkscripts.vmtkSurfaceReader()
         centerlineReader.InputFileName = cl_dir[n]
