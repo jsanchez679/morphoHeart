@@ -638,10 +638,14 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
 
     Returns
     -------
-    cl_dirA : path
-        Path to the '.vtp' file for the internal myoc
-    cl_dirB : path
-        Path to the '.vtp' file for the external endoc
+    [mesh_titleA, mesh_titleB] : str
+        [Name given to the smoothed internal myoc mesh,Name given to the smoothed external endoc mesh]
+    [meshML_titleA, meshML_titleB] : str
+        [Name given to the smoothed internal myoc mesh out of Meshlab,Name given to the smoothed external endoc mesh out of Meshlab]
+    [vmtktxtA, vmtktxtB] : str
+        [Code to run VMTK using pypes to extract centreline of the internal myoc,Code to run VMTK using pypes to extract centreline of the external endoc]
+    [cl_dirA, cl_dirB] : paths
+        [Path to the '.vtp' file for the internal myoc,Path to the '.vtp' file for the external endoc]
 
     """
 
@@ -661,16 +665,16 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
     cl_dirB = os.path.join(dir_cl, cl_titleB)
     cl_dirA_str = '"'+cl_dirA+'"'
     cl_dirB_str = '"'+cl_dirB+'"'
+    vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
+    vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
 
     if printshow:
         print("You are done in python now... to get the centreline with each of the meshes follow the next steps:")
         print(">>> 1. Open the files:  -", mesh_titleA,", ", mesh_titleB+" - in Meshlab")
-        print(">>> 2. Run Filters > Remeshing, Simpl.. > Screened Poisson Surf Reco (check Pre-clean)")
-        print(">>> 3. Cut outflow tract if needed and export the resulting surface adding 'ML' after _cut4cl in the same folder")
-        print(">>> 4. Open VMTK, copy the next text and run it...")
-        vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-        vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-        print(str(vmtktxtA), '\n\n\n', str(vmtktxtB))
+        print(">>> 2. Run Filters > Remeshing, Simplification.. > Screened Poisson Surf Reco (check Pre-clean)")
+        print(">>> 3. Cut inflow/outflow tract and export the resulting surface adding 'ML' at the end of the filename (e.g _cut4clML.stl) in the same folder")
+        print(">>> 4. Open script morphoHeart_B_VMTK.py and run it...")
+        # print(str(vmtktxtA), '\n\n\n', str(vmtktxtB))
 
     alert("wohoo",1)
 

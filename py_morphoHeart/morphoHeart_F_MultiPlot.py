@@ -12,6 +12,9 @@ from itertools import count
 from vedo import *
 from vedo import embedWindow
 embedWindow(False)
+settings.legendSize = .3
+# settings.legendPos = 1
+settings.legendFont="VTK"
 #settings.useParallelProjection=True
 
 init = False
@@ -29,8 +32,7 @@ def setWorkingDir (root_path, init):
 
 root_path, init = setWorkingDir(os.getcwd(),init)
 
-c="k"
-font= 'CallingCode'
+c="k"; font= 'VTK'
 azimuth = 0
 alpha_cube = 0
 s_cube = 350
@@ -53,7 +55,7 @@ if init:
     dict_paths = fcPlot.createDictPaths(objs, df_files, dir_data2Analyse)
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
 
-    vp = Plotter(shape = (1, len(dict_paths)), axes=7, sharecam = True); m = 0
+    vp = Plotter(shape = (1, len(dict_paths)), axes=13, sharecam = True); m = 0
     for i, n, file in zip(count(), range(len(dict_paths)), df_files['Folder'].tolist()):
         txt = fcPlot.plotTitle(file, df_files)
         scale_cube = Cube(pos=meshes[m].centerOfMass(), side=s_cube, c='white', alpha=alpha_cube)
@@ -69,7 +71,7 @@ if init:
     dict_paths = fcPlot.createDictPaths(objs, df_files, dir_data2Analyse)
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
 
-    vp = Plotter(shape = (len(dict_paths), len(objs)), axes=7, sharecam = True); m = 0
+    vp = Plotter(shape = (len(dict_paths), len(objs)), axes=13, sharecam = True); m = 0
     numbs = np.arange(0,len(dict_paths)*len(objs),len(objs)).tolist()
     for i, n in zip(count(), range(len(dict_paths)*len(objs))):
         file = df_files['Folder'].tolist()[n//len(objs)]

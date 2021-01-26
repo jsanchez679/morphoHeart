@@ -13,6 +13,7 @@ import os
 import platform
 import numpy as np
 import json
+import vmtk
 from vmtk import pypes
 from vmtk import vmtkscripts
 
@@ -24,7 +25,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -47,7 +48,6 @@ if init:
 
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
-    # alert,ask4input,getMainDirectories,exportDatasetCSV,selectFile,createDirectories2Save
 
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
@@ -69,11 +69,18 @@ if init:
         myPype = pypes.PypeRun(myArguments)
 
         # Read the vtp file as a dictionary
-        centerlineReader = vmtkscripts.vmtkSurfaceReader()
-        centerlineReader.InputFileName = cl_dir[n]
-        centerlineReader.Execute()
+        # centerlineReader = vmtkscripts.vmtkSurfaceReader()
+        # centerlineReader.InputFileName = cl_dir[n]
+        # centerlineReader.Execute()
+        # clNumpyAdaptor.Centerlines = centerlineReader.Surface 
+        # clNumpyAdaptor.Execute()
+        # numpyCenterlines = clNumpyAdaptor.ArrayDict
+        
+        for m in range(len(myPype.ScriptObjectList)):
+            if isinstance(myPype.ScriptObjectList[m], vmtk.vmtkcenterlines.vmtkCenterlines):
+                centerlineReader = myPype.ScriptObjectList[m]
         clNumpyAdaptor = vmtkscripts.vmtkCenterlinesToNumpy()
-        clNumpyAdaptor.Centerlines = centerlineReader.Surface
+        clNumpyAdaptor.Centerlines = centerlineReader.Centerlines # Surface # cl
         clNumpyAdaptor.Execute()
         numpyCenterlines = clNumpyAdaptor.ArrayDict
 
@@ -110,3 +117,5 @@ if init:
     #         ['CellDataArray1']       <-- optional, (ex: CenterlineTractId)
     #         ['CellDataArray2']       <-- optional
     #            ...
+
+init = True

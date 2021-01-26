@@ -15,6 +15,9 @@ from itertools import count
 from vedo import *
 from vedo import embedWindow
 embedWindow(False)
+settings.legendSize = .3
+# settings.legendPos = 1
+settings.legendFont="VTK"
 
 init = False
 # Verify working dir
@@ -31,8 +34,7 @@ def setWorkingDir (root_path, init):
 
 root_path, init = setWorkingDir(os.getcwd(),init)
 
-c="k"
-font= 'CallingCode'
+c="k"; font= 'VTK' # 'CallingCode'
 azimuth = 0
 
 #%% Start E_Plot
@@ -83,13 +85,13 @@ if init:
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
     [m_myoc_int] = m_all
     
-    vp = Plotter(N=1, axes=7)
+    vp = Plotter(N=1, axes=13)
     vp.show(m_myoc_int, at=0, interactive=True)
     
     fcMeshes.saveMesh(filename, m_myoc_int, 'myoc_int', directories[2], 'stl')
     #%%
     # plot_dir = os.path.join(directories[4], filename+"_")
-    vp = Plotter(N=9, axes=7)
+    vp = Plotter(N=9, axes=13)
     text = filename + "\n\n >> Heart layers and chambers"; txt = Text2D(text, c=c, font=font)
     vp.show(m_myoc, txt, at=0)
     vp.show(m_atrMyoc, at=3)
@@ -102,7 +104,7 @@ if init:
     vp.show(m_ventCJ, at=8,elevation = elevation, azimuth = azimuth, interactive=True)
     screenshot(filename='screenshot.png', scale=None, returnNumpy=False)
 
-    vp = Plotter(N=3, axes=7)
+    vp = Plotter(N=3, axes=13)
     text = filename + "\n\n >> Heart layers and chambers"; txt = Text2D(text, c=c, font=font)
     vp.show(m_myoc, txt, at=0)
     vp.show(m_endo, at=1)
@@ -134,7 +136,7 @@ if init:
 
     #%%
     # plot_dir = os.path.join(directories[4], filename+"_")
-    vp = Plotter(N=9, axes=7)
+    vp = Plotter(N=9, axes=13)
     text = filename + "\n\n >> Heart layers and chambers"; txt = Text2D(text, c=c, font=font)
     vp.show(m_myoc, txt, at=0)
     vp.show(m_atrMyoc, at=3)
@@ -148,21 +150,21 @@ if init:
 
 
     m_atrMyocC = m_ventMyoc
-    m_atrMyocC.legend(m_atrMyoc.legend())
+    m_atrMyocC.legend(m_atrMyoc._legend)
     m_ventMyocC = m_atrMyoc
     m_ventMyocC.legend('Ventricle(Myoc)')
 
     m_atrEndoC = m_ventEndo
-    m_atrEndoC.legend(m_atrEndo.legend())
+    m_atrEndoC.legend(m_atrEndo._legend)
     m_ventEndoC = m_atrEndo
     m_ventEndoC.legend('Ventricle(Endo)')
 
     m_atrCJC = m_ventCJ
-    m_atrCJC.legend(m_atrCJ.legend())
+    m_atrCJC.legend(m_atrCJ._legend)
     m_ventCJC = m_atrCJ
     m_ventCJC.legend('Ventricle(CJ)')
 
-    vp = Plotter(N=9, axes=7)
+    vp = Plotter(N=9, axes=13)
     text = filename + "\n\n >> Heart layers and chambers"; txt = Text2D(text, c=c, font=font)
     vp.show(m_myoc, txt, at=0)
     vp.show(m_atrMyocC, at=3)
@@ -176,7 +178,7 @@ if init:
 
     # screenshot(filename=plot_dir+'Heart_Layers_Chambers.png')
 
-    # vp = Plotter(N=5, axes=7)
+    # vp = Plotter(N=5, axes=13)
     # text = filename + "\n\n >> Thickness"; txt = Text2D(text, c=c, font=font)
     # vp.show(m_cjTh, m_cjIn.color('white'), txt, at=0)
     # vp.show(m_myocTh, at=1)
@@ -200,7 +202,7 @@ if init:
     # [sph_AtrC, sph_VenC, sph_infC, sph_outfC, sph_valve, sph_chCut] = sph_all
     # cl_ribbon = Ribbon(clExt[0], clExt[1], alpha=0.2, res=(500, 150)).wireframe(True).legend("rib_ExtCL(D-V)").color('purple')
 
-    # vp = Plotter(N=1, axes=7)
+    # vp = Plotter(N=1, axes=13)
     # vp.show(txt, cl_ribbon, kspl_all, sph_all, m_myoc.alpha(0.01), m_endo.alpha(0.01), at=0, azimuth = azimuth, elevation = elevation, interactive=True)
 
 
@@ -212,14 +214,14 @@ if init:
     m_cjIn.color("white").alpha(1).wireframe()
     m_cjTh.mapper().SetScalarRange(0,20)
 
-    vp = Plotter(N=1, axes=7)
+    vp = Plotter(N=1, axes=13)
     vp.show(m_cjTh, at=0, azimuth = azimuth, elevation = elevation, interactive=True)
 
     fcMeshes.saveVideo (filename = filename, info = 'cj_thickness0to20', meshes4video = [m_cjTh],
                         rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow=True)
 
 
-    vp = Plotter(N=1, axes=7)
+    vp = Plotter(N=1, axes=13)
     vp.show(m_endo.alpha(0.5), m_cj.alpha(1), at=0, azimuth = azimuth, elevation = elevation, interactive=True)
 
     fcMeshes.saveVideo (filename = filename, info = 'heartEndoCJ', meshes4video = [m_endo.alpha(0.5), m_cj.alpha(1)],
@@ -237,7 +239,7 @@ if init:
     # m_myocIntBall.color("white").alpha(1).wireframe()
     m_myocIntBall.mapper().SetScalarRange(0,75)
 
-    # vp = Plotter(N=1, axes=7)
+    # vp = Plotter(N=1, axes=13)
     # vp.show(sph_ballonning, m_myocIntBall, at=0, azimuth = azimuth, elevation = elevation, interactive=True)
 
     fcMeshes.saveVideo (filename = filename, info = 'myoc_intBall0to75', meshes4video = [m_myocIntBall],

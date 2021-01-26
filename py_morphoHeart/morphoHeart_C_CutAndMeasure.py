@@ -11,6 +11,9 @@ from time import perf_counter
 from vedo import *
 from vedo import embedWindow
 embedWindow(False)
+settings.legendSize = .3
+# settings.legendPos = 1
+settings.legendFont="VTK"
 
 init = False
 # Verify working dir
@@ -20,14 +23,14 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd(),init)
 
-c="k"; font= 'CallingCode'
+c="k"; font= 'VTK'
 save = False
 plot = True
 azimuth = 0
@@ -83,7 +86,8 @@ if init:
     # Plot meshes
     if plot:
         text = str(filename); txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=6, axes=7)
+        settings.legendSize = .20
+        vp = Plotter(N=6, axes=13)
         vp.show(m_myoc, txt, at=0)
         vp.show(m_endo, at=1)
         vp.show(m_cj, at=2)
@@ -102,9 +106,10 @@ if init:
 
     if plot:
         vp = Plotter(N=1, axes=10)
+        settings.legendSize = .50
         vp.show(txt, kSplinesCuts, sphCuts, kspl_CL, linLines, m_myoc.alpha(0.01), m_endo.alpha(0.01), at=0, azimuth = azimuth, interactive=True)
 
-        vp = Plotter(N=4, axes=7)
+        vp = Plotter(N=4, axes=13)
         vp.show(m_myoc.alpha(0.01), sph_CL_colour[0], txt, at=0)
         vp.show(m_endo.alpha(0.01), sph_CL_colour[1], at=1)
         vp.show(m_myoc.alpha(0.01), sph_CL[0], at=2)
@@ -201,7 +206,7 @@ if init:
 
     if plot:
         text = filename+"\n\n >> Int. and Ext. Myocardium and CL"; txt = Text2D(text, c="k", font= 'CallingCode')
-        vp = Plotter(N=3, axes = 7)
+        vp = Plotter(N=3, axes = 13)
         vp.show(m_myocInt.alpha(0.01).color(dict_colour['myoc_int']['colour']), sph_ballonning, txt,  at=0)
         vp.show(m_myocExt.alpha(0.01).color('teal'), sph_ballonning, at=1)
         vp.show(m_myocInt, m_myocExt, sph_ballonning, scale_cube, at=2, zoom = 2, elevation = elevation, interactive = True)
@@ -220,7 +225,7 @@ if init:
     #     fcMeshes.saveMesh(filename = filename, mesh = m_myocExtBall, mesh_name = 'myoc_extBall', dir_stl = directories[2], extension = 'vtk')
 
     if plot:
-        vp = Plotter(N=6, axes = 7)
+        vp = Plotter(N=6, axes = 13)
         vp.show(m_myocInt.alpha(0.01), sph_ballonning, at=0)
         vp.show(m_myocExt.alpha(0.01), sph_ballonning, at=1)
         vp.show(m_myocInt.alpha(0.01), m_myocExt.alpha(0.01), sph_ballonning, at=2)
@@ -310,11 +315,11 @@ init = True
     #%% getBalloons
     #sph_all, sph_whole = fcMeshes.getBalloonedHeart(myoc_int_npcl)
 
-    # vp = Plotter(N=1, axes=7)
+    # vp = Plotter(N=1, axes=13)
     # vp.show(m_myoc.alpha(0.01), sph_all[0].color('green').alpha(0.05), sph_all[5].alpha(0.05), at=0, interactive=True)
 
     # sph_whole = booleanOperation(sph_all[0], 'plus',sph_all[2])
     # sph_whole.color('coral')
 
-    # vp = Plotter(N=1, axes=7)
+    # vp = Plotter(N=1, axes=13)
     # vp.show(m_myoc.alpha(0.01), sph_whole, at=0, interactive=True)

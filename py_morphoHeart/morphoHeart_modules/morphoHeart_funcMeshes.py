@@ -106,7 +106,7 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
         meshes_out.append(mesh_out)
 
     alert("wohoo",1)
-    print('\n')
+    # print('\n')
 
     return meshes_out
 
@@ -265,9 +265,9 @@ def addPlane2Dict (plane, pl_centre, pl_normal, info, dict_planes, print_txt = T
     """
 
     if info =='':
-        specific_plane = dict_planes[plane.legend()]= dict()
+        specific_plane = dict_planes[plane._legend]= dict()
     else:
-        specific_plane = dict_planes[plane.legend()+'-'+info]= dict()
+        specific_plane = dict_planes[plane._legend+'-'+info]= dict()
 
     specific_plane['pl_normal'] = pl_normal
     specific_plane['pl_centre'] = pl_centre
@@ -307,9 +307,9 @@ def addPlanes2Dict (planes, pls_centre, pls_normal, info, dict_planes, print_txt
 
     for i, plane, inf in zip(count(), planes, info):
         if inf =='':
-            specific_plane = dict_planes[plane.legend()]= dict()
+            specific_plane = dict_planes[plane._legend]= dict()
         else:
-            specific_plane = dict_planes[plane.legend()+'-'+inf]= dict()
+            specific_plane = dict_planes[plane._legend+'-'+inf]= dict()
 
         specific_plane['pl_normal'] = pls_normal[i]
         specific_plane['pl_centre'] = pls_centre[i]
@@ -344,9 +344,9 @@ def addPoint2Dict (sphere, info, dict_pts, print_txt = True):
     """
 
     if info =='':
-        specific_pt = dict_pts[sphere.legend()]= dict()
+        specific_pt = dict_pts[sphere._legend]= dict()
     else:
-        specific_pt = dict_pts[sphere.legend()+'-'+info]= dict()
+        specific_pt = dict_pts[sphere._legend+'-'+info]= dict()
 
     specific_pt['sph_position'] = sphere.pos()
     specific_pt['color'] = sphere.color()
@@ -381,9 +381,9 @@ def addPoints2Dict (spheres, info, dict_pts, print_txt = True):
 
     for i, sph, inf in zip(count(), spheres, info):
         if inf =='':
-            specific_pt = dict_pts[sph.legend()]= dict()
+            specific_pt = dict_pts[sph._legend]= dict()
         else:
-            specific_pt = dict_pts[sph.legend()+'-'+inf]= dict()
+            specific_pt = dict_pts[sph._legend+'-'+inf]= dict()
 
         specific_pt['sph_position'] = sph.pos()
         specific_pt['color'] = sph.color()
@@ -417,9 +417,9 @@ def addKSpline2Dict (kspl, info, dict_kspl, print_txt = True):
     """
 
     if info =='':
-        specific_kspl = dict_kspl[kspl.legend()]= dict()
+        specific_kspl = dict_kspl[kspl._legend]= dict()
     else:
-        specific_kspl = dict_kspl[kspl.legend()+'-'+info]= dict()
+        specific_kspl = dict_kspl[kspl._legend+'-'+info]= dict()
 
     specific_kspl['kspl_pts'] = kspl.points()
     specific_kspl['color'] = kspl.color()
@@ -455,9 +455,9 @@ def addKSplines2Dict (kspls, info, dict_kspl, print_txt = True):
     for i, kspl, inf in zip(count(), kspls, info):
         #print(i)
         if inf =='':
-            specific_kspl = dict_kspl[kspl.legend()]= dict()
+            specific_kspl = dict_kspl[kspl._legend]= dict()
         else:
-            specific_kspl = dict_kspl[kspl.legend()+'-'+inf]= dict()
+            specific_kspl = dict_kspl[kspl._legend+'-'+inf]= dict()
 
         specific_kspl['kspl_pts'] = kspl.points()
         specific_kspl['color'] = kspl.color()
@@ -494,9 +494,9 @@ def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
 
     for i, sp_shape, inf, radii in zip(count(), shapes, info, radius):
         if inf =='':
-            specific_shape = dict_shapes[sp_shape.legend()]= dict()
+            specific_shape = dict_shapes[sp_shape._legend]= dict()
         else:
-            specific_shape = dict_shapes[sp_shape.legend()+'-'+inf]= dict()
+            specific_shape = dict_shapes[sp_shape._legend+'-'+inf]= dict()
 
         specific_shape['kspl_pts'] = sp_shape.points()
         specific_shape['color'] = sp_shape.color()
@@ -651,12 +651,12 @@ def addLinearMeas2df(df_res, file_num, lines, kspl_CL):
     df_resFilled = df_res
     for nl, line in enumerate(lines):
         length_l = line.length()
-        name_l = line.legend()
+        name_l = line._legend
         df_resFilled.loc[file_num, name_l] = length_l
 
     for ncl, cl in enumerate(kspl_CL):
         length_cl = cl.length()
-        name_cl = cl.legend()
+        name_cl = cl._legend
         df_resFilled['Length_'+name_cl] = length_cl
 
     return df_resFilled
@@ -1147,7 +1147,7 @@ def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
 
     text = filename+"\n\n >> "+layer
     txt = Text2D(text, c=c, font=font)
-    vp = Plotter(N=3, axes=7)
+    vp = Plotter(N=3, axes=13)
     vp.show(mesh_all, txt, at=0, zoom=1.2)
     vp.show(mesh_all, mesh_out, at=1, zoom=1.2)
     vp.show(mesh_all, mesh_in, at=2, zoom=1.2, interactive=True)
@@ -1206,7 +1206,7 @@ def createExtLayerMesh(filename, s3_ext, resolution, layer, info, plotshow = Tru
     if plotshow:
         text = filename+"\n\n >> External "+layer+' ('+info+')'
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=1, axes=7)
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh_ext, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh_ext
@@ -1260,7 +1260,7 @@ def createLayerMesh(filename, s3, resolution, layer, name, colour, alpha, plotsh
         text = filename+"\n\n >> "+layer
         txt = Text2D(text, c=c, font=font)
 
-        vp = Plotter(N=1, axes=7)
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh
@@ -1376,7 +1376,7 @@ def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
 
         meshes4cl.append(meshCL_cut)
 
-    vp = Plotter(N=2, axes=7)
+    vp = Plotter(N=2, axes=13)
     vp.show(meshes4cl[-1], at=0, zoom=1)
     vp.show(meshes4cl[-2], at=1, zoom=1, interactive = True)
 
@@ -1468,7 +1468,7 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
             meshes.append(mesh4cl)
 
     if plotshow:
-        vp = Plotter(N=1, axes=7)
+        vp = Plotter(N=1, axes=13)
         text = filename+"\n\n >> Resulting mesh after cutting inflow & outflow tract"
         txt = Text2D(text, c=c, font=font)
         vp.show(meshes[-2:], ksplines, spheres, txt, at=0, interactive=True)
@@ -1502,7 +1502,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
     for i, mesh in enumerate(meshes):
 
         meshes2cutLR = mesh
-        mesh_legend = mesh.legend()
+        mesh_legend = mesh._legend
         print('- Dividing '+mesh_legend+' into left and right sides')
 
         mesh_1 = meshes2cutLR.clone().cutWithMesh(cl_ribbon, invert=True)
@@ -1517,7 +1517,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
 
         text = filename+"\n\n >> Resulting mesh after cutting with centreline \n >> Before closing the window make sure you confirm A (light blue): left, B (dark blue): Right"
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=2, axes=7)
+        vp = Plotter(N=2, axes=13)
         vp.show(meshes2cutLR, cl_ribbon, txt, at=0)
         vp.show(mesh_1, mesh_2, at=1, zoom = 1.2, interactive=True)
 
@@ -1991,8 +1991,8 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
     z_size = zmax - zmin
 
     box_size = max(x_size, y_size, z_size)*1.2
-    #centre = (x_size/2+xmin, ymin, z_size/2+zmin)
-    #normal = (0,1,0)
+    centre = (x_size/2+xmin, ymin, z_size/2+zmin)
+    # normal = (0,1,0)
     #print("centre:", centre)
 
     rotX = [0]
@@ -2031,13 +2031,13 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
     plane = Plane(pos=pl_centre, normal=pl_normal, sx=box_size*1.2).color("gainsboro").alpha(1)
 
     if option[0]: #sliderX
-        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0],
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=pl_centre[0],
                     pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
     if option[1]: #sliderY
-        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1],
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=pl_centre[1],
                     pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
     if option[2]: #sliderZ
-        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2],
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=pl_centre[2],
                     pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
     if option[3]: #sliderRotX
         vp.addSlider2D(sliderRotX, -1, +1, value=0,
@@ -2163,7 +2163,7 @@ def createDVPlanes(filename, sph_orient, mesh, kspl_CL, orient_lines, dict_plane
 
     text = filename+"\n\n >> Creating coronal planes to divide each chamber"
     txt = Text2D(text, c="k", font= 'CallingCode')
-    vp = Plotter(N=1, axes = 7)
+    vp = Plotter(N=1, axes = 13)
     vp.show(mesh.alpha(0.01), sph_orient, kspl_CL, orient_lines, pl_DnV_Atr, pl_DnV_Vent, txt, at=0, interactive=True)
 
     pl_DnV = [pl_DnV_Atr, pl_DnV_Vent]
@@ -2443,7 +2443,7 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
     text = filename+"\n\n >> Creating Extended Centreline to Divide Right/Left"
     txt = Text2D(text, c="k", font= 'CallingCode')
 
-    vp = Plotter(N=1, axes=7)
+    vp = Plotter(N=1, axes=13)
     vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
 
     return cl_ribbon, dict_kspl, dict_shapes, dict_planes
@@ -2569,7 +2569,7 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
     return sph_orient, lines_orient, dict_pts, dict_kspl, df_res
 
 #%% func - getDistance2Mesh
-def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True):
+def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     """
     Function that gets the distance between m_ext and m_int and color codes m_ext accordingly
 
@@ -2627,10 +2627,10 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
 
     m_ext_out.pointColors(thickness, cmap="jet", vmin=val_min, vmax=val_max)
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
-    m_ext_out.addScalarBar(title=title_bar+' [um]')
+    m_ext_out.addScalarBar(title=title_bar+' [um]', pos=(0.8, 0.05))
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
 
-    m_ext_out.alpha(alpha).legend(m_ext.legend())
+    m_ext_out.alpha(alpha).legend(m_ext._legend)
     m_int.color("white").alpha(1).wireframe()
 
     if plotshow:
@@ -2639,7 +2639,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
 
         cube = Cube(pos=m_ext_out.centerOfMass(), side=300, c='white', alpha=0.01)
         vp = Plotter(N=1, axes=10)
-        vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
+        vp.show(m_ext_out, cube, txt, at=0, zoom=1.2)#vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
 
     min_max = [vmin, vmax]
 
@@ -3360,10 +3360,10 @@ def orientVectors(line):
 
     """
 
-    if line.legend()  == 'lin_OrientAtr(ProjX)':
+    if line._legend  == 'lin_OrientAtr(ProjX)':
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()]
-    elif line.legend() == 'lin_OrientVent(ProjX)':
+    elif line._legend == 'lin_OrientVent(ProjX)':
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()[::-1]]
     else: # Linear line
@@ -3821,7 +3821,7 @@ def plotPtClassif(filename, mesh, pts_whole, pts_class):
     text = filename+'\n\n >> Point classification'
     txt = Text2D(text, c="k", font= 'CallingCode')
 
-    vp = Plotter(shape = (1, 4), axes = 7)
+    vp = Plotter(shape = (1, 4), axes = 13)
     vp.show(mesh, txt, at = 0)
     for i, sp_class in enumerate(pts_class):
 

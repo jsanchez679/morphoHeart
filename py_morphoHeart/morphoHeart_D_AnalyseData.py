@@ -13,6 +13,9 @@ from skimage import measure
 from vedo import *
 from vedo import embedWindow
 embedWindow(False)
+settings.legendSize = .3
+# settings.legendPos = 1
+settings.legendFont="VTK"
 
 import pandas as pd
 import glob

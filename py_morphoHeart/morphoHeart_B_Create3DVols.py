@@ -10,6 +10,9 @@ from time import perf_counter
 from vedo import *
 from vedo import embedWindow
 embedWindow(False)
+settings.legendSize = .3
+# settings.legendPos = 1
+settings.legendFont="VTK"
 
 init = False
 # Verify working dir
@@ -48,7 +51,7 @@ if init:
     # Initialise variables
     plotshow = False
     dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict()
-    txt = Text2D(filename, c="k", font= 'CallingCode')
+    txt = Text2D(filename, c="k", font= 'VTK')
 
     #%% Load stacks
     s3s, stackShape = fcCont.loadStacks(filename = filename, dir_txtNnpy = directories[1],
@@ -74,7 +77,7 @@ if init:
 
     # Plot Ext Myocardium and Clean Ext Endocardium
     myoc_ext.alpha(0.1); endo_o.color('mediumorchid').legend('Orig.Ext.Endo')
-    vp = Plotter(N=4, axes=4)
+    vp = Plotter(N=4, axes=10)
     vp.show(endo_o, txt, at=0, zoom=1)
     vp.show(myoc_ext, endo_o, at=1, zoom=1)
     vp.show(endo_ext, at=2, zoom=1)
@@ -173,7 +176,7 @@ if init:
                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'], dir2save = directories[0])
 
     # Instructions for VMTK
-    mesh_title, meshML_title, vmtktxt, cl_dir = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
+    _, _, _, _ = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
                            dir_cl = directories[3], printshow = True)
                            
     toc = perf_counter()
