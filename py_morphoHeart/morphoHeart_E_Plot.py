@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from itertools import count
 from vedo import *
-from vedo import embedWindow
+from vedo import embedWindow, settings, Plotter, Text2D
 embedWindow(False)
 settings.legendSize = .3
 # settings.legendPos = 1
@@ -41,7 +41,7 @@ azimuth = 0
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
-    from morphoHeart_modules import morphoHeart_funcContours as fcCont
+    # from morphoHeart_modules import morphoHeart_funcContours as fcCont
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
 
     #%% Get directories and file
@@ -102,7 +102,6 @@ if init:
     vp.show(m_ventMyoc, at=6)
     vp.show(m_ventEndo, at=7)
     vp.show(m_ventCJ, at=8,elevation = elevation, azimuth = azimuth, interactive=True)
-    screenshot(filename='screenshot.png', scale=None, returnNumpy=False)
 
     vp = Plotter(N=3, axes=13)
     text = filename + "\n\n >> Heart layers and chambers"; txt = Text2D(text, c=c, font=font)

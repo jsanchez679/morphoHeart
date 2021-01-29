@@ -17,8 +17,8 @@ import math
 from progress.bar import Bar
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
-from vedo import *
-from vedo import embedWindow
+# from vedo import *
+from vedo import embedWindow, Plotter, Text2D, settings, load
 embedWindow(False)
 
 c="k"

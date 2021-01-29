@@ -638,47 +638,77 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
 
     Returns
     -------
-    [mesh_titleA, mesh_titleB] : str
-        [Name given to the smoothed internal myoc mesh,Name given to the smoothed external endoc mesh]
-    [meshML_titleA, meshML_titleB] : str
-        [Name given to the smoothed internal myoc mesh out of Meshlab,Name given to the smoothed external endoc mesh out of Meshlab]
-    [vmtktxtA, vmtktxtB] : str
-        [Code to run VMTK using pypes to extract centreline of the internal myoc,Code to run VMTK using pypes to extract centreline of the external endoc]
-    [cl_dirA, cl_dirB] : paths
-        [Path to the '.vtp' file for the internal myoc,Path to the '.vtp' file for the external endoc]
+    vmtktxts : list of str
+        Codes to run VMTK using pypes to extract centreline of the internal myoc and/or external endoc
 
     """
+    
+    mesh_titles = []
+    vmtktxts = []
+    names = []
+    meshML_dirs = []
+    
+    vmtktxtsf = []
+    namesf = []
 
-    mesh_titleA = filename+"_"+mesh_name[0]+"_cut4cl.stl"
-    mesh_titleB = filename+"_"+mesh_name[1]+"_cut4cl.stl"
-    # mesh_dirA = '"'+os.path.join(dir_cl, mesh_titleA)+'"'
-    # mesh_dirB = '"'+os.path.join(dir_cl, mesh_titleB)+'"'
-
-    meshML_titleA = filename+"_"+mesh_name[0]+"_cut4clML.stl"
-    meshML_titleB = filename+"_"+mesh_name[1]+"_cut4clML.stl"
-    meshML_dirA = '"'+os.path.join(dir_cl, meshML_titleA)+'"'
-    meshML_dirB = '"'+os.path.join(dir_cl, meshML_titleB)+'"'
-
-    cl_titleA = filename+"_"+mesh_name[0]+"_cl.vtp"
-    cl_titleB = filename+"_"+mesh_name[1]+"_cl.vtp"
-    cl_dirA = os.path.join(dir_cl, cl_titleA)
-    cl_dirB = os.path.join(dir_cl, cl_titleB)
-    cl_dirA_str = '"'+cl_dirA+'"'
-    cl_dirB_str = '"'+cl_dirB+'"'
-    vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-    vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-
+    for i in range(len(mesh_name)):
+        if printshow:
+            name = mesh_name[i][0:8]
+        else: 
+            name = mesh_name[i]
+        names.append(name)
+        mesh_title = filename+"_"+name+"_cut4cl.stl"
+        mesh_titles.append(mesh_title)
+        meshML_title = filename+"_"+name+"_cut4clML.stl"
+        meshML_dir = '"'+os.path.join(dir_cl, meshML_title)+'"'
+        meshML_dirs.append(os.path.join(dir_cl, meshML_title))
+        cl_title = filename+"_"+name+"_cl.vtp"
+        cl_dir = os.path.join(dir_cl, cl_title)
+        cl_dir_str = '"'+cl_dir+'"'
+        vmtktxt = "vmtksurfacereader -ifile "+ meshML_dir +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dir_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
+        vmtktxts.append(vmtktxt)
+        
+        # mesh_titleA = filename+"_"+mesh_name[0]+"_cut4cl.stl"
+        # mesh_titleB = filename+"_"+mesh_name[1]+"_cut4cl.stl"
+        # # mesh_dirA = '"'+os.path.join(dir_cl, mesh_titleA)+'"'
+        # # mesh_dirB = '"'+os.path.join(dir_cl, mesh_titleB)+'"'
+    
+        # meshML_titleA = filename+"_"+mesh_name[0]+"_cut4clML.stl"
+        # meshML_titleB = filename+"_"+mesh_name[1]+"_cut4clML.stl"
+        # meshML_dirA = '"'+os.path.join(dir_cl, meshML_titleA)+'"'
+        # meshML_dirB = '"'+os.path.join(dir_cl, meshML_titleB)+'"'
+    
+        # cl_titleA = filename+"_"+mesh_name[0]+"_cl.vtp"
+        # cl_titleB = filename+"_"+mesh_name[1]+"_cl.vtp"
+        # cl_dirA = os.path.join(dir_cl, cl_titleA)
+        # cl_dirB = os.path.join(dir_cl, cl_titleB)
+        # cl_dirA_str = '"'+cl_dirA+'"'
+        # cl_dirB_str = '"'+cl_dirB+'"'
+        # vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
+        # vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
+    
     if printshow:
-        print("You are done in python now... to get the centreline with each of the meshes follow the next steps:")
-        print(">>> 1. Open the files:  -", mesh_titleA,", ", mesh_titleB+" - in Meshlab")
-        print(">>> 2. Run Filters > Remeshing, Simplification.. > Screened Poisson Surf Reco (check Pre-clean)")
-        print(">>> 3. Cut inflow/outflow tract and export the resulting surface adding 'ML' at the end of the filename (e.g _cut4clML.stl) in the same folder")
-        print(">>> 4. Open script morphoHeart_B_VMTK.py and run it...")
+        print("\nYou are done in python for a little while... \n\t\t\tto get the centreline of each of the selected meshes follow the next steps:")
+        print(" >>> 1. Open the file(s):  -", mesh_titles," - in Meshlab")
+        print(" >>> 2. Run Filters > Remeshing, Simplification.. > Screened Poisson Surf Reco (check Pre-clean)")
+        print(" >>> 3. Cut inflow/outflow tract and export the resulting surface adding 'ML' at the end of the filename \n\t\t\t(e.g _cut4clML.stl) in the same folder")
+        print(" >>> 4. Back in Spyder, open script morphoHeart_B_VMTK.py and run it...")
         # print(str(vmtktxtA), '\n\n\n', str(vmtktxtB))
+        
+        vmtktxtsf = vmtktxts
+        namesf = names
+    
+    else:
+        for j, ml_dir in enumerate(meshML_dirs):
+            # print(cldir)
+            if os.path.exists(ml_dir):
+                vmtktxtsf.append(vmtktxts[j])
+                # print('yay')
+                namesf.append(names[j])
 
     alert("wohoo",1)
-
-    return [mesh_titleA, mesh_titleB], [meshML_titleA, meshML_titleB], [vmtktxtA, vmtktxtB], [cl_dirA, cl_dirB]
+        
+    return vmtktxtsf, namesf
 
 #%% func - saveFilledDF
 def saveFilledDF(filename, df_res, dir2save):
@@ -701,8 +731,8 @@ def saveFilledDF(filename, df_res, dir2save):
 
     """
 
-    print('\n\t\t\tFile dataframe ')
-    print(df_res.T.head(10),'\n')
+    print('\n- File dataframe for '+filename+' has been saved!')
+    # print(df_res.T.head(1:2),'\n')
 
     name_csv = filename+'_ResultsDF.csv'
     dir_filledDF = os.path.join(dir2save, name_csv)
