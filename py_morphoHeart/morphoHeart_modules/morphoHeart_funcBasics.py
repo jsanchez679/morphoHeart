@@ -86,8 +86,8 @@ def alert(sound, times):
     for i in range(times):
         playsound(sound2play)
 
-#%% func - getUsedRAM
-def getUsedRAM():
+#%% func - getRAMUse
+def getRAMUse():
     """
     Funtion that prints RAM memory being used
 
@@ -667,26 +667,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
         cl_dir_str = '"'+cl_dir+'"'
         vmtktxt = "vmtksurfacereader -ifile "+ meshML_dir +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dir_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
         vmtktxts.append(vmtktxt)
-        
-        # mesh_titleA = filename+"_"+mesh_name[0]+"_cut4cl.stl"
-        # mesh_titleB = filename+"_"+mesh_name[1]+"_cut4cl.stl"
-        # # mesh_dirA = '"'+os.path.join(dir_cl, mesh_titleA)+'"'
-        # # mesh_dirB = '"'+os.path.join(dir_cl, mesh_titleB)+'"'
-    
-        # meshML_titleA = filename+"_"+mesh_name[0]+"_cut4clML.stl"
-        # meshML_titleB = filename+"_"+mesh_name[1]+"_cut4clML.stl"
-        # meshML_dirA = '"'+os.path.join(dir_cl, meshML_titleA)+'"'
-        # meshML_dirB = '"'+os.path.join(dir_cl, meshML_titleB)+'"'
-    
-        # cl_titleA = filename+"_"+mesh_name[0]+"_cl.vtp"
-        # cl_titleB = filename+"_"+mesh_name[1]+"_cl.vtp"
-        # cl_dirA = os.path.join(dir_cl, cl_titleA)
-        # cl_dirB = os.path.join(dir_cl, cl_titleB)
-        # cl_dirA_str = '"'+cl_dirA+'"'
-        # cl_dirB_str = '"'+cl_dirB+'"'
-        # vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-        # vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-    
+
     if printshow:
         print("\nYou are done in python for a little while... \n\t\t\tto get the centreline of each of the selected meshes follow the next steps:")
         print(" >>> 1. Open the file(s):  -", mesh_titles," - in Meshlab")
@@ -856,10 +837,12 @@ def changeDirName(filename, dir_o):
 #%% Code to create documentation
 # from pathlib import Path
 # # pdoc --html <path to code> --output-dir <path to documentation>
-# path_2_code = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\Sounds').parent
-# path_2_doc = Path('D:\\Documents JSP\\Dropbox\\Dropbox_Juliana\\PhD_Thesis\\Data_ongoing\\LS_ongoing\\A_LS_Analysis\\morphoHeart\\py_morphoHeart\\docs_morphoHeart')
+# (morphoHeart) D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\morphoHeart\py_morphoHeart>
+#       pdoc --html --output-dir docs_morphoHeart morphoHeart_modules
 
-# pdoc --html path_2_code --output-dir path_2_doc
+#%% Code to create reqs
+# (morphoHeart) D:\Documents JSP\Dropbox\Dropbox_Juliana\PhD_Thesis\Data_ongoing\LS_ongoing\A_LS_Analysis\morphoHeart>
+#       pipreqs .
 
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcBasics")

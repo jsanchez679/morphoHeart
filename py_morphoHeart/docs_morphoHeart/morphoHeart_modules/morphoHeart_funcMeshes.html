@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>morphoHeart_modules.morphoHeart_funcMeshes API documentation</title>
-<meta name="description" content="morphoHeart_funcMeshes
-Functions included:
-- alert(sound, times)
-- …" />
+<meta name="description" content="morphoHeart_funcMeshes …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -25,10 +22,7 @@ Functions included:
 <h1 class="title">Module <code>morphoHeart_modules.morphoHeart_funcMeshes</code></h1>
 </header>
 <section id="section-intro">
-<p>morphoHeart_funcMeshes
-Functions included:
-- alert(sound, times)
--</p>
+<p>morphoHeart_funcMeshes</p>
 <p>Version: September 30, 2020
 @author: Juliana Sanchez-Posada</p>
 <details class="source">
@@ -38,9 +32,6 @@ Functions included:
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
 morphoHeart_funcMeshes
-Functions included:
-    - alert(sound, times)
-    -
 
 Version: September 30, 2020
 @author: Juliana Sanchez-Posada
@@ -58,15 +49,16 @@ from skimage import measure#, io
 from scipy.interpolate import splprep, splev
 import pandas as pd
 
-from datetime import datetime
+# from datetime import datetime
 from progress.bar import Bar
 suffix = &#39;%(index)d/%(max)d - %(elapsed)ds&#39;
 
 c=&#34;k&#34;
-font= &#39;CallingCode&#39;
+font= &#39;VTK&#39;
 
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow#, Plotter, settings, load, Text2D, Mesh, KSpline, Sphere, Plane, Ribbon, Points
+#from vedo import fitPlane, Spheres, Line, colorMap, Cube, Arrow, Video, Ellipsoid
 from time import perf_counter
 embedWindow(False)
 
@@ -75,7 +67,7 @@ import json
 
 #%% Importing morphoHeart packages
 from .morphoHeart_funcBasics import alert, ask4input#, saveDict
-from .morphoHeart_funcContours import save_s3s, loadStacks
+from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks
 
 #%% class - NumpyArrayEncoder
 # Definition of class to save dictionary
@@ -143,7 +135,7 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
         meshes_out.append(mesh_out)
 
     alert(&#34;wohoo&#34;,1)
-    print(&#39;\n&#39;)
+    # print(&#39;\n&#39;)
 
     return meshes_out
 
@@ -302,9 +294,9 @@ def addPlane2Dict (plane, pl_centre, pl_normal, info, dict_planes, print_txt = T
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_plane = dict_planes[plane.legend()]= dict()
+        specific_plane = dict_planes[plane._legend]= dict()
     else:
-        specific_plane = dict_planes[plane.legend()+&#39;-&#39;+info]= dict()
+        specific_plane = dict_planes[plane._legend+&#39;-&#39;+info]= dict()
 
     specific_plane[&#39;pl_normal&#39;] = pl_normal
     specific_plane[&#39;pl_centre&#39;] = pl_centre
@@ -344,9 +336,9 @@ def addPlanes2Dict (planes, pls_centre, pls_normal, info, dict_planes, print_txt
 
     for i, plane, inf in zip(count(), planes, info):
         if inf ==&#39;&#39;:
-            specific_plane = dict_planes[plane.legend()]= dict()
+            specific_plane = dict_planes[plane._legend]= dict()
         else:
-            specific_plane = dict_planes[plane.legend()+&#39;-&#39;+inf]= dict()
+            specific_plane = dict_planes[plane._legend+&#39;-&#39;+inf]= dict()
 
         specific_plane[&#39;pl_normal&#39;] = pls_normal[i]
         specific_plane[&#39;pl_centre&#39;] = pls_centre[i]
@@ -381,9 +373,9 @@ def addPoint2Dict (sphere, info, dict_pts, print_txt = True):
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_pt = dict_pts[sphere.legend()]= dict()
+        specific_pt = dict_pts[sphere._legend]= dict()
     else:
-        specific_pt = dict_pts[sphere.legend()+&#39;-&#39;+info]= dict()
+        specific_pt = dict_pts[sphere._legend+&#39;-&#39;+info]= dict()
 
     specific_pt[&#39;sph_position&#39;] = sphere.pos()
     specific_pt[&#39;color&#39;] = sphere.color()
@@ -418,9 +410,9 @@ def addPoints2Dict (spheres, info, dict_pts, print_txt = True):
 
     for i, sph, inf in zip(count(), spheres, info):
         if inf ==&#39;&#39;:
-            specific_pt = dict_pts[sph.legend()]= dict()
+            specific_pt = dict_pts[sph._legend]= dict()
         else:
-            specific_pt = dict_pts[sph.legend()+&#39;-&#39;+inf]= dict()
+            specific_pt = dict_pts[sph._legend+&#39;-&#39;+inf]= dict()
 
         specific_pt[&#39;sph_position&#39;] = sph.pos()
         specific_pt[&#39;color&#39;] = sph.color()
@@ -454,9 +446,9 @@ def addKSpline2Dict (kspl, info, dict_kspl, print_txt = True):
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_kspl = dict_kspl[kspl.legend()]= dict()
+        specific_kspl = dict_kspl[kspl._legend]= dict()
     else:
-        specific_kspl = dict_kspl[kspl.legend()+&#39;-&#39;+info]= dict()
+        specific_kspl = dict_kspl[kspl._legend+&#39;-&#39;+info]= dict()
 
     specific_kspl[&#39;kspl_pts&#39;] = kspl.points()
     specific_kspl[&#39;color&#39;] = kspl.color()
@@ -492,9 +484,9 @@ def addKSplines2Dict (kspls, info, dict_kspl, print_txt = True):
     for i, kspl, inf in zip(count(), kspls, info):
         #print(i)
         if inf ==&#39;&#39;:
-            specific_kspl = dict_kspl[kspl.legend()]= dict()
+            specific_kspl = dict_kspl[kspl._legend]= dict()
         else:
-            specific_kspl = dict_kspl[kspl.legend()+&#39;-&#39;+inf]= dict()
+            specific_kspl = dict_kspl[kspl._legend+&#39;-&#39;+inf]= dict()
 
         specific_kspl[&#39;kspl_pts&#39;] = kspl.points()
         specific_kspl[&#39;color&#39;] = kspl.color()
@@ -531,9 +523,9 @@ def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
 
     for i, sp_shape, inf, radii in zip(count(), shapes, info, radius):
         if inf ==&#39;&#39;:
-            specific_shape = dict_shapes[sp_shape.legend()]= dict()
+            specific_shape = dict_shapes[sp_shape._legend]= dict()
         else:
-            specific_shape = dict_shapes[sp_shape.legend()+&#39;-&#39;+inf]= dict()
+            specific_shape = dict_shapes[sp_shape._legend+&#39;-&#39;+inf]= dict()
 
         specific_shape[&#39;kspl_pts&#39;] = sp_shape.points()
         specific_shape[&#39;color&#39;] = sp_shape.color()
@@ -688,12 +680,12 @@ def addLinearMeas2df(df_res, file_num, lines, kspl_CL):
     df_resFilled = df_res
     for nl, line in enumerate(lines):
         length_l = line.length()
-        name_l = line.legend()
+        name_l = line._legend
         df_resFilled.loc[file_num, name_l] = length_l
 
     for ncl, cl in enumerate(kspl_CL):
         length_cl = cl.length()
-        name_cl = cl.legend()
+        name_cl = cl._legend
         df_resFilled[&#39;Length_&#39;+name_cl] = length_cl
 
     return df_resFilled
@@ -761,33 +753,215 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     s3_mask_v = s3_mask.reshape(-1)
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_mask &gt;= 0)
+    del s3_mask
+
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
+
     # Make normal a unit vector
     normal_unit = unit_vector(pl_normal)
     # Find all the d values of pix_um
     d_pix_um = np.dot(np.subtract(pix_um,np.array(pl_centre)),np.array(normal_unit))
+    del pix_um
+
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um = s3_mask_v*d_pix_um
+    del d_pix_um
+
     # Duplicate s3_mask_v to initialise atrium and ventricle
     s3_vent_v = np.copy(s3_mask_v)
     s3_vent_v = s3_vent_v.astype(&#39;uint8&#39;)
     s3_atr_v = np.copy(s3_mask_v)
+    del s3_mask_v
+
     s3_atr_v = s3_atr_v.astype(&#39;uint8&#39;)
     # Find all positions in d_pve_pix_um that are at either side of the plane
     pos_atr = np.where(d_pve_pix_um &lt; 0)[0]
     pos_vent = np.where(d_pve_pix_um &gt; 0)[0]
+    del d_pve_pix_um
+
     # Remove the points that belong to the other chamber
     s3_vent_v[pos_atr] = 0
     s3_atr_v[pos_vent] = 0
+    del pos_atr, pos_vent
+
     # Reshape vector into matrix/stack
     s3_vent = s3_vent_v.reshape((xdim, ydim, zdim))
     s3_atr = s3_atr_v.reshape((xdim, ydim, zdim))
+    del s3_vent_v, s3_atr_v
 
     # bar.finish()
     alert(&#39;wohoo&#39;,1)
 
     return s3_atr, s3_vent
+
+#%% func - selectCutS3sOptMxLoad
+def selectCutS3sOptMxLoad(filename, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
+    &#34;&#34;&#34;
+    Function used to cut inflow and/or outflow tract of the s3 masks (s3s2cut) given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    m_endo : mesh
+        Endocardial mesh. (vedo Mesh)
+    m_myoc : mesh
+        Myicardial mesh. (vedo Mesh)
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    save : boolean
+        True if you want to save the final masks, else False.
+
+    Returns
+    -------
+    meshes_cut : list of meshes (vedo Meshes)
+        List of all the surface reconstructions created with the cut masks
+    dict_planes :  dictionary
+        Resulting dictionary with planes information updated
+
+    &#34;&#34;&#34;
+
+    s3_myoc_names_in = [&#39;ch0_all&#39;,&#39;ch0_int&#39;, &#39;ch0_ext&#39;]
+    s3_myoc_names_out = [&#39;ch0_cut&#39;, &#39;ch0_cut_int&#39;, &#39;ch0_cut_ext&#39;]
+    myoc_names = [&#39;Myoc&#39;, &#39;Int.Myoc&#39;, &#39;Ext.Myoc&#39;]
+    s3_endo_names_in = [&#39;ch1_cut&#39;, &#39;ch1_int&#39;, &#39;ch1_cut_ext&#39;]
+    s3_endo_names_out = [&#39;ch1_cut&#39;, &#39;ch1_cut_int&#39;, &#39;ch1_cut_ext&#39;]
+    endo_names = [&#39;Endo&#39;, &#39;Int.Endo&#39;, &#39;Ext.Endo&#39;]
+
+    cut_type = [&#39;inflow&#39;, &#39;outflow&#39;]
+    cuts = []
+    pls_normal = []
+    pls_centre = []
+    cuts_selected = []
+
+    # Define what to cut from each layer
+    myoc_cuts = []; endo_cuts = []
+    # Define lists to save final meshes
+    meshes_myoc = []; meshes_endo = []
+
+    for cut in cut_type:
+        text = filename+&#34;\n\n &gt;&gt; Take a closer look at the -&#34; +cut + &#34;- of both meshes \n\tto decide which layer to cut\n &gt;&gt; [0]:myoc/[1]:endo/[2]:both/[3]:none\n &gt;&gt; Close the window when done&#34;
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
+        settings.legendSize = .15
+        vp = Plotter(N=3, axes=4)
+        vp.show(m_myoc, txt, at=0, zoom=1)
+        vp.show(m_endo, at=1, zoom=1)
+        vp.show(m_myoc, m_endo, at=2, zoom=1, interactive=True)
+
+        q_cuts = ask4input(&#39;Select the layer from which you want to cut the -&#39;+ cut + &#39;- tract \n  [0]:myoc/[1]:endo/[2]:both/[3]:none?: &#39;,int)
+        cuts.append(q_cuts)
+
+        if q_cuts == 0 or q_cuts == 1 or q_cuts == 2:
+            cuts_selected.append(cut)
+            # Get plane to cut
+            plane_cut, pl_cut_centre, pl_cut_normal = getPlane(filename = filename, type_cut = cut, info = &#39;&#39;, mesh_in = m_endo,
+                                                                        mesh_out = m_myoc)
+            # Reorient plane to images (s3)
+            plane_im, pl_im_centre, pl_im_normal = rotatePlane2Images(pl_cut_centre, pl_cut_normal, type_cut = cut)
+            pls_normal.append(pl_im_normal); pls_centre.append(pl_im_centre)
+            #Save planes to dict
+            dict_planes = addPlanes2Dict(planes = [plane_cut, plane_im], pls_centre = [pl_cut_centre ,pl_im_centre],
+                                                    pls_normal = [pl_cut_normal, pl_im_normal], info = [&#39;&#39;,&#39;&#39;], dict_planes = dict_planes, print_txt = False)
+            if q_cuts == 0 or q_cuts == 2:
+                myoc_cuts.append(cut)
+            if q_cuts == 1 or q_cuts == 2:
+                endo_cuts.append(cut)
+
+    # Cut Myocardial layers
+    if len(myoc_cuts) == 2:
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - inf&amp;outf (Myoc)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, myoc_name, s3_name_out in zip(count(), s3_myoc_names_in, myoc_names, s3_myoc_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfAndOutfOptMx(s3, pls_normal, pls_centre, resolution, &#39;(Myoc)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+
+    elif len(myoc_cuts) == 1:
+        index_myoc = cuts_selected.index(myoc_cuts[0])
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - &#39; + myoc_cuts[0]+&#39; (Myoc)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, myoc_name, s3_name_out in zip(count(), s3_myoc_names_in, myoc_names, s3_myoc_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfOrOutfOptMx(s3, pls_normal[index_myoc], pls_centre[index_myoc], resolution = resolution,
+                                                                      option = myoc_cuts[0], mesh_name = &#39;(Myoc)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+    else:
+        print(&#39;- No cuts made to Myocardium!&#39;)
+        for n, s3_name, myoc_name in zip(count(), s3_myoc_names_in, myoc_names):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+
+    alert(&#39;whistle&#39;, 1)
+
+    # Cut Endocardial layers
+    if len(endo_cuts) == 2:
+        # Cut endocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - inf&amp;outf (Endo)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, endo_name, s3_name_out in zip(count(), s3_endo_names_in, endo_names, s3_endo_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfAndOutfOptMx(s3, pls_normal, pls_centre, resolution, &#39;(Endo)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+
+    elif len(endo_cuts) == 1:
+        index_endo = cuts_selected.index(endo_cuts[0])
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - &#39; + endo_cuts[0]+&#39; (Endo)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, endo_name, s3_name_out in zip(count(), s3_endo_names_in, endo_names, s3_endo_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfOrOutfOptMx(s3, pls_normal[index_endo], pls_centre[index_endo], resolution = resolution,
+                                                                      option = endo_cuts[0], mesh_name = &#39;(Endo)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+    else:
+        print(&#39;- No cuts made to Endocardium!&#39;)
+        for n, s3_name, endo_name in zip(count(), s3_endo_names_in, endo_names):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+    alert(&#39;jump&#39;, 1)
+
+    meshes_cut = meshes_myoc+meshes_endo
+    text= filename+&#34;\n\n &gt;&gt; Resulting meshes&#34;
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
+    vp = Plotter(N=6, axes=10)
+    for i, mesh in enumerate(meshes_cut):
+        if i == 0:
+            vp.show(mesh, txt, at = i, zoom = 1.2)
+        elif i &gt; 0 and i &lt; 5:
+            vp.show(mesh, at = i, zoom = 1.2)
+        else:
+            vp.show(mesh, at = i, zoom = 1.2, interactive = True)
+
+    return meshes_cut, dict_planes
 
 #%% func - selectCutS3sOptMx
 def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
@@ -824,11 +998,11 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
 
     &#34;&#34;&#34;
 
-    s3_ch0_int, s3_ch0_ext, s3_ch0, s3_ch1_int, s3_ch1_ext_cl, s3_ch1_cl = s3s2cut
+    s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut = s3s2cut
 
     # Create new s3s to save cuts
-    s3_ch0_cut = s3_ch0; s3_ch0_int_cut = s3_ch0_int; s3_ch0_ext_cut = s3_ch0_ext
-    s3_ch1_cut = s3_ch1_cl; s3_ch1_int_cut = s3_ch1_int; s3_ch1_ext_cut = s3_ch1_ext_cl
+    # s3_ch0_cut = s3_ch0_cut; s3_ch0_int_cut = s3_ch0_int_cut; s3_ch0_ext_cut = s3_ch0_ext_cut
+    # s3_ch1_cut = s3_ch1_cut; s3_ch1_int_cut = s3_ch1_int_cut; s3_ch1_ext_cut = s3_ch1_ext_cut
 
     cut_type = [&#39;inflow&#39;, &#39;outflow&#39;]
     cuts = []
@@ -841,7 +1015,8 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
 
     for cut in cut_type:
         text = filename+&#34;\n\n &gt;&gt; Take a closer look at the -&#34; +cut + &#34;- of both meshes \n\tto decide which layer to cut\n &gt;&gt; [0]:myoc/[1]:endo/[2]:both/[3]:none\n &gt;&gt; Close the window when done&#34;
-        txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
+        settings.legendSize = .3
         vp = Plotter(N=3, axes=4)
         vp.show(m_myoc, txt, at=0, zoom=1)
         vp.show(m_endo, at=1, zoom=1)
@@ -933,8 +1108,8 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
             save_s3s(filename = filename, s3_all = s3_ch0_cut, s3_int = s3_ch0_int_cut, s3_ext = s3_ch0_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = &#39;ch0_cut&#39;)
     else:
-        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0, s3_in = s3_ch0_int,
-                                    s3_out = s3_ch0_ext, resolution = resolution, layer = &#39;Myoc&#39;)
+        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0_cut, s3_in = s3_ch0_int_cut,
+                                    s3_out = s3_ch0_ext_cut, resolution = resolution, layer = &#39;Myoc&#39;)
     # Endocardial layers
     if any(x in cuts for x in [1, 2]):
         #Create new mesh endocardial s3_all
@@ -950,15 +1125,16 @@ def selectCutS3sOptMx(filename, s3s2cut, m_endo, m_myoc, dict_planes, resolution
             save_s3s(filename = filename, s3_all = s3_ch1_cut, s3_int = s3_ch1_int_cut, s3_ext = s3_ch1_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = &#39;ch1_cut&#39;)
     else:
-        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cl, s3_in = s3_ch1_int,
-                                    s3_out = s3_ch1_ext_cl, resolution = resolution, layer = &#39;Endo&#39;)
+        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cut, s3_in = s3_ch1_int_cut,
+                                    s3_out = s3_ch1_ext_cut, resolution = resolution, layer = &#39;Endo&#39;)
 
     s3s_cut = [s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut]
     meshes_cut = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext]
     alert(&#39;jump&#39;, 1)
 
     text= filename+&#34;\n\n &gt;&gt; Resulting meshes&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
     vp = Plotter(N=6, axes=10)
     for i, mesh in enumerate(meshes_cut):
         if i == 0:
@@ -1004,8 +1180,10 @@ def cutInfAndOutfOptMx(s3_cut, pls_normal, pls_centre, resolution, mesh_name):
 
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_cut &gt;= 0)
+    del s3_cut
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
 
     normal_inf = unit_vector(pls_normal[0])
     normal_outf = unit_vector(pls_normal[1])
@@ -1013,32 +1191,35 @@ def cutInfAndOutfOptMx(s3_cut, pls_normal, pls_centre, resolution, mesh_name):
     # Find all the d values of pix_um
     d_pix_um_Inf = np.dot(np.subtract(pix_um,np.array(pls_centre[0])),np.array(normal_inf))
     d_pix_um_Outf = np.dot(np.subtract(pix_um,np.array(pls_centre[1])),np.array(normal_outf))
+    del pix_um
 
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um_Inf = s3_cut_v*d_pix_um_Inf
     d_pve_pix_um_Outf = s3_cut_v*d_pix_um_Outf
+    del d_pix_um_Inf, d_pix_um_Outf
 
     # Duplicate s3f_v to initialise stacks without inflow
     s3f_all_v = np.copy(s3_cut_v)
     s3f_all_v.astype(&#39;uint8&#39;)
+    del s3_cut_v
 
     # Find all positions in d_pve_pix_um that are at either side of the planes (outside of mesh)
     pos_outside_inf = np.where(d_pve_pix_um_Inf &lt; 0)[0]
     pos_outside_outf = np.where(d_pve_pix_um_Outf &gt; 0)[0]
+    del d_pve_pix_um_Inf, d_pve_pix_um_Outf
 
     # Remove the points that are outside of the mesh (inflow)
     s3f_all_v[pos_outside_inf] = 0
-
-    # # Duplicate s3f2_v to initialise stacks without inflow and outflow
-    # s3f2_all_v = np.copy(s3f_all_v)
+    del pos_outside_inf
 
     # Remove the points that are outside of the mesh (ouflow)
     s3f_all_v[pos_outside_outf] = 0
+    del pos_outside_outf
 
     # Reshape vector into matrix/stack
     s3f_cut = s3f_all_v.reshape((xdim, ydim, zdim))
 
-    alert(&#39;wohoo&#39;,1)
+    # alert(&#39;wohoo&#39;,1)
 
     return s3f_cut
 
@@ -1078,8 +1259,10 @@ def cutInfOrOutfOptMx (s3_cut, pls_normal, pls_centre, resolution, option, mesh_
 
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_cut &gt;= 0)
+    del s3_cut
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
 
     normal  = unit_vector(pls_normal)
     # Find all the d values of pix_um
@@ -1087,24 +1270,29 @@ def cutInfOrOutfOptMx (s3_cut, pls_normal, pls_centre, resolution, option, mesh_
 
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um = s3_cut_v*d_pix_um
+    del pix_um
 
     # Duplicate s3f_v to initialise stacks without inflow/outflow
     s3f_all_v = np.copy(s3_cut_v)
     s3f_all_v.astype(&#39;uint8&#39;)
+    del s3_cut_v
 
     # Find all positions in d_pve_pix_um that are at either side of the planes (outside of mesh)
     if option == &#39;inflow&#39;:
         pos_outside = np.where(d_pve_pix_um &lt; 0)[0]
     elif option == &#39;outflow&#39;:
         pos_outside = np.where(d_pve_pix_um &gt; 0)[0]
+    del d_pve_pix_um
 
     # Remove the points that are outside of the mesh (inflow/outflow)
     s3f_all_v[pos_outside] = 0
+    del pos_outside
 
     # Reshape vector into matrix/stack
     s3f_cut = s3f_all_v.reshape((xdim, ydim, zdim))
+    del s3f_all_v
 
-    alert(&#39;wohoo&#39;,1)
+    # alert(&#39;wohoo&#39;,1)
 
     return s3f_cut
 
@@ -1139,7 +1327,7 @@ def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
     mesh_out : mesh
         Mesh of the filled external contours of the heart layer. (vedo Mesh)
 
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;,
 
     print(&#39;- Creating surface reconstruction of &#39;+ layer +&#39; &#39;)
 
@@ -1184,7 +1372,8 @@ def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
 
     text = filename+&#34;\n\n &gt;&gt; &#34;+layer
     txt = Text2D(text, c=c, font=font)
-    vp = Plotter(N=3, axes=7)
+    settings.legendSize = .3
+    vp = Plotter(N=3, axes=13)
     vp.show(mesh_all, txt, at=0, zoom=1.2)
     vp.show(mesh_all, mesh_out, at=1, zoom=1.2)
     vp.show(mesh_all, mesh_in, at=2, zoom=1.2, interactive=True)
@@ -1243,7 +1432,8 @@ def createExtLayerMesh(filename, s3_ext, resolution, layer, info, plotshow = Tru
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt; External &#34;+layer+&#39; (&#39;+info+&#39;)&#39;
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh_ext, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh_ext
@@ -1296,8 +1486,8 @@ def createLayerMesh(filename, s3, resolution, layer, name, colour, alpha, plotsh
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt; &#34;+layer
         txt = Text2D(text, c=c, font=font)
-
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh
@@ -1328,14 +1518,15 @@ def getCutMesh(filename, s3_cut, resolution, mesh_original, layer, plotshow):
         Resulting mesh. (vedo Mesh).
 
     &#34;&#34;&#34;
-
-    print(&#39;- Creating surface reconstructions of cut &#39;+ layer)
+    if plotshow:
+        print(&#39;- Creating surface reconstructions of cut &#39;+ layer)
 
     verts_cut, faces_cut, _, _ = measure.marching_cubes_lewiner(s3_cut, spacing=resolution)
     mesh_cut = Mesh([verts_cut, faces_cut])
     if layer != &#39;Int.Endo&#39;:
         mesh_cut = mesh_cut.extractLargestRegion()
-    alert(&#39;wohoo&#39;,1)
+    if plotshow:
+        alert(&#39;wohoo&#39;,1)
 
     if layer == &#39;Cardiac Jelly&#39; or layer == &#39;CJ&#39;:
         color = &#39;darkorange&#39;
@@ -1353,13 +1544,14 @@ def getCutMesh(filename, s3_cut, resolution, mesh_original, layer, plotshow):
 
     if plotshow:
         mesh_original.legend(layer).alpha(0.1).color(&#39;tomato&#39;)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=4)
         vp.show(mesh_original, mesh_cut, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh_cut
 
 #%% func - createMeshes4CL
-def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
+def createMeshes4CL(filename, meshes, plotshow):
     &#34;&#34;&#34;
     Function that cleans and smooths meshes given as input to get centreline using VMTK
 
@@ -1369,10 +1561,6 @@ def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     meshes : list of meshes
         List of meshes to .
-    names : list of str
-        List of names for cleaned and smoothed meshes
-    mesh_colors : list of str
-        List of colours
     plotshow : boolean
         True if you want to see the resulting mesh in a plot, else False.
 
@@ -1380,16 +1568,32 @@ def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
     -------
     meshes4cl_out : list of meshes
         List of cleaned and smoothed meshes. (vedo Mesh)
+    meshes4cl_names : list of str
+        List of names with which to save exported meshes to obtain centreline
 
     &#34;&#34;&#34;
 
+    meshes_selected = []
     meshes4cl = []
+    meshes4cl_names = []
+    mesh_colors = [&#39;springgreen&#39;, &#39;violet&#39;]
+    names = [&#39;Int.Myoc(Cut)&#39;, &#39;Ext.Endo(Cut)&#39;]
+    names_export = [&#39;myoc_int_cut4cl&#39;,&#39;endo_ext_cut4cl&#39;]
 
-    for i, mesh_cl in enumerate(meshes):
+    q_selectMeshes = ask4input(&#39;Select the meshes you would like to export to extract centreline \n\t\t[0]: Int.Myocardium/[1]: Ext.Endocardium/[2]: both: &#39;, int)
+    if q_selectMeshes in [0,2]:
+        meshes_selected.append(meshes[0])
+        meshes4cl_names.append(names_export[0])
+    if q_selectMeshes in [1,2]:
+        meshes_selected.append(meshes[1])
+        meshes4cl_names.append(names_export[1])
+
+    for i, mesh_cl in enumerate(meshes_selected):
         print(&#34;- File being processed for centreline: &#34;, filename +&#39; - &#39;+names[i])
         mesh_cl.legend(names[i])
 
         if plotshow:
+            settings.legendSize = .3
             vp = Plotter(N=2, axes=4)
             text1 = filename+&#34;\n- Original mesh - &#34;+names[i]
             txt1 = Text2D(text1, c=c, font=font)
@@ -1413,16 +1617,20 @@ def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
 
         meshes4cl.append(meshCL_cut)
 
-    vp = Plotter(N=2, axes=7)
-    vp.show(meshes4cl[-1], at=0, zoom=1)
-    vp.show(meshes4cl[-2], at=1, zoom=1, interactive = True)
+    meshes4cl_out = meshes4cl[-len(meshes_selected):]
 
-    meshes4cl_out = meshes4cl[-2:]
+    settings.legendSize = .3
+    vp = Plotter(N=len(meshes4cl_out), axes=13)
+    for i in range(len(meshes4cl_out)):
+        if i != len(meshes4cl_out)-1:
+            vp.show(meshes4cl[i], at=i, zoom=1)
+        else:
+            vp.show(meshes4cl[i], at=i, zoom=1, interactive = True)
 
-    return meshes4cl_out
+    return meshes4cl_out, meshes4cl_names
 
 #%% func - cutMeshes4CL
-def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh_colors, dicts, plotshow):
+def cutMeshes4CL(filename, meshes, cuts, cut_direction, dicts, plotshow):
     &#34;&#34;&#34;
     Funtion that cuts the inflow and outflow tract of meshes from which the centreline will be obtained.
 
@@ -1430,7 +1638,7 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
     ----------
     filename : str
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    meshes : list of meshes
+    meshes4cl : list of meshes
         List of cleaned and smoothed meshes. (vedo Mesh)
     names : list of str
         List of names of cleaned and smoothed meshes
@@ -1438,10 +1646,6 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
         List with type of cuts [&#39;inflow&#39;, &#39;outflow&#39;]
     cut_direction : list of booleans
         list of booleans indicating the cut direction depending on the &#39;cuts&#39;
-    mark_colors : list of str
-        List of colours for marks
-    mesh_colors : list of str
-        List of colours
     dicts : list of dicts
         [dict_planes, dict_pts, dict_kspl].
     plotshow : boolean
@@ -1449,26 +1653,41 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
 
     Returns
     -------
-    meshes[-2:] : list of meshes
-        List of cut meshes. (vedo Mesh)
+    meshes[-len(meshes):] : list of meshes
+        List of cut meshes with same length as input meshes (vedo Mesh)
     dicts_f :  list of dicts
         List of updated dictionaries
 
     &#34;&#34;&#34;
+    mark_colors = [&#39;deepskyblue&#39;, &#39;tomato&#39;]*3
+    mesh_colors = [&#39;springgreen&#39;, &#39;violet&#39;]*3
 
     dict_planes, dict_pts, dict_kspl = dicts
     ksplines = []; spheres = []
+    num_meshes_out = len(meshes)
 
     for n, cut in enumerate(cuts):
         print(&#39;- Cutting: &#39;+cut)
         #Get plane to cut
-        planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
-                                                                 info = &#39;4CL&#39;, mesh_in = meshes[1],
-                                                                 mesh_out = meshes[0])
+        if isinstance(meshes, list):
+            if len(meshes) == 2:
+                planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                     info = &#39;4CL&#39;, mesh_in = meshes[1],
+                                                                     mesh_out = meshes[0])
+            else:
+                planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                     info = &#39;4CL&#39;, mesh_in = meshes[0],
+                                                                     mesh_out = &#39;&#39;)
+        else:
+            planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                 info = &#39;4CL&#39;, mesh_in = meshes,
+                                                                 mesh_out = &#39;&#39;)
         dict_planes = addPlane2Dict (plane = planeCL_cut, pl_centre = plCL_cut_centre,
                                             pl_normal = plCL_cut_normal, info = &#39;&#39;, dict_planes = dict_planes)
 
-        for i, mesh4cl in enumerate(meshes[-2:]):
+        for i, mesh4cl in enumerate(meshes[-num_meshes_out:]):
+            mesh_name = mesh4cl._legend
+            #print(mesh_name)
             pts2cut = getPointsAtPlane(points = mesh4cl.points(), pl_normal = plCL_cut_normal,
                                        pl_centre = plCL_cut_centre)
             ordpts, _ = order_pts(points = pts2cut)
@@ -1483,36 +1702,32 @@ def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh
             sph_centroid = Sphere(pos=pt_centroid, r=2, c=mark_colors[i]).legend(&#39;sph_Cut4CL_&#39;+cut)
             spheres.append(sph_centroid)
 
-            # # Plot result
-            # vp = Plotter(N=1)
-            # text = filename+&#34;\n\n - Mesh - KSpline and centre of cut &#34;+ cut +&#34;-&#34;+names[i]
-            # txt = Text2D(text, c=c, font=font)
-            # vp.show(mesh4cl, kspl, sph_centroid, txt, at=0, axes=1, interactive=True)
-
-            dict_pts = addPoint2Dict(sphere = sph_centroid, info = names[i], dict_pts = dict_pts)
-            dict_kspl = addKSpline2Dict(kspl = kspl, info = names[i], dict_kspl = dict_kspl)
+            dict_pts = addPoint2Dict(sphere = sph_centroid, info = mesh4cl._legend[:-4], dict_pts = dict_pts)
+            dict_kspl = addKSpline2Dict(kspl = kspl, info = mesh4cl._legend[:-4], dict_kspl = dict_kspl)
 
             # Cutmesh using created plane
-            mesh4cl = mesh4cl.clone().cutWithMesh(planeCL_cut, invert=cut_direction[n])
-            mesh4cl = mesh4cl.extractLargestRegion()
-            mesh4cl.color(mesh_colors[i]).alpha(0.05).wireframe(True).legend(&#39;CL_cutMesh&#39;)
+            mesh4cl_new = mesh4cl.clone().cutWithMesh(planeCL_cut, invert=cut_direction[n])
+            mesh4cl_new = mesh4cl_new.extractLargestRegion()
+            mesh4cl_new.color(mesh_colors[i]).alpha(0.05).wireframe(True).legend(mesh4cl._legend)
 
+            settings.legendSize = .3
             vp = Plotter(N=1)
             text = &#34;- Resulting mesh after cutting&#34;
             txt = Text2D(text, c=c, font=font)
-            vp.show(mesh4cl, kspl, sph_centroid, txt, at=0, viewup=&#34;y&#34;,  interactive=True)
+            vp.show(mesh4cl_new, kspl, sph_centroid, txt, at=0, viewup=&#34;y&#34;,  interactive=True)
 
-            meshes.append(mesh4cl)
+            meshes.append(mesh4cl_new)
 
     if plotshow:
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         text = filename+&#34;\n\n &gt;&gt; Resulting mesh after cutting inflow &amp; outflow tract&#34;
         txt = Text2D(text, c=c, font=font)
-        vp.show(meshes[-2:], ksplines, spheres, txt, at=0, interactive=True)
+        vp.show(meshes[-num_meshes_out:], ksplines, spheres, txt, at=0, interactive=True)
 
     dicts_f = dict_planes, dict_pts, dict_kspl
 
-    return meshes[-2:], dicts_f
+    return meshes[-num_meshes_out:], dicts_f
 
 #%% func - divideMeshesLnR
 def divideMeshesLnR(filename, meshes, cl_ribbon):
@@ -1539,7 +1754,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
     for i, mesh in enumerate(meshes):
 
         meshes2cutLR = mesh
-        mesh_legend = mesh.legend()
+        mesh_legend = mesh._legend
         print(&#39;- Dividing &#39;+mesh_legend+&#39; into left and right sides&#39;)
 
         mesh_1 = meshes2cutLR.clone().cutWithMesh(cl_ribbon, invert=True)
@@ -1554,11 +1769,12 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
 
         text = filename+&#34;\n\n &gt;&gt; Resulting mesh after cutting with centreline \n &gt;&gt; Before closing the window make sure you confirm A (light blue): left, B (dark blue): Right&#34;
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=2, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=2, axes=13)
         vp.show(meshes2cutLR, cl_ribbon, txt, at=0)
         vp.show(mesh_1, mesh_2, at=1, zoom = 1.2, interactive=True)
 
-        q_happy = ask4input(&#39;Are meshes classified correctly [A (light blue): left, B (dark blue): Right ]? [0]:no/[1]:yes: &#39;, bool)
+        q_happy = ask4input(&#39;Are meshes classified correctly [A (light blue):left, B (dark blue):right]? [0]:no/[1]:yes: &#39;, bool)
         if not q_happy:
             leftMesh = ask4input(&#39;Select the mesh number that corresponds to the left side. [A]-&#39;+mesh_legend+&#39;/[B]:&#39;+mesh_legend+&#39;: &#39;, str, keep = True)
             if leftMesh == &#39;A&#39;:
@@ -1629,9 +1845,10 @@ def getChamberMeshes(filename, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt
     vent_color = [&#39;darkturquoise&#39;, &#39;mediumvioletred&#39;, &#39;chocolate&#39;, &#39;indigo&#39;, &#39;darkblue&#39;]
 
     tic = perf_counter()
+    settings.legendSize = .3
     vp = Plotter (N=3, axes=10)
     text2 = filename+&#34;\n\n &gt;&gt;  Result of dividing heart layers into chambers&#34;
-    txt2 = Text2D(text2, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt2 = Text2D(text2, c=&#34;k&#34;, font= font)
     for n, s3_name, name in zip(count(), end_name, names2cut):
         # Mask s3s vent and atrium
         print(&#39;- Cutting s3 (&#39;, name,&#39;)&#39;)
@@ -1658,7 +1875,7 @@ def getChamberMeshes(filename, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt
 
     return atr_meshes, vent_meshes
 
-#%% func - getPl2CutChambers
+#%% func - getInfo2CutChambers
 def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
     &#34;&#34;&#34;
     Function to define the plane needed to cut the meshes into atrium and ventricle
@@ -1696,9 +1913,10 @@ def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
 
     # Plot spheres through centreline inside myocardium
     spheres_spl = sphInSpline(kspl_CL = kspl_CL)
+    settings.legendSize = .3
     vp = Plotter(N=1, axes = 4)
     text = filename+&#34;\n\n &gt;&gt; Decide the centreline point number to use to initialise plane to divide chambers \n [NOTE: Red spheres appear in centreline every 10 points, starting from outflow to inflow tract]&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh2cut.alpha(0.01), kspl_CL, spheres_spl, txt, at=0, azimuth = azimuth, interactive=True)
 
     # Get plane to cut heart layers
@@ -1789,7 +2007,7 @@ def getPlane(filename, type_cut, info, mesh_in, mesh_out, option = [True,True,Tr
     #mesh1.alpha(0.05); mesh2.alpha(0.05)
     while True:
         # Create plane
-        plane, normal, rotX, rotY, rotZ = getPlanePos(filename, type_cut, mesh_in, mesh_out, mesh_in.bounds(), option)
+        plane, normal, rotX, rotY, rotZ = getPlanePos(filename, type_cut, mesh_in.bounds(), option,  mesh_in, mesh_out)
         # Get new normal of rotated plane
         normal_corrected = newNormal3DRot(normal, rotX, rotY, rotZ)
         #normal_corrected = np.asarray(newNormal(normal, rotX))
@@ -1802,8 +2020,12 @@ def getPlane(filename, type_cut, info, mesh_in, mesh_out, option = [True,True,Tr
         text = filename+&#34;\n\n &gt;&gt; Confirm plane position to proceed with the cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
         txt = Text2D(text, c=c, font=font)
 
+        settings.legendSize = .2
         vp = Plotter(N=1, axes=4)
-        vp.show(mesh_in, mesh_out, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
+        if mesh_out != &#39;&#39;:
+            vp.show(mesh_in, mesh_out, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
+        else:
+            vp.show(mesh_in, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
         happy = ask4input(&#39;Do you want to cut the &#39;+type_cut+&#39; with the defined plane? \n  [0]:no, I would like to define a new plane/[1]:yes, continue!: &#39;, bool)
         if happy:
             break
@@ -1811,7 +2033,7 @@ def getPlane(filename, type_cut, info, mesh_in, mesh_out, option = [True,True,Tr
     return plane_new, pl_centre, normal_corrected
 
 #%% func - getPlanePos
-def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
+def getPlanePos (filename, type_cut, xyz_bounds, option, mesh_in, mesh_out = &#39;&#39;):
     &#34;&#34;&#34;
     Function that shows a plot so that the user can define a plane (mesh opacity can be changed)
 
@@ -1821,15 +2043,15 @@ def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     type_cut : str
         Text defining the type of cut that is going to be made with the defined plane
-    mesh_in : mesh
-        Internal mesh (vedo Mesh)
-    mesh_out : mesh
-        External mesh (vedo Mesh)
     xyz_bounds : list of floats
         x,y,z boundaries of mesh_out
     option : list of booleans
         List of booleans indicating the sliders to use in getPlanePos function.
         [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+    mesh_in : mesh
+        Internal mesh (vedo Mesh)
+    mesh_out : mesh, optional
+        If given as input, External mesh (vedo Mesh). The default is &#39;&#39;.
 
     Returns
     -------
@@ -1892,6 +2114,7 @@ def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
         valueAlpha = widget.GetRepresentation().GetValue()
         mesh_out.alpha(valueAlpha)
 
+    settings.legendSize = .2
     vp = Plotter(N=1, axes=8)
     plane = Plane(pos=centre, normal=normal, sx=box_size*1.2).color(&#34;gainsboro&#34;).alpha(1)
 
@@ -1918,8 +2141,11 @@ def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
                pos=[(0.95,0.25), (0.95,0.45)], c=&#34;blue&#34;, title=&#34;Ext.Mesh Opacity)&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
-    vp.show(mesh_in, mesh_out, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    if mesh_out != &#39;&#39;:
+        vp.show(mesh_in, mesh_out, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
+    else:
+        vp.show(mesh_in, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
     return plane, normal, rotX, rotY, rotZ
@@ -1939,9 +2165,10 @@ def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True
         Myocardial mesh to use as background to define plane
     kspl_CL : Kspline
         Centreline (vedo KSpline)
-    option : list of booleans
+    option : list of booleans, optional
         List of booleans indicating the sliders to use in getPlanePos function.
         [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+        The default is: [True,True,True,True,True,True]
 
     Returns
     -------
@@ -1978,6 +2205,7 @@ def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True
 
         text = filename+&#34;\n\n &gt;&gt; Confirm plane position to proceed with division of &#34;+type_cut+&#34;\n &gt;&gt; Close the window when done and define whether you want to use this plane or define a new one&#34;
         txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=4)
         vp.show(mesh1, plane_Ch, plane_Ch_final, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
         happy = ask4input(&#39;Do you want to cut the &#39;+type_cut+&#39; with the defined plane? \n   [0]:no, I would like to define a new plane/[1]:yes, continue with the cut: &#39;, bool)
@@ -2028,8 +2256,8 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
     z_size = zmax - zmin
 
     box_size = max(x_size, y_size, z_size)*1.2
-    #centre = (x_size/2+xmin, ymin, z_size/2+zmin)
-    #normal = (0,1,0)
+    # centre = (x_size/2+xmin, ymin, z_size/2+zmin)
+    # normal = (0,1,0)
     #print(&#34;centre:&#34;, centre)
 
     rotX = [0]
@@ -2064,17 +2292,18 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
         rotZ.append(valueRZ)
         plane.rotateZ(valueRZ, rad=False)
 
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=8)
     plane = Plane(pos=pl_centre, normal=pl_normal, sx=box_size*1.2).color(&#34;gainsboro&#34;).alpha(1)
 
     if option[0]: #sliderX
-        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0],
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=pl_centre[0],
                     pos=[(0.1,0.15), (0.3,0.15)], title=&#34;- &gt; x position &gt; +&#34;, c=&#34;crimson&#34; )
     if option[1]: #sliderY
-        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1],
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=pl_centre[1],
                     pos=[(0.4,0.15), (0.6,0.15)], title=&#34;- &gt; y position &gt; +&#34;, c=&#34;dodgerblue&#34; )
     if option[2]: #sliderZ
-        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2],
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=pl_centre[2],
                     pos=[(0.7,0.15), (0.9,0.15)], title=&#34;- &gt; z position &gt; +&#34;, c=&#34;limegreen&#34;)
     if option[3]: #sliderRotX
         vp.addSlider2D(sliderRotX, -1, +1, value=0,
@@ -2087,7 +2316,7 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
                     pos=[(0.7,0.05), (0.9,0.05)], title=&#34;- &gt; z rotation &gt; +&#34;, c=&#34;teal&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh1, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
@@ -2199,8 +2428,9 @@ def createDVPlanes(filename, sph_orient, mesh, kspl_CL, orient_lines, dict_plane
                                   pls_normal = [pl_DnVAtr_normal, pl_DnVVent_normal], info =[&#39;&#39;,&#39;&#39;], dict_planes = dict_planes)
 
     text = filename+&#34;\n\n &gt;&gt; Creating coronal planes to divide each chamber&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
-    vp = Plotter(N=1, axes = 7)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes = 13)
     vp.show(mesh.alpha(0.01), sph_orient, kspl_CL, orient_lines, pl_DnV_Atr, pl_DnV_Vent, txt, at=0, interactive=True)
 
     pl_DnV = [pl_DnV_Atr, pl_DnV_Vent]
@@ -2393,7 +2623,7 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
         #Plot spheres through centreline inside mesh.
         vcols = [colorMap(v, &#34;jet&#34;, sphData_cl.max(), sphData_cl.min()) for v in sphData_cl]
         sph_cl = Spheres(pts_cl, c=&#39;red&#39;, r=sphData_cl).legend(&#39;sphs_maxInsSphRad_&#39;+layerNames[i])
-        sph_cl_colour = Spheres(pts_cl, c=vcols, r=sphData_cl.min()).addScalarBar(title=&#39;Sphere Radius\n[um]&#39;).legend(&#39;sphs_maxInsSphRadC_&#39;+layerNames[i])
+        sph_cl_colour = Spheres(pts_cl, c=vcols, r=sphData_cl.min()).addScalarBar(title=&#39;Spheres Radius\n[um]&#39;).legend(&#39;sphs_maxInsSphRadC_&#39;+layerNames[i])
         sph_cl_colour.mapper().SetScalarRange(sphData_cl.min(),sphData_cl.max())
         spheres_CL.append(sph_cl)
         spheres_CL_col.append(sph_cl_colour)
@@ -2478,9 +2708,10 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
     dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = [&#39;&#39;,&#39;&#39;], dict_kspl = dict_kspl)
 
     text = filename+&#34;\n\n &gt;&gt; Creating Extended Centreline to Divide Right/Left&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
 
-    vp = Plotter(N=1, axes=7)
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes=13)
     vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
 
     return cl_ribbon, dict_kspl, dict_shapes, dict_planes
@@ -2597,7 +2828,8 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
     df_res = addOrientationAngles2df(df_res = df_res, file_num = file_num, angles = [ang_heart, ang_atr, ang_vent, ang_chs], names = [&#39;ang_Heart&#39;, &#39;ang_Atr&#39;, &#39;ang_Vent&#39;, &#39;ang_BtwChambers&#39;])
 
     text = filename+&#34;\n\n &gt;&gt; Measuring chamber orientation\n - &#34;+atr_txt+&#34;\n - &#34;+vent_txt+&#34;\n - &#34;+chs_txt
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .15
     vp = Plotter(N=1, axes = 8)
     vp.show(m_myoc.alpha(0.01), m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
             orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt, azimuth = azimuth, elevation = elevation, zoom = 0.8, at=0, interactive=True) #
@@ -2606,7 +2838,7 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
     return sph_orient, lines_orient, dict_pts, dict_kspl, df_res
 
 #%% func - getDistance2Mesh
-def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True):
+def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     &#34;&#34;&#34;
     Function that gets the distance between m_ext and m_int and color codes m_ext accordingly
 
@@ -2639,7 +2871,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
     thickness_meshes = [&#39;Cardiac Jelly Thickness&#39;, &#39;Myoc.Thickness&#39;, &#39;Endo.Thickness&#39;]
     tic = perf_counter()
     print(&#39;- Extracting &#39;+title)
-    print(&#34;  &gt; Start time: \t&#34;, str(datetime.now())[11:-7])
+    # print(&#34;  &gt; Start time: \t&#34;, str(datetime.now())[11:-7])
     m_ext_out = m_ext.clone()
     m_ext_out.distanceToMesh(m_int, signed=True, negate=False)
     if title in thickness_meshes:
@@ -2650,7 +2882,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
     vmin, vmax = np.min(thickness),np.max(thickness)
     toc = perf_counter()
     time = toc-tic
-    print(&#34;  &gt; End time: \t\t&#34;, str(datetime.now())[11:-7])
+    # print(&#34;  &gt; End time: \t\t&#34;, str(datetime.now())[11:-7])
     print(&#34;\t&gt;&gt; Total time taken to get heatmap = &#34;,format(time,&#39;.2f&#39;), &#34;s/&#34;, format(time/60,&#39;.2f&#39;), &#34;m/&#34;, format(time/3600,&#39;.2f&#39;), &#34;h&#34;)
 
     alert(&#39;jump&#39;,1)
@@ -2664,19 +2896,20 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True
 
     m_ext_out.pointColors(thickness, cmap=&#34;jet&#34;, vmin=val_min, vmax=val_max)
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
-    m_ext_out.addScalarBar(title=title_bar+&#39; [um]&#39;)
+    m_ext_out.addScalarBar(title=title_bar+&#39; [um]&#39;, pos=(0.8, 0.05))
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
 
-    m_ext_out.alpha(alpha).legend(m_ext.legend())
+    m_ext_out.alpha(alpha).legend(m_ext._legend)
     m_int.color(&#34;white&#34;).alpha(1).wireframe()
 
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt;&#34;+title+&#34; Heat map\n\t   - min and max: (&#34;+format(vmin, &#39;.2f&#39;)+&#34; , &#34;+format(vmax, &#39;.2f&#39;)+&#34;)&#34;
-        txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
 
         cube = Cube(pos=m_ext_out.centerOfMass(), side=300, c=&#39;white&#39;, alpha=0.01)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=10)
-        vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
+        vp.show(m_ext_out, cube, txt, at=0, zoom=1.2)#vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
 
     min_max = [vmin, vmax]
 
@@ -2724,11 +2957,12 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
     # - Get unitary normal of plane to create CL_ribbon
     pl_normCLRibbon = unit_vector(pl_CLRibbon[&#39;pl_normal&#39;])
     pl_centCLRibbon = np.asarray(pl_CLRibbon[&#39;pl_centre&#39;])
-    plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color(&#39;skyblue&#39;).alpha(0.5)
+    # plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color(&#39;skyblue&#39;).alpha(0.5)
     arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon[&#39;pl_normal&#39;])*120, s = 0.1, c = &#39;cyan&#39;)
 
     text = filename+&#34;\n\n &gt;&gt; Is the cyan arrow pointing towards the ventral side of the heart? \n    Check, close the window and answer.&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=4)
     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectNormRib,txt, at=0, azimuth = 0, interactive=1)
 
@@ -2751,7 +2985,7 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
         # print(&#39;normal&#39;, normal)
         # A. Get cut plane info
         # - Info Plane
-        d = normal.dot(centre)
+        # d = normal.dot(centre)
         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c=&#39;orange&#39;)
 
         # B. Get vector that defines 0 deg angle
@@ -2816,6 +3050,7 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
                     else:
                         sphR.append(Sphere(pt+centre, r=2, c=&#39;gold&#39;))
 
+            settings.legendSize = .3
             vp = Plotter(N=1, axes=4)
             vp.show(mesh,sphL, sphR,kspl_CL2use, cl_ribbon, arr_normCRib, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
 
@@ -2881,7 +3116,8 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
 #         if i % 10 == 0:
 #             pl_cut = Plane(pos = centre, normal = normal, sx = 300).color(&#39;coral&#39;).alpha(0.5)
 #             sph_C = Sphere(centre, r=2, c=&#39;red&#39;)
-#             vp = Plotter(N=1, axes=4)
+            # settings.legendSize = .3
+            # vp = Plotter(N=1, axes=4)
 #             vp.show(mesh,sph_pos,kspl_CL2use, cl_ribbon,arr_vectPlCut,arr_vectNormRib,pl_cut, sph_C, at=0, azimuth = 0, interactive=1)
 
 
@@ -2917,9 +3153,10 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
 #         sph_VXYZ = Sphere(v_vectXYZ[0], r=2, c=&#39;green&#39;)
 #         arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
 
-#         # if i % 10 == 0:
-#         #     vp = Plotter(N=1, axes=4)
-#         #     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
+        # if i % 10 == 0:
+        #     settings.legendSize = .3
+        #     vp = Plotter(N=1, axes=4)
+        #     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
 
 #         # C. Get points of mesh at plane
 #         d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
@@ -3397,10 +3634,10 @@ def orientVectors(line):
 
     &#34;&#34;&#34;
 
-    if line.legend()  == &#39;lin_OrientAtr(ProjX)&#39;:
+    if line._legend  == &#39;lin_OrientAtr(ProjX)&#39;:
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()]
-    elif line.legend() == &#39;lin_OrientVent(ProjX)&#39;:
+    elif line._legend == &#39;lin_OrientVent(ProjX)&#39;:
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()[::-1]]
     else: # Linear line
@@ -3770,12 +4007,13 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
         rotMeshes4video.append(rot_mesh)
 
     if plotshow:
-        text = filename+&#34;\n\n &gt;&gt; Rotated meshes&#34;; txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        text = filename+&#34;\n\n &gt;&gt; Rotated meshes&#34;; txt = Text2D(text, c=&#34;k&#34;, font= font)
         vp1 = Plotter(N=1, axes=8)
         vp1.show(rotMeshes4video, txt, at=0, axes=8, zoom=1.2)
 
-    text2 = filename; txt2 = Text2D(text2, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    text2 = filename; txt2 = Text2D(text2, c=&#34;k&#34;, font= font)
 
+    settings.legendSize = .3
     vp = Plotter(bg=&#39;white&#39;, axes=10, offscreen=True)
     vp.show(rotMeshes4video, txt2, zoom=1.4)
     video_name = os.path.join(dir2save, filename+&#34;_&#34;+info+&#34;.mp4&#34;)
@@ -3820,7 +4058,7 @@ def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
 
     &#34;&#34;&#34;
 
-    print(&#39;Saving videos... this might take a while... (about 2min/video&#39;)
+    print(&#39;\nSaving videos... this might take a while... (about 2min/video&#39;)
     bar = Bar(&#39;Saving&#39; , max = len(info), suffix = suffix, check_tty=False, hide_cursor=False)
     for i, name, mesh in zip(count(), info, meshes4video):
         saveVideo(filename = filename, info = name, meshes4video = [mesh],
@@ -3856,9 +4094,10 @@ def plotPtClassif(filename, mesh, pts_whole, pts_class):
     names_class = [[&#39;atrium&#39;, &#39;ventricle&#39;],[&#39;dorsal&#39;, &#39;ventral&#39;],[&#39;left&#39;, &#39;right&#39;]]
     color = [[&#39;tomato&#39;,&#39;gold&#39;], [&#39;greenyellow&#39;, &#39;darkgreen&#39;],[&#39;deepskyblue&#39;, &#39;darkblue&#39;]]
     text = filename+&#39;\n\n &gt;&gt; Point classification&#39;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
 
-    vp = Plotter(shape = (1, 4), axes = 7)
+    settings.legendSize = .2
+    vp = Plotter(shape = (1, 4), axes = 13)
     vp.show(mesh, txt, at = 0)
     for i, sp_class in enumerate(pts_class):
 
@@ -4026,14 +4265,14 @@ def getEllipsoid (filename, type_cut, mesh, kspl, xyz_bounds, option):
     &#34;&#34;&#34;
 
     xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
-    x_size = xmax - xmin
-    y_size = ymax - ymin
-    z_size = zmax - zmin
+    # x_size = xmax - xmin
+    # y_size = ymax - ymin
+    # z_size = zmax - zmin
 
-    box_size = max(x_size, y_size, z_size)*1.2
+    # box_size = max(x_size, y_size, z_size)*1.2
     centre = kspl[len(kspl)*3//4]
-    end_inflow = kspl[-1]
-    normal = (0,1,0)
+    # end_inflow = kspl[-1]
+    # normal = (0,1,0)
     #print(&#34;centre:&#34;, centre)
 
     rotX = [0]
@@ -4072,6 +4311,7 @@ def getEllipsoid (filename, type_cut, mesh, kspl, xyz_bounds, option):
         valueAlpha = widget.GetRepresentation().GetValue()
         ellipsoid.alpha(valueAlpha)
 
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=8)
     axis1 = (200,0,0)
     axis2 = (0,400,0)
@@ -4102,7 +4342,7 @@ def getEllipsoid (filename, type_cut, mesh, kspl, xyz_bounds, option):
                pos=[(0.95,0.25), (0.95,0.45)], c=&#34;blue&#34;, title=&#34;Ext.Mesh Opacity)&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh.alpha(1), ellipsoid, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
@@ -4221,9 +4461,9 @@ alert(&#39;jump&#39;,1)</code></pre>
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_kspl = dict_kspl[kspl.legend()]= dict()
+        specific_kspl = dict_kspl[kspl._legend]= dict()
     else:
-        specific_kspl = dict_kspl[kspl.legend()+&#39;-&#39;+info]= dict()
+        specific_kspl = dict_kspl[kspl._legend+&#39;-&#39;+info]= dict()
 
     specific_kspl[&#39;kspl_pts&#39;] = kspl.points()
     specific_kspl[&#39;color&#39;] = kspl.color()
@@ -4284,9 +4524,9 @@ alert(&#39;jump&#39;,1)</code></pre>
     for i, kspl, inf in zip(count(), kspls, info):
         #print(i)
         if inf ==&#39;&#39;:
-            specific_kspl = dict_kspl[kspl.legend()]= dict()
+            specific_kspl = dict_kspl[kspl._legend]= dict()
         else:
-            specific_kspl = dict_kspl[kspl.legend()+&#39;-&#39;+inf]= dict()
+            specific_kspl = dict_kspl[kspl._legend+&#39;-&#39;+inf]= dict()
 
         specific_kspl[&#39;kspl_pts&#39;] = kspl.points()
         specific_kspl[&#39;color&#39;] = kspl.color()
@@ -4422,12 +4662,12 @@ alert(&#39;jump&#39;,1)</code></pre>
     df_resFilled = df_res
     for nl, line in enumerate(lines):
         length_l = line.length()
-        name_l = line.legend()
+        name_l = line._legend
         df_resFilled.loc[file_num, name_l] = length_l
 
     for ncl, cl in enumerate(kspl_CL):
         length_cl = cl.length()
-        name_cl = cl.legend()
+        name_cl = cl._legend
         df_resFilled[&#39;Length_&#39;+name_cl] = length_cl
 
     return df_resFilled</code></pre>
@@ -4543,9 +4783,9 @@ alert(&#39;jump&#39;,1)</code></pre>
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_plane = dict_planes[plane.legend()]= dict()
+        specific_plane = dict_planes[plane._legend]= dict()
     else:
-        specific_plane = dict_planes[plane.legend()+&#39;-&#39;+info]= dict()
+        specific_plane = dict_planes[plane._legend+&#39;-&#39;+info]= dict()
 
     specific_plane[&#39;pl_normal&#39;] = pl_normal
     specific_plane[&#39;pl_centre&#39;] = pl_centre
@@ -4614,9 +4854,9 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     for i, plane, inf in zip(count(), planes, info):
         if inf ==&#39;&#39;:
-            specific_plane = dict_planes[plane.legend()]= dict()
+            specific_plane = dict_planes[plane._legend]= dict()
         else:
-            specific_plane = dict_planes[plane.legend()+&#39;-&#39;+inf]= dict()
+            specific_plane = dict_planes[plane._legend+&#39;-&#39;+inf]= dict()
 
         specific_plane[&#39;pl_normal&#39;] = pls_normal[i]
         specific_plane[&#39;pl_centre&#39;] = pls_centre[i]
@@ -4676,9 +4916,9 @@ alert(&#39;jump&#39;,1)</code></pre>
     &#34;&#34;&#34;
 
     if info ==&#39;&#39;:
-        specific_pt = dict_pts[sphere.legend()]= dict()
+        specific_pt = dict_pts[sphere._legend]= dict()
     else:
-        specific_pt = dict_pts[sphere.legend()+&#39;-&#39;+info]= dict()
+        specific_pt = dict_pts[sphere._legend+&#39;-&#39;+info]= dict()
 
     specific_pt[&#39;sph_position&#39;] = sphere.pos()
     specific_pt[&#39;color&#39;] = sphere.color()
@@ -4738,9 +4978,9 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     for i, sph, inf in zip(count(), spheres, info):
         if inf ==&#39;&#39;:
-            specific_pt = dict_pts[sph.legend()]= dict()
+            specific_pt = dict_pts[sph._legend]= dict()
         else:
-            specific_pt = dict_pts[sph.legend()+&#39;-&#39;+inf]= dict()
+            specific_pt = dict_pts[sph._legend+&#39;-&#39;+inf]= dict()
 
         specific_pt[&#39;sph_position&#39;] = sph.pos()
         specific_pt[&#39;color&#39;] = sph.color()
@@ -4804,9 +5044,9 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     for i, sp_shape, inf, radii in zip(count(), shapes, info, radius):
         if inf ==&#39;&#39;:
-            specific_shape = dict_shapes[sp_shape.legend()]= dict()
+            specific_shape = dict_shapes[sp_shape._legend]= dict()
         else:
-            specific_shape = dict_shapes[sp_shape.legend()+&#39;-&#39;+inf]= dict()
+            specific_shape = dict_shapes[sp_shape._legend+&#39;-&#39;+inf]= dict()
 
         specific_shape[&#39;kspl_pts&#39;] = sp_shape.points()
         specific_shape[&#39;color&#39;] = sp_shape.color()
@@ -5157,31 +5397,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 <span>def <span class="ident">createAll3LayerMeshes</span></span>(<span>filename, s3_all, s3_in, s3_out, resolution, layer)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Function that creates the 3 meshes of a heart layer (int, ext, all), using the masks given as input</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
-<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
-<dt><strong><code>s3_all</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Mask of the tissue layer</dd>
-<dt><strong><code>s3_in</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Mask of the internal contours of the tissue layer</dd>
-<dt><strong><code>s3_out</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Mask of the external contours of the tissue layer</dd>
-<dt><strong><code>resolution</code></strong> :&ensp;<code>list</code> of <code>floats</code></dt>
-<dd>List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.</dd>
-<dt><strong><code>layer</code></strong> :&ensp;<code>str</code></dt>
-<dd>Name of the heart layer being reconstructed</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>mesh_all</code></strong> :&ensp;<code>mesh</code></dt>
-<dd>Mesh of the heart layer. (vedo Mesh)</dd>
-<dt><strong><code>mesh_in</code></strong> :&ensp;<code>mesh</code></dt>
-<dd>Mesh of the filled internal contours of the heart layer. (vedo Mesh)</dd>
-<dt><strong><code>mesh_out</code></strong> :&ensp;<code>mesh</code></dt>
-<dd>Mesh of the filled external contours of the heart layer. (vedo Mesh)</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5214,7 +5430,7 @@ alert(&#39;jump&#39;,1)</code></pre>
     mesh_out : mesh
         Mesh of the filled external contours of the heart layer. (vedo Mesh)
 
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;,
 
     print(&#39;- Creating surface reconstruction of &#39;+ layer +&#39; &#39;)
 
@@ -5259,7 +5475,8 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     text = filename+&#34;\n\n &gt;&gt; &#34;+layer
     txt = Text2D(text, c=c, font=font)
-    vp = Plotter(N=3, axes=7)
+    settings.legendSize = .3
+    vp = Plotter(N=3, axes=13)
     vp.show(mesh_all, txt, at=0, zoom=1.2)
     vp.show(mesh_all, mesh_out, at=1, zoom=1.2)
     vp.show(mesh_all, mesh_in, at=2, zoom=1.2, interactive=True)
@@ -5378,9 +5595,10 @@ alert(&#39;jump&#39;,1)</code></pre>
     dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = [&#39;&#39;,&#39;&#39;], dict_kspl = dict_kspl)
 
     text = filename+&#34;\n\n &gt;&gt; Creating Extended Centreline to Divide Right/Left&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
 
-    vp = Plotter(N=1, axes=7)
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes=13)
     vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
 
     return cl_ribbon, dict_kspl, dict_shapes, dict_planes</code></pre>
@@ -5497,7 +5715,7 @@ alert(&#39;jump&#39;,1)</code></pre>
         #Plot spheres through centreline inside mesh.
         vcols = [colorMap(v, &#34;jet&#34;, sphData_cl.max(), sphData_cl.min()) for v in sphData_cl]
         sph_cl = Spheres(pts_cl, c=&#39;red&#39;, r=sphData_cl).legend(&#39;sphs_maxInsSphRad_&#39;+layerNames[i])
-        sph_cl_colour = Spheres(pts_cl, c=vcols, r=sphData_cl.min()).addScalarBar(title=&#39;Sphere Radius\n[um]&#39;).legend(&#39;sphs_maxInsSphRadC_&#39;+layerNames[i])
+        sph_cl_colour = Spheres(pts_cl, c=vcols, r=sphData_cl.min()).addScalarBar(title=&#39;Spheres Radius\n[um]&#39;).legend(&#39;sphs_maxInsSphRadC_&#39;+layerNames[i])
         sph_cl_colour.mapper().SetScalarRange(sphData_cl.min(),sphData_cl.max())
         spheres_CL.append(sph_cl)
         spheres_CL_col.append(sph_cl_colour)
@@ -5586,8 +5804,9 @@ alert(&#39;jump&#39;,1)</code></pre>
                                   pls_normal = [pl_DnVAtr_normal, pl_DnVVent_normal], info =[&#39;&#39;,&#39;&#39;], dict_planes = dict_planes)
 
     text = filename+&#34;\n\n &gt;&gt; Creating coronal planes to divide each chamber&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
-    vp = Plotter(N=1, axes = 7)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes = 13)
     vp.show(mesh.alpha(0.01), sph_orient, kspl_CL, orient_lines, pl_DnV_Atr, pl_DnV_Vent, txt, at=0, interactive=True)
 
     pl_DnV = [pl_DnV_Atr, pl_DnV_Vent]
@@ -5675,7 +5894,8 @@ alert(&#39;jump&#39;,1)</code></pre>
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt; External &#34;+layer+&#39; (&#39;+info+&#39;)&#39;
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh_ext, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh_ext</code></pre>
@@ -5822,15 +6042,15 @@ alert(&#39;jump&#39;,1)</code></pre>
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt; &#34;+layer
         txt = Text2D(text, c=c, font=font)
-
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         vp.show(mesh, txt, at=0, zoom=1.2, interactive=True)
 
     return mesh</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.createMeshes4CL"><code class="name flex">
-<span>def <span class="ident">createMeshes4CL</span></span>(<span>filename, meshes, names, mesh_colors, plotshow)</span>
+<span>def <span class="ident">createMeshes4CL</span></span>(<span>filename, meshes, plotshow)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function that cleans and smooths meshes given as input to get centreline using VMTK</p>
@@ -5840,10 +6060,6 @@ alert(&#39;jump&#39;,1)</code></pre>
 <dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
 <dt><strong><code>meshes</code></strong> :&ensp;<code>list</code> of <code>meshes</code></dt>
 <dd>List of meshes to .</dd>
-<dt><strong><code>names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
-<dd>List of names for cleaned and smoothed meshes</dd>
-<dt><strong><code>mesh_colors</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
-<dd>List of colours</dd>
 <dt><strong><code>plotshow</code></strong> :&ensp;<code>boolean</code></dt>
 <dd>True if you want to see the resulting mesh in a plot, else False.</dd>
 </dl>
@@ -5851,12 +6067,14 @@ alert(&#39;jump&#39;,1)</code></pre>
 <dl>
 <dt><strong><code>meshes4cl_out</code></strong> :&ensp;<code>list</code> of <code>meshes</code></dt>
 <dd>List of cleaned and smoothed meshes. (vedo Mesh)</dd>
+<dt><strong><code>meshes4cl_names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>List of names with which to save exported meshes to obtain centreline</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def createMeshes4CL(filename, meshes, names, mesh_colors, plotshow):
+<pre><code class="python">def createMeshes4CL(filename, meshes, plotshow):
     &#34;&#34;&#34;
     Function that cleans and smooths meshes given as input to get centreline using VMTK
 
@@ -5866,10 +6084,6 @@ alert(&#39;jump&#39;,1)</code></pre>
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     meshes : list of meshes
         List of meshes to .
-    names : list of str
-        List of names for cleaned and smoothed meshes
-    mesh_colors : list of str
-        List of colours
     plotshow : boolean
         True if you want to see the resulting mesh in a plot, else False.
 
@@ -5877,16 +6091,32 @@ alert(&#39;jump&#39;,1)</code></pre>
     -------
     meshes4cl_out : list of meshes
         List of cleaned and smoothed meshes. (vedo Mesh)
+    meshes4cl_names : list of str
+        List of names with which to save exported meshes to obtain centreline
 
     &#34;&#34;&#34;
 
+    meshes_selected = []
     meshes4cl = []
+    meshes4cl_names = []
+    mesh_colors = [&#39;springgreen&#39;, &#39;violet&#39;]
+    names = [&#39;Int.Myoc(Cut)&#39;, &#39;Ext.Endo(Cut)&#39;]
+    names_export = [&#39;myoc_int_cut4cl&#39;,&#39;endo_ext_cut4cl&#39;]
 
-    for i, mesh_cl in enumerate(meshes):
+    q_selectMeshes = ask4input(&#39;Select the meshes you would like to export to extract centreline \n\t\t[0]: Int.Myocardium/[1]: Ext.Endocardium/[2]: both: &#39;, int)
+    if q_selectMeshes in [0,2]:
+        meshes_selected.append(meshes[0])
+        meshes4cl_names.append(names_export[0])
+    if q_selectMeshes in [1,2]:
+        meshes_selected.append(meshes[1])
+        meshes4cl_names.append(names_export[1])
+
+    for i, mesh_cl in enumerate(meshes_selected):
         print(&#34;- File being processed for centreline: &#34;, filename +&#39; - &#39;+names[i])
         mesh_cl.legend(names[i])
 
         if plotshow:
+            settings.legendSize = .3
             vp = Plotter(N=2, axes=4)
             text1 = filename+&#34;\n- Original mesh - &#34;+names[i]
             txt1 = Text2D(text1, c=c, font=font)
@@ -5910,13 +6140,17 @@ alert(&#39;jump&#39;,1)</code></pre>
 
         meshes4cl.append(meshCL_cut)
 
-    vp = Plotter(N=2, axes=7)
-    vp.show(meshes4cl[-1], at=0, zoom=1)
-    vp.show(meshes4cl[-2], at=1, zoom=1, interactive = True)
+    meshes4cl_out = meshes4cl[-len(meshes_selected):]
 
-    meshes4cl_out = meshes4cl[-2:]
+    settings.legendSize = .3
+    vp = Plotter(N=len(meshes4cl_out), axes=13)
+    for i in range(len(meshes4cl_out)):
+        if i != len(meshes4cl_out)-1:
+            vp.show(meshes4cl[i], at=i, zoom=1)
+        else:
+            vp.show(meshes4cl[i], at=i, zoom=1, interactive = True)
 
-    return meshes4cl_out</code></pre>
+    return meshes4cl_out, meshes4cl_names</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.createPlane"><code class="name flex">
@@ -6084,8 +6318,10 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_cut &gt;= 0)
+    del s3_cut
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
 
     normal_inf = unit_vector(pls_normal[0])
     normal_outf = unit_vector(pls_normal[1])
@@ -6093,32 +6329,35 @@ alert(&#39;jump&#39;,1)</code></pre>
     # Find all the d values of pix_um
     d_pix_um_Inf = np.dot(np.subtract(pix_um,np.array(pls_centre[0])),np.array(normal_inf))
     d_pix_um_Outf = np.dot(np.subtract(pix_um,np.array(pls_centre[1])),np.array(normal_outf))
+    del pix_um
 
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um_Inf = s3_cut_v*d_pix_um_Inf
     d_pve_pix_um_Outf = s3_cut_v*d_pix_um_Outf
+    del d_pix_um_Inf, d_pix_um_Outf
 
     # Duplicate s3f_v to initialise stacks without inflow
     s3f_all_v = np.copy(s3_cut_v)
     s3f_all_v.astype(&#39;uint8&#39;)
+    del s3_cut_v
 
     # Find all positions in d_pve_pix_um that are at either side of the planes (outside of mesh)
     pos_outside_inf = np.where(d_pve_pix_um_Inf &lt; 0)[0]
     pos_outside_outf = np.where(d_pve_pix_um_Outf &gt; 0)[0]
+    del d_pve_pix_um_Inf, d_pve_pix_um_Outf
 
     # Remove the points that are outside of the mesh (inflow)
     s3f_all_v[pos_outside_inf] = 0
-
-    # # Duplicate s3f2_v to initialise stacks without inflow and outflow
-    # s3f2_all_v = np.copy(s3f_all_v)
+    del pos_outside_inf
 
     # Remove the points that are outside of the mesh (ouflow)
     s3f_all_v[pos_outside_outf] = 0
+    del pos_outside_outf
 
     # Reshape vector into matrix/stack
     s3f_cut = s3f_all_v.reshape((xdim, ydim, zdim))
 
-    alert(&#39;wohoo&#39;,1)
+    # alert(&#39;wohoo&#39;,1)
 
     return s3f_cut</code></pre>
 </details>
@@ -6187,8 +6426,10 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_cut &gt;= 0)
+    del s3_cut
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
 
     normal  = unit_vector(pls_normal)
     # Find all the d values of pix_um
@@ -6196,30 +6437,35 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um = s3_cut_v*d_pix_um
+    del pix_um
 
     # Duplicate s3f_v to initialise stacks without inflow/outflow
     s3f_all_v = np.copy(s3_cut_v)
     s3f_all_v.astype(&#39;uint8&#39;)
+    del s3_cut_v
 
     # Find all positions in d_pve_pix_um that are at either side of the planes (outside of mesh)
     if option == &#39;inflow&#39;:
         pos_outside = np.where(d_pve_pix_um &lt; 0)[0]
     elif option == &#39;outflow&#39;:
         pos_outside = np.where(d_pve_pix_um &gt; 0)[0]
+    del d_pve_pix_um
 
     # Remove the points that are outside of the mesh (inflow/outflow)
     s3f_all_v[pos_outside] = 0
+    del pos_outside
 
     # Reshape vector into matrix/stack
     s3f_cut = s3f_all_v.reshape((xdim, ydim, zdim))
+    del s3f_all_v
 
-    alert(&#39;wohoo&#39;,1)
+    # alert(&#39;wohoo&#39;,1)
 
     return s3f_cut</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.cutMeshes4CL"><code class="name flex">
-<span>def <span class="ident">cutMeshes4CL</span></span>(<span>filename, meshes, names, cuts, cut_direction, mark_colors, mesh_colors, dicts, plotshow)</span>
+<span>def <span class="ident">cutMeshes4CL</span></span>(<span>filename, meshes, cuts, cut_direction, dicts, plotshow)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Funtion that cuts the inflow and outflow tract of meshes from which the centreline will be obtained.</p>
@@ -6227,7 +6473,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
 <dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
-<dt><strong><code>meshes</code></strong> :&ensp;<code>list</code> of <code>meshes</code></dt>
+<dt><strong><code>meshes4cl</code></strong> :&ensp;<code>list</code> of <code>meshes</code></dt>
 <dd>List of cleaned and smoothed meshes. (vedo Mesh)</dd>
 <dt><strong><code>names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
 <dd>List of names of cleaned and smoothed meshes</dd>
@@ -6235,10 +6481,6 @@ alert(&#39;jump&#39;,1)</code></pre>
 <dd>List with type of cuts ['inflow', 'outflow']</dd>
 <dt><strong><code>cut_direction</code></strong> :&ensp;<code>list</code> of <code>booleans</code></dt>
 <dd>list of booleans indicating the cut direction depending on the 'cuts'</dd>
-<dt><strong><code>mark_colors</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
-<dd>List of colours for marks</dd>
-<dt><strong><code>mesh_colors</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
-<dd>List of colours</dd>
 <dt><strong><code>dicts</code></strong> :&ensp;<code>list</code> of <code>dicts</code></dt>
 <dd>[dict_planes, dict_pts, dict_kspl].</dd>
 <dt><strong><code>plotshow</code></strong> :&ensp;<code>boolean</code></dt>
@@ -6246,8 +6488,8 @@ alert(&#39;jump&#39;,1)</code></pre>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>meshes[-2:] : list</code> of <code>meshes</code></dt>
-<dd>List of cut meshes. (vedo Mesh)</dd>
+<dt><code>meshes[-len(meshes):] : list</code> of <code>meshes</code></dt>
+<dd>List of cut meshes with same length as input meshes (vedo Mesh)</dd>
 <dt><strong><code>dicts_f</code></strong> :&ensp;<code> list</code> of <code>dicts</code></dt>
 <dd>List of updated dictionaries</dd>
 </dl></div>
@@ -6255,7 +6497,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cutMeshes4CL(filename, meshes, names, cuts, cut_direction, mark_colors, mesh_colors, dicts, plotshow):
+<pre><code class="python">def cutMeshes4CL(filename, meshes, cuts, cut_direction, dicts, plotshow):
     &#34;&#34;&#34;
     Funtion that cuts the inflow and outflow tract of meshes from which the centreline will be obtained.
 
@@ -6263,7 +6505,7 @@ alert(&#39;jump&#39;,1)</code></pre>
     ----------
     filename : str
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    meshes : list of meshes
+    meshes4cl : list of meshes
         List of cleaned and smoothed meshes. (vedo Mesh)
     names : list of str
         List of names of cleaned and smoothed meshes
@@ -6271,10 +6513,6 @@ alert(&#39;jump&#39;,1)</code></pre>
         List with type of cuts [&#39;inflow&#39;, &#39;outflow&#39;]
     cut_direction : list of booleans
         list of booleans indicating the cut direction depending on the &#39;cuts&#39;
-    mark_colors : list of str
-        List of colours for marks
-    mesh_colors : list of str
-        List of colours
     dicts : list of dicts
         [dict_planes, dict_pts, dict_kspl].
     plotshow : boolean
@@ -6282,26 +6520,41 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     Returns
     -------
-    meshes[-2:] : list of meshes
-        List of cut meshes. (vedo Mesh)
+    meshes[-len(meshes):] : list of meshes
+        List of cut meshes with same length as input meshes (vedo Mesh)
     dicts_f :  list of dicts
         List of updated dictionaries
 
     &#34;&#34;&#34;
+    mark_colors = [&#39;deepskyblue&#39;, &#39;tomato&#39;]*3
+    mesh_colors = [&#39;springgreen&#39;, &#39;violet&#39;]*3
 
     dict_planes, dict_pts, dict_kspl = dicts
     ksplines = []; spheres = []
+    num_meshes_out = len(meshes)
 
     for n, cut in enumerate(cuts):
         print(&#39;- Cutting: &#39;+cut)
         #Get plane to cut
-        planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
-                                                                 info = &#39;4CL&#39;, mesh_in = meshes[1],
-                                                                 mesh_out = meshes[0])
+        if isinstance(meshes, list):
+            if len(meshes) == 2:
+                planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                     info = &#39;4CL&#39;, mesh_in = meshes[1],
+                                                                     mesh_out = meshes[0])
+            else:
+                planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                     info = &#39;4CL&#39;, mesh_in = meshes[0],
+                                                                     mesh_out = &#39;&#39;)
+        else:
+            planeCL_cut, plCL_cut_centre, plCL_cut_normal = getPlane(filename = filename, type_cut = cut,
+                                                                 info = &#39;4CL&#39;, mesh_in = meshes,
+                                                                 mesh_out = &#39;&#39;)
         dict_planes = addPlane2Dict (plane = planeCL_cut, pl_centre = plCL_cut_centre,
                                             pl_normal = plCL_cut_normal, info = &#39;&#39;, dict_planes = dict_planes)
 
-        for i, mesh4cl in enumerate(meshes[-2:]):
+        for i, mesh4cl in enumerate(meshes[-num_meshes_out:]):
+            mesh_name = mesh4cl._legend
+            #print(mesh_name)
             pts2cut = getPointsAtPlane(points = mesh4cl.points(), pl_normal = plCL_cut_normal,
                                        pl_centre = plCL_cut_centre)
             ordpts, _ = order_pts(points = pts2cut)
@@ -6316,36 +6569,32 @@ alert(&#39;jump&#39;,1)</code></pre>
             sph_centroid = Sphere(pos=pt_centroid, r=2, c=mark_colors[i]).legend(&#39;sph_Cut4CL_&#39;+cut)
             spheres.append(sph_centroid)
 
-            # # Plot result
-            # vp = Plotter(N=1)
-            # text = filename+&#34;\n\n - Mesh - KSpline and centre of cut &#34;+ cut +&#34;-&#34;+names[i]
-            # txt = Text2D(text, c=c, font=font)
-            # vp.show(mesh4cl, kspl, sph_centroid, txt, at=0, axes=1, interactive=True)
-
-            dict_pts = addPoint2Dict(sphere = sph_centroid, info = names[i], dict_pts = dict_pts)
-            dict_kspl = addKSpline2Dict(kspl = kspl, info = names[i], dict_kspl = dict_kspl)
+            dict_pts = addPoint2Dict(sphere = sph_centroid, info = mesh4cl._legend[:-4], dict_pts = dict_pts)
+            dict_kspl = addKSpline2Dict(kspl = kspl, info = mesh4cl._legend[:-4], dict_kspl = dict_kspl)
 
             # Cutmesh using created plane
-            mesh4cl = mesh4cl.clone().cutWithMesh(planeCL_cut, invert=cut_direction[n])
-            mesh4cl = mesh4cl.extractLargestRegion()
-            mesh4cl.color(mesh_colors[i]).alpha(0.05).wireframe(True).legend(&#39;CL_cutMesh&#39;)
+            mesh4cl_new = mesh4cl.clone().cutWithMesh(planeCL_cut, invert=cut_direction[n])
+            mesh4cl_new = mesh4cl_new.extractLargestRegion()
+            mesh4cl_new.color(mesh_colors[i]).alpha(0.05).wireframe(True).legend(mesh4cl._legend)
 
+            settings.legendSize = .3
             vp = Plotter(N=1)
             text = &#34;- Resulting mesh after cutting&#34;
             txt = Text2D(text, c=c, font=font)
-            vp.show(mesh4cl, kspl, sph_centroid, txt, at=0, viewup=&#34;y&#34;,  interactive=True)
+            vp.show(mesh4cl_new, kspl, sph_centroid, txt, at=0, viewup=&#34;y&#34;,  interactive=True)
 
-            meshes.append(mesh4cl)
+            meshes.append(mesh4cl_new)
 
     if plotshow:
-        vp = Plotter(N=1, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
         text = filename+&#34;\n\n &gt;&gt; Resulting mesh after cutting inflow &amp; outflow tract&#34;
         txt = Text2D(text, c=c, font=font)
-        vp.show(meshes[-2:], ksplines, spheres, txt, at=0, interactive=True)
+        vp.show(meshes[-num_meshes_out:], ksplines, spheres, txt, at=0, interactive=True)
 
     dicts_f = dict_planes, dict_pts, dict_kspl
 
-    return meshes[-2:], dicts_f</code></pre>
+    return meshes[-num_meshes_out:], dicts_f</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.decodeDict"><code class="name flex">
@@ -6465,7 +6714,7 @@ alert(&#39;jump&#39;,1)</code></pre>
     for i, mesh in enumerate(meshes):
 
         meshes2cutLR = mesh
-        mesh_legend = mesh.legend()
+        mesh_legend = mesh._legend
         print(&#39;- Dividing &#39;+mesh_legend+&#39; into left and right sides&#39;)
 
         mesh_1 = meshes2cutLR.clone().cutWithMesh(cl_ribbon, invert=True)
@@ -6480,11 +6729,12 @@ alert(&#39;jump&#39;,1)</code></pre>
 
         text = filename+&#34;\n\n &gt;&gt; Resulting mesh after cutting with centreline \n &gt;&gt; Before closing the window make sure you confirm A (light blue): left, B (dark blue): Right&#34;
         txt = Text2D(text, c=c, font=font)
-        vp = Plotter(N=2, axes=7)
+        settings.legendSize = .3
+        vp = Plotter(N=2, axes=13)
         vp.show(meshes2cutLR, cl_ribbon, txt, at=0)
         vp.show(mesh_1, mesh_2, at=1, zoom = 1.2, interactive=True)
 
-        q_happy = ask4input(&#39;Are meshes classified correctly [A (light blue): left, B (dark blue): Right ]? [0]:no/[1]:yes: &#39;, bool)
+        q_happy = ask4input(&#39;Are meshes classified correctly [A (light blue):left, B (dark blue):right]? [0]:no/[1]:yes: &#39;, bool)
         if not q_happy:
             leftMesh = ask4input(&#39;Select the mesh number that corresponds to the left side. [A]-&#39;+mesh_legend+&#39;/[B]:&#39;+mesh_legend+&#39;: &#39;, str, keep = True)
             if leftMesh == &#39;A&#39;:
@@ -6807,9 +7057,10 @@ alert(&#39;jump&#39;,1)</code></pre>
     vent_color = [&#39;darkturquoise&#39;, &#39;mediumvioletred&#39;, &#39;chocolate&#39;, &#39;indigo&#39;, &#39;darkblue&#39;]
 
     tic = perf_counter()
+    settings.legendSize = .3
     vp = Plotter (N=3, axes=10)
     text2 = filename+&#34;\n\n &gt;&gt;  Result of dividing heart layers into chambers&#34;
-    txt2 = Text2D(text2, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt2 = Text2D(text2, c=&#34;k&#34;, font= font)
     for n, s3_name, name in zip(count(), end_name, names2cut):
         # Mask s3s vent and atrium
         print(&#39;- Cutting s3 (&#39;, name,&#39;)&#39;)
@@ -6990,7 +7241,8 @@ alert(&#39;jump&#39;,1)</code></pre>
     df_res = addOrientationAngles2df(df_res = df_res, file_num = file_num, angles = [ang_heart, ang_atr, ang_vent, ang_chs], names = [&#39;ang_Heart&#39;, &#39;ang_Atr&#39;, &#39;ang_Vent&#39;, &#39;ang_BtwChambers&#39;])
 
     text = filename+&#34;\n\n &gt;&gt; Measuring chamber orientation\n - &#34;+atr_txt+&#34;\n - &#34;+vent_txt+&#34;\n - &#34;+chs_txt
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .15
     vp = Plotter(N=1, axes = 8)
     vp.show(m_myoc.alpha(0.01), m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
             orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt, azimuth = azimuth, elevation = elevation, zoom = 0.8, at=0, interactive=True) #
@@ -7053,14 +7305,15 @@ alert(&#39;jump&#39;,1)</code></pre>
         Resulting mesh. (vedo Mesh).
 
     &#34;&#34;&#34;
-
-    print(&#39;- Creating surface reconstructions of cut &#39;+ layer)
+    if plotshow:
+        print(&#39;- Creating surface reconstructions of cut &#39;+ layer)
 
     verts_cut, faces_cut, _, _ = measure.marching_cubes_lewiner(s3_cut, spacing=resolution)
     mesh_cut = Mesh([verts_cut, faces_cut])
     if layer != &#39;Int.Endo&#39;:
         mesh_cut = mesh_cut.extractLargestRegion()
-    alert(&#39;wohoo&#39;,1)
+    if plotshow:
+        alert(&#39;wohoo&#39;,1)
 
     if layer == &#39;Cardiac Jelly&#39; or layer == &#39;CJ&#39;:
         color = &#39;darkorange&#39;
@@ -7078,6 +7331,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     if plotshow:
         mesh_original.legend(layer).alpha(0.1).color(&#39;tomato&#39;)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=4)
         vp.show(mesh_original, mesh_cut, txt, at=0, zoom=1.2, interactive=True)
 
@@ -7085,7 +7339,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.getDistance2Mesh"><code class="name flex">
-<span>def <span class="ident">getDistance2Mesh</span></span>(<span>filename, m_int, m_ext, title, alpha=0.1, plotshow=True)</span>
+<span>def <span class="ident">getDistance2Mesh</span></span>(<span>filename, m_int, m_ext, title, alpha=1, plotshow=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function that gets the distance between m_ext and m_int and color codes m_ext accordingly</p>
@@ -7117,7 +7371,7 @@ alert(&#39;jump&#39;,1)</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 0.1, plotshow = True):
+<pre><code class="python">def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     &#34;&#34;&#34;
     Function that gets the distance between m_ext and m_int and color codes m_ext accordingly
 
@@ -7150,7 +7404,7 @@ alert(&#39;jump&#39;,1)</code></pre>
     thickness_meshes = [&#39;Cardiac Jelly Thickness&#39;, &#39;Myoc.Thickness&#39;, &#39;Endo.Thickness&#39;]
     tic = perf_counter()
     print(&#39;- Extracting &#39;+title)
-    print(&#34;  &gt; Start time: \t&#34;, str(datetime.now())[11:-7])
+    # print(&#34;  &gt; Start time: \t&#34;, str(datetime.now())[11:-7])
     m_ext_out = m_ext.clone()
     m_ext_out.distanceToMesh(m_int, signed=True, negate=False)
     if title in thickness_meshes:
@@ -7161,7 +7415,7 @@ alert(&#39;jump&#39;,1)</code></pre>
     vmin, vmax = np.min(thickness),np.max(thickness)
     toc = perf_counter()
     time = toc-tic
-    print(&#34;  &gt; End time: \t\t&#34;, str(datetime.now())[11:-7])
+    # print(&#34;  &gt; End time: \t\t&#34;, str(datetime.now())[11:-7])
     print(&#34;\t&gt;&gt; Total time taken to get heatmap = &#34;,format(time,&#39;.2f&#39;), &#34;s/&#34;, format(time/60,&#39;.2f&#39;), &#34;m/&#34;, format(time/3600,&#39;.2f&#39;), &#34;h&#34;)
 
     alert(&#39;jump&#39;,1)
@@ -7175,19 +7429,20 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     m_ext_out.pointColors(thickness, cmap=&#34;jet&#34;, vmin=val_min, vmax=val_max)
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
-    m_ext_out.addScalarBar(title=title_bar+&#39; [um]&#39;)
+    m_ext_out.addScalarBar(title=title_bar+&#39; [um]&#39;, pos=(0.8, 0.05))
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
 
-    m_ext_out.alpha(alpha).legend(m_ext.legend())
+    m_ext_out.alpha(alpha).legend(m_ext._legend)
     m_int.color(&#34;white&#34;).alpha(1).wireframe()
 
     if plotshow:
         text = filename+&#34;\n\n &gt;&gt;&#34;+title+&#34; Heat map\n\t   - min and max: (&#34;+format(vmin, &#39;.2f&#39;)+&#34; , &#34;+format(vmax, &#39;.2f&#39;)+&#34;)&#34;
-        txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
 
         cube = Cube(pos=m_ext_out.centerOfMass(), side=300, c=&#39;white&#39;, alpha=0.01)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=10)
-        vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
+        vp.show(m_ext_out, cube, txt, at=0, zoom=1.2)#vp.show(m_ext_out, m_int, cube, txt, at=0, zoom=1.2)
 
     min_max = [vmin, vmax]
 
@@ -7268,14 +7523,14 @@ alert(&#39;jump&#39;,1)</code></pre>
     &#34;&#34;&#34;
 
     xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
-    x_size = xmax - xmin
-    y_size = ymax - ymin
-    z_size = zmax - zmin
+    # x_size = xmax - xmin
+    # y_size = ymax - ymin
+    # z_size = zmax - zmin
 
-    box_size = max(x_size, y_size, z_size)*1.2
+    # box_size = max(x_size, y_size, z_size)*1.2
     centre = kspl[len(kspl)*3//4]
-    end_inflow = kspl[-1]
-    normal = (0,1,0)
+    # end_inflow = kspl[-1]
+    # normal = (0,1,0)
     #print(&#34;centre:&#34;, centre)
 
     rotX = [0]
@@ -7314,6 +7569,7 @@ alert(&#39;jump&#39;,1)</code></pre>
         valueAlpha = widget.GetRepresentation().GetValue()
         ellipsoid.alpha(valueAlpha)
 
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=8)
     axis1 = (200,0,0)
     axis2 = (0,400,0)
@@ -7344,7 +7600,7 @@ alert(&#39;jump&#39;,1)</code></pre>
                pos=[(0.95,0.25), (0.95,0.45)], c=&#34;blue&#34;, title=&#34;Ext.Mesh Opacity)&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh.alpha(1), ellipsoid, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
@@ -7421,9 +7677,10 @@ alert(&#39;jump&#39;,1)</code></pre>
 
     # Plot spheres through centreline inside myocardium
     spheres_spl = sphInSpline(kspl_CL = kspl_CL)
+    settings.legendSize = .3
     vp = Plotter(N=1, axes = 4)
     text = filename+&#34;\n\n &gt;&gt; Decide the centreline point number to use to initialise plane to divide chambers \n [NOTE: Red spheres appear in centreline every 10 points, starting from outflow to inflow tract]&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh2cut.alpha(0.01), kspl_CL, spheres_spl, txt, at=0, azimuth = azimuth, interactive=True)
 
     # Get plane to cut heart layers
@@ -7583,7 +7840,7 @@ The default is [True,True,True,True,True,True].</dd>
     #mesh1.alpha(0.05); mesh2.alpha(0.05)
     while True:
         # Create plane
-        plane, normal, rotX, rotY, rotZ = getPlanePos(filename, type_cut, mesh_in, mesh_out, mesh_in.bounds(), option)
+        plane, normal, rotX, rotY, rotZ = getPlanePos(filename, type_cut, mesh_in.bounds(), option,  mesh_in, mesh_out)
         # Get new normal of rotated plane
         normal_corrected = newNormal3DRot(normal, rotX, rotY, rotZ)
         #normal_corrected = np.asarray(newNormal(normal, rotX))
@@ -7596,8 +7853,12 @@ The default is [True,True,True,True,True,True].</dd>
         text = filename+&#34;\n\n &gt;&gt; Confirm plane position to proceed with the cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
         txt = Text2D(text, c=c, font=font)
 
+        settings.legendSize = .2
         vp = Plotter(N=1, axes=4)
-        vp.show(mesh_in, mesh_out, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
+        if mesh_out != &#39;&#39;:
+            vp.show(mesh_in, mesh_out, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
+        else:
+            vp.show(mesh_in, plane, plane_new, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
         happy = ask4input(&#39;Do you want to cut the &#39;+type_cut+&#39; with the defined plane? \n  [0]:no, I would like to define a new plane/[1]:yes, continue!: &#39;, bool)
         if happy:
             break
@@ -7620,9 +7881,10 @@ The default is [True,True,True,True,True,True].</dd>
 <dd>Myocardial mesh to use as background to define plane</dd>
 <dt><strong><code>kspl_CL</code></strong> :&ensp;<code>Kspline</code></dt>
 <dd>Centreline (vedo KSpline)</dd>
-<dt><strong><code>option</code></strong> :&ensp;<code>list</code> of <code>booleans</code></dt>
+<dt><strong><code>option</code></strong> :&ensp;<code>list</code> of <code>booleans</code>, optional</dt>
 <dd>List of booleans indicating the sliders to use in getPlanePos function.
-[sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]</dd>
+[sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+The default is: [True,True,True,True,True,True]</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -7651,9 +7913,10 @@ The default is [True,True,True,True,True,True].</dd>
         Myocardial mesh to use as background to define plane
     kspl_CL : Kspline
         Centreline (vedo KSpline)
-    option : list of booleans
+    option : list of booleans, optional
         List of booleans indicating the sliders to use in getPlanePos function.
         [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+        The default is: [True,True,True,True,True,True]
 
     Returns
     -------
@@ -7690,6 +7953,7 @@ The default is [True,True,True,True,True,True].</dd>
 
         text = filename+&#34;\n\n &gt;&gt; Confirm plane position to proceed with division of &#34;+type_cut+&#34;\n &gt;&gt; Close the window when done and define whether you want to use this plane or define a new one&#34;
         txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .3
         vp = Plotter(N=1, axes=4)
         vp.show(mesh1, plane_Ch, plane_Ch_final, sph_centre, txt, at=0, viewup=&#34;y&#34;, azimuth=0, elevation=0, interactive=True)
         happy = ask4input(&#39;Do you want to cut the &#39;+type_cut+&#39; with the defined plane? \n   [0]:no, I would like to define a new plane/[1]:yes, continue with the cut: &#39;, bool)
@@ -7803,7 +8067,7 @@ The default is [True,True,True,True,True,True].</dd>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.getPlanePos"><code class="name flex">
-<span>def <span class="ident">getPlanePos</span></span>(<span>filename, type_cut, mesh_in, mesh_out, xyz_bounds, option)</span>
+<span>def <span class="ident">getPlanePos</span></span>(<span>filename, type_cut, xyz_bounds, option, mesh_in, mesh_out='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function that shows a plot so that the user can define a plane (mesh opacity can be changed)</p>
@@ -7813,15 +8077,15 @@ The default is [True,True,True,True,True,True].</dd>
 <dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
 <dt><strong><code>type_cut</code></strong> :&ensp;<code>str</code></dt>
 <dd>Text defining the type of cut that is going to be made with the defined plane</dd>
-<dt><strong><code>mesh_in</code></strong> :&ensp;<code>mesh</code></dt>
-<dd>Internal mesh (vedo Mesh)</dd>
-<dt><strong><code>mesh_out</code></strong> :&ensp;<code>mesh</code></dt>
-<dd>External mesh (vedo Mesh)</dd>
 <dt><strong><code>xyz_bounds</code></strong> :&ensp;<code>list</code> of <code>floats</code></dt>
 <dd>x,y,z boundaries of mesh_out</dd>
 <dt><strong><code>option</code></strong> :&ensp;<code>list</code> of <code>booleans</code></dt>
 <dd>List of booleans indicating the sliders to use in getPlanePos function.
 [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]</dd>
+<dt><strong><code>mesh_in</code></strong> :&ensp;<code>mesh</code></dt>
+<dd>Internal mesh (vedo Mesh)</dd>
+<dt><strong><code>mesh_out</code></strong> :&ensp;<code>mesh</code>, optional</dt>
+<dd>If given as input, External mesh (vedo Mesh). The default is ''.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -7840,7 +8104,7 @@ The default is [True,True,True,True,True,True].</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getPlanePos (filename, type_cut, mesh_in, mesh_out, xyz_bounds, option):
+<pre><code class="python">def getPlanePos (filename, type_cut, xyz_bounds, option, mesh_in, mesh_out = &#39;&#39;):
     &#34;&#34;&#34;
     Function that shows a plot so that the user can define a plane (mesh opacity can be changed)
 
@@ -7850,15 +8114,15 @@ The default is [True,True,True,True,True,True].</dd>
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     type_cut : str
         Text defining the type of cut that is going to be made with the defined plane
-    mesh_in : mesh
-        Internal mesh (vedo Mesh)
-    mesh_out : mesh
-        External mesh (vedo Mesh)
     xyz_bounds : list of floats
         x,y,z boundaries of mesh_out
     option : list of booleans
         List of booleans indicating the sliders to use in getPlanePos function.
         [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+    mesh_in : mesh
+        Internal mesh (vedo Mesh)
+    mesh_out : mesh, optional
+        If given as input, External mesh (vedo Mesh). The default is &#39;&#39;.
 
     Returns
     -------
@@ -7921,6 +8185,7 @@ The default is [True,True,True,True,True,True].</dd>
         valueAlpha = widget.GetRepresentation().GetValue()
         mesh_out.alpha(valueAlpha)
 
+    settings.legendSize = .2
     vp = Plotter(N=1, axes=8)
     plane = Plane(pos=centre, normal=normal, sx=box_size*1.2).color(&#34;gainsboro&#34;).alpha(1)
 
@@ -7947,8 +8212,11 @@ The default is [True,True,True,True,True,True].</dd>
                pos=[(0.95,0.25), (0.95,0.45)], c=&#34;blue&#34;, title=&#34;Ext.Mesh Opacity)&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
-    vp.show(mesh_in, mesh_out, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    if mesh_out != &#39;&#39;:
+        vp.show(mesh_in, mesh_out, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
+    else:
+        vp.show(mesh_in, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
     return plane, normal, rotX, rotY, rotZ</code></pre>
@@ -8081,28 +8349,43 @@ new arrays containing each of the chambers.</p>
     s3_mask_v = s3_mask.reshape(-1)
     # Get vectors of x,y and z positions
     pix_coord_pos = np.where(s3_mask &gt;= 0)
+    del s3_mask
+
     # Trasform coordinate positions to um using resolution
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
+
     # Make normal a unit vector
     normal_unit = unit_vector(pl_normal)
     # Find all the d values of pix_um
     d_pix_um = np.dot(np.subtract(pix_um,np.array(pl_centre)),np.array(normal_unit))
+    del pix_um
+
     # Clear vector d_pix_um using only those that are 1 in stack
     d_pve_pix_um = s3_mask_v*d_pix_um
+    del d_pix_um
+
     # Duplicate s3_mask_v to initialise atrium and ventricle
     s3_vent_v = np.copy(s3_mask_v)
     s3_vent_v = s3_vent_v.astype(&#39;uint8&#39;)
     s3_atr_v = np.copy(s3_mask_v)
+    del s3_mask_v
+
     s3_atr_v = s3_atr_v.astype(&#39;uint8&#39;)
     # Find all positions in d_pve_pix_um that are at either side of the plane
     pos_atr = np.where(d_pve_pix_um &lt; 0)[0]
     pos_vent = np.where(d_pve_pix_um &gt; 0)[0]
+    del d_pve_pix_um
+
     # Remove the points that belong to the other chamber
     s3_vent_v[pos_atr] = 0
     s3_atr_v[pos_vent] = 0
+    del pos_atr, pos_vent
+
     # Reshape vector into matrix/stack
     s3_vent = s3_vent_v.reshape((xdim, ydim, zdim))
     s3_atr = s3_atr_v.reshape((xdim, ydim, zdim))
+    del s3_vent_v, s3_atr_v
 
     # bar.finish()
     alert(&#39;wohoo&#39;,1)
@@ -8189,8 +8472,8 @@ new arrays containing each of the chambers.</p>
     z_size = zmax - zmin
 
     box_size = max(x_size, y_size, z_size)*1.2
-    #centre = (x_size/2+xmin, ymin, z_size/2+zmin)
-    #normal = (0,1,0)
+    # centre = (x_size/2+xmin, ymin, z_size/2+zmin)
+    # normal = (0,1,0)
     #print(&#34;centre:&#34;, centre)
 
     rotX = [0]
@@ -8225,17 +8508,18 @@ new arrays containing each of the chambers.</p>
         rotZ.append(valueRZ)
         plane.rotateZ(valueRZ, rad=False)
 
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=8)
     plane = Plane(pos=pl_centre, normal=pl_normal, sx=box_size*1.2).color(&#34;gainsboro&#34;).alpha(1)
 
     if option[0]: #sliderX
-        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0],
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=pl_centre[0],
                     pos=[(0.1,0.15), (0.3,0.15)], title=&#34;- &gt; x position &gt; +&#34;, c=&#34;crimson&#34; )
     if option[1]: #sliderY
-        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1],
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=pl_centre[1],
                     pos=[(0.4,0.15), (0.6,0.15)], title=&#34;- &gt; y position &gt; +&#34;, c=&#34;dodgerblue&#34; )
     if option[2]: #sliderZ
-        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2],
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=pl_centre[2],
                     pos=[(0.7,0.15), (0.9,0.15)], title=&#34;- &gt; z position &gt; +&#34;, c=&#34;limegreen&#34;)
     if option[3]: #sliderRotX
         vp.addSlider2D(sliderRotX, -1, +1, value=0,
@@ -8248,7 +8532,7 @@ new arrays containing each of the chambers.</p>
                     pos=[(0.7,0.05), (0.9,0.05)], title=&#34;- &gt; z rotation &gt; +&#34;, c=&#34;teal&#34;)
 
     text = filename+&#34;\n\n &gt;&gt; Define plane position to make cut (&#34;+type_cut+&#34;)\n &gt;&gt; Close the window when done&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
     vp.show(mesh1, plane, txt, viewup=&#34;y&#34;, zoom=1, interactive=True)
     #azimuth=-90, elevation=0,
 
@@ -8394,7 +8678,7 @@ new arrays containing each of the chambers.</p>
         meshes_out.append(mesh_out)
 
     alert(&#34;wohoo&#34;,1)
-    print(&#39;\n&#39;)
+    # print(&#39;\n&#39;)
 
     return meshes_out</code></pre>
 </details>
@@ -8584,10 +8868,10 @@ new arrays containing each of the chambers.</p>
 
     &#34;&#34;&#34;
 
-    if line.legend()  == &#39;lin_OrientAtr(ProjX)&#39;:
+    if line._legend  == &#39;lin_OrientAtr(ProjX)&#39;:
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()]
-    elif line.legend() == &#39;lin_OrientVent(ProjX)&#39;:
+    elif line._legend == &#39;lin_OrientVent(ProjX)&#39;:
         pts_line = line.points()
         pts_line = pts_line[pts_line[:,2].argsort()[::-1]]
     else: # Linear line
@@ -8646,9 +8930,10 @@ new arrays containing each of the chambers.</p>
     names_class = [[&#39;atrium&#39;, &#39;ventricle&#39;],[&#39;dorsal&#39;, &#39;ventral&#39;],[&#39;left&#39;, &#39;right&#39;]]
     color = [[&#39;tomato&#39;,&#39;gold&#39;], [&#39;greenyellow&#39;, &#39;darkgreen&#39;],[&#39;deepskyblue&#39;, &#39;darkblue&#39;]]
     text = filename+&#39;\n\n &gt;&gt; Point classification&#39;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
 
-    vp = Plotter(shape = (1, 4), axes = 7)
+    settings.legendSize = .2
+    vp = Plotter(shape = (1, 4), axes = 13)
     vp.show(mesh, txt, at = 0)
     for i, sp_class in enumerate(pts_class):
 
@@ -9026,7 +9311,7 @@ the given axis by theta radians.
 
     &#34;&#34;&#34;
 
-    print(&#39;Saving videos... this might take a while... (about 2min/video&#39;)
+    print(&#39;\nSaving videos... this might take a while... (about 2min/video&#39;)
     bar = Bar(&#39;Saving&#39; , max = len(info), suffix = suffix, check_tty=False, hide_cursor=False)
     for i, name, mesh in zip(count(), info, meshes4video):
         saveVideo(filename = filename, info = name, meshes4video = [mesh],
@@ -9158,12 +9443,13 @@ the given axis by theta radians.
         rotMeshes4video.append(rot_mesh)
 
     if plotshow:
-        text = filename+&#34;\n\n &gt;&gt; Rotated meshes&#34;; txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        text = filename+&#34;\n\n &gt;&gt; Rotated meshes&#34;; txt = Text2D(text, c=&#34;k&#34;, font= font)
         vp1 = Plotter(N=1, axes=8)
         vp1.show(rotMeshes4video, txt, at=0, axes=8, zoom=1.2)
 
-    text2 = filename; txt2 = Text2D(text2, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    text2 = filename; txt2 = Text2D(text2, c=&#34;k&#34;, font= font)
 
+    settings.legendSize = .3
     vp = Plotter(bg=&#39;white&#39;, axes=10, offscreen=True)
     vp.show(rotMeshes4video, txt2, zoom=1.4)
     video_name = os.path.join(dir2save, filename+&#34;_&#34;+info+&#34;.mp4&#34;)
@@ -9254,11 +9540,11 @@ the given axis by theta radians.
 
     &#34;&#34;&#34;
 
-    s3_ch0_int, s3_ch0_ext, s3_ch0, s3_ch1_int, s3_ch1_ext_cl, s3_ch1_cl = s3s2cut
+    s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut = s3s2cut
 
     # Create new s3s to save cuts
-    s3_ch0_cut = s3_ch0; s3_ch0_int_cut = s3_ch0_int; s3_ch0_ext_cut = s3_ch0_ext
-    s3_ch1_cut = s3_ch1_cl; s3_ch1_int_cut = s3_ch1_int; s3_ch1_ext_cut = s3_ch1_ext_cl
+    # s3_ch0_cut = s3_ch0_cut; s3_ch0_int_cut = s3_ch0_int_cut; s3_ch0_ext_cut = s3_ch0_ext_cut
+    # s3_ch1_cut = s3_ch1_cut; s3_ch1_int_cut = s3_ch1_int_cut; s3_ch1_ext_cut = s3_ch1_ext_cut
 
     cut_type = [&#39;inflow&#39;, &#39;outflow&#39;]
     cuts = []
@@ -9271,7 +9557,8 @@ the given axis by theta radians.
 
     for cut in cut_type:
         text = filename+&#34;\n\n &gt;&gt; Take a closer look at the -&#34; +cut + &#34;- of both meshes \n\tto decide which layer to cut\n &gt;&gt; [0]:myoc/[1]:endo/[2]:both/[3]:none\n &gt;&gt; Close the window when done&#34;
-        txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
+        settings.legendSize = .3
         vp = Plotter(N=3, axes=4)
         vp.show(m_myoc, txt, at=0, zoom=1)
         vp.show(m_endo, at=1, zoom=1)
@@ -9363,8 +9650,8 @@ the given axis by theta radians.
             save_s3s(filename = filename, s3_all = s3_ch0_cut, s3_int = s3_ch0_int_cut, s3_ext = s3_ch0_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = &#39;ch0_cut&#39;)
     else:
-        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0, s3_in = s3_ch0_int,
-                                    s3_out = s3_ch0_ext, resolution = resolution, layer = &#39;Myoc&#39;)
+        myoc_cut, myoc_cut_int, myoc_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch0_cut, s3_in = s3_ch0_int_cut,
+                                    s3_out = s3_ch0_ext_cut, resolution = resolution, layer = &#39;Myoc&#39;)
     # Endocardial layers
     if any(x in cuts for x in [1, 2]):
         #Create new mesh endocardial s3_all
@@ -9380,15 +9667,16 @@ the given axis by theta radians.
             save_s3s(filename = filename, s3_all = s3_ch1_cut, s3_int = s3_ch1_int_cut, s3_ext = s3_ch1_ext_cut,
                     dir_txtNnpy = dir_txtNnpy, layer = &#39;ch1_cut&#39;)
     else:
-        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cl, s3_in = s3_ch1_int,
-                                    s3_out = s3_ch1_ext_cl, resolution = resolution, layer = &#39;Endo&#39;)
+        endo_cut, endo_cut_int, endo_cut_ext = createAll3LayerMeshes(filename = filename, s3_all = s3_ch1_cut, s3_in = s3_ch1_int_cut,
+                                    s3_out = s3_ch1_ext_cut, resolution = resolution, layer = &#39;Endo&#39;)
 
     s3s_cut = [s3_ch0_int_cut, s3_ch0_ext_cut, s3_ch0_cut, s3_ch1_int_cut, s3_ch1_ext_cut, s3_ch1_cut]
     meshes_cut = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext]
     alert(&#39;jump&#39;, 1)
 
     text= filename+&#34;\n\n &gt;&gt; Resulting meshes&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
     vp = Plotter(N=6, axes=10)
     for i, mesh in enumerate(meshes_cut):
         if i == 0:
@@ -9399,6 +9687,206 @@ the given axis by theta radians.
             vp.show(mesh, at = i, zoom = 1.2, interactive = True)
 
     return s3s_cut, meshes_cut, dict_planes</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcMeshes.selectCutS3sOptMxLoad"><code class="name flex">
+<span>def <span class="ident">selectCutS3sOptMxLoad</span></span>(<span>filename, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function used to cut inflow and/or outflow tract of the s3 masks (s3s2cut) given as input</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).</dd>
+<dt><strong><code>m_endo</code></strong> :&ensp;<code>mesh</code></dt>
+<dd>Endocardial mesh. (vedo Mesh)</dd>
+<dt><strong><code>m_myoc</code></strong> :&ensp;<code>mesh</code></dt>
+<dd>Myicardial mesh. (vedo Mesh)</dd>
+<dt><strong><code>dict_planes</code></strong> :&ensp;<code>dictionary</code></dt>
+<dd>Initialised dictionary with planes information</dd>
+<dt><strong><code>resolution</code></strong> :&ensp;<code>list</code> of <code>floats</code></dt>
+<dd>List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.</dd>
+<dt><strong><code>dir_txtNnpy</code></strong> :&ensp;<code>path</code></dt>
+<dd>Path to the folder where the np arrays are saved.</dd>
+<dt><strong><code>save</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>True if you want to save the final masks, else False.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>meshes_cut</code></strong> :&ensp;<code>list</code> of <code>meshes (vedo Meshes)</code></dt>
+<dd>List of all the surface reconstructions created with the cut masks</dd>
+<dt><strong><code>dict_planes</code></strong> :&ensp;<code> dictionary</code></dt>
+<dd>Resulting dictionary with planes information updated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def selectCutS3sOptMxLoad(filename, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
+    &#34;&#34;&#34;
+    Function used to cut inflow and/or outflow tract of the s3 masks (s3s2cut) given as input
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    m_endo : mesh
+        Endocardial mesh. (vedo Mesh)
+    m_myoc : mesh
+        Myicardial mesh. (vedo Mesh)
+    dict_planes : dictionary
+        Initialised dictionary with planes information
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    save : boolean
+        True if you want to save the final masks, else False.
+
+    Returns
+    -------
+    meshes_cut : list of meshes (vedo Meshes)
+        List of all the surface reconstructions created with the cut masks
+    dict_planes :  dictionary
+        Resulting dictionary with planes information updated
+
+    &#34;&#34;&#34;
+
+    s3_myoc_names_in = [&#39;ch0_all&#39;,&#39;ch0_int&#39;, &#39;ch0_ext&#39;]
+    s3_myoc_names_out = [&#39;ch0_cut&#39;, &#39;ch0_cut_int&#39;, &#39;ch0_cut_ext&#39;]
+    myoc_names = [&#39;Myoc&#39;, &#39;Int.Myoc&#39;, &#39;Ext.Myoc&#39;]
+    s3_endo_names_in = [&#39;ch1_cut&#39;, &#39;ch1_int&#39;, &#39;ch1_cut_ext&#39;]
+    s3_endo_names_out = [&#39;ch1_cut&#39;, &#39;ch1_cut_int&#39;, &#39;ch1_cut_ext&#39;]
+    endo_names = [&#39;Endo&#39;, &#39;Int.Endo&#39;, &#39;Ext.Endo&#39;]
+
+    cut_type = [&#39;inflow&#39;, &#39;outflow&#39;]
+    cuts = []
+    pls_normal = []
+    pls_centre = []
+    cuts_selected = []
+
+    # Define what to cut from each layer
+    myoc_cuts = []; endo_cuts = []
+    # Define lists to save final meshes
+    meshes_myoc = []; meshes_endo = []
+
+    for cut in cut_type:
+        text = filename+&#34;\n\n &gt;&gt; Take a closer look at the -&#34; +cut + &#34;- of both meshes \n\tto decide which layer to cut\n &gt;&gt; [0]:myoc/[1]:endo/[2]:both/[3]:none\n &gt;&gt; Close the window when done&#34;
+        txt = Text2D(text, c=&#34;k&#34;, font= font)
+        settings.legendSize = .15
+        vp = Plotter(N=3, axes=4)
+        vp.show(m_myoc, txt, at=0, zoom=1)
+        vp.show(m_endo, at=1, zoom=1)
+        vp.show(m_myoc, m_endo, at=2, zoom=1, interactive=True)
+
+        q_cuts = ask4input(&#39;Select the layer from which you want to cut the -&#39;+ cut + &#39;- tract \n  [0]:myoc/[1]:endo/[2]:both/[3]:none?: &#39;,int)
+        cuts.append(q_cuts)
+
+        if q_cuts == 0 or q_cuts == 1 or q_cuts == 2:
+            cuts_selected.append(cut)
+            # Get plane to cut
+            plane_cut, pl_cut_centre, pl_cut_normal = getPlane(filename = filename, type_cut = cut, info = &#39;&#39;, mesh_in = m_endo,
+                                                                        mesh_out = m_myoc)
+            # Reorient plane to images (s3)
+            plane_im, pl_im_centre, pl_im_normal = rotatePlane2Images(pl_cut_centre, pl_cut_normal, type_cut = cut)
+            pls_normal.append(pl_im_normal); pls_centre.append(pl_im_centre)
+            #Save planes to dict
+            dict_planes = addPlanes2Dict(planes = [plane_cut, plane_im], pls_centre = [pl_cut_centre ,pl_im_centre],
+                                                    pls_normal = [pl_cut_normal, pl_im_normal], info = [&#39;&#39;,&#39;&#39;], dict_planes = dict_planes, print_txt = False)
+            if q_cuts == 0 or q_cuts == 2:
+                myoc_cuts.append(cut)
+            if q_cuts == 1 or q_cuts == 2:
+                endo_cuts.append(cut)
+
+    # Cut Myocardial layers
+    if len(myoc_cuts) == 2:
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - inf&amp;outf (Myoc)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, myoc_name, s3_name_out in zip(count(), s3_myoc_names_in, myoc_names, s3_myoc_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfAndOutfOptMx(s3, pls_normal, pls_centre, resolution, &#39;(Myoc)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+
+    elif len(myoc_cuts) == 1:
+        index_myoc = cuts_selected.index(myoc_cuts[0])
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - &#39; + myoc_cuts[0]+&#39; (Myoc)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, myoc_name, s3_name_out in zip(count(), s3_myoc_names_in, myoc_names, s3_myoc_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfOrOutfOptMx(s3, pls_normal[index_myoc], pls_centre[index_myoc], resolution = resolution,
+                                                                      option = myoc_cuts[0], mesh_name = &#39;(Myoc)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+    else:
+        print(&#39;- No cuts made to Myocardium!&#39;)
+        for n, s3_name, myoc_name in zip(count(), s3_myoc_names_in, myoc_names):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_myoc, layer = myoc_name, plotshow = False)
+            meshes_myoc.append(mesh_out)
+
+    alert(&#39;whistle&#39;, 1)
+
+    # Cut Endocardial layers
+    if len(endo_cuts) == 2:
+        # Cut endocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - inf&amp;outf (Endo)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, endo_name, s3_name_out in zip(count(), s3_endo_names_in, endo_names, s3_endo_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfAndOutfOptMx(s3, pls_normal, pls_centre, resolution, &#39;(Endo)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+
+    elif len(endo_cuts) == 1:
+        index_endo = cuts_selected.index(endo_cuts[0])
+        # Cut myocardial s3_all, s3_int, s3_ext
+        bar = Bar(&#39;- Cutting s3 - &#39; + endo_cuts[0]+&#39; (Endo)&#39;, max = 3, suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, s3_name, endo_name, s3_name_out in zip(count(), s3_endo_names_in, endo_names, s3_endo_names_out):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            s3 = cutInfOrOutfOptMx(s3, pls_normal[index_endo], pls_centre[index_endo], resolution = resolution,
+                                                                      option = endo_cuts[0], mesh_name = &#39;(Endo)&#39;)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+            save_s3(filename = filename, s3 = s3, dir_txtNnpy = dir_txtNnpy, layer = s3_name_out)
+            bar.next()
+        bar.finish()
+    else:
+        print(&#39;- No cuts made to Endocardium!&#39;)
+        for n, s3_name, endo_name in zip(count(), s3_endo_names_in, endo_names):
+            [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+            mesh_out = getCutMesh(filename = filename, s3_cut = s3, resolution = resolution,
+                                        mesh_original = m_endo, layer = endo_name, plotshow = False)
+            meshes_endo.append(mesh_out)
+    alert(&#39;jump&#39;, 1)
+
+    meshes_cut = meshes_myoc+meshes_endo
+    text= filename+&#34;\n\n &gt;&gt; Resulting meshes&#34;
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
+    vp = Plotter(N=6, axes=10)
+    for i, mesh in enumerate(meshes_cut):
+        if i == 0:
+            vp.show(mesh, txt, at = i, zoom = 1.2)
+        elif i &gt; 0 and i &lt; 5:
+            vp.show(mesh, at = i, zoom = 1.2)
+        else:
+            vp.show(mesh, at = i, zoom = 1.2, interactive = True)
+
+    return meshes_cut, dict_planes</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcMeshes.sphInSpline"><code class="name flex">
@@ -9621,11 +10109,12 @@ the given axis by theta radians.
     # - Get unitary normal of plane to create CL_ribbon
     pl_normCLRibbon = unit_vector(pl_CLRibbon[&#39;pl_normal&#39;])
     pl_centCLRibbon = np.asarray(pl_CLRibbon[&#39;pl_centre&#39;])
-    plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color(&#39;skyblue&#39;).alpha(0.5)
+    # plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color(&#39;skyblue&#39;).alpha(0.5)
     arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon[&#39;pl_normal&#39;])*120, s = 0.1, c = &#39;cyan&#39;)
 
     text = filename+&#34;\n\n &gt;&gt; Is the cyan arrow pointing towards the ventral side of the heart? \n    Check, close the window and answer.&#34;
-    txt = Text2D(text, c=&#34;k&#34;, font= &#39;CallingCode&#39;)
+    txt = Text2D(text, c=&#34;k&#34;, font= font)
+    settings.legendSize = .3
     vp = Plotter(N=1, axes=4)
     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectNormRib,txt, at=0, azimuth = 0, interactive=1)
 
@@ -9648,7 +10137,7 @@ the given axis by theta radians.
         # print(&#39;normal&#39;, normal)
         # A. Get cut plane info
         # - Info Plane
-        d = normal.dot(centre)
+        # d = normal.dot(centre)
         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c=&#39;orange&#39;)
 
         # B. Get vector that defines 0 deg angle
@@ -9713,6 +10202,7 @@ the given axis by theta radians.
                     else:
                         sphR.append(Sphere(pt+centre, r=2, c=&#39;gold&#39;))
 
+            settings.legendSize = .3
             vp = Plotter(N=1, axes=4)
             vp.show(mesh,sphL, sphR,kspl_CL2use, cl_ribbon, arr_normCRib, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
 
@@ -9950,6 +10440,7 @@ implement default like this::</p>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.saveThickness" href="#morphoHeart_modules.morphoHeart_funcMeshes.saveThickness">saveThickness</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.saveVideo" href="#morphoHeart_modules.morphoHeart_funcMeshes.saveVideo">saveVideo</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.selectCutS3sOptMx" href="#morphoHeart_modules.morphoHeart_funcMeshes.selectCutS3sOptMx">selectCutS3sOptMx</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.selectCutS3sOptMxLoad" href="#morphoHeart_modules.morphoHeart_funcMeshes.selectCutS3sOptMxLoad">selectCutS3sOptMxLoad</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.sphInSpline" href="#morphoHeart_modules.morphoHeart_funcMeshes.sphInSpline">sphInSpline</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.splitDicts" href="#morphoHeart_modules.morphoHeart_funcMeshes.splitDicts">splitDicts</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcMeshes.unit_vector" href="#morphoHeart_modules.morphoHeart_funcMeshes.unit_vector">unit_vector</a></code></li>

@@ -1,0 +1,45 @@
+<pipeline version="3.1">
+  <operations>
+    <operation type-id="arivis.analysis.selection" id="arivis.analysis.selection1">
+      <settings>{"ZoomXYOnly":false,"Zoom":1.0,"SelectionHint":5,"Frames":"1","Planes":"1-375","Channels":"1-2","Bounds":"0, 0, 1280, 1280","PixelType":1,"ScopeID":"0","Document":"Y:\\Noel_Group\\User\\mdp18js\\Lightsheet_uosfstore\\LS07_191003_hapln1a_prom241_F2InX_72hpf\\F03_1008_ht\\F03_V_1008.sis"}</settings>
+    </operation>
+    <operation type-id="arivis.analysis.voxel.DenoisingFilter" id="arivis.analysis.voxel.DenoisingFilter1" name="Denoising Filter (3D)">
+      <inputs>
+        <port operation-ref="arivis.analysis.selection1" port-index="0" />
+      </inputs>
+      <settings OutputMode="1" OutputFile="" use3D="True">{"TimeStep":0.1,"Sigma":1.0,"Type":2,"Channels":"0-1"}</settings>
+    </operation>
+    <operation type-id="arivis.analysis.voxel.BackgroundCorrection" id="arivis.analysis.voxel.BackgroundCorrection1" name="Background Correction">
+      <inputs>
+        <port operation-ref="arivis.analysis.voxel.DenoisingFilter1" port-index="0" />
+      </inputs>
+      <settings OutputMode="1" OutputFile="" subtraction-type="0" maintain-color-range="False" background-extractor="arivis.analysis.voxel.background.MeanUniformBackgroundExtractionMethod" channels="1-2">{"BackgroundSource":3}</settings>
+    </operation>
+    <operation type-id="arivis.analysis.filter.Morphology" id="arivis.analysis.filter.Morphology1" name="Morphology Filter">
+      <inputs>
+        <port operation-ref="arivis.analysis.voxel.BackgroundCorrection1" port-index="0" />
+      </inputs>
+      <settings OutputMode="1" OutputFile="">{"FilterId":"arivis.itkbridge.filters.MorphologyFilter","Channels":"0-1","Properties":["0","1"]}</settings>
+    </operation>
+    <operation type-id="arivis.analysis.voxel.MembraneEnhancement" id="arivis.analysis.voxel.MembraneEnhancement1" name="Membrane Enhancement">
+      <inputs>
+        <port operation-ref="arivis.analysis.filter.Morphology1" port-index="0" />
+      </inputs>
+      <settings OutputMode="1" OutputFile="" channelrange="0-1">
+        <strategy planewise="False" />
+        <filter>{"MembraneWidth":0.8,"MaxGapSize":0.22832596302032471,"GlobalMinimum":0.0,"GlobalMaximum":0.0960517514434431}</filter>
+      </settings>
+    </operation>
+    <operation type-id="arivis.analysis.voxelresult" id="arivis.analysis.voxelresult1">
+      <inputs>
+        <port operation-ref="arivis.analysis.voxel.MembraneEnhancement1" port-index="0" />
+      </inputs>
+      <settings mode="4" useForAnnotations="True" filename="E:\Users\Arivis\Documents\e02_completeheart-Result Storages-190618.sis" scopename="Analysis_190618" />
+    </operation>
+    <operation type-id="arivis.analysis.endOfPipeline" id="arivis.analysis.endOfPipeline1">
+      <settings />
+    </operation>
+  </operations>
+  <layout />
+  <features><![CDATA[{"Version":"3.1","Features":[]}]]></features>
+</pipeline>

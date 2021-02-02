@@ -10,7 +10,7 @@ Version: Nov, 2020
 
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert
+# from .morphoHeart_funcBasics import alert
 
 #%% func - getVariables
 def getVariables (list_vars, name):
@@ -61,6 +61,22 @@ def getVariables (list_vars, name):
 
 #%% func - def_variables
 def def_variables(module):
+    """
+    
+
+    Parameters
+    ----------
+    module : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    variables : TYPE
+        DESCRIPTION.
+    ylabels : TYPE
+        DESCRIPTION.
+
+    """
     if module == 'morphoHeart_D_AnalyseData':
         variables = ["SurfArea_Myoc","SurfArea_Int.Myoc","SurfArea_Ext.Myoc",
                      "SurfArea_Endo","SurfArea_Int.Endo","SurfArea_Ext.Endo",

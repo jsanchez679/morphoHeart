@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 morphoHeart - B. CALCULATE CENTRELINES USING VMTK AND EXPORT RESULTS
-Script to extract centreline(s) and save it(them) as (a) dictionary(ies) with numpy arrays
+Welcome to the third code of morphoHeart!
+If you are running this code you must have already created one or two meshes to extract the centreline from and have
+already used MeshLab to reconstruct them and cut both its inflow and outflow tracts to make sure they have blunt ends.
+If so, the objective of this script is to extract centreline(s) from this (these) mesh(es) and save it(them) as (a) 
+dictionary(ies) with numpy arrays, so that we can use them in future scripts. 
+
+Happy centreline extraction!
 
 @author: Juliana Sanchez-Posada
 """
@@ -21,7 +27,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init

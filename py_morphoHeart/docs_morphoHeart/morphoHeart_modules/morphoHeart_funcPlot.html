@@ -52,8 +52,8 @@ import math
 from progress.bar import Bar
 suffix = &#39;%(index)d/%(max)d - %(elapsed)ds&#39;
 
-from vtkplotter import *
-from vtkplotter import embedWindow
+from vedo import *
+from vedo import embedWindow#, Plotter, Text2D, settings, load
 embedWindow(False)
 
 c=&#34;k&#34;
@@ -426,7 +426,56 @@ def yieldMultMeshes(names, dict_paths):
 
         yield list_meshes
 
+#%% func - getVariables
+def getVarsANDLabels (variables, labels):
+    &#34;&#34;&#34;
+    
 
+    Parameters
+    ----------
+    variables : TYPE
+        DESCRIPTION.
+    labels : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    vars2loop : TYPE
+        DESCRIPTION.
+    labels2loop : TYPE
+        DESCRIPTION.
+
+    &#34;&#34;&#34;
+
+    print(&#39;\nVariables:&#39;)
+    for c, value in enumerate(variables, 1):
+        print(c-1, value)
+    input_var = input(&#39;Select the variables you would like to process: &#39;)
+
+    if input_var == &#39;All&#39;:
+        var_num = list(range(0,len(variables),1))
+
+    else:
+        var_num = []
+        comma_split = input_var.split(&#39;,&#39;)
+
+        for string in comma_split:
+            if &#39;-&#39; in string:
+                minus_split = string.split(&#39;-&#39;)
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+
+    vars2loop = []
+    labels2loop = []
+    for i, num in enumerate(var_num):
+        vars2loop.append(variables[num])
+        labels2loop.append(labels[num])
+
+    return vars2loop, labels2loop
 
 
 #%% - ALERT WHEN IMPORTED
@@ -512,6 +561,79 @@ alert(&#39;jump&#39;,1)</code></pre>
                 file_dict[&#39;path_endoExt_CL&#39;] = os.path.join(dir_cl,filename+&#39;_endo_ext_npcl.json&#39;)
 
     return dict_paths</code></pre>
+</details>
+</dd>
+<dt id="morphoHeart_modules.morphoHeart_funcPlot.getVarsANDLabels"><code class="name flex">
+<span>def <span class="ident">getVarsANDLabels</span></span>(<span>variables, labels)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>variables</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+<dt><strong><code>labels</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>vars2loop</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+<dt><strong><code>labels2loop</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getVarsANDLabels (variables, labels):
+    &#34;&#34;&#34;
+    
+
+    Parameters
+    ----------
+    variables : TYPE
+        DESCRIPTION.
+    labels : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    vars2loop : TYPE
+        DESCRIPTION.
+    labels2loop : TYPE
+        DESCRIPTION.
+
+    &#34;&#34;&#34;
+
+    print(&#39;\nVariables:&#39;)
+    for c, value in enumerate(variables, 1):
+        print(c-1, value)
+    input_var = input(&#39;Select the variables you would like to process: &#39;)
+
+    if input_var == &#39;All&#39;:
+        var_num = list(range(0,len(variables),1))
+
+    else:
+        var_num = []
+        comma_split = input_var.split(&#39;,&#39;)
+
+        for string in comma_split:
+            if &#39;-&#39; in string:
+                minus_split = string.split(&#39;-&#39;)
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+
+    vars2loop = []
+    labels2loop = []
+    for i, num in enumerate(var_num):
+        vars2loop.append(variables[num])
+        labels2loop.append(labels[num])
+
+    return vars2loop, labels2loop</code></pre>
 </details>
 </dd>
 <dt id="morphoHeart_modules.morphoHeart_funcPlot.list_columns"><code class="name flex">
@@ -936,6 +1058,7 @@ between columns based on the maximum len() of the list items.</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="morphoHeart_modules.morphoHeart_funcPlot.createDictPaths" href="#morphoHeart_modules.morphoHeart_funcPlot.createDictPaths">createDictPaths</a></code></li>
+<li><code><a title="morphoHeart_modules.morphoHeart_funcPlot.getVarsANDLabels" href="#morphoHeart_modules.morphoHeart_funcPlot.getVarsANDLabels">getVarsANDLabels</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcPlot.list_columns" href="#morphoHeart_modules.morphoHeart_funcPlot.list_columns">list_columns</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcPlot.loadMultMeshes" href="#morphoHeart_modules.morphoHeart_funcPlot.loadMultMeshes">loadMultMeshes</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcPlot.plotTitle" href="#morphoHeart_modules.morphoHeart_funcPlot.plotTitle">plotTitle</a></code></li>

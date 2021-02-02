@@ -41,7 +41,7 @@ Version: Nov, 2020
 
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert
+# from .morphoHeart_funcBasics import alert
 
 #%% func - getVariables
 def getVariables (list_vars, name):
@@ -63,12 +63,12 @@ def getVariables (list_vars, name):
     &#34;&#34;&#34;
 
     print(&#39;\nVariables:&#39;)
-    for c, value in enumerate(variables, 1):
+    for c, value in enumerate(list_vars, 1):
         print(c-1, value)
     input_var = input(&#39;Select the &#39;+ name +&#39; you would like to process: &#39;)
 
     if input_var == &#39;All&#39;:
-        var_num = list(range(0,len(variables),1))
+        var_num = list(range(0,len(list_vars),1))
 
     else:
         var_num = []
@@ -86,9 +86,59 @@ def getVariables (list_vars, name):
 
     variables2loop = []
     for i, num in enumerate(var_num):
-        variables2loop.append(variables[num])
+        variables2loop.append(list_vars[num])
 
-    return variables2loop</code></pre>
+    return variables2loop
+
+#%% func - def_variables
+def def_variables(module):
+    &#34;&#34;&#34;
+    
+
+    Parameters
+    ----------
+    module : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    variables : TYPE
+        DESCRIPTION.
+    ylabels : TYPE
+        DESCRIPTION.
+
+    &#34;&#34;&#34;
+    if module == &#39;morphoHeart_D_AnalyseData&#39;:
+        variables = [&#34;SurfArea_Myoc&#34;,&#34;SurfArea_Int.Myoc&#34;,&#34;SurfArea_Ext.Myoc&#34;,
+                     &#34;SurfArea_Endo&#34;,&#34;SurfArea_Int.Endo&#34;,&#34;SurfArea_Ext.Endo&#34;,
+                     &#34;SurfArea_CJ&#34;,&#34;SurfArea_Int.CJ&#34;,&#34;SurfArea_Ext.CJ&#34;,
+                     &#34;Vol_Int.Myoc&#34;,&#34;Vol_Ext.Myoc&#34;,
+                     &#34;Vol_Int.Endo&#34;,&#34;Vol_Ext.Endo&#34;,
+                     &#34;linLine_Int.Myoc(Cut)&#34;,&#34;linLine_Ext.Endo(Cut)&#34;,
+                     &#34;Length_CL_Int.Myoc(Cut)&#34;,&#34;Length_CL_Ext.Endo(Cut)&#34;,
+                     &#34;Vol_Myoc&#34;,&#34;Vol_Atr.Myoc&#34;,&#34;Vol_Vent.Myoc&#34;,
+                     &#34;Vol_Endo&#34;,&#34;Vol_Atr.Endo&#34;,&#34;Vol_Vent.Endo&#34;,
+                     &#34;Vol_CJ&#34;,&#34;Vol_Atr.CJ&#34;,&#34;Vol_Vent.CJ&#34;,
+                     &#34;ang_Heart&#34;,&#34;ang_Atr&#34;,&#34;ang_Vent&#34;,&#34;ang_BtwChambers&#34;,
+                     &#39;Looping_Ratio_Myoc&#39;,&#39;Looping_Ratio_Endo&#39;,
+                     &#39;Vol_Atr.ExtMyoc&#39;,&#39;Vol_Vent.ExtMyoc&#39;,&#39;Vol_Atr.IntEndo&#39;,&#39;Vol_Vent.IntEndo&#39;]
+
+        ylabels  = [&#34;Surface Area Myocardium [um$^2$]&#34;,&#34;Surface Area Int.Myocardium [um$^2$]&#34;,&#34;Surface Area Ext.Myocardium [um$^2$]&#34;,
+                     &#34;Surface Area Endocardium [um$^2$]&#34;,&#34;Surface Area Int.Endocardium [um$^2$]&#34;,&#34;Surface Area Ext. Endocardium [um$^2$]&#34;,
+                     &#34;Surface Area CJ [um$^2$]&#34;,&#34;Surface Area Int.CJ [um$^2$]&#34;,&#34;Surface Area Ext.CJ [um$^2$]&#34;,
+                     &#34;Volume Int.Myocardium [um$^3$]&#34;,&#34;Heart Volume [um$^3$]&#34;,
+                     &#34;Heart Lumen Volume [um$^3$]&#34;,&#34;Volume Ext.Endocardium [um$^3$]&#34;,
+                     &#34;Linear Heart Length (Int.Myoc) [um]&#34;,&#34;Linear Heart Length (Ext.Endo) [um]&#34;,
+                     &#34;Looped Heart Length (Int.Myoc) [um]&#34;,&#34;Linear Heart Length (Ext.Endo) [um]&#34;,
+                     &#34;Volume Myocardium [um$^3$]&#34;,&#34;Atrial Volume Myocardium [um$^3$]&#34;,&#34;Ventricular Volume Myocardium [um$^3$]&#34;,
+                     &#34;Volume Endocardium [um$^3$]&#34;,&#34;Atrial Volume Endocardium [um$^3$]&#34;,&#34;Ventricular Volume Endocardium [um$^3$]&#34;,
+                     &#34;Volume CJ [um$^3$]&#34;,&#34;Atrial Volume CJ [um$^3$]&#34;,&#34;Ventricular Volume CJ [um$^3$]&#34;,
+                     &#34;Angle Heart wrt Sample (\N{DEGREE SIGN})&#34;,&#34;Atrial Angle (\N{DEGREE SIGN})&#34;,&#34;Ventricular Angle (\N{DEGREE SIGN})&#34;,&#34;Angle between Chambers (\N{DEGREE SIGN})&#34;,
+                     &#39;Looping Ratio (Int.Myoc)&#39;,&#39;Looping Ratio (Ext.Endo)&#39;,
+                     &#39;Atrial Volume [um$^3$]&#39;,&#39;Ventricular Volume [um$^3$]&#39;,&#39;Atrial Lumen Volume [um$^3$]&#39;,&#39;Ventricular Lumen Volume [um$^3$]&#39;]
+    
+    return variables, ylabels
+    </code></pre>
 </details>
 </section>
 <section>
@@ -98,6 +148,75 @@ def getVariables (list_vars, name):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="morphoHeart_modules.morphoHeart_funcAnalysis.def_variables"><code class="name flex">
+<span>def <span class="ident">def_variables</span></span>(<span>module)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>module</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>variables</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+<dt><strong><code>ylabels</code></strong> :&ensp;<code>TYPE</code></dt>
+<dd>DESCRIPTION.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def def_variables(module):
+    &#34;&#34;&#34;
+    
+
+    Parameters
+    ----------
+    module : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    variables : TYPE
+        DESCRIPTION.
+    ylabels : TYPE
+        DESCRIPTION.
+
+    &#34;&#34;&#34;
+    if module == &#39;morphoHeart_D_AnalyseData&#39;:
+        variables = [&#34;SurfArea_Myoc&#34;,&#34;SurfArea_Int.Myoc&#34;,&#34;SurfArea_Ext.Myoc&#34;,
+                     &#34;SurfArea_Endo&#34;,&#34;SurfArea_Int.Endo&#34;,&#34;SurfArea_Ext.Endo&#34;,
+                     &#34;SurfArea_CJ&#34;,&#34;SurfArea_Int.CJ&#34;,&#34;SurfArea_Ext.CJ&#34;,
+                     &#34;Vol_Int.Myoc&#34;,&#34;Vol_Ext.Myoc&#34;,
+                     &#34;Vol_Int.Endo&#34;,&#34;Vol_Ext.Endo&#34;,
+                     &#34;linLine_Int.Myoc(Cut)&#34;,&#34;linLine_Ext.Endo(Cut)&#34;,
+                     &#34;Length_CL_Int.Myoc(Cut)&#34;,&#34;Length_CL_Ext.Endo(Cut)&#34;,
+                     &#34;Vol_Myoc&#34;,&#34;Vol_Atr.Myoc&#34;,&#34;Vol_Vent.Myoc&#34;,
+                     &#34;Vol_Endo&#34;,&#34;Vol_Atr.Endo&#34;,&#34;Vol_Vent.Endo&#34;,
+                     &#34;Vol_CJ&#34;,&#34;Vol_Atr.CJ&#34;,&#34;Vol_Vent.CJ&#34;,
+                     &#34;ang_Heart&#34;,&#34;ang_Atr&#34;,&#34;ang_Vent&#34;,&#34;ang_BtwChambers&#34;,
+                     &#39;Looping_Ratio_Myoc&#39;,&#39;Looping_Ratio_Endo&#39;,
+                     &#39;Vol_Atr.ExtMyoc&#39;,&#39;Vol_Vent.ExtMyoc&#39;,&#39;Vol_Atr.IntEndo&#39;,&#39;Vol_Vent.IntEndo&#39;]
+
+        ylabels  = [&#34;Surface Area Myocardium [um$^2$]&#34;,&#34;Surface Area Int.Myocardium [um$^2$]&#34;,&#34;Surface Area Ext.Myocardium [um$^2$]&#34;,
+                     &#34;Surface Area Endocardium [um$^2$]&#34;,&#34;Surface Area Int.Endocardium [um$^2$]&#34;,&#34;Surface Area Ext. Endocardium [um$^2$]&#34;,
+                     &#34;Surface Area CJ [um$^2$]&#34;,&#34;Surface Area Int.CJ [um$^2$]&#34;,&#34;Surface Area Ext.CJ [um$^2$]&#34;,
+                     &#34;Volume Int.Myocardium [um$^3$]&#34;,&#34;Heart Volume [um$^3$]&#34;,
+                     &#34;Heart Lumen Volume [um$^3$]&#34;,&#34;Volume Ext.Endocardium [um$^3$]&#34;,
+                     &#34;Linear Heart Length (Int.Myoc) [um]&#34;,&#34;Linear Heart Length (Ext.Endo) [um]&#34;,
+                     &#34;Looped Heart Length (Int.Myoc) [um]&#34;,&#34;Linear Heart Length (Ext.Endo) [um]&#34;,
+                     &#34;Volume Myocardium [um$^3$]&#34;,&#34;Atrial Volume Myocardium [um$^3$]&#34;,&#34;Ventricular Volume Myocardium [um$^3$]&#34;,
+                     &#34;Volume Endocardium [um$^3$]&#34;,&#34;Atrial Volume Endocardium [um$^3$]&#34;,&#34;Ventricular Volume Endocardium [um$^3$]&#34;,
+                     &#34;Volume CJ [um$^3$]&#34;,&#34;Atrial Volume CJ [um$^3$]&#34;,&#34;Ventricular Volume CJ [um$^3$]&#34;,
+                     &#34;Angle Heart wrt Sample (\N{DEGREE SIGN})&#34;,&#34;Atrial Angle (\N{DEGREE SIGN})&#34;,&#34;Ventricular Angle (\N{DEGREE SIGN})&#34;,&#34;Angle between Chambers (\N{DEGREE SIGN})&#34;,
+                     &#39;Looping Ratio (Int.Myoc)&#39;,&#39;Looping Ratio (Ext.Endo)&#39;,
+                     &#39;Atrial Volume [um$^3$]&#39;,&#39;Ventricular Volume [um$^3$]&#39;,&#39;Atrial Lumen Volume [um$^3$]&#39;,&#39;Ventricular Lumen Volume [um$^3$]&#39;]
+    
+    return variables, ylabels</code></pre>
+</details>
+</dd>
 <dt id="morphoHeart_modules.morphoHeart_funcAnalysis.getVariables"><code class="name flex">
 <span>def <span class="ident">getVariables</span></span>(<span>list_vars, name)</span>
 </code></dt>
@@ -137,12 +256,12 @@ def getVariables (list_vars, name):
     &#34;&#34;&#34;
 
     print(&#39;\nVariables:&#39;)
-    for c, value in enumerate(variables, 1):
+    for c, value in enumerate(list_vars, 1):
         print(c-1, value)
     input_var = input(&#39;Select the &#39;+ name +&#39; you would like to process: &#39;)
 
     if input_var == &#39;All&#39;:
-        var_num = list(range(0,len(variables),1))
+        var_num = list(range(0,len(list_vars),1))
 
     else:
         var_num = []
@@ -160,7 +279,7 @@ def getVariables (list_vars, name):
 
     variables2loop = []
     for i, num in enumerate(var_num):
-        variables2loop.append(variables[num])
+        variables2loop.append(list_vars[num])
 
     return variables2loop</code></pre>
 </details>
@@ -183,6 +302,7 @@ def getVariables (list_vars, name):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="morphoHeart_modules.morphoHeart_funcAnalysis.def_variables" href="#morphoHeart_modules.morphoHeart_funcAnalysis.def_variables">def_variables</a></code></li>
 <li><code><a title="morphoHeart_modules.morphoHeart_funcAnalysis.getVariables" href="#morphoHeart_modules.morphoHeart_funcAnalysis.getVariables">getVariables</a></code></li>
 </ul>
 </li>

@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from itertools import count
 from vedo import *
-from vedo import embedWindow, settings, Plotter, Text2D
+from vedo import embedWindow#, settings, Plotter, Text2D
 embedWindow(False)
 settings.legendSize = .3
 # settings.legendPos = 1
@@ -79,15 +79,15 @@ if init:
 
     #%%
 
-    
+
     m_names = ['myoc_int']
     m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
     [m_myoc_int] = m_all
-    
+
     vp = Plotter(N=1, axes=13)
     vp.show(m_myoc_int, at=0, interactive=True)
-    
+
     fcMeshes.saveMesh(filename, m_myoc_int, 'myoc_int', directories[2], 'stl')
     #%%
     # plot_dir = os.path.join(directories[4], filename+"_")

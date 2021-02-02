@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 from pylab import *
+# from pylab import rc #*
 rc('axes', linewidth=1, edgecolor = 'w')
 
 from progress.bar import Bar
@@ -22,17 +23,10 @@ suffix = '%(index)d/%(max)d - %(elapsed)ds - avg: %(avg)ds'
 
 from datetime import datetime
 from time import perf_counter
-
 import json
-# from vedo import *
-# from vedo import embedWindow
-# embedWindow(False)
-
 from skimage import measure, io
 from skimage.measure import label, regionprops
 from skimage.draw import line_aa
-
-# from scipy.spatial import ConvexHull
 import scipy.ndimage as ndimage
 
 #%% Importing morphoHeart packages
@@ -54,7 +48,7 @@ class NumpyArrayEncoder(json.JSONEncoder):
 #%% Color definitions
 colors =  ['C0', 'C1', 'C2','C3','C4','C5','C6','C8','C9','#B0C4DE',
            '#DAA520','#FF7F50','#C71585','#7CFC00','#20B2AA',
-           '#00FFFF','#8A2BE2','#FF1493','#D2691E','#DC143C']*10
+           '#00FFFF','#8A2BE2','#FF1493','#D2691E','#DC143C']*20
 
 #%% -MAIN: CLOSE CONTOURS
 #%% func - main_importImages
@@ -143,7 +137,7 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
         True if automatic closure of contours has already been performed, else False.
 
     """
-
+    stack_closed = stack
     done_autom = False
     already_done = False
     print('\n- FIRST: Automatically close contours')
@@ -182,7 +176,6 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
                                                                     new_stack = stack_closed, plotEvery = plotEvery)#100
                 showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows)
 
-                processDict = dict()
                 ch_processDict = processDict[channel] = dict()
                 ch_processDict['G-Slc_tissueLayerFirst'] = slc_first
                 ch_processDict['G-Slc_tissueLayerLast'] = slc_last
@@ -227,7 +220,7 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
                                              myStack = stack_closed, chStr = channel,
                                              slices = (0,len(stack_closed)), contVersion = '1')
             # Save contours v1
-            q_saveNPY = ask4input("Do you want to save the stack automatically closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+            q_saveNPY = ask4input("Do you want to save the stack automatically closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
             if q_saveNPY:
                 saveStackAsNPY(myStack = stack_closed, filename = filename,
                                             chStr = channel, stage = 'closedCJ', dir2save = directories[1])
@@ -257,7 +250,7 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
     n_rows : int
         Number of rows in subplot
     checking : boolean
-        True if you are running this function to just close some slices after closing inf/out tracts, else False. 
+        True if you are running this function to just close some slices after closing inf/out tracts, else False.
         The default is False
 
     Returns
@@ -270,7 +263,7 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
         True if manual closure of contours has already been performed, else False.
 
     """
-    
+
     q_saveNPY = False
     print('\n- NEXT: Manually close contours and clean slices')
     # >> Manually close remaining contours
@@ -311,14 +304,14 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
             processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
             processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-B'
             processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
-            q_save = ask4input("EXIT: Do you want to save the stack you have closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+            q_save = ask4input("EXIT: Do you want to save the stack you have closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
             if q_save:
                 saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
             saveDict(filename, processDict , 'processDict', directories[1], False)
         else:
             # alert('wohoo', 1)
             # print('- Manually closing contours done!')
-            if not checking: 
+            if not checking:
                 q_plotAll = ask4input('Do you want to plot all the slices to double check everything has been closed? [0]:no/[1]:yes: ', bool)
                 if q_plotAll:
                     showGridContours(myStack = stack_closed, slices = (processDict[channel]['G-Slc_tissueLayerFirst'],processDict[channel]['G-Slc_tissueLayerLast']), n_rows = n_rows)
@@ -335,16 +328,16 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
                 processDict[channel]['B-ManualCloseContours'] = 'DONE'
                 processDict[channel]['B-Slc_manuallyClosedLast'] = processDict[channel]['G-Slc_tissueLayerLast']
                 # Save contours v1
-                if not checking: 
-                    q_saveNPY = ask4input("Do you want to save the final stack you manually closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+                if not checking:
+                    q_saveNPY = ask4input("Do you want to save the final stack you manually closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
             else:
                 done_manual = False
                 processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-B'
                 processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
                 processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
                 # Save contours v1
-                if not checking: 
-                    q_saveNPY = ask4input("Do you want to save the stack you manually closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+                if not checking:
+                    q_saveNPY = ask4input("Do you want to save the stack you manually closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
 
             if q_saveNPY or checking:
                 saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
@@ -383,8 +376,8 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
         True if inflow and outflow tract closure of contours has already been performed, else False.
 
     """
-    
-    print('- NEXT: Close inflow and outflow tracts')
+
+    print('\n- NEXT: Close inflow and outflow tracts')
     # >> Close inflow and outflow tract
     done_infOutf = False
     done_InOT = [False, False]
@@ -394,14 +387,16 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
         q_infOutf = ask4input('Do you want to CLOSE the INFLOW/OUTFLOW tracts of '+filename+'? [0]:no/[1]:yes: ',bool)
     else:
         q_infOutf = ask4input('Do you want to continue CLOSING the INFLOW/OUTFLOW tracts of '+filename+'? [0]:no/[1]:yes: ',bool)
-
+        if not q_infOutf:
+            done_infOutf = ask4input('Are you done CLOSING both the INFLOW/OUTFLOW tracts of '+filename+'? [0]:no/[1]:yes: ',bool)
+            
     if q_infOutf:
         for i, region in enumerate(['Inflow', 'Outflow']):
             # print(region, i)
             q_region = ask4input('>>> Do you want to close -'+region+'- tract? [0]:no/[1]:yes: ',bool)
             while q_region:
                 try:
-                    slc_reg_first = processDict[channel]['C-Slc_closing'+region+'TractLast']
+                    slc_reg_first = int(processDict[channel]['C-Slc_closing'+region+'TractLast'])
                     slc_reg_last = processDict[channel]['C-Slc_closed'+region+'TractLast']
                     q_startFromLast = ask4input('Do you want to close the last slice range where the '+region+' tract was closed (Slcs:'+str(slc_reg_first)+'-'+str(slc_reg_last)+')? [0]:no/[1]:yes: ',bool)
                     if q_startFromLast:
@@ -433,7 +428,7 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
                     if slc_reg_first != slc_firstOut:
                         print('- Printing slices where '+ region + ' tract was closed')
                         showGridContours(myStack = stack_closed, slices = (slc_reg_first,slc_firstOut), n_rows = n_rows)
-                    q_saveNPY = ask4input("Do you want to save the stack you have closed so far before exiting? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+                    q_saveNPY = ask4input("Do you want to save the stack you have closed so far before exiting? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
                     saveDict(filename, processDict , 'processDict', directories[1], False)
                     print('- EXITING!')
                     break
@@ -446,23 +441,23 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
                         processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-C.'+region
                         processDict[channel]['C-Closed'+region+'Tract'] = 'DONE'
                         processDict[channel]['C-Slc_closing'+region+'TractLast'] = slc_firstOut
-                        q_saveNPY = ask4input("Do you want to save the final stack with the "+region+" tract closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now or I want to save it just in case\n >>> : ",bool)
+                        q_saveNPY = ask4input("Do you want to save the final stack with the "+region+" tract closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
                         saveDict(filename, processDict , 'processDict', directories[1], False)
-                    else: 
+                    else:
                         processDict[channel]['C-Slc_closing'+region+'TractLast'] = 'New'
-                
+
                 if q_saveNPY:
                     saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
-            
+
             if not q_region:
                 done_InOT[i] = True
-                
+
         # Save contours inf/Outf
         q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
         if q_saveCont and not exit_code:
             savePltContours(directories[5], filename, stack_closed, channel,
                                           slices = (0,len(stack_closed)), contVersion = "CJ")
-        
+
         done_infOutf = done_InOT[0] and done_InOT[1]
         if region == 'Outflow' and done_infOutf:
             alert('wohoo',1)
@@ -915,7 +910,7 @@ def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im):
     """
 
     slc_plot_list = list(range(slices_plot[0], slices_plot[1]))
-    n_im = shape(slc_plot_list)[0]
+    n_im = len(slc_plot_list)
 
     #Plot
     Im_size = 5
@@ -990,7 +985,7 @@ def getContExpCont_plt (myIm, slcNum, chStr, minLenContour, figSize, plot_show =
         ax1.imshow(myIm, cmap=plt.cm.gray)
 
     # Go through all the contours
-    for rand_n, contour in enumerate(contours):
+    for num_n, contour in enumerate(contours):
         # Get only the contours made up of more than the designated number of points
         if len(contour)>minLenContour:
             # Append contour to the array
@@ -1335,7 +1330,7 @@ def getSlices (slc_tuple, text):
                 pass
             else:
                 slc_list.append(int(string))
-    
+
     slc_end = slc_tuple[1]
 
     return slc_list, slc_end
@@ -1503,7 +1498,7 @@ def update_tuple_pair(tuple_slc, numCont, heartLayer):
                 tuple_slc_up = []
                 numCont_upf = []
                 not_new = False
-            else: 
+            else:
                 print('ERROR: -'+q_newTuples+'- The number entered needs to be a [0],[1] or [2]!')
 
     return tuple_slc_up, numCont_upf
@@ -1557,18 +1552,34 @@ def new_tuples_from_originals(heartLayer):
         index_end = slcCont_add.index(q_EndAt)
         slcCont_up = slcCont_add[:index_end+1]
         numCont_up = numCont_up[:index_end]
-        
+
     tuple_slc_up, numCont_upf, _ = tuple_pairs(numCont_up, slcCont_up, False, 20)
 
     return tuple_slc_up, numCont_upf
 
 #%% func - new_indiv_tuples
 def new_indiv_tuples(heartLayer):
+    """
+    Function that returns a new group of tuples if user wants to fill the dictionary of individual slices
+
+    Parameters
+    ----------
+    heartLayer : dictionary
+        Dictionary with information about the heart layer being processed including selected contours number and coordinates
+
+    Returns
+    -------
+    tuple_slc_new : list of tuples of int
+        Updated List with tuples including remaining slices.
+    numCont_new : list of int
+        Updated List of contour numbers in the remaining contour groups.
+
+    """
     numCont_o = heartLayer['info']['numCont_group']
     numCont_o = [int(num) for num in numCont_o[1:-1].split(',')]
     slcCont_o = heartLayer['info']['slcCont_group']
     slcCont_o = [int(num) for num in slcCont_o[1:-1].split(',')]
-    
+
     q_slcCont_new = ask4input('Select the individual slices in which you would like to select the contours \n\t\t(e.g. to select contours of slices 15,20-22 type: 15,20,21,22): ',str)
     slcCont_new = []
     comma_split = q_slcCont_new.split(',')
@@ -1577,7 +1588,7 @@ def new_indiv_tuples(heartLayer):
             pass
         else:
             slcCont_new.append(int(string))
-    
+
     numCont_new = []
     for slc in slcCont_new:
         try:
@@ -1589,11 +1600,11 @@ def new_indiv_tuples(heartLayer):
             slcCont_add.sort()
             index_start = slcCont_add.index(slc)
             numCont_new.append(numCont_o[index_start-1])
-    
+
     tuple_slc_new = [(slc, slc+1) for slc in slcCont_new]
-    
+
     return tuple_slc_new, numCont_new
-        
+
 #%% func - getClicks
 def getClicks (clicks, myIm, scale, text):
     """
@@ -1831,13 +1842,13 @@ def getContProps (myIm, ch, slc, cont_sort, num_contours, plotshow):
         ax.imshow(myIm, cmap=plt.cm.gray)
 
         # Go through all the contours
-        for rand_n, contour in enumerate(cont_plot):
-            ax.plot(contour[:, 1], contour[:, 0], linewidth=1.5, color=colors[rand_n])
-            txt = "Cont"+str(rand_n)
-            ax.text(0.95,(0.97-0.035*(rand_n+1)), txt,
+        for num, contour in enumerate(cont_plot):
+            ax.plot(contour[:, 1], contour[:, 0], linewidth=1.5, color=colors[num])
+            txt = "Cont"+str(num)
+            ax.text(0.95,(0.97-0.035*(num+1)), txt,
                         verticalalignment='bottom', horizontalalignment='right',
                         transform=ax.transAxes,
-                        color=colors[rand_n], fontsize=10, weight = 'semibold')
+                        color=colors[num], fontsize=10, weight = 'semibold')
 
         ax.set(xlabel = "Channel "+str(ch)+" / Slice "+str(slc))
 
@@ -2128,7 +2139,7 @@ def manuallyCloseContours (stack_closed, stack_o, slices, n_rows, chStr, exit_co
 
     # print('slices_first:', shape(slices_first))
 
-    for i in range(shape(slices_first)[0]):
+    for i in range(len(slices_first)):#shape(slices_first)[0]):
         slc_tuple = (slices_first[i], slices_last[i])
         plotSlcsRange(stack_closed, slc_tuple, 'INITIAL', slcs_per_im)
         slc_list, slc_end = getSlices(slc_tuple, 'you would like to close')
@@ -2145,10 +2156,15 @@ def manuallyCloseContours (stack_closed, stack_o, slices, n_rows, chStr, exit_co
             plotSlcsRange(stack_closed, slc_tuple, 'CHECKING (after having closed)', slcs_per_im)
             q_done = str(input('> Are you done CLOSING the contours for this - tuple ('+ str(slc_tuple[0])+','+str(slc_tuple[1]-1)+'?: \n - [0]:no/[1/ ]:yes! >>>>> ')).lower()
             if q_done == '1' or q_done == '':
-                break
+                if i == len(slices_first)-1:
+                    q_not_done_all = str(input('> Do you want to close any other slices? [0]:no/[1/ ]:yes! >>>>> ')).lower()
+                    if q_not_done_all: 
+                        slc_list, slc_end = getSlices((0,stack_closed.shape[0]), 'you would like to close')
+                else: 
+                    break
             else:
                 slc_list, slc_end = getSlices(slc_tuple, 'you would like to close')
-
+            
         if exit_code:
             break
 
@@ -2211,7 +2227,7 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, chStr, exit_cod
             last_slc = slc
             exit_code = True
             break
-        
+
         last_slc = slc
         add_step = ['', '1']
         while not exit_code and done_close in add_step:   #exit_code == False:
@@ -2550,7 +2566,7 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
         print(slc)
         if slc != list_slc[-1]:
             slc_end = slc+10
-        else: 
+        else:
             slc_end = end_InO
         print(slc_end)
         while not happy: #happy == False:
@@ -3243,12 +3259,12 @@ def modifyDict(stack, chStr, heartLayer, minLenContour):
             tuple_slc_up = []
             numCont_upf = []
             not_new = False
-        else: 
+        else:
             print('ERROR: -'+q_newTuples+'- The number entered needs to be a [0],[1] or [2]!')
-              
+
     print(tuple_slc_up)
     print(numCont_upf)
-    
+
     while len(tuple_slc_up) != 0:
         heartLayer, tuple_slc_up, numCont_upf, exit_txt = dictFill (tuple_slc = tuple_slc_up, numContours = numCont_upf,
                                             stack = stack, chStr = chStr, heartLayer = heartLayer, minLenContour = 250)
@@ -3256,10 +3272,10 @@ def modifyDict(stack, chStr, heartLayer, minLenContour):
             print('EXIT - Modifying dictionary!!');
             break
 
-    if not exit_txt: 
+    if not exit_txt:
         alert('wohoo',1)
         print("- All Done - heartLayer dictionary was modified!")
-    else: 
+    else:
         print('-EXITING!')
 
     return heartLayer
@@ -3349,13 +3365,13 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
     ax.imshow(myIm, cmap=plt.cm.gray)
 
     # Go through all the contours
-    for rand_n, contour in enumerate(cont_sort):
-        ax.plot(contour[:, 1], contour[:, 0], linewidth=1.5, color=colors[rand_n])
-        txt = "Cont"+str(rand_n)
-        ax.text(0.95,(0.97-0.035*(rand_n+1)), txt,
+    for num, contour in enumerate(cont_sort):
+        ax.plot(contour[:, 1], contour[:, 0], linewidth=1.5, color=colors[num])
+        txt = "Cont"+str(num)
+        ax.text(0.95,(0.97-0.035*(num+1)), txt,
                     verticalalignment='bottom', horizontalalignment='right',
                     transform=ax.transAxes,
-                    color=colors[rand_n], fontsize=10, weight = 'semibold')
+                    color=colors[num], fontsize=10, weight = 'semibold')
 #    ax.set_xticks([])
 #    ax.set_yticks([])
     ax.set(xlabel = "Channel "+str(chNum)+" / Slice "+str(slcNum) + " / Contours expected: "+ str(numContours_pair))
