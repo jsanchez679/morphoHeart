@@ -261,7 +261,7 @@ if init:
     #   At the end, a 3D plot showing the two different ballooning heatmaps will pop-up and the resulting meshes
     #   will be saved. Note: Calculation of the ballooning heatmap for each mesh takes about 10-15 min. Be patient! :)
     #   ================================================================================================================
-
+    elevation = 0
     # Get Ballooning
     print('- Extracting ballooning information for Internal and External Myocardium... \n\tNOTE: it takes about 10-15 to process each mesh... ')
     sph_ballonning = fcMeshes.sphInSpline(kspl_CL = kspl_CL[0], name = 'sphs_ball', every = 0.6)

@@ -43,7 +43,7 @@ def setWorkingDir (root_path, init):
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd(),init)
-save = True
+save = False
 
 #%% Start B_Create3DVols
 if init:
@@ -69,7 +69,7 @@ if init:
     xy_Scaling_um, z_Scaling_um = fcBasics.metadataExt(filename,dir_data2Analyse)
     res = [xy_Scaling_um,xy_Scaling_um,z_Scaling_um]
     # Initialise variables
-    plotshow = True
+    plotshow = False
     dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict()
     txt = Text2D(filename, c="k", font= 'VTK'); initial_smooth = True
 
@@ -94,7 +94,16 @@ if init:
     # Create Ext Endocardial mesh - Ch1
     endo_o = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext, resolution = res, layer = 'Endo',
                                          info = 'Original', plotshow = plotshow)
-    # Clean Endocardium
+    
+    # # Clean Endocardium - Option 1 (Using just myocardial layer)
+    # # Clean Endocardium
+    # s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = '')
+    # fcCont.ch_clean_plt(mask_s3 = s3_ch0, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
+    #                           cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
+    # # Clean Ext Endocardium
+    # s3_ch1_rem, s3_ch1_ext_cl = fcCont.ch_clean(mask_s3 = s3_ch0, toClean_s3 = s3_ch1_ext, option = "clean")
+
+    # Clean Endocardium - Option 2 (Using inverted internal myocardium)
     s3_endo_rem, s3_ch1_cl, s3_invIntMyoc = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1)
     # Plot s3s of clean endocardium - (if plotshow = True)
     fcCont.ch_clean_plt(mask_s3 = s3_invIntMyoc, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem,
@@ -102,19 +111,21 @@ if init:
     fcCont.save_s3(filename = filename, s3 = s3_ch1_cl, dir_txtNnpy = directories[1], layer = 'ch1_cut')
     # Clean Ext Endocardium
     _, s3_ch1_ext_cl, _ = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1_ext)
+    
+    
     fcCont.save_s3(filename = filename, s3 = s3_ch1_ext_cl, dir_txtNnpy = directories[1], layer = 'ch1_cut_ext')
     # Re-Create Ext Endocardial mesh - Ch1
-    endo_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
+    endo_ext2 = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
 
     # Plot Ext Myocardium and Clean Ext Endocardium
     myoc_o.alpha(0.1); endo_o.color('mediumorchid').legend('Orig.Ext.Endo'); settings.legendSize = .2
     vp = Plotter(N=4, axes=10)
     vp.show(endo_o, txt, at=0, zoom=1)
     vp.show(myoc_o, endo_o, at=1, zoom=1)
-    vp.show(endo_ext, at=2, zoom=1)
-    vp.show(myoc_o, endo_ext, at=3, zoom=1, interactive=True)
+    vp.show(myoc_o, endo_ext, at=2, zoom=1)
+    vp.show(myoc_o, endo_ext2, at=3, zoom=1, interactive=True)
 
-    del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_invIntMyoc, s3_ch1_ext_cl, s3s
+    # del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_invIntMyoc, s3_ch1_ext_cl, s3s
 
     #%% CUT INFLOW AND OUTFLOW TRACTS OF BOTH TISSUE LAYERS
     #   This section will allow the user to define planes to cut both the inflow and outflow regions of the myocardial
