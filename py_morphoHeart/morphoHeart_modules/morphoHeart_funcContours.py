@@ -444,6 +444,7 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
                         q_saveNPY = ask4input("Do you want to save the final stack with the "+region+" tract closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
                         saveDict(filename, processDict , 'processDict', directories[1], False)
                     else:
+                        q_saveNPY = False
                         processDict[channel]['C-Slc_closing'+region+'TractLast'] = 'New'
 
                 if q_saveNPY:
@@ -928,6 +929,7 @@ def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im):
     for im in range(n_im):
         #Get Image and Label
         slc = slc_plot_list[im]
+        # print(slc)
         myIm = stack_closed[slc][:][:]
         contours, numCont = getContExpCont (myIm, minLenContour = 250)
 
@@ -3096,8 +3098,8 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
 
                 if slc == pair[0]:
                     slcDict["FirstSlc"] = "Yes"
-                    print(" - Pair ", pair[0], ",", pair[1]-1," / slc", slc)
-                    print("- Select contours >> Number of expected contours: ", numContours_pair)
+                    # print("\n- Pair ", pair[0], ",", pair[1]-1," / slc", slc)
+                    print("\n >> Pair ("+ str(pair[0])+","+str(pair[1]-1)+")/slc"+str(slc)+" - Number of expected contours: "+str(numContours_pair))
                     #Run function to select contours and get its metrics
                     # --selectContours_slc (ch, slc, myIm, cont_sort, num_contours, intNext, ask2save)
                     selectCont, txtSelect, propSelect, exit_txt = selectContours (myIm, slc, chNum, contours, numCont, numContours_pair, True)
@@ -3422,8 +3424,8 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
 
        while not sureBoth:
            # Internal
-           print('- \n[Ch'+str(chNum)+'/Slc'+str(slcNum)+']')
-           print('- Enter the contour numbers for the:')
+           #print('- \n[Ch'+str(chNum)+'/Slc'+str(slcNum)+']')
+           print('Enter the contour numbers for slice '+str(slcNum)+':')
            selecContInt = str(input("\t> INTERNAL contours (separated by SPACES)/'esc': ")).lower()
            if selecContInt == 'esc':
                exit_txt = True

@@ -35,7 +35,7 @@ def setWorkingDir (root_path, init):
 root_path, init = setWorkingDir(os.getcwd(),init)
 initial_runABC = True; initial_runD = True
 q_ABC_done = False; q_fullDict = False
-n_rows = 6
+n_rows = 7
 
 #%% Start A_Contours
 if init:
@@ -82,7 +82,7 @@ if init:
     #   NOTE: Intermediate steps of this process can be saved.
     #   ================================================================================================================
     
-    q_ABC = fcBasics.ask4input('Do you want to run any of these processes: \n\t1. Automatically close contours \n\t2. Manually close contours or \n\t3. Close inflow/outflow tracts of this stack? \n\t >[0]:no/[1]:yes: ',bool)
+    q_ABC = fcBasics.ask4input('Do you want to run any of these processes: \n\t- Automatically close contours \n\t- Manually close contours or \n\t- Close inflow/outflow tracts of this stack? \n\t >[0]:no/[1]:yes: ',bool)
     if q_ABC:
         ticABC = perf_counter()
         # >> Automatically close contours
@@ -98,16 +98,16 @@ if init:
             # >> Manually close additional contours (if needed)
             stack_closed, processDict, done_manual = fcCont.main_manuallyCloseContours(filename, channel, 
                                        directories, stack_closed, stack_o, processDict, n_rows = n_rows, checking = True)
-            if done_infOutf:
-                q_ABC_done = fcBasics.ask4input('Checking: Are you done closing the contours and inflow/outflow tracts? [0]:no/[1]:yes!', bool)
-                if q_ABC_done:
-                    # >> Save stack before continuing to selectContours
-                    fcCont.saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
-                    first = processDict[channel]['G-Slc_tissueLayerFirst']
-                    last = processDict[channel]['G-Slc_tissueLayerLast']
-                    fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows)
-                    tocABC = perf_counter()
-                    fcBasics.printTime(ticABC, tocABC, 'close contours')
+            # if done_infOutf:
+            q_ABC_done = fcBasics.ask4input('Checking: Are you done closing the contours and inflow/outflow tracts? [0]:no/[1]:yes!', bool)
+            if q_ABC_done:
+                # >> Save stack before continuing to selectContours
+                fcCont.saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
+                first = processDict[channel]['G-Slc_tissueLayerFirst']
+                last = processDict[channel]['G-Slc_tissueLayerLast']
+                fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows)
+                tocABC = perf_counter()
+                fcBasics.printTime(ticABC, tocABC, 'close contours')
     else:
         fcCont.showGridContours(myStack = stack_closed, slices = (0,stack_closed.shape[0]), n_rows = n_rows)
 
