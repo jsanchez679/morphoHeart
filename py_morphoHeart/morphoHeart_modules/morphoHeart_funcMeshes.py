@@ -720,7 +720,7 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     xdim, ydim, zdim = s3_mask.shape
     # Reshape stack as a vector
     s3_mask_v = s3_mask.reshape(-1)
-    # Get vectors of x,y and z positions
+    # Get vectors of x,y and z positions in array
     pix_coord_pos = np.where(s3_mask >= 0)
     del s3_mask
 
@@ -728,7 +728,7 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
     del pix_coord_pos
 
-    # Make normal a unit vector
+    # Make normal of the input plane a unit vector
     normal_unit = unit_vector(pl_normal)
     # Find all the d values of pix_um
     d_pix_um = np.dot(np.subtract(pix_um,np.array(pl_centre)),np.array(normal_unit))
@@ -764,6 +764,72 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     alert('wohoo',1)
 
     return s3_atr, s3_vent
+
+#%% func - maskCutInChamberS3s
+def maskCutInChamberS3s (s3_mask, pl_normal, pl_centre, r_min, cl_pt, resolution, tol = 2):
+    """
+    Function used to cut the heart into chambers (atrium and ventricle).
+    For this, the s3_mask given as input is cut with a plane whose normal and centre are also given, creating two
+    new arrays containing each of the chambers.
+
+    Parameters
+    ----------
+    s3_mask : numpy array of booleans
+        Array with information about the heart layer (int/ext/all). The size of this array corresponds to the size of the original stack.
+    pl_normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre
+    resolution : list of floats
+        List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.
+
+    Returns
+    -------
+    s3_atr : numpy array of booleans
+        Resulting array with information of the atrium of the heart. Final size is same size as the input array.
+    s3_vent : numpy array of booleans
+        Resulting array with information of the ventricle of the heart. Final size is same size as the input array.
+
+    """
+
+    # Get dimensions of stack
+    xdim, ydim, zdim = s3_mask.shape
+    # Reshape stack as a vector
+    s3_mask_v = s3_mask.reshape(-1)
+    # Get vectors of x,y and z positions in array
+    pix_coord_pos = np.where(s3_mask >= 0)
+    del s3_mask
+
+    # Trasform coordinate positions to um using resolution
+    pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
+    del pix_coord_pos
+
+    # Make normal of the input plane a unit vector
+    normal_unit = fcMeshes.unit_vector(pl_normal)
+    # Find all the d values of pix_um
+    d_pix_um = np.dot(np.subtract(pix_um,np.array(pl_centre)),np.array(normal_unit))
+    
+    #Find the distance to cl_pt 
+    r_pix_um = np.linalg.norm(np.subtract(pix_um,cl_pt), axis=1)
+    del pix_um
+
+    # Find all positions in d_pve_pix_um that are at the plane
+    pos_centre = np.where(np.abs(d_pix_um) < 2)[0]
+    pos_centre2 = np.where(np.abs(r_pix_um) < abs(r_min))[0]
+    del d_pix_um, r_pix_um
+    
+    # Remove the points that belong to the other chamber
+    s3_mask_v[pos_centre] = 0
+    del pos_centre
+
+    # Reshape vector into matrix/stack
+    s3_mask = s3_mask_v.reshape((xdim, ydim, zdim))
+    del s3_div_v
+
+    # bar.finish()
+    alert('wohoo',1)
+
+    return s3_mask
 
 #%% func - selectCutS3sOptMxLoad
 def selectCutS3sOptMxLoad(filename, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
@@ -1899,9 +1965,9 @@ def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
                              pls_normal = [pl_Ch_normal, pl_imCh_normal], info = ['',''], dict_planes = dict_planes)
 
     # Cut cl with plane
-    ksplCL_cut = kspl_CL.clone().cutWithMesh(plane_Ch)
+    ksplCL_cut = kspl_CL.clone().cutWithMesh(plane_Ch, invert=True)
     # Find point of centreline closer to last point of kspline cut
-    ksplCL_cutPt, num_pt = findClosestPt(ksplCL_cut.points()[0], kspl_CL.points())
+    ksplCL_cutPt, num_pt = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
     # Create sphere for that point
     sph_cut = Sphere(pos = ksplCL_cutPt, r=4, c='gold').legend('sph_ChamberCut')
     # Add pt to dict
@@ -2749,13 +2815,13 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         linLineX = linLine.clone().projectOnPlane('x').c(linLine.color()).x(0).legend('linLine(ProjX)')
         pts_heart = orientVectors(linLineX)
         # print('pts_heart', pts_heart)
-        ang_heart = findAngleBtwVectors(pts_heart, np.array([[0,1,0],[0,0,0]]))
+        ang_heart = findAngleBtwVectorsZ(pts_heart, np.array([[0,1,0],[0,0,0]]))
         azimuth = -45; elevation = 0
     elif dORv == 'D':
         linLineX = linLine.clone().projectOnPlane('z').c(linLine.color()).x(0).legend('linLine(ProjX)')
         pts_heart = orientVectors(linLineX)
         # print('pts_heart', pts_heart)
-        ang_heart = findAngleBtwVectors(pts_heart, np.array([[0,0,0],[0,1,0]]))
+        ang_heart = findAngleBtwVectorsZ(pts_heart, np.array([[0,0,0],[0,1,0]]))
         azimuth = -135; elevation = 0
 
     # Atrial orientation
@@ -2768,7 +2834,7 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         orient_atrX = orient_atr.clone().projectOnPlane('z').c('steelblue').x(0).legend('lin_OrientAtr(ProjX)')
 
     pts_atr = orientVectors(orient_atrX)
-    ang_atr = findAngleBtwVectors(pts_atr, pts_heart)
+    ang_atr = findAngleBtwVectorsZ(pts_atr, pts_heart)
     atr_txt = 'Atrial orientation with respect to heart (deg): '+ format(ang_atr,'.1f')
     print('\t>> '+atr_txt)
 
@@ -2783,12 +2849,12 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         # azimuth = 0
         orient_ventX = orient_vent.clone().projectOnPlane('z').c('hotpink').x(0).legend('lin_OrientVent(ProjX)')
     pts_vent = orientVectors(orient_ventX)
-    ang_vent = findAngleBtwVectors(pts_vent, pts_heart)
+    ang_vent = findAngleBtwVectorsZ(pts_vent, pts_heart)
     vent_txt = 'Ventricular orientation with respect to heart (deg): '+ format(ang_vent,'.1f')
     print('\t>> '+vent_txt)
 
     # Angle between chambers
-    ang_chs = findAngleBtwVectors(pts_atr, pts_vent)
+    ang_chs = findAngleBtwVectorsZ(pts_atr, pts_vent)
     chs_txt = 'Angle between chambers (deg): '+ format(ang_chs,'.1f')
     print('\t>> '+chs_txt)
 
@@ -3555,10 +3621,10 @@ def getInterpolatedPts(points, nPoints):
 
     return pts_interp
 
-#%% func - findAngleBtwVectors
-def findAngleBtwVectors(pts1, pts2):
+#%% func - findAngleBtwVectorsZ
+def findAngleBtwVectorsZ(pts1, pts2):
     """
-    Function that returns the angle between two vectors given as input
+    Function that returns the angle between two vectors on the XY-plane 
 
     Parameters
     ----------

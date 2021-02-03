@@ -2517,13 +2517,25 @@ def drawLine (clicks, myIm, color_draw):
                                   int(pt2x), int(pt2y))
             rr1, cc1, val1 = line_aa(int(pt1x)+1, int(pt1y),
                                      int(pt2x)+1, int(pt2y))
+            rr2, cc2, val2 = line_aa(int(pt1x)-1, int(pt1y),
+                                     int(pt2x)-1, int(pt2y))
             if color_draw == "w" or color_draw == "":
                 myIm[rr, cc] = val * 50000
+            elif color_draw == "1":
+                myIm[rr, cc] = 1
+                myIm[rr1, cc1] = 1
+                myIm[rr2, cc2] = 1
+            elif color_draw == "0":
+                myIm[rr, cc] = 0
+                myIm[rr1, cc1] = 0
+                myIm[rr2, cc2] = 0
             else:
                 myIm[rr, cc] = val * 0
                 myIm[rr1, cc1] = val1 * 0
-
+                
     return myIm
+
+
 
 #%% C. func - closeInfOutfStack
 def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
