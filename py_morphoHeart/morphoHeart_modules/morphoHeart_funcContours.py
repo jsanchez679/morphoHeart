@@ -1152,7 +1152,7 @@ def plt_s3 (start_slc, end_slc, im_every, s3_int, s3_ext, plotshow, option):
     plotshow : boolean
         True to show plot, else False
     option : str
-        "both ch"/"cardiacjelly" that changes the title to use on top of the subplots
+        "both ch"/"cardiacjelly"/"chamber ring" that changes the title to use on top of the subplots
 
     Returns
     -------
@@ -1165,6 +1165,8 @@ def plt_s3 (start_slc, end_slc, im_every, s3_int, s3_ext, plotshow, option):
             print('- Plotting ext myoc and int endo to get CJ ')
         elif option == "both ch":
             print('- Plotting myoc and ext endo to clean endo ')
+        elif option == "chamber ring":
+            print('- Plotting heart layer and chamber ring to cut chambers ')
 
         for slc in range(start_slc, end_slc-1, im_every):
             fig, ax = plt.subplots(1,2, figsize = (8,4))
@@ -1184,6 +1186,11 @@ def plt_s3 (start_slc, end_slc, im_every, s3_int, s3_ext, plotshow, option):
             elif option == "both ch":
                 ax[0].set_title("Myocardium - ch1", fontsize=10)
                 ax[1].set_title("Endocardium - ch2", fontsize=10)
+                
+            elif option == "chamber ring":
+                ax[0].set_title("Heart tissue layer", fontsize=10)
+                ax[1].set_title("Chamber ring", fontsize=10)
+
 
             plt.show()
 
@@ -2519,13 +2526,25 @@ def drawLine (clicks, myIm, color_draw):
                                   int(pt2x), int(pt2y))
             rr1, cc1, val1 = line_aa(int(pt1x)+1, int(pt1y),
                                      int(pt2x)+1, int(pt2y))
+            rr2, cc2, val2 = line_aa(int(pt1x)-1, int(pt1y),
+                                     int(pt2x)-1, int(pt2y))
             if color_draw == "w" or color_draw == "":
                 myIm[rr, cc] = val * 50000
+            elif color_draw == "1":
+                myIm[rr, cc] = 1
+                myIm[rr1, cc1] = 1
+                myIm[rr2, cc2] = 1
+            elif color_draw == "0":
+                myIm[rr, cc] = 0
+                myIm[rr1, cc1] = 0
+                myIm[rr2, cc2] = 0
             else:
                 myIm[rr, cc] = val * 0
                 myIm[rr1, cc1] = val1 * 0
-
+                
     return myIm
+
+
 
 #%% C. func - closeInfOutfStack
 def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):

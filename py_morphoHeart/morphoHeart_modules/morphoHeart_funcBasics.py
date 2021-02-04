@@ -302,7 +302,7 @@ def loadDF(filename, file, dir_results):
     return df_results
 
 #%% func - loadNPY
-def loadNPY(filename, names, dir_txtNnpy):
+def loadNPY(filename, names, dir_txtNnpy, print_txt = True):
     """
     Function that loads a (group of) npy array(s)
 
@@ -314,6 +314,8 @@ def loadNPY(filename, names, dir_txtNnpy):
         List of particular names given to the npy arrays that want to be loaded (e.g. ['stackShape', 's3_ch0']).
     dir_txtNnpy :  path
         Path to the npy arrays folder.
+    print_txt : Bool
+        True if text is to be printed, else False. The default is True.
 
     Returns
     -------
@@ -323,16 +325,19 @@ def loadNPY(filename, names, dir_txtNnpy):
     """
     # print('- Loading np arrays...')
     npys = []
-    bar = Bar('- Loading np arrays', max=len(names), suffix = suffix, check_tty=False, hide_cursor=False)
+    if print_txt:
+        bar = Bar('- Loading np arrays', max=len(names), suffix = suffix, check_tty=False, hide_cursor=False)
     for i, name in enumerate(names):
         npy_title = filename+'_'+name+'.npy'
         npy_dir = os.path.join(dir_txtNnpy, npy_title)
         npy = np.load(npy_dir)
         npys.append(np.asarray(npy))
-        bar.next()
-
-    bar.finish()
-    alert('jump',1)
+        if print_txt:
+            bar.next()
+            
+    if print_txt:
+        bar.finish()
+        alert('jump',1)
 
     return npys
 
@@ -349,6 +354,8 @@ def loadDicts(filename, dicts_name, directories, print_txt = True):
         List of particular names given to the dictionaries that want to be loaded (e.g. ['dict_obj']).
     directories : list of paths
         List of paths to the folders where the dictionaries are saved.
+    print_txt : Bool
+        True if text is to be printed, else False. The default is True.
 
     Returns
     -------

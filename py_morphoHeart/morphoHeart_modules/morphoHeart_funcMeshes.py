@@ -9,6 +9,7 @@ Version: September 30, 2020
 
 #%% Importing python packages
 import numpy as np
+import random
 import math
 import os
 
@@ -35,8 +36,8 @@ import json
 #from json import JSONEncoder
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert, ask4input#, saveDict
-from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks
+from .morphoHeart_funcBasics import alert, ask4input, loadNPY #, saveDict
+from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks, plt_s3, drawLine
 
 #%% class - NumpyArrayEncoder
 # Definition of class to save dictionary
@@ -109,7 +110,7 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
     return meshes_out
 
 #%% func - openThicknessMeshes
-def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy):
+def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy, print_txt = True):
     """
     Function to load a list of meshes that are coloured by a particular property (e.g. thickness, ballooning)
 
@@ -125,6 +126,8 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy)
         Path to the folder where the meshes are saved.
     dir_txtNnpy :  path
         Path to the folder where the np arrays are saved.
+    print_txt : Bool
+        True if text is to be printed, else False. The default is True.
 
     Returns
     -------
@@ -140,7 +143,8 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy)
     bar_names_all = ['Int.Myoc\nBalloning\n[um]','Ext.Myoc\nBalloning\n[um]','Myoc.Thickness\n[um]','Endo.Thickness\n[um]','CJ.Thickness\n[um]']
     alpha_all = [1,1,0.1,0.1,0.1]
 
-    print('- Loading thickness meshes...')
+    if print_txt:
+        print('- Loading thickness meshes...')
     meshes_out = []
     colour_arrays = []
 
@@ -151,7 +155,8 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy)
         mesh_title = filename+"_"+name+"."+extension
         mesh_dir = os.path.join(dir_stl, mesh_title)
         mesh_out = load(mesh_dir)
-        print("\t>> Mesh loaded - "+mesh_title+"!")
+        if print_txt:
+           print("\t>> Mesh loaded - "+mesh_title+"!")
         # Load colour array
         colour_title = filename+"_"+name+".npy"
         colour_dir = os.path.join(dir_txtNnpy, colour_title)
@@ -166,9 +171,9 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy)
         meshes_out.append(mesh_out)
         colour_arrays.append(sp_colour)
 
-
-    alert("wohoo",1)
-    print('\n')
+    if print_txt:
+        alert("wohoo",1)
+        print('\n')
 
     return meshes_out, colour_arrays
 
@@ -720,7 +725,7 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     xdim, ydim, zdim = s3_mask.shape
     # Reshape stack as a vector
     s3_mask_v = s3_mask.reshape(-1)
-    # Get vectors of x,y and z positions
+    # Get vectors of x,y and z positions in array
     pix_coord_pos = np.where(s3_mask >= 0)
     del s3_mask
 
@@ -728,7 +733,7 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     pix_um = np.transpose(np.asarray([pix_coord_pos[i]*resolution[i] for i in range(len(resolution))]))
     del pix_coord_pos
 
-    # Make normal a unit vector
+    # Make normal of the input plane a unit vector
     normal_unit = unit_vector(pl_normal)
     # Find all the d values of pix_um
     d_pix_um = np.dot(np.subtract(pix_um,np.array(pl_centre)),np.array(normal_unit))
@@ -764,6 +769,46 @@ def maskChamberS3s (s3_mask, pl_normal, pl_centre, resolution):
     alert('wohoo',1)
 
     return s3_atr, s3_vent
+
+#%% #%% func - maskRingCutChamberS3s
+def maskRing2CutChamberS3s (s3_mask, s3_cyl, stack_shape):
+    """
+    Function used to cut the heart layers into chambers (atrium and ventricle).
+    For this, the s3_mask given as input is cut with a ring whose mask is alalso given, creating one array 
+    with a ring dividing the input mask into two distinctive chambers
+
+    Parameters
+    ----------
+    s3_mask : numpy array of booleans
+        Array with information about the heart layer (int/ext/all). The size of this array corresponds to the size of the original stack.
+    s3_cyl : numpy array of booleans
+        Array with ring to cut tissue layer into chambers. The size of this array corresponds to the size of the original stack.
+    stack_shape : list
+        List containing the stack shape [x,y,z]
+
+    Returns
+    -------
+    s3_mask : numpy array of booleans
+        Resulting array masked with ring to cut tissue layer into chambers. Final size is same size as the input array.
+
+    """
+
+    xdim, ydim, zdim = stack_shape
+    
+    bar = Bar('Masking cut', max=zdim, suffix = suffix, check_tty=False, hide_cursor=False)
+    for slc in range(zdim):
+        im_cyl =s3_cyl[:,:,slc]
+        pos_pts = np.where(im_cyl == 1)
+        im = s3_mask[:,:,slc]
+    
+        clicks = [(pos_pts[0][i], pos_pts[1][i]) for i in range(pos_pts[0].shape[0])]
+        clicks_random = random.sample(clicks+clicks, 2*len(clicks))
+        myIm = drawLine(clicks_random, im, '0')
+        s3_mask[:,:,slc] = myIm
+        bar.next()
+    bar.finish()
+
+    return s3_mask
 
 #%% func - selectCutS3sOptMxLoad
 def selectCutS3sOptMxLoad(filename, m_endo, m_myoc, dict_planes, resolution, dir_txtNnpy, save):
@@ -1657,7 +1702,7 @@ def cutMeshes4CL(filename, meshes, cuts, cut_direction, dicts, plotshow):
         for i, mesh4cl in enumerate(meshes[-num_meshes_out:]):
             mesh_name = mesh4cl._legend
             #print(mesh_name)
-            pts2cut = getPointsAtPlane(points = mesh4cl.points(), pl_normal = plCL_cut_normal,
+            pts2cut, _ = getPointsAtPlane(points = mesh4cl.points(), pl_normal = plCL_cut_normal,
                                        pl_centre = plCL_cut_centre)
             ordpts, _ = order_pts(points = pts2cut)
             #print('ordpts', ordpts)
@@ -1763,7 +1808,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
     return meshes_LnR
 
 #%% func - getChamberMeshes
-def getChamberMeshes(filename, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt, dict_planes, resolution):
+def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt, dict_planes, resolution, plotshow = False):
     """
     Function to cut meshes and get its chambers (atrium/ventricle) using the plane information given as input
 
@@ -1802,45 +1847,176 @@ def getChamberMeshes(filename, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt
         azimuth = 0
 
     # Get plane info from dict_planes
-    pl_imCh_normal = dict_planes['pl2CutIm_Chamber']['pl_normal']
-    pl_imCh_centre = dict_planes['pl2CutIm_Chamber']['pl_centre']
+    pl_Chambers_normal = dict_planes['pl2CutMesh_Chamber']['pl_normal']
+    normal_unit = unit_vector(pl_Chambers_normal)*10
+    pl_Chambers_centre = dict_planes['pl2CutMesh_Chamber']['pl_centre']
 
-    sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCut')
+    cl_point = kspl_CL.points()[num_pt]
+    sph_cut = Sphere(pos = cl_point, r=4, c='gold').legend('sph_ChamberCut')
+    atr_point = kspl_CL.points()[num_pt-50]
+    vent_point = kspl_CL.points()[num_pt+50]
+    
+    # Get myocIntBall data
+    [[m_myocIntBall], [myoc_intBall]] = openThicknessMeshes(filename = filename, meshes_names = ['myoc_intBall'], extension = 'vtk',
+                                  dir_stl = dir_stl, dir_txtNnpy = dir_txtNnpy, print_txt = False)
+    # Get points at plane
+    pts2cut, data2cut = getPointsAtPlane(points = m_myocIntBall.points(), pl_normal = pl_Chambers_normal,
+                                        pl_centre = pl_Chambers_centre, tol = 1, addData = myoc_intBall)
+    # Order the points
+    ordpts, _ = order_pts(points = pts2cut)
+    # Find distance between points at plane and cl_point to define radius
+    dist = []
+    for pt in ordpts:
+        dist.append(findDist(cl_point, pt))
 
+    r_circle_max = min(dist)*2
+    r_circle_min = min(dist)*0.8
+    if r_circle_max < max(data2cut):
+        r_circle_max = max(data2cut)*1.2
+        
+    happy_rad = False
+    text = filename+"\n\n >> Check the radius of the disk to cut the myocardial tissue into \n   chambers. Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
+    while not happy_rad:
+        cyl_test = Cylinder(pos = cl_point,r = r_circle_max, height = 2*0.225, axis = normal_unit, c = 'purple', cap = True, res = 300)
+        r_circle_max_str = r_circle_max
+        txt = Text2D(text, c="k", font= font)
+        settings.legendSize = .15
+        vp = Plotter(N=1, axes = 10)
+        vp.show(m_myoc.alpha(1), kspl_CL, cyl_test, sph_cut, txt, at = 0, interactive=True)
+        
+        happy_rad = ask4input('Is the selected radius ['+format(r_circle_max_str,'.2f')+"um] sufficient to cut mesh into chambers? \n  [0]:no, I would like to change its value, \n  [1]:yes, it cuts the heart layer but doesn't affect any of the chambers!: ", bool)
+        if not happy_rad:
+            r_circle_max = ask4input('Imput cylinder radius [um]: ', float)
+            text = filename+"\n\n >> New radius \n  Check the radius of the disk to cut the myocardial tissue into \n   chambers. Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
+        
+    
+    step_rad = int(((r_circle_max-r_circle_min)/0.225)+1)
+    for j, rad in enumerate(np.linspace(r_circle_min, r_circle_max, 15)):
+        for i,h in enumerate(np.linspace(0.225/2,0.225*2,9)):
+            cyl = Cylinder(pos = cl_point,r = rad, height = h, axis = normal_unit, c = 'lime', cap = True, res = 2000)#.wireframe(True)
+            if i == 0 and j == 0:
+                cyl_pts = cyl.points()
+            else: 
+                cyl_pts = np.concatenate((cyl_pts, cyl.points()))
+    
+    cyl_points_rot = np.zeros_like(cyl_pts)
+    for i, pt in enumerate(cyl_pts):
+        cyl_points_rot[i] = (np.dot(rotation_matrix(axis = [0,0,1], theta = np.radians(90)),pt))
+        
+    cyl_pix = np.transpose(np.asarray([cyl_points_rot[:,i]//resolution[i] for i in range(len(resolution))]))
+    cyl_pix = cyl_pix.astype(int)
+    cyl_pix = np.unique(cyl_pix, axis =0)
+    
+    #Load stack shape 
+    [[xdim, ydim, zdim]] = loadNPY(filename, ['stackShape'], dir_txtNnpy, print_txt = False)
+    stack_shape = [xdim, ydim, zdim+2]
+    
+    # Create mask of ring
+    s3_cyl = np.zeros((xdim, ydim, zdim+2))
+    s3_cyl[cyl_pix[:,0],cyl_pix[:,1],cyl_pix[:,2]] = 1
+    
     # Create empty lists to save atrium and ventricles
     atr_meshes = []
-    atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo']
+    atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo', 'tomato']
     vent_meshes = []
-    vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue']
+    vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue', 'skyblue']
 
     tic = perf_counter()
     settings.legendSize = .3
     vp = Plotter (N=3, axes=10)
-    text2 = filename+"\n\n >>  Result of dividing heart layers into chambers"
+    text2 = filename+"\n\n >>  Result of dividing heart layers into chambers. \n  NOTE: Do not try to interact with plot unless the \n  cardiac jelly volumes have already come up!"
     txt2 = Text2D(text2, c="k", font= font)
     for n, s3_name, name in zip(count(), end_name, names2cut):
         # Mask s3s vent and atrium
         print('- Cutting s3 (', name,')')
         [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
-        s3_vent, s3_atr = maskChamberS3s(s3_mask = s3, pl_normal = pl_imCh_normal, pl_centre = pl_imCh_centre, resolution = resolution)
+        s3_ring = maskRing2CutChamberS3s(s3_mask = s3, s3_cyl = s3_cyl, stack_shape = stack_shape)
+        plt_s3(start_slc = 0, end_slc = zdim-1, im_every = 20,
+                       s3_int = s3, s3_ext = s3_cyl, plotshow = plotshow, option = "chamber ring")
         # Create chamber meshes
-        atr = createLayerMesh(filename = filename, s3 = s3_atr, resolution = resolution, layer = name, name = name+'_Atr',
-                                       colour = atr_color[n], alpha = 0.01, plotshow = False)
-        atr_meshes.append(atr)
-        vent = createLayerMesh(filename = filename, s3 = s3_vent, resolution = resolution, layer = name, name = name+'_Vent',
-                                        colour = vent_color[n], alpha = 0.01, plotshow = False)
-        vent_meshes.append(vent)
-        if n == 0:
-            vp.show(atr, vent, kspl_CL, sph_cut, txt2, at=n)
-        elif n == 1:
-            vp.show(atr, vent, kspl_CL, sph_cut, at=n)
-        elif n == 2:
-            vp.show(atr, vent, kspl_CL, sph_cut, at=n, azimuth = azimuth, interactive = True)
+        m_cut = createLayerMesh(filename = filename, s3 = s3_ring, resolution = resolution, layer = name+'_ChCut', name = name+'_ChCut',
+                                        colour = atr_color[n], alpha = 1, plotshow = False)
+        
+        m_chambers = m_cut.splitByConnectivity(maxdepth=1000)
 
+        meshes_atr = []
+        meshes_vent = []
+        for mesh in m_chambers:
+            if mesh.volume() > 15: 
+                centOfMass = mesh.centerOfMass()
+                dist_AtrOrVent = [findDist(atr_point, centOfMass),findDist(vent_point, centOfMass)]
+                index_AtrOrVent = np.where(dist_AtrOrVent == min(dist_AtrOrVent))[0][0]
+                if index_AtrOrVent == 0:
+                    meshes_atr.append(mesh)
+                else: #1
+                    meshes_vent.append(mesh)
+                
+        atr_whole = merge(meshes_atr)
+        atr_meshes.append(atr_whole.legend(name+'_Atr').color(atr_color[n]))
+        
+        vent_whole = merge(meshes_vent)
+        vent_meshes.append(vent_whole.legend(name+'_Vent').color(vent_color[n]))
+        
+        if n == 0:
+            vp.show(atr_meshes[n], vent_meshes[n], kspl_CL, sph_cut, txt2, at=n)
+        elif n == 1:
+            vp.show(atr_meshes[n], vent_meshes[n], kspl_CL, sph_cut, at=n)
+        elif n == 2:
+            alert('whistle', 1)
+            vp.show(atr_meshes[n], vent_meshes[n], kspl_CL, sph_cut, at=n, azimuth = azimuth, interactive = True)
+            
     toc = perf_counter()
     time = toc-tic
     print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
     alert('jump', 1)
+    
+    #OLD VERSION
+    #  dORv = filename[9:10]
+    # if dORv == 'D':
+    #     azimuth = -90
+    # else:
+    #     azimuth = 0
+
+    # # Get plane info from dict_planes
+    # pl_imCh_normal = dict_planes['pl2CutIm_Chamber']['pl_normal']
+    # pl_imCh_centre = dict_planes['pl2CutIm_Chamber']['pl_centre']
+
+    # sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCut')
+
+    # # Create empty lists to save atrium and ventricles
+    # atr_meshes = []
+    # atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo']
+    # vent_meshes = []
+    # vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue']
+
+    # tic = perf_counter()
+    # settings.legendSize = .3
+    # vp = Plotter (N=3, axes=10)
+    # text2 = filename+"\n\n >>  Result of dividing heart layers into chambers"
+    # txt2 = Text2D(text2, c="k", font= font)
+    # for n, s3_name, name in zip(count(), end_name, names2cut):
+    #     # Mask s3s vent and atrium
+    #     print('- Cutting s3 (', name,')')
+    #     [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
+    #     s3_vent, s3_atr = maskChamberS3s(s3_mask = s3, pl_normal = pl_imCh_normal, pl_centre = pl_imCh_centre, resolution = resolution)
+    #     # Create chamber meshes
+    #     atr = createLayerMesh(filename = filename, s3 = s3_atr, resolution = resolution, layer = name, name = name+'_Atr',
+    #                                    colour = atr_color[n], alpha = 0.01, plotshow = False)
+    #     atr_meshes.append(atr)
+    #     vent = createLayerMesh(filename = filename, s3 = s3_vent, resolution = resolution, layer = name, name = name+'_Vent',
+    #                                     colour = vent_color[n], alpha = 0.01, plotshow = False)
+    #     vent_meshes.append(vent)
+    #     if n == 0:
+    #         vp.show(atr, vent, kspl_CL, sph_cut, txt2, at=n)
+    #     elif n == 1:
+    #         vp.show(atr, vent, kspl_CL, sph_cut, at=n)
+    #     elif n == 2:
+    #         vp.show(atr, vent, kspl_CL, sph_cut, at=n, azimuth = azimuth, interactive = True)
+
+    # toc = perf_counter()
+    # time = toc-tic
+    # print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
+    # alert('jump', 1)
 
     return atr_meshes, vent_meshes
 
@@ -1899,9 +2075,9 @@ def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
                              pls_normal = [pl_Ch_normal, pl_imCh_normal], info = ['',''], dict_planes = dict_planes)
 
     # Cut cl with plane
-    ksplCL_cut = kspl_CL.clone().cutWithMesh(plane_Ch)
+    ksplCL_cut = kspl_CL.clone().cutWithMesh(plane_Ch, invert=True)
     # Find point of centreline closer to last point of kspline cut
-    ksplCL_cutPt, num_pt = findClosestPt(ksplCL_cut.points()[0], kspl_CL.points())
+    ksplCL_cutPt, num_pt = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
     # Create sphere for that point
     sph_cut = Sphere(pos = ksplCL_cutPt, r=4, c='gold').legend('sph_ChamberCut')
     # Add pt to dict
@@ -2749,13 +2925,13 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         linLineX = linLine.clone().projectOnPlane('x').c(linLine.color()).x(0).legend('linLine(ProjX)')
         pts_heart = orientVectors(linLineX)
         # print('pts_heart', pts_heart)
-        ang_heart = findAngleBtwVectors(pts_heart, np.array([[0,1,0],[0,0,0]]))
+        ang_heart = findAngleBtwVectorsZ(pts_heart, np.array([[0,1,0],[0,0,0]]))
         azimuth = -45; elevation = 0
     elif dORv == 'D':
         linLineX = linLine.clone().projectOnPlane('z').c(linLine.color()).x(0).legend('linLine(ProjX)')
         pts_heart = orientVectors(linLineX)
         # print('pts_heart', pts_heart)
-        ang_heart = findAngleBtwVectors(pts_heart, np.array([[0,0,0],[0,1,0]]))
+        ang_heart = findAngleBtwVectorsZ(pts_heart, np.array([[0,0,0],[0,1,0]]))
         azimuth = -135; elevation = 0
 
     # Atrial orientation
@@ -2768,7 +2944,7 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         orient_atrX = orient_atr.clone().projectOnPlane('z').c('steelblue').x(0).legend('lin_OrientAtr(ProjX)')
 
     pts_atr = orientVectors(orient_atrX)
-    ang_atr = findAngleBtwVectors(pts_atr, pts_heart)
+    ang_atr = findAngleBtwVectorsZ(pts_atr, pts_heart)
     atr_txt = 'Atrial orientation with respect to heart (deg): '+ format(ang_atr,'.1f')
     print('\t>> '+atr_txt)
 
@@ -2783,12 +2959,12 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         # azimuth = 0
         orient_ventX = orient_vent.clone().projectOnPlane('z').c('hotpink').x(0).legend('lin_OrientVent(ProjX)')
     pts_vent = orientVectors(orient_ventX)
-    ang_vent = findAngleBtwVectors(pts_vent, pts_heart)
+    ang_vent = findAngleBtwVectorsZ(pts_vent, pts_heart)
     vent_txt = 'Ventricular orientation with respect to heart (deg): '+ format(ang_vent,'.1f')
     print('\t>> '+vent_txt)
 
     # Angle between chambers
-    ang_chs = findAngleBtwVectors(pts_atr, pts_vent)
+    ang_chs = findAngleBtwVectorsZ(pts_atr, pts_vent)
     chs_txt = 'Angle between chambers (deg): '+ format(ang_chs,'.1f')
     print('\t>> '+chs_txt)
 
@@ -3437,7 +3613,7 @@ def findDist(pt1, pt2):
     return dist
 
 #%% func - getPointsAtPlane
-def getPointsAtPlane (points, pl_normal, pl_centre, tol=2):
+def getPointsAtPlane (points, pl_normal, pl_centre, tol=2, addData = []):
     """
     Function to get points within mesh at certain heights (y positions) to create kspline
 
@@ -3451,31 +3627,41 @@ def getPointsAtPlane (points, pl_normal, pl_centre, tol=2):
         List with the x,y,z coordinatesof the plane's centre
     tol : float, optional
         Tolerance defined to get points in plane. The default is 2.
+    addData : list, optional
+        List of additional parameter associated to input points that wants to be extracted from points at plane. 
+        Default is [] (empty list).
 
     Returns
     -------
     pts_cut : array of coordinates
         Array with x,y,z coordinates of the mesh4cl points that are cut by plane
-
+    data_cut : array of cut data - same length as pts_cut
+        List of additional data of only points found at plane. If addData = [], then data_cut = []
+    
     """
 
     pts_cut = []
-
+    data_cut = []
+    
     d = pl_normal.dot(pl_centre)
     #print('d for tol:', d)
     d_range = [d-tol, d+tol]
     #print('d range:', d_range)
     d_range.sort()
 
-    for pt in points:
+    for i, pt in enumerate(points):
         d_pt = pl_normal.dot(pt)
         if d_pt>d_range[0] and d_pt<d_range[1]:
             pts_cut.append(pt)
+            if addData != []:
+                data_cut.append(addData[i])
+            
             #print(pt)
 
     pts_cut = np.asarray(pts_cut)
+    data_cut = np.asarray(data_cut)
 
-    return pts_cut
+    return pts_cut, data_cut
 
 #%% func - order_pts
 def order_pts (points):
@@ -3555,10 +3741,10 @@ def getInterpolatedPts(points, nPoints):
 
     return pts_interp
 
-#%% func - findAngleBtwVectors
-def findAngleBtwVectors(pts1, pts2):
+#%% func - findAngleBtwVectorsZ
+def findAngleBtwVectorsZ(pts1, pts2):
     """
-    Function that returns the angle between two vectors given as input
+    Function that returns the angle between two vectors on the XY-plane 
 
     Parameters
     ----------
@@ -3674,7 +3860,7 @@ def classifyPtsMx(dict_planes, pl_name, pts_whole):
     return pts_classFinal
 
 #%% func - classifyHeartPts
-def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, names_data, plot_show = True):
+def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, data, names_data, plot_show = True):
     """
     Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right
 
@@ -3690,6 +3876,8 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, nam
         Array with x,y,z coordinates of whole mesh
     pts_left : array of coordinates
         Array with x,y,z coordinates of left mesh
+    pts_atr : array of coordinates
+        Array with x,y,z coordinates of atrial mesh
     data : list of arrays
         List of arrays with distance data to be classified
     names_data : list of str
@@ -3711,8 +3899,19 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, nam
     df_classPts = pd.DataFrame(columns=cols)
 
     # Classify AnV
-    pts_classAnV = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl2CutMesh_Chamber', pts_whole = pts_whole)
+    print('--> Atrium-Ventricle')
+    av = pts_whole.view([('', pts_whole.dtype)] * pts_whole.shape[1]).ravel()
+    cv = pts_atr.view([('', pts_atr.dtype)] * pts_atr.shape[1]).ravel()
+    d_isin = np.isin(av,cv)
+    index_isind = np.where(d_isin == True)[0]
+    
+    pts_classAnV = np.empty(len(pts_whole), dtype='object')
+    pts_classAnV[:] = 'ventricle'
+    pts_classAnV[index_isind] = 'atrium'
+    
+    # pts_classAnV = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl2CutMesh_Chamber', pts_whole = pts_whole)
     df_classPts['AtrVent'] = pts_classAnV
+    
     # Classify DnV
     # - Classify DnV_Atr
     pts_classDnV_Atr = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_AtrCoronal', pts_whole =  pts_whole)
@@ -3756,6 +3955,89 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, nam
         plotPtClassif(filename, mesh, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
 
     return df_classPts
+
+# def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, names_data, plot_show = True):
+#     """
+#     Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right
+
+#     Parameters
+#     ----------
+#     filename : str
+#         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+#     mesh : mesh
+#         Mesh whose points are going to be classified
+#     dict_planes : dictionary
+#         Initialised dictionary with planes information
+#     pts_whole : array of coordinates
+#         Array with x,y,z coordinates of whole mesh
+#     pts_left : array of coordinates
+#         Array with x,y,z coordinates of left mesh
+#     data : list of arrays
+#         List of arrays with distance data to be classified
+#     names_data : list of str
+#         List with the names of the data corresponding to each point
+#     plot_show : boolean, optional
+#         True if you want to see the resulting mesh in a plot, else False. The default is True.
+
+#     Returns
+#     -------
+#     df_classPts : dataframe
+#         Dataframe including the points classification and corresponding distance data
+
+#     """
+
+#     print('- Classifying points for ', names_data)
+#     tic = perf_counter()
+
+#     cols = ['AtrVent','DorsVent','LeftRight'] + names_data
+#     df_classPts = pd.DataFrame(columns=cols)
+
+#     # Classify AnV
+#     pts_classAnV = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl2CutMesh_Chamber', pts_whole = pts_whole)
+#     df_classPts['AtrVent'] = pts_classAnV
+#     # Classify DnV
+#     # - Classify DnV_Atr
+#     pts_classDnV_Atr = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_AtrCoronal', pts_whole =  pts_whole)
+#     # - Classify DnV_Vent
+#     pts_classDnV_Vent = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_VentCoronal', pts_whole =  pts_whole)
+
+#     atr = np.where(pts_classAnV == 'atrium')[0]
+#     vent = np.where(pts_classAnV == 'ventricle')[0]
+
+#     pts_classDnV_Atr[vent] = ''
+#     pts_classDnV_Vent[atr] = ''
+
+#     pts_classDnV = pts_classDnV_Atr+pts_classDnV_Vent
+#     df_classPts['DorsVent'] = pts_classDnV
+
+#     # Classify LnR
+#     print('--> Left-Right')
+#     av = pts_whole.view([('', pts_whole.dtype)] * pts_whole.shape[1]).ravel()
+#     bv = pts_left.view([('', pts_left.dtype)] * pts_left.shape[1]).ravel()
+#     # cint = np.intersect1d(av, bv).view(a.dtype).reshape(-1, a.shape[1])
+#     c_isin = np.isin(av,bv)
+#     index_isin = np.where(c_isin == True)[0]
+
+#     pts_classLnR = np.empty(len(pts_whole), dtype='object')
+#     pts_classLnR[:] = 'right'
+#     pts_classLnR[index_isin] = 'left'
+
+#     df_classPts['LeftRight'] = pts_classLnR
+
+#     for i, name, dat in zip(count(), names_data, data):
+#         df_classPts[name] = dat
+
+#     toc = perf_counter()
+#     time = toc-tic
+#     print("- All Done - points have been classified!\n")
+#     print(df_classPts.sample(20))
+#     print("- Time taken to classify = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
+#     alert('whistle',1)
+
+#     if plot_show:
+#         plotPtClassif(filename, mesh, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
+
+    # return df_classPts
 
 #%% func - getPlaneNormals
 def getPlaneNormals (no_planes, spline_pts):
