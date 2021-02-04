@@ -104,19 +104,20 @@ if init:
     pl_Chambers_normal = dict_planes['pl2CutMesh_Chamber']['pl_normal']
     pl_Chambers_centre = dict_planes['pl2CutMesh_Chamber']['pl_centre']
     
-    pts2cut = fcMeshes.getPointsAtPlane(points = m_myocIntBall.points(), pl_normal = pl_Chambers_normal,
-                                        pl_centre = pl_Chambers_centre, tol = 1)
+    pts2cut, data2cut = fcMeshes.getPointsAtPlane(points = m_myocIntBall.points(), pl_normal = pl_Chambers_normal,
+                                        pl_centre = pl_Chambers_centre, tol = 1, addData = myoc_intBall)
+    
     ordpts, angpts = fcMeshes.order_pts(points = pts2cut)
     cl_point = kspl_CL[0].points()[num_pt]
     sph_c = Sphere(pos = cl_point, c = 'darkorange', r = 2)
-    
+    sph_atr = Sphere(pos =  kspl_CL[0].points()[100], c = 'lime', r = 2)
 
     # Create spline around cut
     kspl = KSpline(ordpts, continuity=0, tension=0, bias=0, closed=True)
     kspl.color('magenta').legend('ksplCutChambers').lw(2)
 
     vp = Plotter(N=1, axes = 13)
-    vp.show(m_myocIntBall.alpha(0.01), kspl_CL[0],kspl, sph_c, at = 0, interactive=True)
+    vp.show(m_myocIntBall.alpha(0.01), kspl_CL[0],kspl, sph_c, sph_atr, at = 0, interactive=True)
     
     import numpy as np
     colour_title = filename+"_myoc_intBall.npy"
@@ -127,14 +128,14 @@ if init:
     for pt in ordpts:
         dist.append(fcMeshes.findDist(cl_point, pt))
     
-    r_circle_max = min(dist)*1.5
+    r_circle_max = min(dist)*2
     r_circle_min = min(dist)*0.8
     normal_unit = fcMeshes.unit_vector(pl_Chambers_normal)*10
     
     step_rad = int(((r_circle_max-r_circle_min)/0.225)+1)
-    for j, rad in enumerate(np.linspace(r_circle_min, r_circle_max, step_rad)):
-        for i,h in enumerate(np.linspace(0.225/2,0.225*5,9)):
-            cyl = Cylinder(pos = cl_point,r = rad, height = h, axis = normal_unit, c = 'lime', cap = True, res = 2000).wireframe(True)
+    for j, rad in enumerate(np.linspace(r_circle_min, r_circle_max, 10)):
+        for i,h in enumerate(np.linspace(0.225/2,0.225*2,9)):
+            cyl = Cylinder(pos = cl_point,r = rad, height = h, axis = normal_unit, c = 'lime', cap = True, res = 2000)#.wireframe(True)
             if i == 0 and j == 0:
                 cyl_pts = cyl.points()
             else: 
@@ -182,20 +183,27 @@ if init:
         myIm = fcCont.drawLine(clicks_random, im, '0')
         s3_mask[:,:,slc] = myIm
     
-    fcCont.plt_s3(start_slc = 0, end_slc = s3_mask.shape[2]-1, im_every = 1,
+    # fcCont.plt_s3(start_slc = 0, end_slc = s3_mask.shape[2]-1, im_every = 1,
+                      # s3_int = s3_mask, s3_ext = s3_cyl, plotshow = True, option = "both ch")
+    fcCont.plt_s3(start_slc = 155, end_slc = 322, im_every = 20,
                       s3_int = s3_mask, s3_ext = s3_cyl, plotshow = True, option = "both ch")
     
     test_mesh = fcMeshes.createLayerMesh(filename, s3_mask, res, layer='test', name='test', colour = 'cornflowerblue', alpha= 0.1, plotshow = True)
     
-    fcMeshes.saveMesh(filename, mesh= test_mesh, mesh_name= 'test_split', dir_stl = directories[2], extension = 'vtk')
+    # fcMeshes.saveMesh(filename, mesh= test_mesh, mesh_name= 'test_split', dir_stl = directories[2], extension = 'vtk')
     
-    vp = Plotter(N=1, axes = 1)
-    vp.show(test_mesh, at = 0, interactive=True)
+    # vp = Plotter(N=1, axes = 1)
+    # vp.show(test_mesh, at = 0, interactive=True)
     
     splitem = test_mesh.splitByConnectivity(maxdepth=2)
     
     vp = Plotter(N=1, axes = 1)
     vp.show(splitem, at = 0, interactive=True)
+    
+    splitem[0].isInside(point = kspl_CL[0].points()[100])
+    splitem[1].isInside(point = kspl_CL[0].points()[100])
+    
+    splitem[1].legend('Atr')
     
     # pos_pts_new = np.where(myIm == 1)
     
@@ -207,6 +215,17 @@ if init:
     # ax[1].imshow(myIm)
     # plt.show()
     
+    #%%
+    # from vedo import *
+
+    car = load(datadir+"porsche.ply").alpha(0.2)
+    
+    line = [(-9.,0.,0.), (0.,1.,0.), (9.,0.,0.)]
+    tube = Tube(line).triangulate().c("violet",0.2)
+    
+    contour = car.intersectWith(tube).lineWidth(4).c('black')
+    
+    show(car, tube, contour, __doc__, axes=7)
     #%%
     cyls = []
     for j, h in enumerate(np.linspace(0.225/2,0.225*5,9)):
