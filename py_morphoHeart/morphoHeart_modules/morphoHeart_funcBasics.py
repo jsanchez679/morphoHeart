@@ -626,7 +626,7 @@ def metadataExt (filename, dir_data2Analyse):
 
     return xy_Scaling_um, z_Scaling_um
 
-#%% func - code4vmtkCL (Changes needed - list/for)
+#%% func - code4vmtkCL
 def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
     """
     Function that gets directories information and prints a series of instructions to process the meshes to obtain centreline and
@@ -676,7 +676,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
         vmtktxts.append(vmtktxt)
 
     if printshow:
-        print("\nYou are done in python for a little while... \n\t\t\tto get the centreline of each of the selected meshes follow the next steps:")
+        print("\nYou are done in python for a little while... \n\t\tto get the centreline of each of the selected meshes follow the next steps:")
         print(" >>> 1. Open the file(s):  -", mesh_titles," - in Meshlab")
         print(" >>> 2. Run Filters > Remeshing, Simplification.. > Screened Poisson Surf Reco (check Pre-clean)")
         print(" >>> 3. Cut inflow/outflow tract and export the resulting surface adding 'ML' at the end of the filename \n\t\t\t(e.g _cut4clML.stl) in the same folder")

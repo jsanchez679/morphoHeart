@@ -10,7 +10,7 @@ centreline in the next script.
 To do this we need to initially clean the endocardium using the internal contours of the myocardium. Next,
 cut the inflow and outflow tracts of the endocardium (particularly remove the aortic arches and the common
 cardinal vein), and using the same method cut also the myocardium so that we end up analysing only the heart tissues. 
-Finally we smooth, clean and save the mesh (or meshes )from which we are going to extract the centreline. 
+Finally we smooth, clean and save the mesh (or meshes) from which we are going to extract the centreline. 
 At the end of this script you will end with all the created meshes saved in the 'meshes' folder and the centreline mesh(es) 
 saved in the 'centreline' folder.
 
@@ -43,7 +43,7 @@ def setWorkingDir (root_path, init):
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd(),init)
-save = False
+save = True
 
 #%% Start B_Create3DVols
 if init:
@@ -115,7 +115,7 @@ if init:
     
     fcCont.save_s3(filename = filename, s3 = s3_ch1_ext_cl, dir_txtNnpy = directories[1], layer = 'ch1_cut_ext')
     # Re-Create Ext Endocardial mesh - Ch1
-    endo_ext2 = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
+    endo_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
 
     # Plot Ext Myocardium and Clean Ext Endocardium
     myoc_o.alpha(0.1); endo_o.color('mediumorchid').legend('Orig.Ext.Endo'); settings.legendSize = .2
@@ -123,9 +123,9 @@ if init:
     vp.show(endo_o, txt, at=0, zoom=1)
     vp.show(myoc_o, endo_o, at=1, zoom=1)
     vp.show(myoc_o, endo_ext, at=2, zoom=1)
-    vp.show(myoc_o, endo_ext2, at=3, zoom=1, interactive=True)
+    vp.show(endo_ext, at=3, zoom=1, interactive=True)
 
-    # del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_invIntMyoc, s3_ch1_ext_cl, s3s
+    del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_invIntMyoc, s3_ch1_ext_cl, s3s
 
     #%% CUT INFLOW AND OUTFLOW TRACTS OF BOTH TISSUE LAYERS
     #   This section will allow the user to define planes to cut both the inflow and outflow regions of the myocardial

@@ -471,7 +471,7 @@ def addKSplines2Dict (kspls, info, dict_kspl, print_txt = True):
     return dict_kspl
 
 #%% func - addShapes2Dict
-def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
+def addShapes2Dict(shapes, dict_shapes, radius, print_txt = True):
     """
     Function that adds a list of shapes to dict_kspl
 
@@ -479,8 +479,6 @@ def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
     ----------
     shapes : list of shapes
         List of shapes (ribbons, spheres, etc) to add to dict- (vedo Objects)
-    info : str
-        Additional text to include in the planes names.
     dict_shapes : dictionary
         Initialised dictionary with kspline information
     radius : list of floats
@@ -494,18 +492,34 @@ def addShapes2Dict(shapes, info, dict_shapes, radius, print_txt = True):
         Resulting dictionary where the list of 'shapes' was added
 
     """
-
-    for i, sp_shape, inf, radii in zip(count(), shapes, info, radius):
-        if inf =='':
-            specific_shape = dict_shapes[sp_shape._legend]= dict()
-        else:
-            specific_shape = dict_shapes[sp_shape._legend+'-'+inf]= dict()
-
-        specific_shape['kspl_pts'] = sp_shape.points()
-        specific_shape['color'] = sp_shape.color()
-
-        if len(radii) != 0:
+    
+    for i, sp_shape, radii in zip(count(), shapes, radius):
+        name = sp_shape._legend
+        specific_shape = dict_shapes[sp_shape._legend]= dict()
+        
+        if 'sphs_maxInsSphRadC' in name:
             specific_shape['maxInscSphRad'] = radii
+        if 'sphs_maxInsSphRad' in name:
+            specific_shape['kspl_pts'] = sp_shape.points()
+        elif 'cyl2CutChambers_o' in name: 
+            specific_shape['radius_max'] = radii[0]
+            specific_shape['radius_min'] = radii[1]
+            specific_shape['cyl_axis'] = radii[2]
+            specific_shape['cyl_centre'] = radii[3]
+        elif 'cyl2CutChambers_final' in name: 
+            specific_shape['radius_max'] = radii[0]
+            specific_shape['radius_min'] = radii[1]
+            specific_shape['radius_num'] = radii[2]
+            
+            specific_shape['height_max'] = radii[3]
+            specific_shape['height_min'] = radii[4]
+            specific_shape['height_num'] = radii[5]
+            
+            specific_shape['cyl_axis'] = radii[6]
+            specific_shape['cyl_centre'] = radii[7]
+            specific_shape['resolution'] = radii[8]
+            
+        specific_shape['color'] = sp_shape.color()
 
     if print_txt:
         print('\t>> Shapes have been added to dict_shapes!')
@@ -822,7 +836,7 @@ def selectCutS3sOptMxLoad(filename, m_endo, m_myoc, dict_planes, resolution, dir
     m_endo : mesh
         Endocardial mesh. (vedo Mesh)
     m_myoc : mesh
-        Myicardial mesh. (vedo Mesh)
+        Myocardial mesh. (vedo Mesh)
     dict_planes : dictionary
         Initialised dictionary with planes information
     resolution : list of floats
@@ -1808,16 +1822,17 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
     return meshes_LnR
 
 #%% func - getChamberMeshes
-def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut, kspl_CL, num_pt, dict_planes, resolution, plotshow = False):
+def getChamberMeshes(filename, m_myoc, end_name, names2cut, kspl_CL, num_pt, dir_txtNnpy, dict_shapes, resolution, plotshow = False):
     """
-    Function to cut meshes and get its chambers (atrium/ventricle) using the plane information given as input
+    Function to cut meshes and get its chambers (atrium/ventricle) using the cylinder/disk information given as 
+    input (dict_shapes)
 
     Parameters
     ----------
     filename : str
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    dir_txtNnpy : path
-        Path to the folder where the np arrays are saved.
+    m_myoc : mesh
+        Myocardial mesh. (vedo Mesh)
     end_name : list of str
         List of names given to the s3 masks saved in dir_txtNnpy
     names2cut : list of str
@@ -1826,10 +1841,14 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
         Centreline (vedo KSpline)
     num_pt : int
         Index of the centreline point closer to the plane that cuts the meshes into the two chambers.
-    dict_planes : dictionary
-        Initialised dictionary with planes information
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    dict_shapes :  dictionary
+        Initialised dictionary with shapes information
     resolution : list of floats
         List with the x,y, z scaling values of the images taken. This information is taken from the metadata of the original file.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is False.
 
     Returns
     -------
@@ -1837,6 +1856,8 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
         List of atrial meshes (vedo Meshes)
     vent_meshes : list of meshes
         List of ventricular meshes (vedo Meshes)
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated
 
     """
 
@@ -1846,58 +1867,25 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
     else:
         azimuth = 0
 
-    # Get plane info from dict_planes
-    pl_Chambers_normal = dict_planes['pl2CutMesh_Chamber']['pl_normal']
-    normal_unit = unit_vector(pl_Chambers_normal)*10
-    pl_Chambers_centre = dict_planes['pl2CutMesh_Chamber']['pl_centre']
-
-    cl_point = kspl_CL.points()[num_pt]
-    sph_cut = Sphere(pos = cl_point, r=4, c='gold').legend('sph_ChamberCut')
-    atr_point = kspl_CL.points()[num_pt-50]
-    vent_point = kspl_CL.points()[num_pt+50]
+    r_circle_max = dict_shapes['cyl2CutChambers_o']['radius_max']
+    r_circle_min = dict_shapes['cyl2CutChambers_o']['radius_min']
+    normal_unit = dict_shapes['cyl2CutChambers_o']['cyl_axis']
+    cl_point = dict_shapes['cyl2CutChambers_o']['cyl_centre']
     
-    # Get myocIntBall data
-    [[m_myocIntBall], [myoc_intBall]] = openThicknessMeshes(filename = filename, meshes_names = ['myoc_intBall'], extension = 'vtk',
-                                  dir_stl = dir_stl, dir_txtNnpy = dir_txtNnpy, print_txt = False)
-    # Get points at plane
-    pts2cut, data2cut = getPointsAtPlane(points = m_myocIntBall.points(), pl_normal = pl_Chambers_normal,
-                                        pl_centre = pl_Chambers_centre, tol = 1, addData = myoc_intBall)
-    # Order the points
-    ordpts, _ = order_pts(points = pts2cut)
-    # Find distance between points at plane and cl_point to define radius
-    dist = []
-    for pt in ordpts:
-        dist.append(findDist(cl_point, pt))
-
-    r_circle_max = min(dist)*2
-    r_circle_min = min(dist)*0.8
-    if r_circle_max < max(data2cut):
-        r_circle_max = max(data2cut)*1.2
-        
-    happy_rad = False
-    text = filename+"\n\n >> Check the radius of the disk to cut the myocardial tissue into \n   chambers. Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
-    while not happy_rad:
-        cyl_test = Cylinder(pos = cl_point,r = r_circle_max, height = 2*0.225, axis = normal_unit, c = 'purple', cap = True, res = 300)
-        r_circle_max_str = r_circle_max
-        txt = Text2D(text, c="k", font= font)
-        settings.legendSize = .15
-        vp = Plotter(N=1, axes = 10)
-        vp.show(m_myoc.alpha(1), kspl_CL, cyl_test, sph_cut, txt, at = 0, interactive=True)
-        
-        happy_rad = ask4input('Is the selected radius ['+format(r_circle_max_str,'.2f')+"um] sufficient to cut mesh into chambers? \n  [0]:no, I would like to change its value, \n  [1]:yes, it cuts the heart layer but doesn't affect any of the chambers!: ", bool)
-        if not happy_rad:
-            r_circle_max = ask4input('Imput cylinder radius [um]: ', float)
-            text = filename+"\n\n >> New radius \n  Check the radius of the disk to cut the myocardial tissue into \n   chambers. Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
-        
-    
-    step_rad = int(((r_circle_max-r_circle_min)/0.225)+1)
-    for j, rad in enumerate(np.linspace(r_circle_min, r_circle_max, 15)):
-        for i,h in enumerate(np.linspace(0.225/2,0.225*2,9)):
-            cyl = Cylinder(pos = cl_point,r = rad, height = h, axis = normal_unit, c = 'lime', cap = True, res = 2000)#.wireframe(True)
+    res_cyl = 2000
+    num_rad = 15 #int(((r_circle_max-r_circle_min)/0.225)+1)
+    num_h = 9; h_min = 0.225/2; h_max = 0.225*2
+    for j, rad in enumerate(np.linspace(r_circle_min, r_circle_max, num_rad)):
+        for i,h in enumerate(np.linspace(h_min,h_max, num_h)):
+            cyl = Cylinder(pos = cl_point,r = rad, height = h, axis = normal_unit, c = 'lime', cap = True, res = res_cyl)#.wireframe(True)
             if i == 0 and j == 0:
                 cyl_pts = cyl.points()
             else: 
                 cyl_pts = np.concatenate((cyl_pts, cyl.points()))
+    
+    cyl.legend('cyl2CutChambers_final')
+    cyl_data = [r_circle_max, r_circle_min, num_rad, h_max, h_min, num_h, normal_unit, cl_point, res_cyl]
+    dict_shapes = addShapes2Dict (shapes = [cyl], dict_shapes = dict_shapes, radius = [cyl_data], print_txt = False)
     
     cyl_points_rot = np.zeros_like(cyl_pts)
     for i, pt in enumerate(cyl_pts):
@@ -1921,6 +1909,17 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
     vent_meshes = []
     vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue', 'skyblue']
 
+    avc_minus50y = kspl_CL.points()[num_pt-50]
+    avc_plus50y = kspl_CL.points()[num_pt+50]
+    sph_cut = Sphere(pos = cl_point, r=4, c='gold').legend('sph_ChamberCut')
+    
+    if avc_plus50y[1] < avc_minus50y[1]:
+        atr_point = avc_plus50y
+        vent_point = avc_minus50y
+    else: 
+        atr_point = avc_minus50y
+        vent_point = avc_plus50y
+                                  
     tic = perf_counter()
     settings.legendSize = .3
     vp = Plotter (N=3, axes=10)
@@ -1942,14 +1941,13 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
         meshes_atr = []
         meshes_vent = []
         for mesh in m_chambers:
-            if mesh.volume() > 15: 
-                centOfMass = mesh.centerOfMass()
-                dist_AtrOrVent = [findDist(atr_point, centOfMass),findDist(vent_point, centOfMass)]
-                index_AtrOrVent = np.where(dist_AtrOrVent == min(dist_AtrOrVent))[0][0]
-                if index_AtrOrVent == 0:
-                    meshes_atr.append(mesh)
-                else: #1
-                    meshes_vent.append(mesh)
+            centOfMass = mesh.centerOfMass()
+            dist_AtrOrVent = [findDist(atr_point, centOfMass),findDist(vent_point, centOfMass)]
+            index_AtrOrVent = np.where(dist_AtrOrVent == min(dist_AtrOrVent))[0][0]
+            if index_AtrOrVent == 0:
+                meshes_atr.append(mesh)
+            else: #1
+                meshes_vent.append(mesh)
                 
         atr_whole = merge(meshes_atr)
         atr_meshes.append(atr_whole.legend(name+'_Atr').color(atr_color[n]))
@@ -1969,58 +1967,147 @@ def getChamberMeshes(filename, m_myoc, dir_stl, dir_txtNnpy, end_name, names2cut
     time = toc-tic
     print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
     alert('jump', 1)
+
+    return atr_meshes, vent_meshes, dict_shapes
+
+#%% func - getRing2CutChambers
+def getRing2CutChambers(filename, kspl_CL, mesh2cut, dir_stl, dir_txtNnpy, dict_pts, dict_shapes):
+    """
+    Function to define the ring needed to cut the meshes into atrium and ventricle
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    mesh2cut : Kspline
+        Centreline (vedo KSpline)
+    dir_stl : path
+        Path to the folder where the meshes are saved.
+    dir_txtNnpy : path
+        Path to the folder where the np arrays are saved.
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    dict_shapes : dictionary
+        Initialised dictionary with shapes information
+
+    Returns
+    -------
+    cyl_final : Cylinder
+        Cylinder/dick defined to cut meshes into chambers
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the meshes into the two chambers.
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated
+    dict_pts : dictionary
+        Resulting dictionary with points information updated
+
+    """
+    dORv = filename[9:10]
+    if dORv == 'D':
+        azimuth = -90
+    else:
+        azimuth = 0
     
-    #OLD VERSION
-    #  dORv = filename[9:10]
-    # if dORv == 'D':
-    #     azimuth = -90
-    # else:
-    #     azimuth = 0
+    # Plot spheres through centreline inside myocardium
+    spheres_spl = sphInSpline(kspl_CL = kspl_CL, colour = True)
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes = 1)
+    text = filename+"\n\n >> Define the centreline point number to use to initialise \n  disk to divide heart into chambers \n  [NOTE: Spheres appear in centreline every 10 points, starting from \n  outflow (blue) to inflow (red) tract]"
+    txt = Text2D(text, c="k", font= font)
+    vp.show(mesh2cut.alpha(0.01), kspl_CL, spheres_spl, txt, at=0, azimuth = azimuth, interactive=True)
+    
+    # Get myocIntBall data
+    [[m_myocIntBall], [myoc_intBall]] = openThicknessMeshes(filename = filename, meshes_names = ['myoc_intBall'], extension = 'vtk',
+                                      dir_stl = dir_stl, dir_txtNnpy = dir_txtNnpy, print_txt = False)
+        
+    # Get plane to cut heart layers
+    mesh2cut.alpha(0.05)
+    happyWithDisk = False
+    while not happyWithDisk:
+        # Create plane
+        num_pt = ask4input('Enter the centreline point number you want to use to initialise disk to divide heart into chambers: ', int)
+        pl_Ch_normal, pl_Ch_centre = getPlaneNormal2Pt (pt_num = num_pt, spline_pts = kspl_CL.points())
+        # print('- Modifying disk position to cut chambers. Initially defined disk radius is 60um. \n  Once you have selected the position of the disk a new radius will be calculated based on the mesh points the disk cuts. \n  If you are not happy with the disk radius, you will be able to modify it just before proceeding to the cut.')
+        # Modify (rotate and move cylinder/disk)
+        cyl_test, rotX, rotY, rotZ = modifyDisk (filename = filename,
+                                                pl_normal = pl_Ch_normal, pl_centre = pl_Ch_centre, 
+                                                radius = 60, type_cut = 'Chamber',
+                                                mesh1 = mesh2cut, xyz_bounds = mesh2cut.bounds())
+        
+        # Get new normal of rotated disk
+        pl_Ch_normal_corrected = newNormal3DRot(normal = pl_Ch_normal, rotX = rotX, rotY = rotY, rotZ = rotZ)
+        normal_unit = unit_vector(pl_Ch_normal_corrected)*10
+        # Get central point of new plane and create sphere
+        pl_Ch_centre = cyl_test.pos()
+        
+        # Get points at plane
+        # Myocardium
+        pts2cut, _ = getPointsAtPlane(points = mesh2cut.points(), pl_normal = pl_Ch_normal_corrected,
+                                            pl_centre = pl_Ch_centre, tol = 1)
+        # Internal myocardium with ballooning data
+        _, data2cut = getPointsAtPlane(points = m_myocIntBall.points(), pl_normal = pl_Ch_normal_corrected,
+                                            pl_centre = pl_Ch_centre, tol = 1, addData = myoc_intBall)
+        
+        plane_Ch = Plane(pos = pl_Ch_centre, normal = pl_Ch_normal, sx = 300)
+        # Cut cl with plane
+        ksplCL_cut = kspl_CL.clone().cutWithMesh(plane_Ch, invert=True)
+        # Find point of centreline closer to last point of kspline cut
+        ksplCL_cutPt, num_pt = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
+        
+        cl_point = kspl_CL.points()[num_pt]
+        sph_cut = Sphere(pos = cl_point, r=4, c='gold').legend('sph_ChamberCut')
+        # Add pt to dict
+        dict_pts = addPoint2Dict (sphere = sph_cut, info = '', dict_pts = dict_pts)
+        dict_pts['numPt_CLChamberCut'] = num_pt
+    
+        # Order the points
+        ordpts, _ = order_pts(points = pts2cut)
+        # Find distance between points at plane and cl_point to define radius
+        dist = []
+        for pt in ordpts:
+            dist.append(findDist(cl_point, pt))
+        
+        r_circle_max = np.mean(dist)*1.2
+        r_circle_min = min(dist)*0.8
+        if r_circle_max < max(data2cut):
+            r_circle_max = max(data2cut)*1.5
+        
+        # Build new cylinder to confirm
+        cyl_final = Cylinder(pos = cl_point,r = r_circle_max, height = 2*0.225, axis = normal_unit, c = 'purple', cap = True, res = 300)
+        r_circle_max_str = r_circle_max
+        
+        text = filename+"\n\n >> Check the position and the radius of the disk to cut the heart into chambers.\n  Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
+        txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=4)
+        vp.show(mesh2cut, cyl_final, txt, at=0, viewup="y", azimuth=0, elevation=0, interactive=True)
+        happy = ask4input('Are you happy with the position of the disk [radius: '+format(r_circle_max_str,'.2f')+"um] to cut heart into chambers? \n  [0]:no, I would like to define a new position for the disk\n  [1]:yes, but I would like to redefine the disk radius \n [2]:yes, I am happy with both, disk position and radius :", int)
+        if happy == 1:
+            happy_rad = False
+            while not happy_rad:
+                r_circle_max = ask4input('Input disk radius [um]: ', float)
+                text = filename+"\n\n >> New radius \n  Check the radius of the disk to cut the myocardial tissue into \n   chambers. Make sure it is cutting through the AVC and not catching any other chamber regions. \n >> Close the window when done"
+                cyl_final = Cylinder(pos = cl_point,r = r_circle_max, height = 2*0.225, axis = normal_unit, c = 'purple', cap = True, res = 300)
+                r_circle_max_str = r_circle_max
+                txt = Text2D(text, c="k", font= font)
+                settings.legendSize = .15
+                vp = Plotter(N=1, axes = 10)
+                vp.show(mesh2cut.alpha(1), kspl_CL, cyl_final, sph_cut, txt, at = 0, interactive=True)
+                r_circle_max_str = r_circle_max
+                happy_rad = ask4input('Is the selected radius ['+format(r_circle_max_str,'.2f')+"um] sufficient to cut heart into chambers? \n  [0]:no, I would like to change its value, \n  [1]:yes, it cuts the heart layer but doesn't affect any of the chambers!: ", bool)
+            happyWithDisk = True
+        elif happy == 2:
+            happyWithDisk = True
+        
+        cyl_final.legend('cyl2CutChambers_o')
+        cyl_data = [r_circle_max, r_circle_min, normal_unit, cl_point]
+        dict_shapes = addShapes2Dict (shapes = [cyl_final], dict_shapes = dict_shapes, radius = [cyl_data], print_txt = False)
 
-    # # Get plane info from dict_planes
-    # pl_imCh_normal = dict_planes['pl2CutIm_Chamber']['pl_normal']
-    # pl_imCh_centre = dict_planes['pl2CutIm_Chamber']['pl_centre']
-
-    # sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCut')
-
-    # # Create empty lists to save atrium and ventricles
-    # atr_meshes = []
-    # atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'indigo']
-    # vent_meshes = []
-    # vent_color = ['darkturquoise', 'mediumvioletred', 'chocolate', 'indigo', 'darkblue']
-
-    # tic = perf_counter()
-    # settings.legendSize = .3
-    # vp = Plotter (N=3, axes=10)
-    # text2 = filename+"\n\n >>  Result of dividing heart layers into chambers"
-    # txt2 = Text2D(text2, c="k", font= font)
-    # for n, s3_name, name in zip(count(), end_name, names2cut):
-    #     # Mask s3s vent and atrium
-    #     print('- Cutting s3 (', name,')')
-    #     [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
-    #     s3_vent, s3_atr = maskChamberS3s(s3_mask = s3, pl_normal = pl_imCh_normal, pl_centre = pl_imCh_centre, resolution = resolution)
-    #     # Create chamber meshes
-    #     atr = createLayerMesh(filename = filename, s3 = s3_atr, resolution = resolution, layer = name, name = name+'_Atr',
-    #                                    colour = atr_color[n], alpha = 0.01, plotshow = False)
-    #     atr_meshes.append(atr)
-    #     vent = createLayerMesh(filename = filename, s3 = s3_vent, resolution = resolution, layer = name, name = name+'_Vent',
-    #                                     colour = vent_color[n], alpha = 0.01, plotshow = False)
-    #     vent_meshes.append(vent)
-    #     if n == 0:
-    #         vp.show(atr, vent, kspl_CL, sph_cut, txt2, at=n)
-    #     elif n == 1:
-    #         vp.show(atr, vent, kspl_CL, sph_cut, at=n)
-    #     elif n == 2:
-    #         vp.show(atr, vent, kspl_CL, sph_cut, at=n, azimuth = azimuth, interactive = True)
-
-    # toc = perf_counter()
-    # time = toc-tic
-    # print("- All layers have been cut!  > Total time taken to cut meshes = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
-    # alert('jump', 1)
-
-    return atr_meshes, vent_meshes
-
-#%% func - getInfo2CutChambers
+    return cyl_final, num_pt, dict_shapes, dict_pts
+ 
+#%% func - getInfo2CutChambers (NLU)
 def getInfo2CutChambers(filename, kspl_CL, mesh2cut, dict_planes, dict_pts):
     """
     Function to define the plane needed to cut the meshes into atrium and ventricle
@@ -2295,7 +2382,7 @@ def getPlanePos (filename, type_cut, xyz_bounds, option, mesh_in, mesh_out = '')
 
     return plane, normal, rotX, rotY, rotZ
 
-#%% func - getPlane4ChDivision
+#%% func - getPlane4ChDivision (NLU)
 def getPlane4ChDivision (filename, type_cut, mesh1, kspl_CL, option = [True,True,True,True,True,True]):
     """
     Function that gets plane for chamber division
@@ -2467,6 +2554,118 @@ def modifyPlane (filename, pl_normal, pl_centre, type_cut, mesh1, xyz_bounds, op
 
     return plane, rotX, rotY, rotZ
 
+#%% func - modifyDisk
+def modifyDisk (filename, pl_normal, pl_centre, radius, type_cut, mesh1, xyz_bounds, option = [True,True,True,True,True,True]):
+    """
+    Function that shows a plot so that the user can define a cylinder (disk)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    pl_normal : list of floats
+        List with the x,y,z coordinatesof the plane's normal
+    pl_centre : list of floats
+        List with the x,y,z coordinates of the plane's centre
+    radius: float
+        Initial radius value to create disk to cut mesh
+    type_cut : str
+        Text defining the type of cut that is going to be made with the modified plane
+    mesh1 : mesh
+        Myocardial mesh to use as background to define plane
+    xyz_bounds : list of floats
+        x,y,z boundaries of mesh_out
+    option : list of booleans
+        List of booleans indicating the sliders to use in getPlanePos function.
+        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
+
+    Returns
+    -------
+    cyl_test : Cylinder
+        Final cylinder position defined by the user
+    rotX : list of floats
+        List of angles (deg) of the resulting rotation around the x-axis.
+    rotY : list of floats
+        List of angles (deg) of the resulting rotation around the y-axis.
+    rotZ : list of floats
+        List of angles (deg) of the resulting rotation around the z-axis.
+
+    """
+
+    xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
+    x_size = xmax - xmin
+    y_size = ymax - ymin
+    z_size = zmax - zmin
+
+    rotX = [0]
+    rotY = [0]
+    rotZ = [0]
+
+    # Functions to move and rotate cyl_test
+    def sliderX(widget, event):
+        valueX = widget.GetRepresentation().GetValue()
+        cyl_test.x(valueX)
+        sph_cyl.x(valueX)
+
+    def sliderY(widget, event):
+        valueY = widget.GetRepresentation().GetValue()
+        cyl_test.y(valueY)
+        sph_cyl.y(valueY)
+
+    def sliderZ(widget, event):
+        valueZ = widget.GetRepresentation().GetValue()
+        cyl_test.z(valueZ)
+        sph_cyl.z(valueZ)
+
+    def sliderRotX(widget, event):
+        valueRX = widget.GetRepresentation().GetValue()
+        rotX.append(valueRX)
+        cyl_test.rotateX(valueRX, rad=False)
+        sph_cyl.rotateX(valueRX, rad=False)
+
+    def sliderRotY(widget, event):
+        valueRY = widget.GetRepresentation().GetValue()
+        rotY.append(valueRY)
+        cyl_test.rotateY(valueRY, rad=False)
+        sph_cyl.rotateY(valueRY, rad=False)
+
+    def sliderRotZ(widget, event):
+        valueRZ = widget.GetRepresentation().GetValue()
+        rotZ.append(valueRZ)
+        cyl_test.rotateZ(valueRZ, rad=False)
+        sph_cyl.rotateZ(valueRZ, rad=False)
+
+    settings.legendSize = .3
+    vp = Plotter(N=1, axes=8)
+    cyl_test = Cylinder(pos = pl_centre,r = radius, height = 2*0.225, axis = pl_normal, c = 'purple', cap = True, res = 300)
+    sph_cyl = Sphere(pos = pl_centre, r=4, c='gold')
+    
+    if option[0]: #sliderX
+        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=pl_centre[0],
+                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
+    if option[1]: #sliderY
+        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=pl_centre[1],
+                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
+    if option[2]: #sliderZ
+        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=pl_centre[2],
+                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
+    if option[3]: #sliderRotX
+        vp.addSlider2D(sliderRotX, -1, +1, value=0,
+                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x rotation > +", c="deeppink")
+    if option[4]: #sliderRotY
+        vp.addSlider2D(sliderRotY, -1, +1, value=0,
+                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y rotation > +", c="gold")
+    if option[5]: #sliderRotZ
+        vp.addSlider2D(sliderRotZ, -1, +1, value=0,
+                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z rotation > +", c="teal")
+
+    text = filename+"\n\n>> Define disk position to make cut ("+type_cut+")\n   Make sure it cuts through the AVC and effectively separates the chambers. \n>> Close the window when done. \n>> Note: Initially defined disk radius is 60um. Once you have selected the\n   position of the disk a new radius will be calculated based \n   on the mesh points the disk cuts. \n   If you are not happy with the disk radius, \n   you will be able to modify it just before proceeding to the cut."
+    txt = Text2D(text, c="k", font= font)
+    vp.show(mesh1, cyl_test, sph_cyl, txt, viewup="y", zoom=1, interactive=True)
+    #azimuth=-90, elevation=0,
+
+    return cyl_test, rotX, rotY, rotZ
+
 #%% func - getPlaneNormal2Pt
 def getPlaneNormal2Pt (pt_num, spline_pts):
     """
@@ -2584,7 +2783,7 @@ def createDVPlanes(filename, sph_orient, mesh, kspl_CL, orient_lines, dict_plane
 
 #%% >>> SHAPES
 #%% func - sphInSpline
-def sphInSpline(kspl_CL, name = '', every = 10):
+def sphInSpline(kspl_CL, colour = False, name = '', every = 10):
     """
     Function that creates a group of spheres through a spline given as input.
 
@@ -2592,6 +2791,8 @@ def sphInSpline(kspl_CL, name = '', every = 10):
     ----------
     kspl_CL : Kspline
         Centreline (vedo KSpline)
+    colour : bool, optional
+        If True color spheres according to position within centreline, else False. The default if False
     name : str, optional
         Name given to the group of spheres. The default is ''.
     every : int (1) or float, optional
@@ -2603,12 +2804,20 @@ def sphInSpline(kspl_CL, name = '', every = 10):
         list of spheres (vedo Sphere) / Spheres (vedo Sphere)
 
     """
-
+    if colour: 
+        # ypos = [kspl_CL.points()[i][1] for i in range(len(kspl_CL.points()))]
+        # ymin, ymax = np.min(ypos), np.max(ypos)
+        # print("min and max of variances:", ymin, ymax)
+        vcols = [colorMap(v, "jet", 0, len(kspl_CL.points())) for v in list(range(len(kspl_CL.points())))]  # scalars->colors
+    
     if every > 1:
         spheres_spline = []
         for num, point in enumerate(kspl_CL.points()):
             if num % every == 0 or num == kspl_CL.NPoints()-1:
-                sphere_pt = Sphere(pos=point, r=2, c='coral')
+                if colour:
+                    sphere_pt = Sphere(pos=point, r=2, c=vcols[num]).addScalarBar(title='Centreline\nPoint Number')
+                else:
+                    sphere_pt = Sphere(pos=point, r=2, c='coral')
                 spheres_spline.append(sphere_pt)
     else:
         kspl_new = KSpline(kspl_CL.points(), res = round(kspl_CL.NPoints()/every))
@@ -2773,7 +2982,7 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
         spheres_CL.append(sph_cl)
         spheres_CL_col.append(sph_cl_colour)
 
-        dict_shapes = addShapes2Dict(shapes = [sph_cl, sph_cl_colour], info = ['',''], dict_shapes = dict_shapes, radius = [[],sphData_cl])
+        dict_shapes = addShapes2Dict(shapes = [sph_cl, sph_cl_colour], dict_shapes = dict_shapes, radius = [[],sphData_cl])
         dict_kspl = addKSplines2Dict(kspls = [linearLine, kspl], info = ['',''], dict_kspl = dict_kspl)
 
     return kspl_CL, linLines, spheres_CL, spheres_CL_col, dict_shapes, dict_kspl
@@ -2849,7 +3058,7 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
     cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(220, 5))
     cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
 
-    dict_shapes = addShapes2Dict (shapes = [cl_ribbon], info = [''], dict_shapes = dict_shapes, radius = [[]])
+    dict_shapes = addShapes2Dict (shapes = [cl_ribbon], dict_shapes = dict_shapes, radius = [[]])
     dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = ['',''], dict_kspl = dict_kspl)
 
     text = filename+"\n\n >> Creating Extended Centreline to Divide Right/Left"
@@ -2863,7 +3072,7 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
 
 #%% - MEASURE
 #%% func - getChambersOrientation
-def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes, linLine, dict_pts, dict_kspl, df_res):
+def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, myoc_meshes, linLine, dict_pts, dict_kspl, df_res):
     """
     Function to get chambers orientation
 
@@ -2877,6 +3086,8 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
         Index of the centreline point closer to the plane that cuts the meshes into the two chambers.
     kspl_CL2use : Kspline
         Centreline (vedo KSpline)
+    distFromCl : int
+        Number of points apart from the AV Canal (num_pt) in which to define centre of chambe.
     myoc_meshes : list of meshes
         Myocardial meshes [m_myoc, m_atrMyoc, m_ventMyoc]
     linLine : Line
@@ -2905,8 +3116,8 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, myoc_meshes,
 
     print('- Measuring chamber orientations')
     m_myoc, m_atrMyoc, m_ventMyoc = myoc_meshes
-    atr_pt = num_pt+25
-    vent_pt = num_pt-25
+    atr_pt = num_pt + distFromCl
+    vent_pt = num_pt - distFromCl
 
     # Create spheres
     sph_atr = Sphere(pos = kspl_CL2use.points()[atr_pt], r=4, c='navy').legend('sph_AtrCentre')
@@ -3859,7 +4070,7 @@ def classifyPtsMx(dict_planes, pl_name, pts_whole):
 
     return pts_classFinal
 
-#%% func - classifyHeartPts
+#%% func - classifyHeartPts 
 def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, data, names_data, plot_show = True):
     """
     Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right
@@ -3946,8 +4157,8 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
 
     toc = perf_counter()
     time = toc-tic
-    print("- All Done - points have been classified!\n")
-    print(df_classPts.sample(20))
+    print("- All Done - points have been classified!\n- Sample of classified points")
+    print(df_classPts.sample(10))
     print("- Time taken to classify = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
     alert('whistle',1)
 
@@ -3955,89 +4166,6 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
         plotPtClassif(filename, mesh, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
 
     return df_classPts
-
-# def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, data, names_data, plot_show = True):
-#     """
-#     Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right
-
-#     Parameters
-#     ----------
-#     filename : str
-#         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-#     mesh : mesh
-#         Mesh whose points are going to be classified
-#     dict_planes : dictionary
-#         Initialised dictionary with planes information
-#     pts_whole : array of coordinates
-#         Array with x,y,z coordinates of whole mesh
-#     pts_left : array of coordinates
-#         Array with x,y,z coordinates of left mesh
-#     data : list of arrays
-#         List of arrays with distance data to be classified
-#     names_data : list of str
-#         List with the names of the data corresponding to each point
-#     plot_show : boolean, optional
-#         True if you want to see the resulting mesh in a plot, else False. The default is True.
-
-#     Returns
-#     -------
-#     df_classPts : dataframe
-#         Dataframe including the points classification and corresponding distance data
-
-#     """
-
-#     print('- Classifying points for ', names_data)
-#     tic = perf_counter()
-
-#     cols = ['AtrVent','DorsVent','LeftRight'] + names_data
-#     df_classPts = pd.DataFrame(columns=cols)
-
-#     # Classify AnV
-#     pts_classAnV = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl2CutMesh_Chamber', pts_whole = pts_whole)
-#     df_classPts['AtrVent'] = pts_classAnV
-#     # Classify DnV
-#     # - Classify DnV_Atr
-#     pts_classDnV_Atr = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_AtrCoronal', pts_whole =  pts_whole)
-#     # - Classify DnV_Vent
-#     pts_classDnV_Vent = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_VentCoronal', pts_whole =  pts_whole)
-
-#     atr = np.where(pts_classAnV == 'atrium')[0]
-#     vent = np.where(pts_classAnV == 'ventricle')[0]
-
-#     pts_classDnV_Atr[vent] = ''
-#     pts_classDnV_Vent[atr] = ''
-
-#     pts_classDnV = pts_classDnV_Atr+pts_classDnV_Vent
-#     df_classPts['DorsVent'] = pts_classDnV
-
-#     # Classify LnR
-#     print('--> Left-Right')
-#     av = pts_whole.view([('', pts_whole.dtype)] * pts_whole.shape[1]).ravel()
-#     bv = pts_left.view([('', pts_left.dtype)] * pts_left.shape[1]).ravel()
-#     # cint = np.intersect1d(av, bv).view(a.dtype).reshape(-1, a.shape[1])
-#     c_isin = np.isin(av,bv)
-#     index_isin = np.where(c_isin == True)[0]
-
-#     pts_classLnR = np.empty(len(pts_whole), dtype='object')
-#     pts_classLnR[:] = 'right'
-#     pts_classLnR[index_isin] = 'left'
-
-#     df_classPts['LeftRight'] = pts_classLnR
-
-#     for i, name, dat in zip(count(), names_data, data):
-#         df_classPts[name] = dat
-
-#     toc = perf_counter()
-#     time = toc-tic
-#     print("- All Done - points have been classified!\n")
-#     print(df_classPts.sample(20))
-#     print("- Time taken to classify = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
-#     alert('whistle',1)
-
-#     if plot_show:
-#         plotPtClassif(filename, mesh, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
-
-    # return df_classPts
 
 #%% func - getPlaneNormals
 def getPlaneNormals (no_planes, spline_pts):
@@ -4309,7 +4437,7 @@ def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
 
     """
 
-    print('\nSaving videos... this might take a while... (about 2min/video')
+    print('\nSaving videos... this might take a while (about 2 min/video)')
     bar = Bar('Saving' , max = len(info), suffix = suffix, check_tty=False, hide_cursor=False)
     for i, name, mesh in zip(count(), info, meshes4video):
         saveVideo(filename = filename, info = name, meshes4video = [mesh],

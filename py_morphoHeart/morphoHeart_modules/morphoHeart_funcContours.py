@@ -2230,7 +2230,7 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, chStr, exit_cod
         myIm_closed = myIm
 
         # closeContours per slice
-        k_size = 120
+        k_size = 60
         myIm_closed, done_close  = closeContoursSlc(myIm_closed, slc, chStr, k_size, k_size)
         if done_close == 'esc':
             last_slc = slc
@@ -2579,14 +2579,14 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
     # Starting and ending slices to close inflow or outflow tracts
     start_InO, end_InO = slices
     # Get info about point every X images
-    list_slc = list(range(start_InO, end_InO, 10))
+    list_slc = list(range(start_InO, end_InO, 12))
 
     bar = Bar('Closing '+region+' Contours', max=len(list_slc), suffix = suffix, check_tty=False, hide_cursor=False)
     for slc in list_slc:
         happy = False
         print(slc)
         if slc != list_slc[-1]:
-            slc_end = slc+10
+            slc_end = slc+12
         else:
             slc_end = end_InO
         print(slc_end)

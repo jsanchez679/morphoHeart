@@ -38,18 +38,6 @@ root_path, init = setWorkingDir(os.getcwd(),init)
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
-    
-    # # Class to save dictionary
-    # class NumpyArrayEncoder(json.JSONEncoder):
-    #     def default(self, obj):
-    #         if isinstance(obj, np.integer):
-    #             return int(obj)
-    #         elif isinstance(obj, np.floating):
-    #             return float(obj)
-    #         elif isinstance(obj, np.ndarray):
-    #             return obj.tolist()
-    #         else:
-    #             return super(NumpyArrayEncoder, self).default(obj)
 
     #%% SELECT FILE AND GET METADATA 
     #   This section allows the user to select file to process, get its main directories and metadata, 

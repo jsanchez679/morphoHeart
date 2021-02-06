@@ -33,7 +33,7 @@ root_path, init = setWorkingDir(os.getcwd(),init)
 #%% Start D_AnalyseData
 if init:
     # Importing morphoHeart packages
-    from morphoheart_modules import morphoheart_funcAnalysis as fcAn
+    from morphoHeart_modules import morphoHeart_funcAnalysis as fcAn
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
     from morphoHeart_modules import morphoHeart_funcPlot as fcPlot
     # import morphoHeart_funcContours as fcCont
@@ -49,10 +49,6 @@ if init:
     df_all['Looping_Ratio_Myoc'] = df_all['Length_CL_Int.Myoc(Cut)']/ df_all['linLine_Int.Myoc(Cut)']
     df_all['Looping_Ratio_Endo'] = df_all['Length_CL_Ext.Endo(Cut)']/ df_all['linLine_Ext.Endo(Cut)']
 
-    # df_complete = df_all
-
-    # df_all = df_all[df_all['Genotype_A']== 'wt']
-
     #%% Plot results
     variables, ylabels = fcAn.def_variables('morphoHeart_D_AnalyseData')
     vars2plot, labels2plot = fcPlot.getVarsANDLabels(variables, ylabels)
@@ -64,8 +60,8 @@ if init:
     num_vars = len(vars2plot)
     plots_per_col = 3
     plots_per_row = math.ceil(num_vars/plots_per_col)
-    size_col = plots_per_col*3.5+5
-    size_row = plots_per_row*3.5
+    size_col = plots_per_col*4+5
+    size_row = plots_per_row*4
 
     colors_pts = sns.hls_palette(2, h=.5, l=.4)
 
@@ -76,14 +72,14 @@ if init:
                                                     "ytick.labelsize":'small', "lines.linewidth": 1.5})
 
     fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col, figsize=(size_col, size_row), sharex=False, sharey=False)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.subplots_adjust(hspace=0.5, wspace=0.8)
     fig.suptitle(title)
 
     for ax, var, ylabel in zip(axes.flatten(), vars2plot, labels2plot):
-        sns.barplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
-                      palette = colors_pts)
-        # sns.stripplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
+        # sns.barplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
         #               palette = colors_pts)
+        sns.stripplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
+                      palette = colors_pts)
         ax.legend(bbox_to_anchor=(1, 1), loc='best')
         # Add x-axis and y-axis labels
         ax.set(xlabel="Stage [hpf]",
@@ -136,6 +132,27 @@ if init:
     ax.set_xlim(-5, 25);
     ax.set_ylim(0, 0.6);
     plt.tight_layout();
+
+#%% https://stackoverflow.com/questions/38650895/how-do-i-add-multiple-markers-to-a-stripplot-in-seaborn
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+tips = sns.load_dataset("tips")
+
+plt.clf()
+thu_fri_sat = tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
+colors = ['blue','yellow','green','red']
+m = sns.stripplot('size','total_bill',hue='day',
+                  marker='o',data=thu_fri_sat, jitter=0.1, 
+                  palette=sns.xkcd_palette(colors),
+                  dodge=True,linewidth=2,edgecolor="gray")
+
+sun = tips[tips['day']=='Sun']
+n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
+                  marker='^',data=sun, jitter=0.1, 
+                  dodge=True,linewidth=0)
+handles, labels = n.get_legend_handles_labels()
+n.legend(handles[:4], labels[:4])
 
     #%%
     sns.set_style("white")
