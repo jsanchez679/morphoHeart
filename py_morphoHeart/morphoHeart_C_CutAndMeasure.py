@@ -117,7 +117,7 @@ if init:
         vp.show(m_cj, at=2)
         vp.show(m_cjIn, at=3)
         vp.show(m_cjOut, at=4)
-        vp.show(m_myoc, m_endo, m_cj, scale_cube, at=5, zoom = 2, azimuth = azimuth, interactive=True)
+        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 2, azimuth = azimuth, interactive=True)
 
     #%% Create ksplines, points, lines and centrelines
     #   This section will create spline(s) of the centreline(s) using the information from the loaded dictionary(ies) and
@@ -329,7 +329,7 @@ if init:
     [pl_DnV_Atr, pl_DnV_Vent], dict_planes = fcMeshes.createDVPlanes(filename = filename, sph_orient = sph_orient, mesh = m_myoc,
                                                   kspl_CL = kspl_CL[0], orient_lines = [orient_atr, orient_vent], dict_planes = dict_planes)
     # Get centreline ribbon
-    cl_ribbon, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
+    cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
                                                                  mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
 
 
@@ -401,22 +401,108 @@ if init:
         toc = perf_counter()
         fcBasics.printTime(tic, toc, 'Cut and Measure')
 
+    df_cjThNmyocIntBall.sample(5)
+
+    #%% CODE TO IGNORE!! save more information of cl? cl_ribbon? cl_ext? kspl_vsurf? Chech save shapes function
+    #Divide cl for atrium and ventricle, into 300 pts each, use them to create heatmaps of the same length each? 
+    #Add myoc_intBall data too to plot as well
+    
+    # -----------------------------------------------------------------------------------------------------------------
+    df_cjThNmyocIntBall = fcBasics.loadDF(filename = filename, file = 'df_cjThNmyocIntBall', dir_results = dir_results)
+    df_AtrVent = np.asarray(df_cjThNmyocIntBall['AtrVent'])
+    cjTh = np.asarray(df_cjThNmyocIntBall['cj_thickness'])
+    
+    # Unlooping the heart
+    unlooped = fcMeshes.unloopHeart(filename = filename, mesh = m_cjTh, kspl_CL = kspl_CL[0], kspl_ext = kspl_ext,
+                                    no_planes = 250, pl_CLRibbon =  dict_planes['pl_Parallel2LinLine'], 
+                                    param = cj_thickness, df_AtrVent = df_AtrVent, num_pt = dict_pts['numPt_CLChamberCut'],
+                                    plotshow = False, tol=0.05)
+    unlooped[100:130, :]
+    
+    vp = Plotter(N=1)
+    vp.show(m_cjTh.alpha(1), at = 0, interactive = True)
+    
+    import pandas as pd
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    df_unlooped = pd.DataFrame(unlooped, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
+    df_unlooped.sample(10)
+    df_unlooped = df_unlooped[df_unlooped['taken']==1]
+    
+    fig, ax = plt.subplots(figsize=(16, 10))
+    heatmap = pd.pivot_table(df_unlooped, values='cj_thickness', columns = 'z_plane', index='theta', aggfunc=np.max)
+    ax = sns.heatmap(heatmap, cmap='jet')#, xticklabels=20, yticklabels=550)
+    x_pos = np.linspace(0,1,len(ax.get_xticks()))
+    y_pos = np.linspace(180,-180,len(ax.get_yticks()), endpoint = True)
+    xlabels = [format(x,'.3f') for x in x_pos]
+    ylabels = [format(y,'.0f') for y in y_pos]
+    plt.show()
+
 init = True
 
-    #%% CODE TO IGNORE!!
-    # -----------------------------------------------------------------------------------------------------------------
-    # Unlooping the heart
-    # unlooped = fcMeshes.unloopHeart(filename = filename, mesh = m_cjTh, kspl_CL2use = kspl_CL[0], cl_ribbon = cl_ribbon, no_planes = 100,
-    #                                 pl_CLRibbon =  dict_planes['pl_Parallel2LinLine'], param = cj_thickness, tol=0.05)
+#%%
 
-    # pl_CLRibbon = dict_planes['pl_Parallel2LinLine']
-    # -----------------------------------------------------------------------------------------------------------------
-    #% Cut layer with n number of planes perpendicular to spline and plot
-    # mesh2cut = mesh_ch1
-    # #Transform mesh from vtk structure to trimesh
-    # print("Transforming mesh into trimesh object...")
-    # mesh3= vtk2trimesh(mesh2cut)
-    # cjf4.alert("jump",1)
+# df_filt = pd.DataFrame(columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
+# z_planes = df_unlooped.z_plane.unique().tolist()#.sort()
+# z_planes = sorted(z_planes)
+# v_theta = np.linspace(-180,180,180+1)
+# #loop for each plane
+# for num, z_pl in enumerate(z_planes[0:50]):
+#     df_z = df_unlooped[df_unlooped['z_plane'] == z_pl]
+#     # print('--PLANE: ',z_pl)
+#     for i, theta in enumerate(v_theta[0:-1]):
+#         # print('--Theta:', theta)
+
+#         df_t = df_z[(df_z['theta'] >= theta) & (df_z['theta'] <= v_theta[i+1])]
+#         x = df_t['x'].mean()
+#         y = df_t['y'].mean()
+#         z = df_t['z'].mean()
+#         taken = df_t['taken'].mean()
+#         z_plane = df_t['z_plane'].mean()*100
+#         theta = df_t['theta'].mean()
+#         radius = df_t['radius'].mean()
+#         cj_thickness = df_t['cj_thickness'].max()
+#         data = [[x,y,z,taken,z_plane,theta,radius,cj_thickness]]
+#         df_r = pd.DataFrame(data, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
+
+#         df_filt = pd.concat([df_filt, df_r])
+
+# #% REVISARRRR
+# fig, ax = plt.subplots(figsize=(8, 5))
+# heatmap = pd.pivot_table(df_filt, values='cj_thickness', columns = 'z_plane', index='theta')#, aggfunc=np.max)
+# ax = sns.heatmap(heatmap, cmap='jet', xticklabels=20, yticklabels=550)
+
+# x_pos = np.linspace(0,1,len(ax.get_xticks()))
+# y_pos = np.linspace(180,-180,len(ax.get_yticks()), endpoint = True)
+# xlabels = [format(x,'.3f') for x in x_pos]
+# ylabels = [format(y,'.0f') for y in y_pos]
+
+# plt.show()
+
+    
+    
+    
+#     xlabels = [format(x/10,'.1f') for x in ax.get_xticks()]
+#     ylabels = [format(y/1800*360-180,'.0f') for y in ax.get_yticks()]
+#     ax.set_xticklabels(xlabels)
+#     ax.set_yticklabels(ylabels)
+
+  
+#     # plt.xlabel('Centreline position\n[Atrium >> Ventricle]', fontsize=10)
+#     # plt.ylabel('Angle (\N{DEGREE SIGN})\n[Ventral >> Dorsal >> Ventral]', fontsize=10)
+    
+#     x_pos = np.linspace(0,1,len(ax.get_xticks()))
+#     y_pos = np.linspace(180,-180,len(ax.get_yticks()), endpoint = True)
+#     xlabels = [format(x,'.3f') for x in x_pos]
+#     ylabels = [format(y,'.0f') for y in y_pos]
+    
+    
+#     flights = sns.load_dataset("flights")
+
+#     flights = flights.pivot("month", "year", "passengers")
+
+#     ax = sns.heatmap(flights)
+
 
     # Cut layer with a certain number of planes
     # no_planes = 15

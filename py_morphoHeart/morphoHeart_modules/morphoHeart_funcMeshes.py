@@ -2083,7 +2083,7 @@ def getRing2CutChambers(filename, kspl_CL, mesh2cut, dir_stl, dir_txtNnpy, dict_
         settings.legendSize = .3
         vp = Plotter(N=1, axes=4)
         vp.show(mesh2cut, cyl_final, txt, at=0, viewup="y", azimuth=0, elevation=0, interactive=True)
-        happy = ask4input('Are you happy with the position of the disk [radius: '+format(r_circle_max_str,'.2f')+"um] to cut heart into chambers? \n  [0]:no, I would like to define a new position for the disk\n  [1]:yes, but I would like to redefine the disk radius \n [2]:yes, I am happy with both, disk position and radius :", int)
+        happy = ask4input('Are you happy with the position of the disk [radius: '+format(r_circle_max_str,'.2f')+"um] to cut heart into chambers? \n  [0]:no, I would like to define a new position for the disk\n  [1]:yes, but I would like to redefine the disk radius \n  [2]:yes, I am happy with both, disk position and radius :", int)
         if happy == 1:
             happy_rad = False
             while not happy_rad:
@@ -2988,7 +2988,7 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
     return kspl_CL, linLines, spheres_CL, spheres_CL_col, dict_shapes, dict_kspl
 
 #%% func - createCLRibbon
-def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes):
+def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes, clRib_type = 'extDV'):
     """
     Function that creates dorso-ventral extended centreline ribbon
 
@@ -3008,11 +3008,17 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
         Initialised dictionary with shapes information
     dict_planes : dictionary
         Initialised dictionary with planes information
+    clRib_type : str ['extDV', 'extV']
+        String to define the centreline ribbon the function should return. If 'extDV': then a Dorso-Ventrally extended 
+        centreline ribbon will be returned, else if 'extV', only a ventrally extended centreline ribbon with much 
+        higher resolution will be returned.The default is 'extDV'.
 
     Returns
     -------
     cl_ribbon : ribbon
         Dorso-ventral extended centreline (vedo Ribbon)
+    kspl_ext : Kspline
+        Kspline of extended centreline
     dict_kspl : dictionary
         Resulting dictionary with ksplines information updated
     dict_shapes : dictionary
@@ -3031,7 +3037,7 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
 
     pts_cl_ext = np.insert(pts_cl,0,np.transpose(outf_ext_normal), axis=0)
     pts_cl_ext = np.insert(pts_cl_ext,len(pts_cl_ext),np.transpose(inf_ext_normal), axis=0)
-    kspl_ext = KSpline(pts_cl_ext, res=220).color('purple')
+    kspl_ext = KSpline(pts_cl_ext, res=601).color('purple')
 
     # Create plane to project centreline
     dORv = filename[9:10]
@@ -3050,25 +3056,39 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
     dict_planes = addPlane2Dict (plane = pl_linLine, pl_centre = pl_linLine_centre,
                                             pl_normal = pl_linLine_normal, info = '', dict_planes = dict_planes)
 
-    pl_linLine_unitNormal = unit_vector(pl_linLine_normal)*120
-    x_cl, y_cl, z_cl = pl_linLine_unitNormal
-
-    kspl_ext_D = kspl_ext.clone().x(x_cl).y(y_cl).z(z_cl).legend('kspl_CLExtD')
-    kspl_ext_V = kspl_ext.clone().x(-x_cl).y(-y_cl).z(-z_cl).legend('kspl_CLExtV')
-    cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(220, 5))
-    cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
-
+    pl_linLine_unitNormal = unit_vector(pl_linLine_normal)
+    x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*10
+    pl_linLine_unitNormal120 = pl_linLine_unitNormal*120
+    x_cl, y_cl, z_cl = pl_linLine_unitNormal120
+    
+    if clRib_type == 'extDV': # Names are switched but it works
+        kspl_ext_D = kspl_ext.clone().x(x_cl).y(y_cl).z(z_cl).legend('kspl_CLExtD')
+        kspl_ext_V = kspl_ext.clone().x(-x_cl).y(-y_cl).z(-z_cl).legend('kspl_CLExtV')
+        cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(220, 5))
+        cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
+    
+    # elif clRib_type == 'extV':
+    #     cl_ribbon = []
+    #     for i in range(10):
+    #         kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)
+    #         kspl_ext_DB = kspl_ext.clone().x((i+1)*x_ucl).y((i+1)*y_ucl).z((i+1)*z_ucl)
+    #         cl_ribbon2un = Ribbon(kspl_ext_DA, kspl_ext_DB, alpha=0.2, res=(220, 5))
+    #         cl_ribbon.append(cl_ribbon2un)
+    #     cl_ribbon = merge(cl_ribbon)
+    #     cl_ribbon.legend('rib_ExtCL(V)').wireframe(True)
+        
     dict_shapes = addShapes2Dict (shapes = [cl_ribbon], dict_shapes = dict_shapes, radius = [[]])
-    dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = ['',''], dict_kspl = dict_kspl)
+    if clRib_type == 'extDV':
+        dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = ['',''], dict_kspl = dict_kspl)
 
-    text = filename+"\n\n >> Creating Extended Centreline to Divide Right/Left"
+    text = filename+"\n\n >> Creating Extended Centreline ("+clRib_type+")"
     txt = Text2D(text, c="k", font= font)
 
     settings.legendSize = .3
     vp = Plotter(N=1, axes=13)
     vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
 
-    return cl_ribbon, dict_kspl, dict_shapes, dict_planes
+    return cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes
 
 #%% - MEASURE
 #%% func - getChambersOrientation
@@ -3272,7 +3292,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     return thickness, m_ext_out, min_max
 
 #%% func - unloopHeart
-def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, plotshow = False, tol=0.05):
+def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, df_AtrVent, num_pt, plotshow = False, tol=0.05):
     """
     Function to unloop the heart
 
@@ -3282,16 +3302,20 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     mesh : mesh
         Color coded mesh that will be unlooped
-    kspl_CL2use : Kspline
+    kspl_CL : Kspline
         Centreline (vedo KSpline)
-    cl_ribbon : ribbon
-        Dorso-ventral extended centreline (vedo Ribbon)
+    kspl_ext : Kspline
+        Extended centreline (vedo KSpline)
     no_planes : int
         Number of planes that will be used to get transverse sections of heart
     pl_CLRibbon : Plane
         Plane used to extend dorso-ventrally the centreline
     param : array of floats
         Numpy array with distance that wants to be unlooped
+    df_AtrVent: numpy array of objects 
+        Array with points classification of atrium and ventricle
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the kspline.
     plotshow : boolean, optional
         True if you want to see the resulting mesh in a plot, else False. The default is False.
     tol : float, optional
@@ -3308,372 +3332,118 @@ def unloopHeart(filename, mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, 
     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7: param
     matrix_unlooped = np.zeros((len(mesh.points()),8))
     matrix_unlooped[:,0:3] = mesh.points()
-    matrix_unlooped[:,8-1] = param
+    matrix_unlooped[:,7] = param
+    
+    plotevery = no_planes // 10
 
     # - Get unitary normal of plane to create CL_ribbon
     pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
     pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
-    # plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color('skyblue').alpha(0.5)
-    arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon['pl_normal'])*120, s = 0.1, c = 'cyan')
-
-    text = filename+"\n\n >> Is the cyan arrow pointing towards the ventral side of the heart? \n    Check, close the window and answer."
-    txt = Text2D(text, c="k", font= font)
-    settings.legendSize = .3
-    vp = Plotter(N=1, axes=4)
-    vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectNormRib,txt, at=0, azimuth = 0, interactive=1)
-
-    q_ventralDir = ask4input('Is the cyan arrow pointing towards the ventral side of the heart? [0]:no/[1]:yes: ', bool)
-    if q_ventralDir:
-        pl_normCLRibbon = -120*pl_normCLRibbon
-    else:
-        pl_normCLRibbon = 120*pl_normCLRibbon
-
+    
+    #Find the points that intersect with the ribbon
+    pts_int = []
+    for num in range(len(kspl_ext.points())):
+        try: 
+            cl_pt_test = kspl_ext.points()[num]
+            pt_int = mesh.intersectWithLine(cl_pt_test, cl_pt_test+60*pl_normCLRibbon)
+            pts_int.append(pt_int[0])
+        except: 
+            pass
+    
+    # KSpline on surface
+    kspl_vSurf = KSpline(pts_int).color('black').lw(2)
+    
     # Get normals and centres of planes
-    pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL2use.points())
+    pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL.points())
     pl_normals = pl_normals[1:-2]
     pl_centres = pl_centres[1:-2]
-    # print(pl_normals)
-
     plane_num = np.linspace(0,1,len(pl_normals))
 
     # Iterate through each plane
     for i, normal, centre in zip(count(), pl_normals, pl_centres):
-        # print('normal', normal)
         # A. Get cut plane info
         # - Info Plane
-        # d = normal.dot(centre)
         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
-
-        # B. Get vector that defines 0 deg angle
-        arr_normCRib = Arrow(centre, centre+pl_normCLRibbon, s = 0.1, c='black')
-        # - Get projection of pl_normalCLRibbon on cutting plane
-        proj = pl_normCLRibbon - (np.dot(pl_normCLRibbon, normal)/np.linalg.norm(normal)**2)*normal
-        #print(proj)
-
-        v_vectC = proj
-        # - Unit vector
-        v_unitvectC = unit_vector(v_vectC)
-
-        # Create stuff to plot
-        pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
-        sph_C = Sphere(centre, r=2, c='red')
-        sph_VXYZ = Sphere(centre+v_vectC, r=2, c='green')
-        arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
-
-        # C. Get points of mesh at plane
-        d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
-        # Find the indexes where the d values fit the plane and are not yet taken
-        index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0))
-
-        # Define new matrix just with the points on plane
-        new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
-        # - Get points of mesh that are on plane, centered on centreline point
-        ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
-        # print('ptsc:', ptsC, 'len:', len(ptsC))
-        # - Get the radius of those points
-        radius = [np.linalg.norm(x) for x in ptsC]
-        # print('radius:', radius)
-
-        # D. Find direction of point with respect to plane that includes central point, vC and the normal of the cutting plane
-        normal_divLR = np.cross(normal, v_unitvectC)
-        lORr = np.sign(np.dot(ptsC, np.asarray(normal_divLR)))
-        # print(normal_divLR)
-        # print('lORr:', lORr,'min:', min(lORr), ' - max:', max(lORr))
-
-        # E. Get angle of points in that plane
-        av = np.dot(ptsC,v_unitvectC)
-        # print('av:', av)
-        cosTheta = np.divide(av, radius)
-        # print('cosTheta:', cosTheta)
-        theta = np.arccos(cosTheta)*180/np.pi
-
-        # print('theta:', theta)
-        # print(min(theta), max(theta))
-        theta_corr = np.multiply(lORr, theta)
-        # print('theta_corr:', theta_corr)
-        # print(min(theta_corr), max(theta_corr))
-
-        if i % 10 == 0:
-            # sphL = Spheres(ptC[::50,:]+centre, r=2, c='blueviolet')
-            # sphR = Spheres(ptC[::50,:]+centre, r=2, c='blueviolet')
-
-            sphL = []
-            sphR = []
-            for num, pt in enumerate(ptsC):
-                if num % 50 == 0:
-                    if lORr[num] == 1:
-                        sphL.append(Sphere(pt+centre, r=2, c='blueviolet'))
-                    else:
-                        sphR.append(Sphere(pt+centre, r=2, c='gold'))
-
-            settings.legendSize = .3
-            vp = Plotter(N=1, axes=4)
-            vp.show(mesh,sphL, sphR,kspl_CL2use, cl_ribbon, arr_normCRib, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
-
-        # - Save all obtained values in matrix_unlooped
-        for num, index in enumerate(index_ptsAtPlane[0]):
-            #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-            matrix_unlooped[index,3] = 1
-            matrix_unlooped[index,4] = plane_num[i]
-            matrix_unlooped[index,5] = theta_corr[num]
-            matrix_unlooped[index,6] = radius[num]
-            matrix_unlooped[index,7] = param[num]
-
+        # Cut cl with plane
+        ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True)
+        # Find point of centreline closer to last point of kspline cut
+        _, pt_num = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
+        
+        if pt_num < num_pt:
+            chamber = 'ventricle'
+        else: 
+            chamber = 'atrium'
+        
+        if pt_num < num_pt-10 or pt_num > num_pt+10:
+            try: 
+                # B. Get vector that defines 0 deg angle
+                pts_zero, _ = getPointsAtPlane(points = kspl_vSurf.points(), pl_normal = normal,
+                                               pl_centre = centre)
+                min_dist = 1000
+                for ik, pt in enumerate(pts_zero):
+                    dist = findDist(pt, centre)
+                    if dist < min_dist:
+                        ind = ik; min_dist = dist
+                pt_zero = pts_zero[ind]
+                
+                # Vector from centre to cl_surface point being cut by plane
+                v_zero = unit_vector(pt_zero - centre)
+        
+                # C. Get points of mesh at plane
+                d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
+                # Find the indexes of the points that have not been yet taken, are at the plane and are in the 
+                # chamber being analysed
+                index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0) & (df_AtrVent == chamber))
+                
+                # Define new matrix just with the points on plane
+                new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
+                # - Get points of mesh that are on plane, centered on centreline point
+                ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
+                # - Get the radius of those points
+                radius = [np.linalg.norm(x) for x in ptsC]
+    
+                # D. Find direction of point with respect to plane that includes central point, vC and the normal of the cutting plane
+                normal_divLR = np.cross(normal, v_zero)
+                lORr = np.sign(np.dot(ptsC, np.asarray(normal_divLR)))
+    
+                # E. Get angle of points in that plane
+                av = np.dot(ptsC,v_zero)
+                cosTheta = np.divide(av, radius)
+                theta = np.arccos(cosTheta)*180/np.pi
+                theta_corr = np.multiply(lORr, theta)
+    
+                if plotshow:
+                    # Create stuff to plot
+                    pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
+                    sph_C = Sphere(centre, r=2, c='red')
+                    sph_VXYZ = Sphere(pt_zero, r=2, c='green')
+                    arr_vectXYZ = Arrow(centre, pt_zero, s = 0.1)
+                    if i % plotevery == 0:
+                        sphL = []; sphR = []
+                        for num, pt in enumerate(ptsC):
+                            if num % 50 == 0:
+                                if lORr[num] == 1:
+                                    sphL.append(Sphere(pt+centre, r=2, c='blueviolet'))
+                                else:
+                                    sphR.append(Sphere(pt+centre, r=2, c='gold'))
+            
+                        settings.legendSize = .3
+                        text = filename+"\n\n >> Unlooping the heart"
+                        txt = Text2D(text, c=c, font=font)
+                        vp = Plotter(N=1, axes=4)
+                        vp.show(mesh,sphL, sphR, kspl_vSurf, kspl_CL, kspl_ext, arr_vectXYZ, arr_vectPlCut, sph_C, sph_VXYZ, pl_cut, txt, at=0, azimuth = 0, interactive=1)
+            except: 
+                pass
+    
+            # - Save all obtained values in matrix_unlooped
+            for num, index in enumerate(index_ptsAtPlane[0]):
+                #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+                matrix_unlooped[index,3] = 1
+                matrix_unlooped[index,4] = plane_num[i]
+                matrix_unlooped[index,5] = theta_corr[num]
+                matrix_unlooped[index,6] = radius[num]
+                
     return matrix_unlooped
-
-#%% func - unloopHeart-BU2
-# def unloopHeart(mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, tol=0.05):
-
-#     # Create matrix with all data
-#     n_param = 1#param.shape[1]
-#     dims = 7+n_param
-#     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-#     matrix_unlooped = np.zeros((len(mesh.points()),dims))
-#     matrix_unlooped[:,0:3] = mesh.points()
-#     matrix_unlooped[:,dims-1] = param #-n_param:dims] = param
-
-#     # Get info cl_ribbon and plane with which it was created
-#     matrix_clRibbon = np.asarray(cl_ribbon.points())
-#     # - Get unitary normal of plane
-#     pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
-
-#     # print('pl_normCLRibbon ', pl_normCLRibbon)
-#     pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
-#     plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color('skyblue').alpha(0.5)
-#     arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon['pl_normal'])*20, s = 0.1, c = 'cyan')
-#     pos_pt = pl_normCLRibbon*50+pl_centCLRibbon#pl_centCLRibbon+200
-#     sph_pos = Sphere(pos_pt, r=2, c='orangered')
-#     # - d value of clr_plane
-#     # d_clr = np.dot(pl_normCLRibbon, pl_centCLRibbon)
-#     d_clr_pve = np.dot(pos_pt,pl_normCLRibbon)
-#     print('d_clr_pve:', d_clr_pve)
-#     if d_clr_pve > 0:
-#         criteria = 'positive'
-#     else:
-#         criteria = 'negative'
-
-
-#     # Get normals and centres of planes
-#     pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL2use.points())
-#     pl_normals = pl_normals[1:-2]
-#     pl_centres = pl_centres[1:-2]
-#     # print(pl_normals)
-
-#     plane_num = np.linspace(0,1,len(pl_normals))
-
-#     # Iterate through each plane
-#     for i, normal, centre in zip(count(), pl_normals, pl_centres):
-#         # print('normal', normal)
-#         # A. Get cut plane info
-#         # - Info Plane
-#         d = normal.dot(centre)
-#         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
-
-#         if i % 10 == 0:
-#             pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
-#             sph_C = Sphere(centre, r=2, c='red')
-            # settings.legendSize = .3
-            # vp = Plotter(N=1, axes=4)
-#             vp.show(mesh,sph_pos,kspl_CL2use, cl_ribbon,arr_vectPlCut,arr_vectNormRib,pl_cut, sph_C, at=0, azimuth = 0, interactive=1)
-
-
-#         # B. Get vector that defines 0 deg angle
-#         # - Get points of cl_ribbon that intersect plane to cut
-#         d_clRpts = np.dot(np.subtract(matrix_clRibbon,np.asarray(centre)),np.asarray(normal))
-#         # - Get d values of cl_ribbon with respect to plane of cl extension
-#         d_clRpts2 = np.dot(np.subtract(matrix_clRibbon,np.asarray(pl_centCLRibbon)),pl_normCLRibbon)
-#         # - Find the indexes of the cl_ribbon points where the d values fit the plane to cut and have positive d_clr values
-#         if criteria == 'positive':
-#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.5)  & (d_clRpts2 > 0))
-#         else:
-#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.5)  & (d_clRpts2 < 0))
-#         # print(index_clRAtPlanes)
-#         cut_matrix = matrix_clRibbon[index_clRAtPlanes]
-#         d_clRptsCut = np.dot(np.subtract(cut_matrix,np.asarray(pl_centCLRibbon)),pl_normCLRibbon)
-#         # print(d_clRptsCut)
-#         if criteria == 'positive':
-#             index_v = np.where(d_clRpts2[index_clRAtPlanes] == min(d_clRpts2[index_clRAtPlanes]))
-#         else:
-#             index_v = np.where(d_clRpts2[index_clRAtPlanes] == max(d_clRpts2[index_clRAtPlanes]))
-#         # - Point that defines the vector with which 0 deg is defined
-#         v_vectXYZ = cut_matrix[index_v]
-#         # print('v_vectXYZ:', v_vectXYZ)
-#         # print('d_vXYZ: ', d_clRptsCut[index_v])
-#         # - Coordinates of vector with respect to centre point in cl
-#         v_vectC = v_vectXYZ[0]-centre
-#         v_unitvectC = unit_vector(v_vectC)
-
-#         # Create stuff to plot
-#         pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
-#         sph_C = Sphere(centre, r=2, c='red')
-#         sph_VXYZ = Sphere(v_vectXYZ[0], r=2, c='green')
-#         arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
-
-        # if i % 10 == 0:
-        #     settings.legendSize = .3
-        #     vp = Plotter(N=1, axes=4)
-        #     vp.show(mesh, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
-
-#         # C. Get points of mesh at plane
-#         d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
-#         # Find the indexes where the d values fit the plane and are not yet taken
-#         index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0))
-
-#         # Define new matrix just with the points on plane
-#         new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
-#         # - Get points of mesh that are on plane, centered on centreline point
-#         ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
-#         # print('ptsc:', ptsC, 'len:', len(ptsC))
-#         # - Get the radius of those points
-#         radius = [np.linalg.norm(x) for x in ptsC]
-#         # print('radius:', radius)
-
-#         # D. Find direction of point with respect to plane that includes central point, vC and the normal of the cutting plane
-#         normal_divLR = np.cross(normal, v_unitvectC)
-#         lORr = np.sign(np.dot(ptsC, np.asarray(normal_divLR)))
-#         # print(normal_divLR)
-#         # print('lORr:', lORr,'min:', min(lORr), ' - max:', max(lORr))
-
-#         # E. Get angle of points in that plane
-#         av = np.dot(ptsC,v_unitvectC)
-#         # print('av:', av)
-#         cosTheta = np.divide(av, radius)
-#         # print('cosTheta:', cosTheta)
-#         theta = np.arccos(cosTheta)*180/np.pi
-
-#         # print('theta:', theta)
-#         # print(min(theta), max(theta))
-#         theta_corr = np.multiply(lORr, theta)
-#         # print('theta_corr:', theta_corr)
-#         # print(min(theta_corr), max(theta_corr))
-
-#         if i % 10 == 0:
-#             sphL = []
-#             sphR = []
-#             for num, pt in enumerate(ptsC):
-#                 if num % 200 == 0:
-#                     if lORr[num] == 1:
-#                         sphL.append(Sphere(pt+centre, r=2, c='red'))
-#                     else:
-#                         sphR.append(Sphere(pt+centre, r=2, c='navy'))
-
-#             vp = Plotter(N=1, axes=4)
-#             vp.show(mesh,sphL, sphR, sph_pos,kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, at=0, azimuth = 0, interactive=1)
-
-#         # - Save all obtained values in matrix_unlooped
-#         for num, index in enumerate(index_ptsAtPlane[0]):
-#             #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-#             matrix_unlooped[index,3] = 1
-#             matrix_unlooped[index,4] = plane_num[i]
-#             matrix_unlooped[index,5] = theta_corr[num]
-#             matrix_unlooped[index,6] = radius[num]
-#             matrix_unlooped[index,dims-1] = param[num]
-
-#     return matrix_unlooped
-
-#%% func - unloopHeart-BU
-# def unloopHeart2(mesh, kspl_CL2use, cl_ribbon, no_planes, pl_CLRibbon, param, tol=0.05):
-
-#     # Create matrix with all data
-#     n_param = 1#param.shape[1]
-#     dims = 7+n_param
-#     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-#     matrix_unlooped = np.zeros((len(mesh.points()),dims))
-#     matrix_unlooped[:,0:3] = mesh.points()
-#     matrix_unlooped[:,dims-1] = param #-n_param:dims] = param
-
-#     # Get info cl_ribbon and plane with which it was created
-#     matrix_clRibbon = np.asarray(cl_ribbon.points())
-#     # - Get unitary normal of plane
-#     pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
-
-#     print('pl_normCLRibbon ', pl_normCLRibbon)
-#     pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
-#     plane_CLRibbon = Plane(pos = pl_centCLRibbon, normal = pl_normCLRibbon, sx = 300).color('skyblue').alpha(0.5)
-#     arr_vectNormRib = Arrow(pl_centCLRibbon, pl_centCLRibbon+np.asarray(pl_CLRibbon['pl_normal'])*20, s = 0.1, c = 'cyan')
-#     pos_pt = pl_centCLRibbon+200
-#     sph_pos = Sphere(pos_pt, r=2, c='orangered')
-#     # - d value of clr_plane
-#     d_clr = np.dot(pl_normCLRibbon, pl_centCLRibbon)
-#     d_clr_pve = np.dot(pl_normCLRibbon,pos_pt)-d_clr
-#     print('d_clr_pve:', d_clr_pve)
-#     if d_clr_pve > 0:
-#         criteria = 'positive'
-#     else:
-#         criteria = 'negative'
-
-#     # Get normals and centres of planes
-#     pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL2use.points())
-#     pl_normals = pl_normals[1:-2]
-#     pl_centres = pl_centres[1:-2]
-#     # print(pl_normals)
-
-#     plane_num = np.linspace(0,1,no_planes)
-
-#     # Iterate through each plane
-#     for i, normal, centre in zip(count(), pl_normals, pl_centres):
-#         print('normal', normal)
-#         # A. Get cut plane info
-#         # - Info Plane
-#         d = normal.dot(centre)
-#         arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
-
-#         # B. Get vector that defines 0 deg angle
-#         # - Get points of cl_ribbon that intersect plane to cut
-#         d_clRpts = np.dot(matrix_clRibbon,normal)-d
-#         # - Get d values of cl_ribbon with respect to plane of cl extension
-#         d_clRpts2 = np.dot(matrix_clRibbon,pl_centCLRibbon)-d_clr
-#         # - Find the indexes of the cl_ribbon points where the d values fit the plane to cut and have positive d_clr values
-#         if criteria == 'positive':
-#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 > 0))
-#         else:
-#             index_clRAtPlanes = np.where((np.absolute(d_clRpts) <= 0.8)  & (d_clRpts2 < 0))
-#         print('len:', len(index_clRAtPlanes))
-#         cut_matrix = matrix_clRibbon[index_clRAtPlanes]
-#         index_v = np.where(d_clRpts2[index_clRAtPlanes] == min(d_clRpts2[index_clRAtPlanes]))
-#         # - Point that defines the vector with which 0 deg is defined
-#         v_vectXYZ = cut_matrix[index_v]
-#         print('v_vectXYZ:', v_vectXYZ)
-#         print('d_vXYZ: ', d_clRpts2[index_v])
-#         # - Coordinates of vector with respect to centre point in cl
-#         v_vectC = v_vectXYZ[0] - centre
-#         v_unitvectC = unit_vector(v_vectC)
-
-#         # Create stuff to plot
-#         pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
-#         sph_C = Sphere(centre, r=2, c='red')
-#         sph_VXYZ = Sphere(v_vectXYZ[0], r=2, c='green')
-#         arr_vectXYZ = Arrow(centre, centre+v_vectC, s = 0.1)
-#         # if i == 0:
-#         vp = Plotter(N=1, axes=1)#8)
-#         vp.show(mesh, sph_pos, kspl_CL2use, cl_ribbon, arr_vectXYZ,arr_vectPlCut,arr_vectNormRib,sph_C, sph_VXYZ, pl_cut, plane_CLRibbon, at=0, azimuth = 0, interactive=1)
-
-#         # C. Get points of mesh at plane
-#         d_points = np.absolute(np.dot(matrix_unlooped[:,0:3],normal)-d)
-#         # Find the indexes where the d values fit the plane and are not yet taken
-#         index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0))
-
-#         # Define new matrix just with the points on plane
-#         new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
-#         # - Get points of mesh that are on plane, centered on centreline point
-#         ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
-#         # - Get the radius of those points
-#         radius = [np.linalg.norm(x) for x in ptsC]
-#         # - Get angle
-#         av = np.dot(ptsC,v_unitvectC)
-#         cosTheta = np.divide(av, radius)
-#         theta = np.arccos(cosTheta)*180/np.pi
-
-#         # - Save all obtained values in matrix_unlooped
-#         for num, index in enumerate(index_ptsAtPlane[0]):
-#             #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-#             matrix_unlooped[index,3] = 1
-#             matrix_unlooped[index,4] = plane_num[i]
-#             matrix_unlooped[index,5] = theta[num]
-#             matrix_unlooped[index,6] = radius[num]
-#             matrix_unlooped[index,dims-1] = param[num]
-
-#     return matrix_unlooped
 
 #%% - PROCESS DATA
 #%% func - rotation_matrix
@@ -4170,7 +3940,8 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
 #%% func - getPlaneNormals
 def getPlaneNormals (no_planes, spline_pts):
     """
-    Function that returns a list with normal vectors to create cutting planes
+    Function that returns a list with normal vectors to create cutting planes. 
+    Note: the input spline is checked in the inverse order, from last to first point
 
     Parameters
     ----------

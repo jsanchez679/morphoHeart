@@ -395,3 +395,96 @@ if init:
     mesh = fcMeshes.createLayerMesh(filename, s3_mask, res, layer='test', name = 'test', colour = 'cyan', alpha = 1, plotshow = True)
     
 init = True
+
+
+#%%
+"""Intersection of two polygonal meshes"""
+from vedo import *
+from vedo import embedWindow
+embedWindow(False)
+
+car = load(datadir+"porsche.ply").alpha(0.2)
+
+line = [(-9.,0.,0.), (0.,1.,0.), (9.,0.,0.)]
+tube = Tube(line).triangulate().c("violet",0.2)
+
+contour = car.intersectWith(tube).lineWidth(4).c('black')
+
+show(car, tube, contour, __doc__, axes=7)
+
+
+"""Mesh smoothing with two different methods"""
+from vedo import Plotter, datadir
+
+vp = Plotter(N=3)
+
+# Load a mesh and show it
+vol = vp.load(datadir+"embryo.tif")
+m0 = vol.isosurface().normalize().lw(0.1).c("violet")
+vp.show(m0, __doc__, at=0)
+
+# Adjust mesh using Laplacian smoothing
+m1 = m0.clone().smoothLaplacian(niter=20, relaxfact=0.1, edgeAngle=15, featureAngle=60)
+m1.color("pink").legend("laplacian")
+vp.show(m1, at=1)
+
+# Adjust mesh using a windowed sinc function interpolation kernel
+m2 = m0.clone().smoothWSinc(niter=15, passBand=0.1, edgeAngle=15, featureAngle=60)
+m2.color("lg").legend("window sinc")
+vp.show(m2, at=2)
+
+vp.backgroundColor([0.8, 1, 1], at=0)  # set first renderer color
+
+vp.show(zoom=1.4, interactive=True)
+
+
+lineInt = m_cjTh.intersectWith(cl_ribbon).lineWidth(4).c('black')
+
+cl_ribbon = cl_ribbon.subdivide(N=10)
+
+#%%
+# Get centreline ribbon
+cl_ribbonV, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
+                                                             mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes, clRib_type = 'extV')
+
+
+mesh_cl.distanceToMesh(cl_ribbonV, signed=True, negate=False)
+
+
+mesh_cl = m_cjTh.clone()
+mesh_cl.clean(tol=0.005)
+meshCL_cut = mesh_cl.clone().smoothMLS2D(f=0.5)
+lineInt = meshCL_cut.intersectWith(cl_ribbonV).lineWidth(4).c('black')
+
+vp = Plotter(N=1)
+vp.show(mesh_cl, at=0, interactive = True)
+
+
+vp = Plotter(N=2)
+vp.show(meshCL_cut, lineInt, cl_ribbon, at=0)
+vp.show(m_cjTh, lineInt, cl_ribbon, at=1, interactive = True).grid
+
+
+
+from vedo import *
+from vedo import embedWindow
+embedWindow(False)
+
+s = Hyperboloid().rotateX(20)
+
+sx = s.clone().projectOnPlane('x').c('r').x(-3) # sx is 2d
+sy = s.clone().projectOnPlane('y').c('g').y(-3)
+sz = s.clone().projectOnPlane('z').c('b').z(-3)
+
+vp = Plotter(N=1)
+vp.show(s,
+     sx, sx.silhouette('2d'), # 2d objects dont need a direction
+     sy, sy.silhouette('2d'),
+     sz, sz.silhouette('2d'),
+     axes={'zxGrid':True},
+     viewup='z',
+     at = 0, interactive=True)
+
+m_sx = m_cjTh.clone().projectOnPlane('x').c('r').x(0)
+vp = Plotter(N=1)
+vp.show(m_sx, m_cjTh, at=0, interactive = True)
