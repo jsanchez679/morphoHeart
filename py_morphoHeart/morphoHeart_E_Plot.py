@@ -27,7 +27,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -297,45 +297,25 @@ if init:
         sp_df['Class'] = name
 
     df_concat = pd.concat(df_classALL)
-    print(df_concat)
+  
+    df_concat.sample(10)
+    df_ALD.sample(10)
+    df_classCJTh.sample(10)
 
-    # data = []
-    # for idx, var in enumerate(list(df)):
-    #     myPlot = sns.distplot(df[var])
-
-    #     # Fine Line2D objects
-    #     lines2D = [obj for obj in fig1.findobj() if str(type(obj)) == "<class 'matplotlib.lines.Line2D'>"]
-
-    # for idx, var in enumerate(lines2D):
-    #     # Retrieving x, y data
-    #     x, y = lines2D[idx].get_data()[0], lines2D[idx].get_data()[1]
-
-    #     # Store as dataframe
-    #     data.append(pd.DataFrame({'x':x, 'y':y}))
-
-
-
-    # data = []
-    # for idx, var in enumerate(list(df)):
-    #     myPlot = sns.distplot(df[var])
-
-    #     # Fine Line2D objects
-    #     lines2D = [obj for obj in myPlot.findobj() if str(type(obj)) == "<class 'matplotlib.lines.Line2D'>"]
-
-    #     # Retrieving x, y data
-    #     x, y = lines2D[idx].get_data()[0], lines2D[idx].get_data()[1]
-
-    #     # Store as dataframe
-    #     data.append(pd.DataFrame({'x':x, 'y':y}))
-
-
+    
+    df_atrium = df_classCJTh[df_classCJTh['AtrVent'] == 'atrium']
+    df_atrium.sample(10)
+    atr_th = df_atrium['cj_thickness']
+    
+    
     #%% Figures
+    
     for k, x, label in zip(count(), ['cj_thickness', 'myoc_intBall'], ['Cardiac Jelly Thickness [um]', 'Myoc.Int Ballooning [um]']):
         plt.figure(k)
         fig1 = sns.kdeplot(data=df_classCJTh, x=x, hue="LeftRight", hue_order = ['left','right'], multiple="fill", palette = colors_pts[0:2])
         fig1.figure.suptitle(label+"  - "+filename, fontsize = 12)
         plt.xlabel(label, fontsize=10)
-        plt.savefig(plot_dir+x+"L-R.png", dpi=300, bbox_inches='tight')
+        # plt.savefig(plot_dir+x+"L-R.png", dpi=300, bbox_inches='tight')
 
 
     # data_x, data_y = fig1.lines[0].get_data()
@@ -345,14 +325,14 @@ if init:
         fig2 = sns.kdeplot(data=df_classCJTh, x=x, hue="AtrVent", hue_order = ['atrium','ventricle'], multiple="fill", palette = colors_pts[2:4])
         fig2.figure.suptitle(label+"  - "+filename, fontsize = 12)
         plt.xlabel(label, fontsize=10)
-        plt.savefig(plot_dir+x+"A-V.png", dpi=300, bbox_inches='tight')
+        # plt.savefig(plot_dir+x+"A-V.png", dpi=300, bbox_inches='tight')
 
     for k, x, label in zip(count(), ['cj_thickness', 'myoc_intBall'], ['Cardiac Jelly Thickness [um]', 'Myoc.Int Ballooning [um]']):
         plt.figure(k+4)
         fig3 = sns.kdeplot(data=df_classCJTh, x=x, hue="DorsVent", hue_order = ['dorsal','ventral'],  multiple="fill",  palette = colors_pts[6:8])
         fig3.figure.suptitle(label+"  - "+filename, fontsize = 12)
         plt.xlabel(label, fontsize=10)
-        plt.savefig(plot_dir+x+"D-V.png", dpi=300, bbox_inches='tight')
+        # plt.savefig(plot_dir+x+"D-V.png", dpi=300, bbox_inches='tight')
 
     for k, x, label in zip(count(), ['myoc_intBall'], ['Myoc.Int Ballooning [um]']):
         plt.figure(k+6)
@@ -365,7 +345,7 @@ if init:
         fig4.figure.suptitle(label+"  - "+filename, fontsize = 12)
         plt.xlabel(label, fontsize=10)
         # plt.legend(loc='upper left')
-        plt.savefig(plot_dir+x+"DistAll.png", dpi=300, bbox_inches='tight')
+        # plt.savefig(plot_dir+x+"DistAll.png", dpi=300, bbox_inches='tight')
 
     for k, x, label in zip(count(), ['cj_thickness'], ['Cardiac Jelly Thickness [um]']):
         plt.figure(k+8)
@@ -376,105 +356,117 @@ if init:
             alpha=.5, legend = False, linewidth=0, clip=(0.5,20))
         fig5.figure.suptitle(label+"  - "+filename, fontsize = 12)
         plt.xlabel(label, fontsize=10)
-        plt.savefig(plot_dir+x+"DistAll05-20.png", dpi=300, bbox_inches='tight')
+        # plt.savefig(plot_dir+x+"DistAll05-20.png", dpi=300, bbox_inches='tight')
+        
+import numpy as np
+from seaborn import kdeplot
 
-    #%% Create unlooped hearts
-    df_classCJTh = fcBasics.loadDF(filename = filename, file = 'df_cjThNmyocIntBall', dir_results = dir_results)
-    [cj_thickness] = fcBasics.loadNPY(filename = filename, names = ['cj_thickness'], dir_txtNnpy = directories[1])
-    cl_ribbon, _, _, _ = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
-                                                                 mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
-
-    unlooped = fcMeshes.unloopHeart(filename = filename, mesh = m_cjTh, kspl_CL2use = kspl_CL[0], cl_ribbon = cl_ribbon, no_planes = 50,
-                                    pl_CLRibbon = dict_planes['pl_Parallel2LinLine'], param = cj_thickness, tol=0.05)
-
-    # #%% Unlooped heart
-    # df_unlooped = pd.DataFrame(unlooped, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
-    # df_unlooped['AtrVent'] = df_classCJTh['AtrVent']
-    # df_unlooped = df_unlooped[df_unlooped['taken']==1]
-
-    # df_filt = pd.DataFrame(columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
-    # z_planes = df_unlooped.z_plane.unique().tolist()#.sort()
-    # z_planes = sorted(z_planes)
-    # v_theta = np.linspace(-180,180,180+1)
-    # #loop for each plane
-    # loc = 0
-    # for num, z_pl in enumerate(z_planes):
-    #     df_z = df_unlooped[df_unlooped['z_plane'] == z_pl]
-    #     # print('--PLANE: ',z_pl)
-    #     for i, theta in enumerate(v_theta[0:-1]):
-    #         # print('--Theta:', theta)
-
-    #         df_t = df_z[(df_z['theta'] >= theta) & (df_z['theta'] <= v_theta[i+1])]
-    #         x = df_t['x'].mean()
-    #         y = df_t['y'].mean()
-    #         z = df_t['z'].mean()
-    #         taken = df_t['taken'].mean()
-    #         z_plane = df_t['z_plane'].mean()*100
-    #         theta = df_t['theta'].mean()
-    #         radius = df_t['radius'].mean()
-    #         cj_thickness = df_t['cj_thickness'].max()
-    #         data = [[x,y,z,taken,z_plane,theta,radius,cj_thickness]]
-    #         df_r = pd.DataFrame(data, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness'])
-
-    #         df_filt = pd.concat([df_filt, df_r])
-
-    # #%% REVISARRRR
-    # fig, ax = plt.subplots(figsize=(8, 5))
-    # heatmap = pd.pivot_table(df_filt, values='cj_thickness', columns = 'z_plane', index='theta')#, aggfunc=np.max)
-    # ax = sns.heatmap(heatmap, cmap='jet', xticklabels=20, yticklabels=550)
-
-    # plt.xlabel('Centreline position\n[Atrium >> Ventricle]', fontsize=10)
-    # plt.ylabel('Angle (\N{DEGREE SIGN})\n[Ventral >> Dorsal >> Ventral]', fontsize=10)
-
-    # x_pos = np.linspace(0,1,len(ax.get_xticks()))
-    # y_pos = np.linspace(180,-180,len(ax.get_yticks()), endpoint = True)
-    # xlabels = [format(x,'.3f') for x in x_pos]
-    # ylabels = [format(y,'.0f') for y in y_pos]
-    # # xlabels = [format(x/10,'.1f') for x in ax.get_xticks()]
-    # # ylabels = [format(y/1800*360-180,'.0f') for y in ax.get_yticks()]
-    # ax.set_xticklabels(xlabels)
-    # ax.set_yticklabels(ylabels)
+my_data = np.random.randn(1000)
+my_kde = kdeplot(my_data)
 
 
-    #%%
-    # fig, ax = plt.subplots(figsize=(10, 10))
-    # heatmap = pd.pivot_table(df_filt, values='cj_thickness', columns = 'z_plane', index='theta', aggfunc=np.max)
-    # ax = sns.heatmap(heatmap, cmap='jet')
-    # # ax.set_xticks(np.arange(len(df_filt["z_plane"])))
-    # # xlabels = [format(x,'.0f') for x in ax.get_xticks()]
-    # print(max(df_filt["z_plane"]))
-    # ax.set_xticklabels(df_filt["z_plane"])
+fig, ax = plt.subplots()
+ax.plot(x[x>0], y[x>0])
 
-    # plt.xlabel('Centreline position [Atrium >> Ventricle]', fontsize=10)
-    # # plt.set_xticklabels(rotation=45)
-    # plt.ylabel('Theta (\N{DEGREE SIGN}) [Dorsal >> Ventral >> Dorsal]', fontsize=10)
+reviews[reviews['price'] < 200]['price'].value_counts().sort_index().plot.line()
 
 
-    # ax.set(xlim = (0,100))
-    # ax.set(ylim = (180,-180))
-    # xlabels = [format(x,'.0f') for x in ax.get_xticks()]
-    # ylabels = [format(y,'.0f') for y in ax.get_yticks()]
-    # ax.set_xticklabels(xlabels)
-    # ax.set_yticklabels(ylabels)
+
+#%%
+
+
+from sklearn.neighbors import KernelDensity
+# from scipy.stats import gaussian_kde
+# from statsmodels.nonparametric.kde import KDEUnivariate
+# from statsmodels.nonparametric.kernel_density import KDEMultivariate
+
+# import matplotlib.pyplot as plt
+# import seaborn as sns; sns.set()
+# import numpy as np
+
+# import sklearn
+# print ("  scikit-learn:", sklearn.__version__)
 
 
 
 
-    # ax.set_xticks(range(0,100, 5))
+from scipy.stats.distributions import norm
+# The grid we'll use for plotting
+x_grid = np.linspace(-4.5, 3.5, 1000)
+
+# Draw points from a bimodal distribution in 1D
+np.random.seed(0)
+x = np.concatenate([norm(-1, 1.).rvs(400),
+                    norm(1, 0.3).rvs(100)])
+pdf_true = (0.8 * norm(-1, 1).pdf(x_grid) +
+            0.2 * norm(1, 0.3).pdf(x_grid))
+
+fig, ax = plt.subplots()
+for bandwidth in [0.1, 0.3, 1.0]:
+    ax.plot(x_grid, kde_sklearn(x, x_grid, bandwidth=bandwidth),
+            label='bw={0}'.format(bandwidth), linewidth=3, alpha=0.5)
+ax.hist(x, 30, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
+ax.set_xlim(-4.5, 3.5)
+ax.legend(loc='upper left')
+
+from sklearn.model_selection import GridSearchCV
+grid = GridSearchCV(KernelDensity(),
+                    {'bandwidth': np.linspace(0.1, 1.0, 30)},
+                    cv=20) # 20-fold cross-validation
+grid.fit(x[:, None])
+print (grid.best_params_)
+
+kde = grid.best_estimator_
+pdf = np.exp(kde.score_samples(x_grid[:, None]))
+
+fig, ax = plt.subplots()
+ax.plot(x_grid, pdf, linewidth=3, alpha=0.5, label='bw=%.2f' % kde.bandwidth)
+ax.hist(x, 30, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
+ax.legend(loc='upper left')
+ax.set_xlim(-4.5, 3.5);
+
+#%% Cardiac jelly thickness
+#https://stackabuse.com/kernel-density-estimation-in-python-using-scikit-learn/
+#https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
+#https://jakevdp.github.io/PythonDataScienceHandbook/05.13-kernel-density-estimation.html
+from sklearn.neighbors import KernelDensity
+from sklearn.model_selection import GridSearchCV
+
+def kde_sklearn(x, x_grid, bandwidth=0.2, **kwargs):
+    """Kernel Density Estimation with Scikit-learn"""
+    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
+    kde_skl.fit(x[:, np.newaxis])
+    # score_samples() returns the log-likelihood of the samples
+    log_pdf = kde_skl.score_samples(x_grid[:, np.newaxis])
+    return np.exp(log_pdf)
+
+x_grid = np.linspace(0, 20, 1000)
+x = atr_th
+fig, ax = plt.subplots()
+for bandwidth in [0.08, 0.09, 0.1]:
+    ax.plot(x_grid, kde_sklearn(x, x_grid, bandwidth=bandwidth),
+            label='bw={0}'.format(bandwidth), linewidth=1, alpha=0.5)
+ax.hist(x, 30, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
+ax.set_xlim(0.1, 10)
+ax.set_ylim(0, 0.3)
+ax.legend(loc='upper left')
+
+grid = GridSearchCV(KernelDensity(),
+                    {'bandwidth': np.linspace(0.01, 0.1, 10)})#,
+                    cv=20) # 20-fold cross-validation
+grid.fit(x[:, None])
+print (grid.best_params_)
+
+kde = grid.best_estimator_
+pdf = np.exp(kde.score_samples(x_grid[:, None]))
+
+fig, ax = plt.subplots()
+ax.plot(x_grid, pdf, linewidth=3, alpha=0.5, label='bw=%.2f' % kde.bandwidth)
+ax.hist(x, 30, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
+ax.legend(loc='upper left')
+ax.set_xlim(0, 20);
 
 
-
-    # plt.show()
-
-    # # fig.get_size_inches()
-    # # locs, labels = xticks()
-    # # xticks(np.arange(3), ['Tom', 'Dick', 'Sue'])
-
-    # ax.set_xticks([0,2,4,6])
-    # ax.set_xticklabels(['zero','two','four','six'])
-    # print(ax.get_xticks())
-
-    # plt.savefig(plot_dir+x+"Unlooped.png", dpi=300, bbox_inches='tight')
     #%%
     # fig, ax = plt.subplots(figsize=(8, 5))
     # # palette = sns.color_palette('jet')
@@ -653,3 +645,5 @@ if init:
     #     data=tips, x="total_bill", hue="time",
     #     cumulative=True, common_norm=False, common_grid=True,
     # )
+
+init = True

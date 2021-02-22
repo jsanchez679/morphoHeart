@@ -199,5 +199,6 @@ if others:
     #%% Plot again resulting mesh
     vp = Plotter(N=1, axes =13)
     vp.show(mesh, at=0,interactive = True)
-    
+
+#%% Init
 init = True

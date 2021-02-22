@@ -12,6 +12,8 @@ import numpy as np
 import random
 import math
 import os
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from itertools import count
 
@@ -36,7 +38,7 @@ import json
 #from json import JSONEncoder
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert, ask4input, loadNPY #, saveDict
+from .morphoHeart_funcBasics import alert, ask4input, loadNPY, saveDF, loadDF #, saveDict
 from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks, plt_s3, drawLine
 
 #%% class - NumpyArrayEncoder
@@ -480,7 +482,7 @@ def addShapes2Dict(shapes, dict_shapes, radius, print_txt = True):
     shapes : list of shapes
         List of shapes (ribbons, spheres, etc) to add to dict- (vedo Objects)
     dict_shapes : dictionary
-        Initialised dictionary with kspline information
+        Initialised dictionary with shapes information
     radius : list of floats
         List of floats with the radii of the spheres (if applicable)
     print_txt : bool, optional
@@ -518,6 +520,9 @@ def addShapes2Dict(shapes, dict_shapes, radius, print_txt = True):
             specific_shape['cyl_axis'] = radii[6]
             specific_shape['cyl_centre'] = radii[7]
             specific_shape['resolution'] = radii[8]
+        else:
+            specific_shape['Points'] = sp_shape.points()
+            specific_shape['NoPoints'] = len(sp_shape.points())
             
         specific_shape['color'] = sp_shape.color()
 
@@ -607,7 +612,8 @@ def addLayersVolume2df (df_res, file_num,  meshes):
             vol_vent = volume
             print('-> ', name, '\t- Volume: ', vol_print, 'um^3')
             diff_print = format(vol_all - (vol_atr+vol_vent), '.1f')
-            print('\t - Vol difference: ', diff_print,  'um^3')
+            diff_perc = format(100*(1-(vol_atr+vol_vent)/vol_all), '.1f')
+            print('\t - Vol difference: ', diff_print,  'um^3 - (', diff_perc,'%)')
         else:
             print('-> ', name, '\t- Volume: ', vol_print, 'um^3')
 
@@ -1804,7 +1810,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
 
         q_happy = ask4input('Are meshes classified correctly [A (light blue):left, B (dark blue):right]? [0]:no/[1]:yes: ', bool)
         if not q_happy:
-            leftMesh = ask4input('Select the mesh number that corresponds to the left side. [A]-'+mesh_legend+'/[B]:'+mesh_legend+': ', str, keep = True)
+            leftMesh = ask4input('Select the mesh number that corresponds to the left side. [A]/[B]: ', str, keep = True)
             if leftMesh == 'A':
                 mesh_1.legend(mesh_legend+'-Left')
                 mesh_2.legend(mesh_legend+'-Right')
@@ -1820,6 +1826,69 @@ def divideMeshesLnR(filename, meshes, cl_ribbon):
         meshes_LnR.append(mesh_LnR)
 
     return meshes_LnR
+
+#%% func - divideMeshesAnV
+def divideMeshesAnV(filename, meshes, disk):
+    """
+    Function that divides meshes into atrium and ventricle using the defined disk/cylinder
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes
+        List of meshes to divide. (vedo Mesh)
+    disk : Cylinder
+        Cylinder to cut mesh into Atrium and Ventricle (vedo Cylinder)
+
+    Returns
+    -------
+    meshes_AnV : list of list of meshes
+        List of list of the divided meshes [atrium, ventricle] (vedo Mesh)
+
+    """
+
+    meshes_AnV = []
+    for i, mesh in enumerate(meshes):
+
+        meshes2cutAV = mesh
+        mesh_legend = mesh._legend
+        print('- Dividing '+mesh_legend+' into atrium and ventricle')
+
+        mesh_1 = meshes2cutAV.clone().cutWithMesh(disk, invert=False)
+        mesh_1.alpha(0.05).wireframe(True).color('gold')
+
+        mesh_2 = meshes2cutAV.clone().cutWithMesh(disk, invert=True)
+        mesh_2.alpha(0.05).wireframe(True).color('tomato')
+        alert("wohoo",1)
+
+        mesh_1.legend('Atrium(A)')
+        mesh_2.legend('Ventricle(B)')
+
+        text = filename+"\n\n >> Resulting mesh after cutting with centreline \n >> Before closing the window make sure you confirm A (yellow): Atrium, B (red): Ventricle"
+        txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .3
+        vp = Plotter(N=2, axes=13)
+        vp.show(meshes2cutAV, disk, txt, at=0)
+        vp.show(mesh_1, mesh_2, at=1, zoom = 1.2, interactive=True)
+
+        q_happy = ask4input('Are meshes classified correctly [A (yellow): Atrium, B (red): Ventricle]? [0]:no/[1]:yes: ', bool)
+        if not q_happy:
+            leftMesh = ask4input('Select the mesh number that corresponds to the atrium. [A]/[B]: ', str, keep = True)
+            if leftMesh == 'A':
+                mesh_1.legend(mesh_legend+'-Atrium')
+                mesh_2.legend(mesh_legend+'-Ventricle')
+                mesh_LnR = [mesh_1, mesh_2]
+            elif leftMesh == 'B':
+                mesh_2.legend(mesh_legend+'-Atrium')
+                mesh_1.legend(mesh_legend+'-Venticle')
+                mesh_LnR = [mesh_2, mesh_1]
+        else:
+            mesh_AnV = [mesh_1, mesh_2]
+
+        meshes_AnV.append(mesh_AnV)
+
+    return meshes_AnV
 
 #%% func - getChamberMeshes
 def getChamberMeshes(filename, m_myoc, end_name, names2cut, kspl_CL, num_pt, dir_txtNnpy, dict_shapes, resolution, plotshow = False):
@@ -1931,7 +2000,7 @@ def getChamberMeshes(filename, m_myoc, end_name, names2cut, kspl_CL, num_pt, dir
         [s3], _ = loadStacks(filename = filename, dir_txtNnpy = dir_txtNnpy, end_name = [s3_name], print_txt = False)
         s3_ring = maskRing2CutChamberS3s(s3_mask = s3, s3_cyl = s3_cyl, stack_shape = stack_shape)
         plt_s3(start_slc = 0, end_slc = zdim-1, im_every = 20,
-                       s3_int = s3, s3_ext = s3_cyl, plotshow = plotshow, option = "chamber ring")
+                        s3_int = s3, s3_ext = s3_cyl, plotshow = plotshow, option = "chamber ring")
         # Create chamber meshes
         m_cut = createLayerMesh(filename = filename, s3 = s3_ring, resolution = resolution, layer = name+'_ChCut', name = name+'_ChCut',
                                         colour = atr_color[n], alpha = 1, plotshow = False)
@@ -1995,7 +2064,7 @@ def getRing2CutChambers(filename, kspl_CL, mesh2cut, dir_stl, dir_txtNnpy, dict_
     Returns
     -------
     cyl_final : Cylinder
-        Cylinder/dick defined to cut meshes into chambers
+        Cylinder/ring defined to cut meshes into chambers
     num_pt : int
         Index of the centreline point closer to the plane that cuts the meshes into the two chambers.
     dict_shapes : dictionary
@@ -2059,7 +2128,7 @@ def getRing2CutChambers(filename, kspl_CL, mesh2cut, dir_stl, dir_txtNnpy, dict_
         cl_point = kspl_CL.points()[num_pt]
         sph_cut = Sphere(pos = cl_point, r=4, c='gold').legend('sph_ChamberCut')
         # Add pt to dict
-        dict_pts = addPoint2Dict (sphere = sph_cut, info = '', dict_pts = dict_pts)
+        dict_pts = addPoint2Dict(sphere = sph_cut, info = '', dict_pts = dict_pts)
         dict_pts['numPt_CLChamberCut'] = num_pt
     
         # Order the points
@@ -2988,7 +3057,7 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
     return kspl_CL, linLines, spheres_CL, spheres_CL_col, dict_shapes, dict_kspl
 
 #%% func - createCLRibbon
-def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes, clRib_type = 'extDV'):
+def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes, clRib_type = 'extDV', plotshow = True):
     """
     Function that creates dorso-ventral extended centreline ribbon
 
@@ -3012,6 +3081,8 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
         String to define the centreline ribbon the function should return. If 'extDV': then a Dorso-Ventrally extended 
         centreline ribbon will be returned, else if 'extV', only a ventrally extended centreline ribbon with much 
         higher resolution will be returned.The default is 'extDV'.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is True.
 
     Returns
     -------
@@ -3037,7 +3108,7 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
 
     pts_cl_ext = np.insert(pts_cl,0,np.transpose(outf_ext_normal), axis=0)
     pts_cl_ext = np.insert(pts_cl_ext,len(pts_cl_ext),np.transpose(inf_ext_normal), axis=0)
-    kspl_ext = KSpline(pts_cl_ext, res=601).color('purple')
+    kspl_ext = KSpline(pts_cl_ext, res=601).color('purple').legend('kspl_extended')
 
     # Create plane to project centreline
     dORv = filename[9:10]
@@ -3067,26 +3138,27 @@ def createCLRibbon(filename, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes,
         cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(220, 5))
         cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
     
-    # elif clRib_type == 'extV':
-    #     cl_ribbon = []
-    #     for i in range(10):
-    #         kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)
-    #         kspl_ext_DB = kspl_ext.clone().x((i+1)*x_ucl).y((i+1)*y_ucl).z((i+1)*z_ucl)
-    #         cl_ribbon2un = Ribbon(kspl_ext_DA, kspl_ext_DB, alpha=0.2, res=(220, 5))
-    #         cl_ribbon.append(cl_ribbon2un)
-    #     cl_ribbon = merge(cl_ribbon)
-    #     cl_ribbon.legend('rib_ExtCL(V)').wireframe(True)
+    elif clRib_type == 'extV':
+        cl_ribbon = []
+        for i in range(7):
+            kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)
+            kspl_ext_DB = kspl_ext.clone().x((i+1)*x_ucl).y((i+1)*y_ucl).z((i+1)*z_ucl)
+            cl_ribbon2un = Ribbon(kspl_ext_DA, kspl_ext_DB, alpha=0.2, res=(220, 5))
+            cl_ribbon.append(cl_ribbon2un)
+        cl_ribbon = merge(cl_ribbon)
+        cl_ribbon.legend('rib_ExtCL(V)').wireframe(True)
         
     dict_shapes = addShapes2Dict (shapes = [cl_ribbon], dict_shapes = dict_shapes, radius = [[]])
     if clRib_type == 'extDV':
-        dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext_V], info = ['',''], dict_kspl = dict_kspl)
+        dict_kspl = addKSplines2Dict(kspls = [kspl_ext_D, kspl_ext, kspl_ext_V], info = ['','', ''], dict_kspl = dict_kspl)
 
-    text = filename+"\n\n >> Creating Extended Centreline ("+clRib_type+")"
-    txt = Text2D(text, c="k", font= font)
-
-    settings.legendSize = .3
-    vp = Plotter(N=1, axes=13)
-    vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
+    if plotshow:
+        text = filename+"\n\n >> Creating Extended Centreline ("+clRib_type+")"
+        txt = Text2D(text, c="k", font= font)
+    
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=13)
+        vp.show(mesh, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, interactive=1)
 
     return cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes
 
@@ -3292,7 +3364,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     return thickness, m_ext_out, min_max
 
 #%% func - unloopHeart
-def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, df_AtrVent, num_pt, plotshow = False, tol=0.05):
+def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_shapes, dict_kspl, dict_pts, dir_results, plotshow = False, tol=0.05):
     """
     Function to unloop the heart
 
@@ -3305,37 +3377,62 @@ def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param
     kspl_CL : Kspline
         Centreline (vedo KSpline)
     kspl_ext : Kspline
-        Extended centreline (vedo KSpline)
+        Extended centreline (vedo KSpline).
     no_planes : int
-        Number of planes that will be used to get transverse sections of heart
-    pl_CLRibbon : Plane
+        Number of planes that will be used to get transverse sections of each chamber (heart = chamber*2)
+    pl_CLRibbon :  Plane
         Plane used to extend dorso-ventrally the centreline
-    param : array of floats
-        Numpy array with distance that wants to be unlooped
-    df_AtrVent: numpy array of objects 
+    param : list of arrays of floats
+        List of Numpy arrays with distance measurements that want to be unlooped
+    param_name : str
+        Name of distance parameter(s) to add to saving file
+    df_AtrVent : numpy array of objects 
         Array with points classification of atrium and ventricle
-    num_pt : int
-        Index of the centreline point closer to the plane that cuts the kspline.
-    plotshow : boolean, optional
+    dict_shapes : dictionary
+        Initialised dictionary with shapes information
+    dict_kspl : dictionary
+        Initialised dictionary with ksplines information
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    dir_results : path
+        Path to the folder where the results are saved.
+    plotshow : TYPE, boolean, optional
         True if you want to see the resulting mesh in a plot, else False. The default is False.
     tol : float, optional
         Tolerance defined to get points in plane. The default is 0.05.
 
     Returns
     -------
-    matrix_unlooped : numpy array
-        Array with data of the unlooped heart
+    df_unlooped : dataframe
+        Dataframe containing unlooped heart data.
+    planes_all : list of Planes
+        List of some of the planes created to unloop heart
+    spheres_all : list of Spheres
+        List of Spheres with the position of the centre of the planes created to unloop heart
+    kspl_vSurf : Kspline
+        KSpline in the surface of the heart indicating the 0 degree direction.
+    kspls_HR : List of KSplines
+        Listo of ksplines for atrium and ventricle with high resolution.
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated
+    dict_kspl : dictionary
+        Resulting dictionary with ksplines information updated
+    dict_pts : dictionary
+        Resulting dictionary with points information updated
 
     """
 
+    planes_all = []
+    spheres_all = []
+    plotevery = no_planes // 40
+
     # Create matrix with all data
     #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7: param
-    matrix_unlooped = np.zeros((len(mesh.points()),8))
+    matrix_unlooped = np.zeros((len(mesh.points()),9))
     matrix_unlooped[:,0:3] = mesh.points()
-    matrix_unlooped[:,7] = param
-    
-    plotevery = no_planes // 10
-
+    matrix_unlooped[:,7] = param[0]
+    matrix_unlooped[:,8] = param[1]
+        
     # - Get unitary normal of plane to create CL_ribbon
     pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
     pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
@@ -3351,35 +3448,72 @@ def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param
             pass
     
     # KSpline on surface
-    kspl_vSurf = KSpline(pts_int).color('black').lw(2)
+    kspl_vSurf = KSpline(pts_int).color('black').lw(4).legend('kspl_VSurfaceIntMyoc')
     
-    # Get normals and centres of planes
-    pl_normals, pl_centres = getPlaneNormals (no_planes = no_planes+2, spline_pts = kspl_CL.points())
-    pl_normals = pl_normals[1:-2]
-    pl_centres = pl_centres[1:-2]
-    plane_num = np.linspace(0,1,len(pl_normals))
-
-    # Iterate through each plane
-    for i, normal, centre in zip(count(), pl_normals, pl_centres):
-        # A. Get cut plane info
-        # - Info Plane
-        arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
-        # Cut cl with plane
-        ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True)
-        # Find point of centreline closer to last point of kspline cut
-        _, pt_num = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
-        
-        if pt_num < num_pt:
-            chamber = 'ventricle'
-        else: 
-            chamber = 'atrium'
-        
-        if pt_num < num_pt-10 or pt_num > num_pt+10:
+    #Create kspline wth higher resolution
+    kspl_CL = KSpline(points = kspl_CL.points(), res= 600).color('deepskyblue').lw(3).legend(kspl_CL._legend+'_HighRes')
+    #Get num_pt new
+    cyl_centre = dict_shapes['cyl2CutChambers_o']['cyl_centre']
+    cyl_normal = dict_shapes['cyl2CutChambers_o']['cyl_axis']
+    ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=cyl_centre, normal=cyl_normal, sx=300), invert=True)
+    # Find point of centreline closer to last point of kspline cut
+    _, num_pt = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
+    # print(num_pt)
+    # Add pt to dict
+    sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCutCLHighRes')
+    dict_pts = addPoint2Dict(sphere = sph_cut, info = '', dict_pts = dict_pts)
+    dict_pts['numPt_CLChamberCutHighRes'] = num_pt
+    
+    n_vent_pts = 0
+    res_v = 595
+    while n_vent_pts < 610:
+        res_v +=1
+        kspl_vent = KSpline(points = kspl_CL.points()[0:num_pt], res = res_v).color('tomato').lw(3).legend('kspl_vent')
+        n_vent_pts = kspl_vent.NPoints()
+    n_atr_pts = 0
+    res_a = 595
+    while n_atr_pts < 610:
+        res_a +=1
+        kspl_atr = KSpline(points = kspl_CL.points()[num_pt:], res = res_a).color('goldenrod').lw(3).legend('kspl_atr')
+        n_atr_pts = kspl_atr.NPoints()
+    
+    sph_1st_vent = Sphere(pos = kspl_vent.points()[0], r = 3, c = 'lime')
+    sph_1st_atr = Sphere(pos = kspl_atr.points()[0], r = 3, c = 'navy')
+    kspls_HR = [kspl_atr, kspl_vent]
+    texts = ['Unlooping atrium', 'Unlooping ventricle']
+    
+    for ksp_num, kspl in enumerate(kspls_HR):
+    
+        # Get normals and centres of planes
+        pl_normals, pl_centres = getPlaneNormals(no_planes = no_planes, spline_pts = kspl.points())
+        # pl_normals = pl_normals[1:-2]
+        # pl_centres = pl_centres[1:-2]
+        plane_num = np.linspace(2-ksp_num,1-ksp_num,len(pl_normals))
+    
+        planes = []
+        spheres = []
+        bar = Bar(texts[ksp_num], max=len(pl_normals), suffix = suffix, check_tty=False, hide_cursor=False)
+        # Iterate through each plane
+        for i, normal, centre in zip(count(), pl_normals, pl_centres):
+            # A. Get cut plane info
+            # - Info Plane
+            arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
+            # Cut cl with plane
+            ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True)
+            # Find point of centreline closer to last point of kspline cut
+            _, pt_num = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
+            
+            if pt_num < num_pt:
+                chamber = 'ventricle'
+            else: 
+                chamber = 'atrium'
+            
+            # if pt_num < num_pt-10 or pt_num > num_pt+10:
             try: 
                 # B. Get vector that defines 0 deg angle
                 pts_zero, _ = getPointsAtPlane(points = kspl_vSurf.points(), pl_normal = normal,
-                                               pl_centre = centre)
-                min_dist = 1000
+                                                pl_centre = centre)
+                min_dist = 100000
                 for ik, pt in enumerate(pts_zero):
                     dist = findDist(pt, centre)
                     if dist < min_dist:
@@ -3412,9 +3546,10 @@ def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param
                 theta = np.arccos(cosTheta)*180/np.pi
                 theta_corr = np.multiply(lORr, theta)
     
+                pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('light steel blue').alpha(0.5)
+                sph_C = Sphere(centre, r=2, c='red')
                 if plotshow:
                     # Create stuff to plot
-                    pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('coral').alpha(0.5)
                     sph_C = Sphere(centre, r=2, c='red')
                     sph_VXYZ = Sphere(pt_zero, r=2, c='green')
                     arr_vectXYZ = Arrow(centre, pt_zero, s = 0.1)
@@ -3431,20 +3566,378 @@ def unloopHeart(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param
                         text = filename+"\n\n >> Unlooping the heart"
                         txt = Text2D(text, c=c, font=font)
                         vp = Plotter(N=1, axes=4)
-                        vp.show(mesh,sphL, sphR, kspl_vSurf, kspl_CL, kspl_ext, arr_vectXYZ, arr_vectPlCut, sph_C, sph_VXYZ, pl_cut, txt, at=0, azimuth = 0, interactive=1)
+                        vp.show(mesh,sphL, sphR, kspl_vSurf, kspl, kspl_ext, arr_vectXYZ, arr_vectPlCut, sph_C, sph_VXYZ, pl_cut, txt, at=0, azimuth = 0, interactive=1)
+                if i % 40 == 0:
+                    planes.append(pl_cut)
+                    spheres.append(sph_C)
+                    
+                # - Save all obtained values in matrix_unlooped
+                for num, index in enumerate(index_ptsAtPlane[0]):
+                    #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+                    matrix_unlooped[index,3] = 1
+                    matrix_unlooped[index,4] = plane_num[i]
+                    matrix_unlooped[index,5] = theta_corr[num]
+                    matrix_unlooped[index,6] = radius[num]
+                
             except: 
                 pass
+            bar.next()
+    bar.finish()
+        
+    dict_shapes = addShapes2Dict (shapes = [kspl_vSurf, kspl_CL, kspl_atr, kspl_vent], dict_shapes = dict_shapes, radius = [[],[],[],[]], print_txt = False)
+        
+    df_unlooped = pd.DataFrame(matrix_unlooped, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness', 'myoc_intBall'])
+    df_unlooped = df_unlooped[df_unlooped['taken']==1]
+    df_unlooped_f = df_unlooped.drop(['x', 'y','z'], axis=1)
+    df_unlooped_f.astype({'taken': 'bool','z_plane':'float16','theta':'float16','radius':'float16','cj_thickness':'float16','myoc_intBall':'float16' }).dtypes
+        
+    saveDF(filename = filename, df2save = df_unlooped, df_name = 'df_unloopHeart'+param_name,
+                    dir2save = dir_results)
+    planes_all.append(planes)
+    spheres_all.append(spheres)
     
-            # - Save all obtained values in matrix_unlooped
-            for num, index in enumerate(index_ptsAtPlane[0]):
-                #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
-                matrix_unlooped[index,3] = 1
-                matrix_unlooped[index,4] = plane_num[i]
-                matrix_unlooped[index,5] = theta_corr[num]
-                matrix_unlooped[index,6] = radius[num]
-                
-    return matrix_unlooped
+    if plotshow:
+        vp = Plotter(N=2, axes = 4)
+        vp.show(mesh, kspl_vSurf, kspls_HR[0], planes_all[0], spheres_all[0], Text2D(texts[0], c="k", font= font), at=0)
+        vp.show(mesh, kspl_vSurf, kspls_HR[1], planes_all[1], spheres_all[1], Text2D(texts[1], c="k", font= font), at=1, interactive = True)
+        
+    return df_unlooped, planes_all, spheres_all, kspl_vSurf, kspls_HR, dict_pts, dict_kspl, dict_shapes
 
+#%% func - unloopChambers
+def unloopChambers(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_shapes, dict_pts, dir_results, plotshow = False, tol=0.05):
+    """
+    Function to unloop the heart and get two dataframes with the data for the unlooped hearts
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    mesh : mesh
+        Color coded mesh that will be unlooped
+    kspl_CL : Kspline
+        Centreline (vedo KSpline)
+    kspl_ext : Kspline
+        Extended centreline (vedo KSpline).
+    no_planes : int
+        Number of planes that will be used to get transverse sections of each chamber (heart = chamber*2)
+    pl_CLRibbon :  Plane
+        Plane used to extend dorso-ventrally the centreline
+    param : list of arrays of floats
+        List of numpy arrays with distance measurements that want to be unlooped
+    param_name : str
+        Name of distance parameter(s) to add to saving file
+    df_AtrVent : numpy array of objects 
+        Array with points classification of atrium and ventricle
+    dict_shapes : dictionary
+        Initialised dictionary with shapes information
+    dict_pts : dictionary
+        Initialised dictionary with points information
+    dir_results : path
+        Path to the folder where the results are saved.
+    plotshow : boolean, optional
+        True if you want to see the resulting mesh in a plot, else False. The default is False.
+    tol : float, optional
+        Tolerance defined to get points in plane. The default is 0.05.
+
+    Returns
+    -------
+    df_unlooped : dataframe
+        Dataframe containing unlooped heart data.
+    kspl_vSurf : Kspline
+        KSpline in the surface of the heart indicating the 0 degree direction.
+    kspls_HR : List of KSplines
+        Listo of ksplines for atrium and ventricle with high resolution.
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated
+    dict_pts : dictionary
+        Resulting dictionary with points information updated
+
+    """
+
+    dfs_unlooped = []
+    planes_all = []
+    spheres_all = []
+    plotevery = no_planes // 5
+
+    # - Get unitary normal of plane to create CL_ribbon
+    pl_normCLRibbon = unit_vector(pl_CLRibbon['pl_normal'])
+    pl_centCLRibbon = np.asarray(pl_CLRibbon['pl_centre'])
+    
+    #Find the points that intersect with the ribbon
+    pts_int = []
+    for num in range(len(kspl_ext.points())):
+        try: 
+            cl_pt_test = kspl_ext.points()[num]
+            pt_int = mesh.intersectWithLine(cl_pt_test, cl_pt_test+60*pl_normCLRibbon)
+            pts_int.append(pt_int[0])
+        except: 
+            pass
+    
+    # KSpline on surface
+    kspl_vSurf = KSpline(pts_int).color('black').lw(4).legend('kspl_VSurfaceIntMyoc')
+    
+    #Create kspline wth higher resolution
+    kspl_CL = KSpline(points = kspl_CL.points(), res= 600).color('deepskyblue').lw(3).legend(kspl_CL._legend+'_HighRes')
+    #Get num_pt new
+    cyl_centre = dict_shapes['cyl2CutChambers_o']['cyl_centre']
+    cyl_normal = dict_shapes['cyl2CutChambers_o']['cyl_axis']
+    ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=cyl_centre, normal=cyl_normal, sx=300), invert=True)
+    # Find point of centreline closer to last point of kspline cut
+    _, num_pt = findClosestPt(ksplCL_cut.points()[-1], kspl_CL.points())
+    # print(num_pt)
+    # Add pt to dict
+    sph_cut = Sphere(pos = kspl_CL.points()[num_pt], r=4, c='gold').legend('sph_ChamberCutCLHighRes')
+    dict_pts = addPoint2Dict(sphere = sph_cut, info = '', dict_pts = dict_pts)
+    dict_pts['numPt_CLChamberCutHighRes'] = num_pt
+    
+    n_vent_pts = 0
+    res_v = 595
+    while n_vent_pts < 610:
+        res_v +=1
+        kspl_vent = KSpline(points = kspl_CL.points()[0:num_pt], res = res_v).color('tomato').lw(3).legend('kspl_vent')
+        n_vent_pts = kspl_vent.NPoints()
+    n_atr_pts = 0
+    res_a = 595
+    while n_atr_pts < 610:
+        res_a +=1
+        kspl_atr = KSpline(points = kspl_CL.points()[num_pt:], res = res_a).color('goldenrod').lw(3).legend('kspl_atr')
+        n_atr_pts = kspl_atr.NPoints()
+    
+    sph_1st_vent = Sphere(pos = kspl_vent.points()[0], r = 3, c = 'lime')
+    sph_1st_atr = Sphere(pos = kspl_atr.points()[0], r = 3, c = 'navy')
+    kspls_HR = [kspl_atr, kspl_vent]
+    texts = ['Unlooping atrium', 'Unlooping ventricle']
+    names= ['unloopAtr', 'unloopVent']
+    
+    for ksp_num, kspl in enumerate(kspls_HR):
+        # Create matrix with all data
+        #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: parameters
+        matrix_unlooped = np.zeros((len(mesh.points()),9))
+        matrix_unlooped[:,0:3] = mesh.points()
+        matrix_unlooped[:,7] = param[0]
+        matrix_unlooped[:,8] = param[1]
+    
+        # Get normals and centres of planes
+        pl_normals, pl_centres = getPlaneNormals(no_planes = no_planes, spline_pts = kspl.points())
+        # pl_normals = pl_normals[1:-2]
+        # pl_centres = pl_centres[1:-2]
+        plane_num = np.linspace(2-ksp_num,1-ksp_num,len(pl_normals))
+    
+        planes = []
+        spheres = []
+        bar = Bar(texts[ksp_num], max=len(pl_normals), suffix = suffix, check_tty=False, hide_cursor=False)
+        index_guess = len(kspl_CL.points())-1
+        # Iterate through each plane
+        for i, normal, centre in zip(count(), pl_normals, pl_centres):
+            # A. Get cut plane info
+            # - Info Plane
+            arr_vectPlCut = Arrow(centre, centre+normal*20, s = 0.1, c='orange')
+            # Cut cl with plane
+            ksplCL_cut = kspl_CL.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True).lw(5).color('tomato')
+            # Find point of centreline closer to last point of kspline cut
+            _, pt_num = findClosestPtGuess(ksplCL_cut.points(), kspl_CL.points(), index_guess)
+            index_guess = pt_num
+            
+            if pt_num < num_pt:
+                chamber = 'ventricle'
+            else: 
+                chamber = 'atrium'
+            # print(pt_num, num_pt, chamber)
+            # if pt_num < num_pt-10 or pt_num > num_pt+10:
+            try: 
+                # B. Get vector that defines 0 deg angle
+                pts_zero, _ = getPointsAtPlane(points = kspl_vSurf.points(), pl_normal = normal,
+                                                pl_centre = centre)
+                min_dist = 100000
+                for ik, pt in enumerate(pts_zero):
+                    dist = findDist(pt, centre)
+                    if dist < min_dist:
+                        ind = ik; min_dist = dist
+                pt_zero = pts_zero[ind]
+                
+                # Vector from centre to cl_surface point being cut by plane
+                v_zero = unit_vector(pt_zero - centre)
+        
+                # C. Get points of mesh at plane
+                d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
+                # Find the indexes of the points that have not been yet taken, are at the plane and are in the 
+                # chamber being analysed
+                index_ptsAtPlane = np.where((d_points <= tol) & (matrix_unlooped[:,3] == 0) & (df_AtrVent == chamber))
+                
+                # Define new matrix just with the points on plane
+                new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
+                # - Get points of mesh that are on plane, centered on centreline point
+                ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
+                # - Get the radius of those points
+                radius = [np.linalg.norm(x) for x in ptsC]
+    
+                # D. Find direction of point with respect to plane that includes central point, vC and the normal of the cutting plane
+                # Vector normal to plane normal and v_zero (vector defined from centre of plane to cut-pt in centreline surface)
+                normal_divLR = np.cross(normal, v_zero)
+                # Definbe using this points if the points are all lying in the same side or not (1, -1)
+                lORr = np.sign(np.dot(ptsC, np.asarray(normal_divLR)))
+    
+                # E. Get angle of points in that plane using v_zero
+                av = np.dot(ptsC,v_zero)
+                cosTheta = np.divide(av, radius) # vectors of magnitude one
+                theta = np.arccos(cosTheta)*180/np.pi
+                theta_corr = np.multiply(lORr, theta)
+    
+                pl_cut = Plane(pos = centre, normal = normal, sx = 300).color('light steel blue').alpha(0.5)
+                sph_C = Sphere(centre, r=2, c='red')
+                if plotshow:
+                    # Create stuff to plot
+                    sph_C = Sphere(centre, r=2, c='red')
+                    sph_VXYZ = Sphere(pt_zero, r=2, c='green')
+                    arr_vectXYZ = Arrow(centre, pt_zero, s = 0.1)
+                    if i % plotevery == 0:
+                        sphL = []; sphR = []
+                        for num, pt in enumerate(ptsC):
+                            if num % 50 == 0:
+                                if lORr[num] == 1:
+                                    sphL.append(Sphere(pt+centre, r=2, c='blueviolet'))
+                                else:
+                                    sphR.append(Sphere(pt+centre, r=2, c='gold'))
+            
+                        settings.legendSize = .3
+                        text = filename+"\n\n >> Unlooping the heart"
+                        txt = Text2D(text, c=c, font=font)
+                        vp = Plotter(N=1, axes=4)
+                        # vp.show(mesh,sphL, sphR, kspl_vSurf, kspl, kspl_ext, arr_vectXYZ, arr_vectPlCut, sph_C, sph_VXYZ, pl_cut, txt, at=0, azimuth = 0, interactive=1)
+                        vp.show(mesh,sphL, sphR, kspl_vSurf, kspl, kspl_ext, ksplCL_cut, arr_vectXYZ, arr_vectPlCut, sph_C, sph_VXYZ, pl_cut, txt, at=0, azimuth = 0, interactive=1)
+                
+                if i % 40 == 0:
+                    planes.append(pl_cut)
+                    spheres.append(sph_C)
+                    
+                # - Save all obtained values in matrix_unlooped
+                for num, index in enumerate(index_ptsAtPlane[0]):
+                    #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+                    matrix_unlooped[index,3] = 1
+                    matrix_unlooped[index,4] = plane_num[i]
+                    matrix_unlooped[index,5] = theta_corr[num]
+                    matrix_unlooped[index,6] = radius[num]
+                
+            except: 
+                pass
+            bar.next()
+        
+        dict_shapes = addShapes2Dict (shapes = [kspl_vSurf, kspl_CL, kspl_atr, kspl_vent], dict_shapes = dict_shapes, radius = [[],[],[],[]], print_txt = False)
+        
+        df_unlooped = pd.DataFrame(matrix_unlooped, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness', 'myoc_intBall'])
+        df_unlooped = df_unlooped[df_unlooped['taken']==1]
+        df_unlooped_f = df_unlooped.drop(['x', 'y','z'], axis=1)
+        df_unlooped_f.astype({'taken': 'bool','z_plane':'float16','theta':'float16','radius':'float16','cj_thickness':'float16','myoc_intBall':'float16' }).dtypes
+        print('\n')
+        saveDF(filename = filename, df2save = df_unlooped_f, df_name = 'df_'+names[ksp_num]+param_name,
+                        dir2save = dir_results)
+        dfs_unlooped.append(df_unlooped_f)
+        planes_all.append(planes)
+        spheres_all.append(spheres)
+        
+    bar.finish() 
+        
+    if plotshow:
+        vp = Plotter(N=2, axes = 4)
+        vp.show(mesh, kspl_vSurf, kspls_HR[0], planes_all[0], spheres_all[0], Text2D(texts[0], c="k", font= font), at=0)
+        vp.show(mesh, kspl_vSurf, kspls_HR[1], planes_all[1], spheres_all[1], Text2D(texts[1], c="k", font= font), at=1, interactive = True)
+        
+    return df_unlooped, kspl_vSurf, kspls_HR, dict_pts, dict_shapes
+
+#%% func - heatmapUnlooped
+def heatmapUnlooped (filename, val2unloop, dataname, dir_results, dirImgs, names, saveHM = True, savePlot = True):
+    """
+    Function to create heatmap of unlooped data 
+
+    Parameters
+    ----------
+    filename :  str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    dir_results : path
+        Path to the folder where the results are saved.
+    dirImgs : path
+        Path to the folder where the images and videos are saved.
+    names : list of str
+        List of strings with the names of the dataframe files.
+
+    Returns
+    -------
+    heatmaps : TYPE
+        DESCRIPTION.
+
+    """
+
+    heatmaps = []
+    for i, name in enumerate(names): 
+        df = loadDF(filename, 'df_'+name, dir_results)
+        df = df.drop(['taken'], axis=1)
+        df.astype('float16').dtypes
+        heatmap = pd.pivot_table(df, values= val2unloop, columns = 'theta', index='z_plane', aggfunc=np.max)
+        heatmap.astype('float16').dtypes
+        
+        if val2unloop == 'cj_thickness':
+            vmin = 0
+            vmax = 25
+            title = filename +' - Cardiac jelly thickness [um] '
+        elif val2unloop == 'myoc_intBall': 
+            vmin = 0
+            vmax = 100
+            title = filename +' - Myocardium ballooning [um] '
+    
+        # Make figure
+        fig, ax = plt.subplots(figsize=(16, 10))
+        ax = sns.heatmap(heatmap, cmap='jet', vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
+        
+        max_val = df.z_plane.max()
+        if max_val > 1.1: 
+            y_labels = [1,2]
+            y_text = '[Inflow tract >> Valve]'
+        else: # Ventricle
+            y_labels = [0,1]
+            y_text = '[Valve >> Outflow tract]'
+            
+        x_pos = ax.get_xticks()
+        x_lab = ax.get_xticklabels()
+        x_pos_new = np.linspace(x_pos[0], x_pos[-1], 18)
+        x_lab_new = np.arange(-180,180,20)
+        ax.set_xticks(x_pos_new) 
+        ax.set_xticklabels(x_lab_new, rotation=30)
+        
+        y_pos = ax.get_yticks()
+        y_lab = ax.get_yticklabels()
+        y_pos_new = np.linspace(y_pos[0], y_pos[-1], 11)
+        y_lab_new = np.linspace(y_labels[0],y_labels[1],11)
+        y_lab_new = [format(y,'.2f') for y in y_lab_new]
+        ax.set_yticks(y_pos_new) 
+        ax.set_yticklabels(y_lab_new, rotation=0)
+        
+        plt.ylabel('Centreline position '+y_text+'\n', fontsize=10)
+        plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=10)
+        
+        if 'Atr' in name:
+            dir4heatmap = os.path.join(dirImgs,'df_'+name[0:9]+'_'+dataname+'.png')
+            title = title +'- Atrium'
+        else: 
+            dir4heatmap = os.path.join(dirImgs,'df_'+name[0:10]+'_'+dataname+'.png')
+            title = title +'- Ventricle'
+            
+        plt.title(title, fontsize = 15)
+        if savePlot: 
+            plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
+        
+        # dir4heatmap = os.path.join(dirImgs,'df_'+name+'.eps')
+        # plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
+        
+        plt.show()
+        if saveHM: 
+            saveDF(filename = filename, df2save = heatmap, df_name = 'hm_'+name, dir2save = dir_results)
+        
+        heatmaps.append(heatmap)
+        alert('frog', 1)
+    alert('wohoo', 1)
+        
+    return heatmaps
+    
 #%% - PROCESS DATA
 #%% func - rotation_matrix
 def rotation_matrix(axis, theta):
@@ -3557,6 +4050,54 @@ def findClosestPt(pt_o, pts):
 
     """
 
+    min_dist = 9999999
+    for n in range(len(pts)):
+        pt = pts[n]
+        squared_dist = np.sum((pt-pt_o)**2, axis=0)
+        dist = np.sqrt(squared_dist)
+
+        if dist < min_dist:
+            min_dist = dist
+            pt_out = pt
+            num_pt = n
+
+    return pt_out, num_pt
+
+#%% func - findClosestPtGuess
+def findClosestPtGuess(pts_o, pts, index_guess):
+    """
+    Function that finds the closest point of the centreline where a plane cuts it with a point given as initial guess
+
+    Parameters
+    ----------
+    pts_o : array of coordinates
+        np array with the x,y,z coordinates of all the points that make the cut section of the kspline
+    pts : array of coordinates
+        Array with x,y,z coordinates of the centreline points
+    index_guess : int
+        Index of the point guessed to be closest to new closest point
+
+    Returns
+    -------
+    pt_out : numpy array
+        np array with the x,y,z coordinates of the centreline point closest to the kspline cut
+    num_pt : int
+        Index of the centreline point closer to the plane that cuts the kspline.
+
+    """
+    # First find the closes point of the input pts_o to pt_guess = pts[index]
+    pt_guess = pts[index_guess]
+    min_dist_guess = 99999999
+    for k in range(len(pts_o)):
+        pt = pts_o[k]
+        squared_dist_guess = np.sum((pt-pt_guess)**2, axis=0)
+        dist_guess = np.sqrt(squared_dist_guess)
+
+        if dist_guess < min_dist_guess:
+            min_dist_guess = dist_guess
+            pt_o = pt
+    
+    # Find the closest point of all the centreline points closest to pt_o
     min_dist = 9999999
     for n in range(len(pts)):
         pt = pts[n]
@@ -3840,8 +4381,8 @@ def classifyPtsMx(dict_planes, pl_name, pts_whole):
 
     return pts_classFinal
 
-#%% func - classifyHeartPts 
-def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, data, names_data, plot_show = True):
+#%% func - classifyHeartPts
+def classifyHeartPts(filename, dict_planes, m_whole, m_left, m_atr, data, names_data, plot_show = True):
     """
     Function that classifies the points that make up a mesh as atrium/ventricle, dorsal/ventral and left/right
 
@@ -3849,16 +4390,14 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
     ----------
     filename : str
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    mesh : mesh
-        Mesh whose points are going to be classified
     dict_planes : dictionary
         Initialised dictionary with planes information
-    pts_whole : array of coordinates
-        Array with x,y,z coordinates of whole mesh
-    pts_left : array of coordinates
-        Array with x,y,z coordinates of left mesh
-    pts_atr : array of coordinates
-        Array with x,y,z coordinates of atrial mesh
+    m_whole : mesh
+        Mesh whose points are going to be classified
+    m_left : mesh
+        Left side of mesh to be classified
+    m_atr : mesh
+        Atrial mesh to be classified
     data : list of arrays
         List of arrays with distance data to be classified
     names_data : list of str
@@ -3881,19 +4420,23 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
 
     # Classify AnV
     print('--> Atrium-Ventricle')
+    pts_atr = m_atr.points()
+    pts_whole = m_whole.points()
     av = pts_whole.view([('', pts_whole.dtype)] * pts_whole.shape[1]).ravel()
     cv = pts_atr.view([('', pts_atr.dtype)] * pts_atr.shape[1]).ravel()
     d_isin = np.isin(av,cv)
-    index_isind = np.where(d_isin == True)[0]
+    index_atr = np.where(d_isin == True)[0]
     
     pts_classAnV = np.empty(len(pts_whole), dtype='object')
     pts_classAnV[:] = 'ventricle'
-    pts_classAnV[index_isind] = 'atrium'
+    pts_classAnV[index_atr] = 'atrium'
+    del av, cv, pts_whole
     
     # pts_classAnV = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl2CutMesh_Chamber', pts_whole = pts_whole)
     df_classPts['AtrVent'] = pts_classAnV
     
     # Classify DnV
+    pts_whole = m_whole.points()
     # - Classify DnV_Atr
     pts_classDnV_Atr = classifyPtsMx(dict_planes = dict_planes, pl_name = 'pl_AtrCoronal', pts_whole =  pts_whole)
     # - Classify DnV_Vent
@@ -3907,18 +4450,21 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
 
     pts_classDnV = pts_classDnV_Atr+pts_classDnV_Vent
     df_classPts['DorsVent'] = pts_classDnV
+    del pts_whole
 
     # Classify LnR
     print('--> Left-Right')
+    pts_left = m_left.points()
+    pts_whole = m_whole.points()
     av = pts_whole.view([('', pts_whole.dtype)] * pts_whole.shape[1]).ravel()
     bv = pts_left.view([('', pts_left.dtype)] * pts_left.shape[1]).ravel()
     # cint = np.intersect1d(av, bv).view(a.dtype).reshape(-1, a.shape[1])
     c_isin = np.isin(av,bv)
-    index_isin = np.where(c_isin == True)[0]
+    index_left = np.where(c_isin == True)[0]
 
     pts_classLnR = np.empty(len(pts_whole), dtype='object')
     pts_classLnR[:] = 'right'
-    pts_classLnR[index_isin] = 'left'
+    pts_classLnR[index_left] = 'left'
 
     df_classPts['LeftRight'] = pts_classLnR
 
@@ -3933,7 +4479,7 @@ def classifyHeartPts(filename, mesh, dict_planes, pts_whole, pts_left, pts_atr, 
     alert('whistle',1)
 
     if plot_show:
-        plotPtClassif(filename, mesh, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
+        plotPtClassif(filename, m_whole, pts_whole, [pts_classAnV, pts_classDnV, pts_classLnR])
 
     return df_classPts
 
@@ -3962,7 +4508,10 @@ def getPlaneNormals (no_planes, spline_pts):
     normals = []
     pt_centre = []
     every = len(spline_pts)//no_planes
-    for i in range(len(spline_pts)-1,0,-every):
+    #print(len(spline_pts), no_planes, every)
+    list_index = list(range(len(spline_pts)-2,1,-every))
+    # print(len(list_index))
+    for i in list_index:
         pt_centre.append(spline_pts[i])
         normal = spline_pts[i-1]-spline_pts[i]
         normals.append(normal)
@@ -4320,16 +4869,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
     alert("wohoo",1)
 
     return cl_dirA, cl_dirB
-
-#%% Others (back-up / developing)
-# import numpy as np
-# def random_arr(low, high, size, rand_type):
-#     if rand_type == float:
-#         arr = [np.random.uniform(low, high) for _ in range(size)]
-#     elif rand_type == int:
-#         arr = [np.random.randint(low, high) for _ in range(size)]
-#     return  arr
-
+    
 #%% func - decodeDict
 def decodeDict (dict2classify, info):
     """
@@ -4378,126 +4918,103 @@ def decodeDict (dict2classify, info):
 
     return [AnV, DnV_Atr, DnV_Vent, pts_left, pts_whole, meas_param]
 
-#%% func - getEllipsoid
-def getEllipsoid (filename, type_cut, mesh, kspl, xyz_bounds, option):
-    """
-    Function that shows a plot so that the user can define a plane (mesh opacity can be changed)
-
-    Parameters
-    ----------
-    filename : str
-        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    type_cut : str
-        Text defining the type of cut that is going to be made with the defined plane
-    mesh_in : mesh
-        Internal mesh (vedo Mesh)
-    mesh_out : mesh
-        External mesh (vedo Mesh)
-    xyz_bounds : list of floats
-        x,y,z boundaries of mesh_out
-    option : list of booleans
-        List of booleans indicating the sliders to use in getPlanePos function.
-        [sliderX, sliderY, sliderZ, sliderRotX, sliderRotY, sliderRotZ]
-
-    Returns
-    -------
-    plane : Plane
-        Final plane defined by the user
-    normal : list of floats
-        List with the x,y,z coordinatesof the plane's normal
-    rotX : list of floats
-        List of angles (deg) of the resulting rotation around the x-axis.
-    rotY : list of floats
-        List of angles (deg) of the resulting rotation around the y-axis.
-    rotZ : list of floats
-        List of angles (deg) of the resulting rotation around the z-axis.
-
-    """
-
-    xmin, xmax, ymin, ymax, zmin, zmax = xyz_bounds
-    # x_size = xmax - xmin
-    # y_size = ymax - ymin
-    # z_size = zmax - zmin
-
-    # box_size = max(x_size, y_size, z_size)*1.2
-    centre = kspl[len(kspl)*3//4]
-    # end_inflow = kspl[-1]
-    # normal = (0,1,0)
-    #print("centre:", centre)
-
-    rotX = [0]
-    rotY = [0]
-    rotZ = [0]
-
-    # Functions to move and rotate plane
-    def sliderX(widget, event):
-        valueX = widget.GetRepresentation().GetValue()
-        ellipsoid.x(valueX)
-
-    def sliderY(widget, event):
-        valueY = widget.GetRepresentation().GetValue()
-        ellipsoid.y(valueY)
-
-    def sliderZ(widget, event):
-        valueZ = widget.GetRepresentation().GetValue()
-        ellipsoid.z(valueZ)
-
-    def sliderRotX(widget, event):
-        valueRX = widget.GetRepresentation().GetValue()
-        rotX.append(valueRX)
-        ellipsoid.rotateX(valueRX, rad=False)
-
-    def sliderRotY(widget, event):
-        valueRY = widget.GetRepresentation().GetValue()
-        rotY.append(valueRY)
-        ellipsoid.rotateY(valueRY, rad=False)
-
-    def sliderRotZ(widget, event):
-        valueRZ = widget.GetRepresentation().GetValue()
-        rotZ.append(valueRZ)
-        ellipsoid.rotateZ(valueRZ, rad=False)
-
-    def sliderAlphaMeshOut(widget, event):
-        valueAlpha = widget.GetRepresentation().GetValue()
-        ellipsoid.alpha(valueAlpha)
-
-    settings.legendSize = .3
-    vp = Plotter(N=1, axes=8)
-    axis1 = (200,0,0)
-    axis2 = (0,400,0)
-    axis3 = (0,0,200)
-    ellipsoid = Ellipsoid(pos=centre, axis1=axis1, axis2=axis2, axis3=axis3, c='r', alpha=0.5, res=24)
-    # plane = Plane(pos=centre, normal=normal, sx=box_size*1.2).color("gainsboro").alpha(1)
-
-    if option[0]: #sliderX
-        vp.addSlider2D(sliderX, xmin*0.8, xmax*1.2, value=centre[0],
-                    pos=[(0.1,0.15), (0.3,0.15)], title="- > x position > +", c="crimson" )
-    if option[1]: #sliderY
-        vp.addSlider2D(sliderY, ymin*1.2, ymax*0.8, value=centre[1],
-                    pos=[(0.4,0.15), (0.6,0.15)], title="- > y position > +", c="dodgerblue" )
-    if option[2]: #sliderZ
-        vp.addSlider2D(sliderZ, zmin*1.2, zmax*0.8, value=centre[2],
-                    pos=[(0.7,0.15), (0.9,0.15)], title="- > z position > +", c="limegreen")
-    if option[3]: #sliderRotX
-        vp.addSlider2D(sliderRotX, -1, +1, value=0,
-                    pos=[(0.1,0.05), (0.3,0.05)], title="- > x rotation > +", c="deeppink")
-    if option[4]: #sliderRotY
-        vp.addSlider2D(sliderRotY, -1, +1, value=0,
-                    pos=[(0.4,0.05), (0.6,0.05)], title="- > y rotation > +", c="gold")
-    if option[5]: #sliderRotZ
-        vp.addSlider2D(sliderRotZ, -1, +1, value=0,
-                    pos=[(0.7,0.05), (0.9,0.05)], title="- > z rotation > +", c="teal")
-
-    vp.addSlider2D(sliderAlphaMeshOut, xmin=0.01, xmax=0.99, value=0.05,
-               pos=[(0.95,0.25), (0.95,0.45)], c="blue", title="Ext.Mesh Opacity)")
-
-    text = filename+"\n\n >> Define plane position to make cut ("+type_cut+")\n >> Close the window when done"
-    txt = Text2D(text, c="k", font= font)
-    vp.show(mesh.alpha(1), ellipsoid, txt, viewup="y", zoom=1, interactive=True)
-    #azimuth=-90, elevation=0,
-
-    return ellipsoid, rotX, rotY, rotZ
-
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcMeshes")
 alert('jump',1)
+
+#%% Others (back-up / developing)
+# A --------
+# import numpy as np
+# def random_arr(low, high, size, rand_type):
+#     if rand_type == float:
+#         arr = [np.random.uniform(low, high) for _ in range(size)]
+#     elif rand_type == int:
+#         arr = [np.random.randint(low, high) for _ in range(size)]
+#     return  arr
+
+# B --------
+# Cut layer with n number of planes perpendicular to spline and plot
+# mesh2cut = mesh_ch1
+#Transform mesh from vtk structure to trimesh
+# print("Transforming mesh into trimesh object...")
+# mesh3= vtk2trimesh(mesh2cut)
+# cjf4.alert("jump",1)
+
+# Cut layer with a certain number of planes
+# no_planes = 15
+# sectDict = cjf4.sliceLayerCL(mesh3, no_planes, cl_splineAdd, 'red')
+# cjf4.plotAllLayerSlices(mesh2cut, cl_splineAdd, no_planes, sectDict)
+
+# Plot a particular slice
+# cjf4.plotLayerSlice(mesh2cut, cl_splineAdd, 5, sectDict)
+
+# #%% func - sliceLayerCL
+# def sliceLayerCL(mesh, no_planes, spline, color):
+#     sections = dict()
+#     allPlanes = []
+#     allSlice_2D = []
+#     allSlice_3D = []
+#     allCenters = []
+    
+#     # Get normals and centres of planes
+#     normals, pt_centre = getPlaneNormals (no_planes, spline.points())
+    
+#     for slice_num in range(no_planes):
+#         print("Processing slice no.", slice_num+1, "/", no_planes)
+#         # Get mesh cuts
+#         plane, slice_2D, slice_3D, sphere, mslice = getSlices(mesh, normals[slice_num], pt_centre[slice_num], color)
+#         allPlanes.append(plane)
+#         allSlice_2D.append(slice_2D)
+#         allSlice_3D.append(slice_3D)
+#         allCenters.append(sphere)
+#         print("Mesh sliced...")
+        
+#     print("Mesh has been sliced!")
+        
+#     sections['Planes'] = allPlanes
+#     sections['Spheres'] = allCenters
+#     sections['slice2D'] = allSlice_2D
+#     sections['slice3D'] = allSlice_3D
+    
+#     return sections
+
+# #%% func - plotAllLayerSlices
+# def plotAllLayerSlices (mesh, spline, no_planes, sections):
+#     N = no_planes*2
+#     n_plot1 = list(range(0,no_planes,1))
+#     n_plot2 = list(range(no_planes,no_planes*2,1))
+#     vpA = Plotter(N=N, sharecam=False) 
+#     for n in range(no_planes):
+#         plane = sections['Planes'][n]
+#         sphere = sections['Spheres'][n]
+#         slice3D = sections['slice3D'][n]
+#         slice2D = sections['slice2D'][n]
+#         vpA.show(mesh, plane, slice3D, spline, sphere, at=n_plot1[n], zoom=2)
+#         if n == no_planes-1:
+#             vpA.show(slice2D, at=n_plot2[n], interactive=1)
+#         else:
+#             vpA.show(slice2D, at=n_plot2[n])
+
+# #%% func - plotSlice 
+# def plotLayerSlice (mesh, spline, slice_num, sections):
+#     plane = sections['Planes'][slice_num]
+#     slice3D = sections['slice3D'][slice_num]
+#     slice2D = sections['slice2D'][slice_num]
+#     sphere = sections['Spheres'][slice_num]
+    
+#     vpA = Plotter(N=2, sharecam=False) 
+#     vpA.show(mesh, plane, slice3D, spline, sphere, at=0, zoom=2)
+#     vpA.show(slice2D, at=1, interactive=1)
+
+# C --------
+# getBalloons
+#sph_all, sph_whole = fcMeshes.getBalloonedHeart(myoc_int_npcl)
+
+# vp = Plotter(N=1, axes=13)
+# vp.show(m_myoc.alpha(0.01), sph_all[0].color('green').alpha(0.05), sph_all[5].alpha(0.05), at=0, interactive=True)
+
+# sph_whole = booleanOperation(sph_all[0], 'plus',sph_all[2])
+# sph_whole.color('coral')
+
+# vp = Plotter(N=1, axes=13)
+# vp.show(m_myoc.alpha(0.01), sph_whole, at=0, interactive=True)
