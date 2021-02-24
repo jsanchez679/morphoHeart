@@ -101,9 +101,9 @@ def def_variables(module):
                      'Looping_Ratio_Myoc','Looping_Ratio_Endo',
                      'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc','Vol_Atr.IntEndo','Vol_Vent.IntEndo']
 
-        ylabels  = ["Surface Area Myocardium [um$^2$]","Surface Area Int.Myocardium [um$^2$]","Surface Area Ext.Myocardium [um$^2$]",
-                     "Surface Area Endocardium [um$^2$]","Surface Area Int.Endocardium [um$^2$]","Surface Area Ext. Endocardium [um$^2$]",
-                     "Surface Area CJ [um$^2$]","Surface Area Int.CJ [um$^2$]","Surface Area Ext.CJ [um$^2$]",
+        ylabels  = ["Surface Area\nMyocardium [um$^2$]","Surface Area\nInt.Myocardium [um$^2$]","Surface Area\nExt.Myocardium [um$^2$]",
+                     "Surface Area\nEndocardium [um$^2$]","Surface Area\nInt.Endocardium [um$^2$]","Surface Area\nExt. Endocardium [um$^2$]",
+                     "Surface Area\nCardiac Jelly [um$^2$]","Surface Area\nInt.Cardiac Jelly [um$^2$]","Surface Area\nExt.Cardiac Jelly [um$^2$]",
                      "Volume Int.Myocardium [um$^3$]","Heart Volume [um$^3$]",
                      "Heart Lumen Volume [um$^3$]","Volume Ext.Endocardium [um$^3$]",
                      "Linear Heart Length (Int.Myoc) [um]","Linear Heart Length (Ext.Endo) [um]",
@@ -116,7 +116,100 @@ def def_variables(module):
                      'Atrial Volume [um$^3$]','Ventricular Volume [um$^3$]','Atrial Lumen Volume [um$^3$]','Ventricular Lumen Volume [um$^3$]']
     
     return variables, ylabels
+
+#%% func - getVarsANDLabels_UserInput
+def getVarsANDLabels_UserInput (variables, labels):
+    """
     
+
+    Parameters
+    ----------
+    variables : TYPE
+        DESCRIPTION.
+    labels : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    vars2loop : TYPE
+        DESCRIPTION.
+    labels2loop : TYPE
+        DESCRIPTION.
+
+    """
+
+    print('\nVariables:')
+    for c, value in enumerate(variables, 1):
+        print(c-1, value)
+    input_var = input('Select the variables you would like to process: ')
+
+    if input_var == 'All':
+        var_num = list(range(0,len(variables),1))
+
+    else:
+        var_num = []
+        comma_split = input_var.split(',')
+
+        for string in comma_split:
+            if '-' in string:
+                minus_split = string.split('-')
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    var_num.append(n)
+            else:
+                var_num.append(int(string))
+
+    vars2loop = []
+    labels2loop = []
+    for i, num in enumerate(var_num):
+        vars2loop.append(variables[num])
+        labels2loop.append(labels[num])
+
+    return vars2loop, labels2loop
+
+#%% func - getVarsANDLabels_Autom
+def getVarsANDLabels_Autom (variables, labels, input_var):
+    """
+    
+
+    Parameters
+    ----------
+    variables : TYPE
+        DESCRIPTION.
+    labels : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    vars2loop : TYPE
+        DESCRIPTION.
+    labels2loop : TYPE
+        DESCRIPTION.
+
+    """
+
+    var_num = []
+    comma_split = input_var.split(',')
+
+    for string in comma_split:
+        if '-' in string:
+            minus_split = string.split('-')
+            #print(minus_split)
+            for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                #print(n)
+                var_num.append(n)
+        else:
+            var_num.append(int(string))
+
+    vars2loop = []
+    labels2loop = []
+    for i, num in enumerate(var_num):
+        vars2loop.append(variables[num])
+        labels2loop.append(labels[num])
+
+    return vars2loop, labels2loop
+
 #%% func - kde_sklearn
 def kde_sklearn(x, x_grid, bandwidth=0.2, **kwargs):
     """Kernel Density Estimation with Scikit-learn"""
@@ -153,6 +246,11 @@ def kdeThPlots(filename, df_file, file_num, variable, thData, dir2save, save = T
     -------
     df_pdfs : TYPE
         DESCRIPTION.
+        
+    Some links for reference:
+        #https://stackabuse.com/kernel-density-estimation-in-python-using-scikit-learn/
+        #https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
+        #https://jakevdp.github.io/PythonDataScienceHandbook/05.13-kernel-density-estimation.html
 
     """
     if variable == 'cj_thickness':

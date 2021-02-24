@@ -24,7 +24,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    # init = True
+    init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -126,12 +126,13 @@ if init:
     #   selection of the planes used to cross-section each chamber. When closed, the code will transform all the 
     #   acquired data and will create 2D heatmaps for each chamber and thickness measurement. When all the heatmap 
     #   plots have been created, a new 3D interactive plot will appear where you will be able to compare the thickness 
-    #   measurements on the 2D heatmap and on the colorcoded mesh. 
+    #   measurements on the 2D heatmap and on the color-coded mesh. 
     #   Note: Make sure you select the 'Plots' Pane in Spyder to be able to see the resulting heatmaps and compare 
     #   them to the color coded meshes. 
-    #   The heatmap creation can take longer than 5min/eac, and there are four to be created. 
+    #   The heatmap creation can take longer than 5min/each, and there are four to be created. 
     #   Again, be patient, it is worth it! :)
     #   ================================================================================================================
+    
     saveHM = True; savePlot = True; plotshow = True
     df_AtrVent = np.asarray(df_cjThNmyocIntBall['AtrVent'])
     
@@ -139,19 +140,22 @@ if init:
                            pts_class = [df_cjThNmyocIntBall['AtrVent'], df_cjThNmyocIntBall['DorsVent'], df_cjThNmyocIntBall['LeftRight']])
     
     # Unlooping the heart
-    _, kspl_vSurf, kspls_HR, dict_pts, dict_shapes = fcMeshes.unloopChambers(filename = filename, 
+    _, kspl_vSurf, kspls_HR, arr_all, arr_valve, dict_pts, dict_shapes, dict_kspl = fcMeshes.unloopChambers(filename = filename, 
                                             mesh = m_cjTh.alpha(0.05), kspl_CL = kspl_CL[0], kspl_ext = kspl_ext,
                                             no_planes = 150, pl_CLRibbon =  dict_planes['pl_Parallel2LinLine'], 
                                             param = [cj_thickness, myoc_intBall], param_name = 'CjTh_myocIntBall',
-                                            df_AtrVent = df_AtrVent, dict_shapes = dict_shapes, 
-                                            dict_pts = dict_pts, dir_results = dir_results, plotshow = plotshow, tol=0.05)
-
+                                            df_AtrVent = df_AtrVent, dict_kspl = dict_kspl, 
+                                            dict_shapes = dict_shapes, dict_pts = dict_pts, 
+                                            dict_planes = dict_planes, 
+                                            dir_results = dir_results, plotshow = plotshow, tol=0.05)
+    
+    print('Creating heatmaps for each chamber... Note: this can take a while.')
     heatmaps_cj = fcMeshes.heatmapUnlooped(filename = filename, val2unloop = 'cj_thickness', dataname = 'CjTh',
                                            dir_results = dir_results, dirImgs = directories[4], 
                                            names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
                                            saveHM = saveHM, savePlot = savePlot)
     del heatmaps_cj
-    #%%
+    
     heatmaps_ball = fcMeshes.heatmapUnlooped(filename = filename, val2unloop = 'myoc_intBall', dataname = 'myocIntBall',
                                            dir_results = dir_results, dirImgs = directories[4], 
                                            names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
@@ -166,16 +170,16 @@ if init:
     settings.legendSize = .2
     txt = Text2D(filename+"\n\n >> Plots to validate heatmaps", c="k", font= font)
     vp = Plotter(N=4, axes = 4)
-    vp.show(m_cjTh.alpha(1), cl_ribbonV, disk,  txt, at = 0)
+    vp.show(m_cjTh.alpha(1), cl_ribbonV, disk, txt, at = 0)
     vp.show(m_myocIntBall.alpha(1), cl_ribbonV, disk,  at = 1)
-    vp.show(m_cjTh.clone().alpha(0.01), kspl_vSurf, kspls_HR, disk, at = 2)
-    vp.show(m_myocIntBall.clone().alpha(0.01), kspl_vSurf, kspls_HR, disk, at = 3, interactive = True)
+    vp.show(m_cjTh.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, arr_all, disk, at = 2)
+    vp.show(m_myocIntBall.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, arr_valve, disk, at = 3, interactive = True)
     
     del heatmaps_ball
     
     #%% GET THICKNESS REGION PLOTS (PROBALITY DENSITY ESTIMATION PLOTS)
     #   Finally, we need to create distribution plots that will allow us to compare the thickness distribution between 
-    #   regions of the heart . 
+    #   regions of the heart.
     #   ================================================================================================================
     
     file_num = df_file[df_file['Folder']==folder].index.values[0]

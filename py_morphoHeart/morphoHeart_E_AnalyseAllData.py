@@ -13,6 +13,7 @@ import pandas as pd
 import glob
 import seaborn as sns
 import matplotlib.pyplot as plt
+from itertools import count
 import math
 
 init = False
@@ -42,6 +43,7 @@ if init:
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     dir_R_meas = os.path.join(dir_data2Analyse,'R_All', 'df_meas')
+    dir_pl_meas = os.path.join(dir_data2Analyse,'R_All', 'pl_meas','R_')
     dir_R_cjPdfs = os.path.join(dir_data2Analyse,'R_All', 'df_cjPDFs')
 
     #%% Create plots for df_measurements 
@@ -51,46 +53,196 @@ if init:
     df_meas = pd.concat((pd.read_csv(f) for f in all_CSVs))
     df_meas['Looping_Ratio_Myoc'] = df_meas['Length_CL_Int.Myoc(Cut)']/ df_meas['linLine_Int.Myoc(Cut)']
     df_meas['Looping_Ratio_Endo'] = df_meas['Length_CL_Ext.Endo(Cut)']/ df_meas['linLine_Ext.Endo(Cut)']
-
+    
+    df_meas['GenotA'] = df_meas['Gene_A']+':'+df_meas['Genotype_A']
+    df_meas['GenotB'] = df_meas['Gene_B']+':'+df_meas['Genotype_B']
+    df_meas['GenotypeAll'] = df_meas['GenotA']+'/'+df_meas['GenotB']
+    
+    # Generate result using pandas 
+    genotypeAll = [] 
+    for i, genotA, genotB in zip(count(), df_meas["GenotA"], df_meas["GenotB"]): 
+        if genotB == "-:-": 
+            genotypeAll.append(genotA) 
+        else: 
+            genotypeAll.append(genotA+'/'+genotB) 
+    df_meas["GenotypeAll"] = genotypeAll 
+    
     #%% Plot results
     variables, ylabels = fcAn.def_variables('morphoHeart_D_AnalyseAllData')
-    vars2plot, labels2plot = fcPlot.getVarsANDLabels(variables, ylabels)
+    save = True
     
     #%%
-    title = fcBasics.ask4input('Title: ', str, keep = True)
+    titles = ['Surface Areas','Heart and Lumen Size','Heart Looping','Tissue Layer Volumes','Angles']
+    input_vars = ['0-8','10,32,33,11,34,35','13,15,30','17-19,20-22,23-25','27-29']
+    
+    #ask4context = # notebook, talk, poster, paper
+    for i, input_var, title in zip(count(), input_vars, titles):
+        vars2plot, labels2plot = fcAn.getVarsANDLabels_Autom(variables, ylabels, input_var)
+        
+        sns.set_style("ticks")
+        # Set up the matplotlib figure
+        num_vars = len(vars2plot)
+        plots_per_col = 3
+        plots_per_row = math.ceil(num_vars/plots_per_col)
+        size_col = plots_per_col*8+5
+        size_row = plots_per_row*6+1
+        
+        # Number of genotypes: 
+        genots = sorted(df_all.GenotypeAll.unique())
+        n_gen = len(genots)
+        strains = sorted(df_all.Strain.unique())
+        n_strain = len(strains)
+        
+        # Save a palette to a variable:
+        palette = sns.color_palette("husl", 8*n_gen*n_strain)
+        # sns.palplot(palette)
+        
+        palettes = []
+        for strain in range(n_strain):
+            palettes.append(palette[strain*len(palette)//n_strain+2])
+        
+        # plt.clf()
+        fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col, figsize=(size_col, size_row), sharex=False, sharey=False)
+        fig.subplots_adjust(hspace=0.5, wspace=0.8)
+        
+        sns.set_context('poster', font_scale = 0.8, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                        "ytick.labelsize":'small', "lines.linewidth": 2.5,
+                                                        "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+        
+        marker_size = 10
+        dodge = False
+        jitter = 0.2
+        if n_strain == 2:
+            df_plot_0 = df_meas[df_meas['Strain'] == strains[0]]
+            df_plot_1 = df_meas[df_meas['Strain'] == strains[1]]
+            for ax, var, ylabel in zip(axes.flatten(), vars2plot, labels2plot):
+    
+                m_0 = sns.stripplot(x="Stage", y=var, hue="GenotypeAll", data=df_plot_0, ax = ax, order=['32-34','48-50','72-74'],
+                              marker = 'o', palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+    
+                m_1 = sns.stripplot(x="Stage", y=var, hue="GenotypeAll", data=df_plot_1, ax = ax, order=['32-34','48-50','72-74'],
+                              marker = '^', palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+                box = ax.get_position()
+                ax.set(xlabel="Stage [hpf]", ylabel=ylabel);
+                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+                
+                handles0, labels0 = m_0.get_legend_handles_labels()
+                handles1, labels1 = m_1.get_legend_handles_labels()
+            
+                # ax.legend(handles0, labels0, loc='center left', bbox_to_anchor=(1, 0.5))
+                ax.legend(handles0[1:],labels[1:],loc='center left', bbox_to_anchor=(1, 0.5))
+                sns.despine()
+                
+        fig.suptitle(title, fontsize = 30, y=1)
+        
+        if save: 
+            plt.savefig(dir_pl_meas+title+".png", dpi=300, bbox_inches='tight', transparent=True)
+
+#%% 
+    # perhaps use hue for strain and the different symbpl for the genotype nad use swarmplots instead? and in this case dodge = True
+    #https://seaborn.pydata.org/generated/seaborn.swarmplot.html 
+    # ax = sns.swarmplot(x="day", y="total_bill", hue="smoker",
+    #                data=tips, palette="Set2", dodge=True)
+    
     #%%
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    plots_per_col = 3
-    plots_per_row = math.ceil(num_vars/plots_per_col)
-    size_col = plots_per_col*4+5
-    size_row = plots_per_row*4
+    vars2plot, labels2plot = fcAn.getVarsANDLabels_Autom(variables, ylabels, input_var)
+    var = vars2plot[0]
+    fig, axes = plt.subplots(figsize=(12, 5), sharex=False, sharey=False)
+    g = sns.catplot(x="Strain", y=var,
+                    hue="GenotypeAll", col="Stage", hue_order = sorted(df_all.GenotypeAll.unique()),# col_order = sorted(df_all.Strain.unique()),
+                    data=df_meas, kind="strip", aspect = 0.5 )#,
+    # locs, labels = plt.xticks()
+    # plt.setp(labels, rotation=45)
+    g.set_xticklabels(rotation=30)
+    g.set_axis_labels("Survived","All")
+    
 
-    colors_pts = sns.hls_palette(2, h=.5, l=.4)
+                   # height=4, aspect=.7);
+    #https://dev.to/thalesbruno/subplotting-with-matplotlib-and-seaborn-5ei8
+    #https://seaborn.pydata.org/tutorial/axis_grids.html
+    #https://stackoverflow.com/questions/56788245/is-there-a-restriction-on-catplot-with-subplot
+    
+#%%
+    plt.clf()
+    thu_fri_sat = tips[tips['time'] == 'Lunch']#tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
+    colors = ['blue','yellow','green','red']
+    m = sns.stripplot('size','total_bill',hue='day',
+                      marker='o',data=thu_fri_sat, jitter=0.1, 
+                      palette=sns.xkcd_palette(colors),
+                      dodge=True,linewidth=2,edgecolor="gray")
+    
+    sun = tips[tips['time'] == 'Dinner']#tips[tips['day']=='Sun']
+    n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
+                      marker='^',data=sun, jitter=0.1, 
+                      dodge=True,linewidth=0)
+    handles, labels = n.get_legend_handles_labels()
+    n.legend(handles[:4], labels[:4])
+    
+#%% https://stackoverflow.com/questions/38650895/how-do-i-add-multiple-markers-to-a-stripplot-in-seaborn
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    
+    tips = sns.load_dataset("tips")
+    
+    plt.clf()
+    thu_fri_sat = tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
+    colors = ['blue','yellow','green','red']
+    m = sns.stripplot('size','total_bill',hue='day',
+                      marker='o',data=thu_fri_sat, jitter=0.1, 
+                      palette=sns.xkcd_palette(colors),
+                      dodge=True,linewidth=2,edgecolor="gray")
+    
+    sun = tips[tips['day']=='Sun']
+    n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
+                      marker='^',data=sun, jitter=0.1, 
+                      dodge=True,linewidth=0)
+    handles, labels = n.get_legend_handles_labels()
+    n.legend(handles[:4], labels[:4])
 
+
+#%% # colors_pts = sns.color_palette("husl", 8)# sns.color_palette("tab10")#sns.hls_palette(2, h=.5, l=.4)
+    # #Define number of variations/categories to plot
+    # colors_pts = [colors_pts[0], colors_pts[4]]
+    
     # sns.set_style("ticks", {"xtick.major.size": 4, "ytick.major.size": 4})
-    sns.set_style("darkgrid")
+    # sns.set_style("darkgrid")
     # sns.set(rc={"xtick.bottom" : True, "ytick.left" : True, "xtick.minor.width":0.3, "xtick.major.size": 2,"ytick.labelsize":5, "lines.linewidth": 1.5})
-    sns.set_context('poster', font_scale = 0.5, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":'small', "lines.linewidth": 1.5})
+    sns.set_context('poster', font_scale = 0.8, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                    "ytick.labelsize":'small', "lines.linewidth": 2.5,
+                                                    "xtick.major.size": 10, "ytick.major.size": 10})
 
     fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col, figsize=(size_col, size_row), sharex=False, sharey=False)
     fig.subplots_adjust(hspace=0.5, wspace=0.8)
-    fig.suptitle(title)
+    fig.suptitle(title)#, fontsize = 20)
 
     for ax, var, ylabel in zip(axes.flatten(), vars2plot, labels2plot):
         # sns.barplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
         #               palette = colors_pts)
         sns.stripplot(x="Stage", y=var, hue="Genotype_A", data=df_all, ax = ax, order=['32-34','48-50','72-74'],
-                      palette = colors_pts)
+                      palette = colors_pts, jitter=0.1, dodge = True, size = 8)
         ax.legend(bbox_to_anchor=(1, 1), loc='best')
         # Add x-axis and y-axis labels
         ax.set(xlabel="Stage [hpf]",
                   ylabel=ylabel);
         sns.despine()
         # ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+#%% for looping
+f, ax = plt.subplots()
+sns.violinplot(data=data)
+sns.despine(offset=10, trim=True);
 
 
+ax =  sns.stripplot(x="day", y="total_bill", hue="smoker",
+
+                   data=tips, palette="Set2", size=20, marker="D",
+
+                   edgecolor="gray", alpha=.25)
+
+# Save a palette to a variable:
+palette = sns.color_palette("Set2", 16)
+ 
+# Use palplot and pass in the variable:
+sns.palplot(palette)
     #%%
     # Set up the matplotlib figure
     num_vars = len(vars2plot)
@@ -120,42 +272,9 @@ if init:
                   ylabel=ylabel);
         sns.despine()
 
-    #%%
-    fig, axes = plt.subplots(1, 4, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
-    colors = ['tab:blue', 'tab:orange', 'tab:pink', 'tab:green', 'tab:olive']
+  
 
-    for i, (ax, Class) in enumerate(zip(axes.flatten(), df_filtAtr.Class.unique())):
-        print(Class)
-        x = df_filtAtr.loc[df_filtAtr.Class==Class, 'Thickness']
-        ax.hist(x, alpha=0.7, bins=100, density=True, stacked=True, label=str(Class), color=colors[i])
-        ax.set_title(Class)
 
-    title = filename[0] + ' - Probability Histogram of Thickness'
-    plt.suptitle(title, y=1.05, size=12)
-    ax.set_xlim(-5, 25);
-    ax.set_ylim(0, 0.6);
-    plt.tight_layout();
-
-#%% https://stackoverflow.com/questions/38650895/how-do-i-add-multiple-markers-to-a-stripplot-in-seaborn
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-    
-    tips = sns.load_dataset("tips")
-    
-    plt.clf()
-    thu_fri_sat = tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
-    colors = ['blue','yellow','green','red']
-    m = sns.stripplot('size','total_bill',hue='day',
-                      marker='o',data=thu_fri_sat, jitter=0.1, 
-                      palette=sns.xkcd_palette(colors),
-                      dodge=True,linewidth=2,edgecolor="gray")
-    
-    sun = tips[tips['day']=='Sun']
-    n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
-                      marker='^',data=sun, jitter=0.1, 
-                      dodge=True,linewidth=0)
-    handles, labels = n.get_legend_handles_labels()
-    n.legend(handles[:4], labels[:4])
 
     #%%
     sns.set_style("white")

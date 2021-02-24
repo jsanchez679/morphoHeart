@@ -37,7 +37,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    # init = True
+    init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -363,9 +363,8 @@ if init:
     #                                         pts_whole = m_cjTh.points(), pts_left = m_cjThLnR[0].points(), 
     #                                         pts_atr = m_atrExtCJ.points(), data = [cj_thickness], 
     #                                         names_data = ['cj_thickness'], plot_show = True)
-    if plot: 
-        fcMeshes.plotPtClassif(filename = filename, mesh = m_cjTh, pts_whole = m_cjTh.points(), 
-                           pts_class = [df_cjThNmyocIntBall['AtrVent'], df_cjThNmyocIntBall['DorsVent'], df_cjThNmyocIntBall['LeftRight']])
+    # fcMeshes.plotPtClassif(filename = filename, mesh = m_cjTh, pts_whole = m_cjTh.points(), 
+    #                    pts_class = [df_cjThNmyocIntBall['AtrVent'], df_cjThNmyocIntBall['DorsVent'], df_cjThNmyocIntBall['LeftRight']])
 
     if save:
         fcBasics.saveDF(filename = filename, df2save = df_cjThNmyocIntBall, df_name = 'df_cjThNmyocIntBall',

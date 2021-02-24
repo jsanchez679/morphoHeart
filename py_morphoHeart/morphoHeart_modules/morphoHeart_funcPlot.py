@@ -391,7 +391,7 @@ def yieldMultMeshes(names, dict_paths):
 
         yield list_meshes
 
-#%% func - getVariables
+#%% func - getVarsANDLabels
 def getVarsANDLabels (variables, labels):
     """
     
