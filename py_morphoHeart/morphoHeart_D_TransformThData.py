@@ -8,8 +8,8 @@ Created on Sat Feb 20 12:43:45 2021
 import os
 import numpy as np
 from time import perf_counter
-from vedo import *
-#from vedo import Plotter, Cube, settings, Text2D
+# from vedo import *
+from vedo import Plotter, Cylinder, settings, Text2D
 from vedo import embedWindow
 embedWindow(False)
 settings.legendSize = .3
@@ -24,7 +24,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -161,8 +161,8 @@ if init:
                                            names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
                                            saveHM = saveHM, savePlot = savePlot)
     
-    if 'kspl_vSurf' not in locals():
-        kspls_HR = []; kspl_vSurf = []
+    if 'kspl_vSurf' not in locals() or 'arr_all' not in locals():
+        kspls_HR = []; kspl_vSurf = []; arr_all = []; arr_valve = []
     m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=0, vmax=25).addScalarBar()
     m_cjTh.mapper().SetScalarRange(0,25)
     m_myocIntBall.pointColors(myoc_intBall, cmap="jet", vmin=0, vmax=100).addScalarBar()
@@ -199,3 +199,21 @@ if init:
 
 #%% Init
 init = True
+
+#%% IGNORE
+#% Temporal Angle hearts
+# num_pt = dict_pts['numPt_CLChamberCut']
+# # Import meshes
+# [m_myoc, m_atrMyoc, m_ventMyoc] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc','myoc_atr', 'myoc_vent'],
+#                                                               extension = 'vtk', dir_stl = directories[2],
+#                                                               alpha = [1,1,1], dict_colour = dict_colour)
+# sph_orient, lines_orient, dict_pts, dict_kspl, df_res = fcMeshes.getChambersOrientation(filename = filename, file_num = file_num, 
+#                                                                 num_pt = num_pt, kspl_CL2use = kspl_CL[0], distFromCl = 50,
+#                                                                 myoc_meshes = [m_myoc, m_atrMyoc, m_ventMyoc], linLine = linLines[0],
+#                                                                 dict_pts = dict_pts, dict_kspl = dict_kspl, df_res = df_res)
+
+# if save:
+#     # Save measurements dataframe
+#     fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
+#     fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = os.path.join(dir_data2Analyse, 'R_All', 'df_meas'))
+        

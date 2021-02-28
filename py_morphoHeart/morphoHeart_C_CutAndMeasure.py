@@ -18,11 +18,11 @@ Happy sectioning and heatmapping!
 
 #%% Importing python packages
 import os
-import numpy as np
+# import numpy as np
 from time import perf_counter
 from datetime import datetime
-from vedo import *
-#from vedo import Plotter, Cube, settings, Text2D
+# from vedo import *
+from vedo import Plotter, Cube, settings, Text2D
 from vedo import embedWindow
 embedWindow(False)
 settings.legendSize = .3
@@ -163,31 +163,31 @@ if init:
     # Cardiac Jelly
     cj_thickness, m_cjTh, _ = fcMeshes.getDistance2Mesh(filename = filename, m_int = m_cjIn, m_ext = m_cjOut,
                                                         title = 'Cardiac Jelly Thickness', plotshow = False)
-    # # Myocardium
-    # myoc_thickness, m_myocTh, _ = fcMeshes.getDistance2Mesh(filename = filename, m_int = m_myocInt, m_ext = m_myocExt,
-    #                                                     title = 'Myoc.Thickness', plotshow = False)
-    # # Endocardium
-    # endo_thickness, m_endoTh, _ = fcMeshes.getDistance2Mesh(filename = filename, m_int = m_endoInt, m_ext = m_endoExt,
-    #                                                     title = 'Endo.Thickness', plotshow = False)
+    # Myocardium
+    myoc_thickness, m_myocTh, _ = fcMeshes.getDistance2Mesh(filename = filename, m_int = m_myocInt, m_ext = m_myocExt,
+                                                        title = 'Myoc.Thickness', plotshow = False)
+    # Endocardium
+    endo_thickness, m_endoTh, _ = fcMeshes.getDistance2Mesh(filename = filename, m_int = m_endoInt, m_ext = m_endoExt,
+                                                        title = 'Endo.Thickness', plotshow = False)
 
-    # if plot:
-    #     vp = Plotter(N=3, axes=10)
-    #     vp.show(m_cjTh.alpha(1), txt, at=0)
-    #     vp.show(m_myocTh.alpha(1), at=1)
-    #     vp.show(m_endoTh.alpha(1), scale_cube, at=2, zoom=2, azimuth = azimuth, elevation = 0, interactive=True)
+    if plot:
+        vp = Plotter(N=3, axes=10)
+        vp.show(m_cjTh.alpha(1), txt, at=0)
+        vp.show(m_myocTh.alpha(1), at=1)
+        vp.show(m_endoTh.alpha(1), scale_cube, at=2, zoom=2, azimuth = azimuth, elevation = 0, interactive=True)
 
     if save:
-        fcMeshes.saveThickness(filename = filename, arrays2save = [cj_thickness],
-                                names = ['cj_thickness'], dir2save = directories[1])
-        dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_cjTh],
-                                names = ['cj_thickness'],
-                                dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
-        
-        # fcMeshes.saveThickness(filename = filename, arrays2save = [cj_thickness, myoc_thickness, endo_thickness],
-        #                         names = ['cj_thickness','myoc_thickness','endo_thickness'], dir2save = directories[1])
-        # dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_cjTh, m_myocTh, m_endoTh],
-        #                         names = ['cj_thickness','myoc_thickness','endo_thickness'],
+        # fcMeshes.saveThickness(filename = filename, arrays2save = [cj_thickness],
+        #                         names = ['cj_thickness'], dir2save = directories[1])
+        # dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_cjTh],
+        #                         names = ['cj_thickness'],
         #                         dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
+        
+        fcMeshes.saveThickness(filename = filename, arrays2save = [cj_thickness, myoc_thickness, endo_thickness],
+                                names = ['cj_thickness','myoc_thickness','endo_thickness'], dir2save = directories[1])
+        dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_cjTh, m_myocTh, m_endoTh],
+                                names = ['cj_thickness','myoc_thickness','endo_thickness'],
+                                dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
 
     #%% GET BALLOONING HEATMAPS 
     #   This section of the code will extract the balloning heatmaps of the internal and external myocardial meshes
@@ -224,7 +224,7 @@ if init:
 
     if plot:
         settings.legendSize = .2
-        if 'myoc_extBall' not in locals():
+        if 'm_myoc_extBall' not in locals():
             vp = Plotter(N=4, axes = 13)
             vp.show(m_myocInt.alpha(0.01), sph_ballonning, at=0)
             vp.show(m_myocInt.alpha(0.01), m_myocExt.alpha(0.01), sph_ballonning, at=1)
@@ -387,13 +387,9 @@ if init:
         saveVideos = fcBasics.ask4input('Do you want to save videos of all the resulting meshes? [0]:no/[1]:yes, please!: ', bool)
         if saveVideos:
             if 'myoc_extBall' not in locals():
-                # fcMeshes.saveMultVideos(filename = filename,
-                #     info = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall'],
-                #     meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1)],
-                #     rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False)
                 fcMeshes.saveMultVideos(filename = filename,
-                    info = ['endo_thickness','myoc_intBall'],
-                    meshes4video = [m_endoTh, m_myocIntBall.alpha(1)],
+                    info = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall'],
+                    meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1)],
                     rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False)
             else: 
                 fcMeshes.saveMultVideos(filename = filename,

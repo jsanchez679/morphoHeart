@@ -181,10 +181,10 @@ if others:
 
     #%% Manually close the contours or clean any slices you might have missed
     stack_closed, processDict, _ = fcCont.main_manuallyCloseContours(filename, channel, directories, stack_closed, 
-                                                                     stack_o, processDict, 6, True)
+                                                                     stack_o, processDict, 7, True)
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
-    first = 45
+    first = 75
     last = 170 # any number within the number of slices in the stack
     fcCont.showGridContours(myStack = stack_closed, slices = (first,last+1), n_rows = n_rows)
     

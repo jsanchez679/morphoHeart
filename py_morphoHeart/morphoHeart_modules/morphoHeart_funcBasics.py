@@ -421,7 +421,7 @@ def selectFile (df_dataset):
     #     print('-',c-1,':\t', value)
 
     alert('beep',1)
-    input_num = int(input('> Select the file you want to process: '))
+    input_num = int(input('> Select the file number you want to process: '))
     filename = list_folder[input_num]
 
     print('\n\t\t\tFILE SELECTED ')
@@ -679,8 +679,8 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
         print("\nYou are done in python for a little while... \n\t\tto get the centreline of each of the selected meshes follow the next steps:")
         print(" >>> 1. Open the file(s):  -", mesh_titles," - in Meshlab")
         print(" >>> 2. Run Filters > Remeshing, Simplification.. > Screened Poisson Surf Reco (check Pre-clean)")
-        print(" >>> 3. Cut inflow/outflow tract and export the resulting surface adding 'ML' at the end of the filename \n\t\t\t(e.g _cut4clML.stl) in the same folder")
-        print(" >>> 4. Back in Spyder, open script morphoHeart_B_VMTK.py and run it...")
+        print(" >>> 3. Cut inflow and outflow tract as close as the cuts from the original mesh you opened in Meshlab \n         and export the resulting surface adding 'ML' at the end of the filename (e.g _cut4clML.stl) in the same folder")
+        print(" >>> 4. Back in Spyder, open script morphoHeart_B_VMTK.py and run it using the green triangle...")
         # print(str(vmtktxtA), '\n\n\n', str(vmtktxtB))
         
         vmtktxtsf = vmtktxts

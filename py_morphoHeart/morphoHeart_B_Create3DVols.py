@@ -22,8 +22,8 @@ Happy running!
 #%% Importing python packages
 import os
 from time import perf_counter
-from vedo import *
-from vedo import embedWindow#, settings, Plotter, Text2D
+# from vedo import *
+from vedo import embedWindow, settings, Plotter, Text2D
 embedWindow(False)
 settings.legendSize = .3
 # settings.legendPos = 1
@@ -45,7 +45,7 @@ def setWorkingDir (root_path, init):
 root_path, init = setWorkingDir(os.getcwd(),init)
 save = True
 
-#%% Start B_Create3DVols
+#%% Start B_Create3DVols (***)
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
@@ -53,7 +53,7 @@ if init:
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
     tic = perf_counter()
 
-    #%% SELECT FILE AND GET METADATA
+    #%% SELECT FILE AND GET METADATA (***)
     #   This section allows the user to select file to process, get its main directories and metadata,
     #   and define some properties
     #   ================================================================================================================
@@ -220,14 +220,37 @@ if init:
     if save:
         fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
 
-    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE
+    # Save
+    if save:
+        dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour],
+                                         names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'],
+                                         dir2save = directories[0])
+        
+    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE (***)
     #   This section allows the user to create one or two meshes from which the centreline will be extracted. As the
     #   package used to create the centrelines (vmtk) needs a smooth mesh with blunt cuts in the inflow and outflow
     #   tracts, this section will smooth the meshes and ask the user to define planes to cut both the inflow and outflow
-    #   tracts (similar process to the one previously used to cut the meshes).
-    #   This section will save the resulting meshes (smoothed and cut)
+    #   tracts (following a similar process to the one previously used to cut the meshes).
+    #   This section will save the resulting meshes (smoothed and cut).
+    #   Note: If when running this process the computer freezes and the kernel needs to be restarted, restart the kernel
+    #   and run the sections of the code that have a (***) at the end of the title. This process will allow you just to 
+    #   create the meshes for the centreline without having to run again all the code. 
     #   ================================================================================================================
 
+    if 'myoc_cut_int' not in locals():
+        # Import dictionaries
+        dicts = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj'], directories = [directories[0]])
+        dict_obj = fcMeshes.splitDicts(dicts[0])
+        if len(dict_obj) == 4:
+            [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
+        else:
+            [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
+    
+        # Import meshes
+        [myoc_cut_int, endo_cut_ext] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc_int', 'myoc_ext'],
+                                                                  extension = 'vtk', dir_stl = directories[2],
+                                                                  alpha = [1,1], dict_colour = dict_colour)
+    
     # Create meshes for centreline
     if initial_smooth:
         meshes4cl, names_exp = fcMeshes.createMeshes4CL(filename = filename, meshes = [myoc_cut_int, endo_cut_ext],
@@ -244,18 +267,26 @@ if init:
 
     # Plot and save all meshes
     settings.legendSize = .2
-    vp = Plotter(N=4+len(meshes4clf), axes=13)
-    vp.show(myoc_cut, txt, at=0, zoom=1)
-    vp.show(endo_cut, at=1, zoom=1)
-    vp.show(meshes4clf[0], at=2,  zoom=1)
-    vp.show(cj_all, at=3,  zoom=1)
-    if len(meshes4clf) == 1:
-        vp.show(myoc_cut, endo_cut, cj_all, at=4, zoom=1, interactive=True)
-    else:
-        vp.show(myoc_cut, endo_cut, cj_all, at=4)
-        vp.show(meshes4clf[1], at=5, zoom=1, interactive=True)
+    if 'myoc_cut' in locals():
+        vp = Plotter(N=4+len(meshes4clf), axes=13)
+        vp.show(myoc_cut, txt, at=0, zoom=1)
+        vp.show(endo_cut, at=1, zoom=1)
+        vp.show(meshes4clf[0], at=2,  zoom=1)
+        vp.show(cj_all, at=3,  zoom=1)
+        if len(meshes4clf) == 1:
+            vp.show(myoc_cut, endo_cut, cj_all, at=4, zoom=1, interactive=True)
+        else:
+            vp.show(myoc_cut, endo_cut, cj_all, at=4)
+            vp.show(meshes4clf[1], at=5, zoom=1, interactive=True)
+    else: 
+        vp = Plotter(N=len(meshes4clf), axes=13)
+        if len(meshes4clf) == 1:
+            vp.show(meshes4clf[0], at=0, zoom=1, interactive=True)
+        else:
+            vp.show(meshes4clf[0], at=0, zoom=1)
+            vp.show(meshes4clf[1], at=1, zoom=1, interactive=True)
 
-    #%% SAVE ALL AND PRINT INSTRUCTIONS
+    #%% SAVE ALL AND PRINT INSTRUCTIONS (***)
     #   This section allows the user to save the dictionaries created with all the planes, splines and spheres created
     #    and and print the instructions the user needs to follow to extract the centreline(s).
     #   ================================================================================================================

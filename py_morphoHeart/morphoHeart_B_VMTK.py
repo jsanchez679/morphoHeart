@@ -13,11 +13,8 @@ Happy centreline extraction!
 """
 #%% Importing python packages
 import os
-import numpy as np
-import json
 import vmtk
-from vmtk import pypes
-from vmtk import vmtkscripts
+from vmtk import pypes, vmtkscripts
 
 init = False
 # Verify working dir

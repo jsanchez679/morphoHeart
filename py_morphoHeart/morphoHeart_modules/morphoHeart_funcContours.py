@@ -184,7 +184,9 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
                 ch_processDict['C-ClosedInflowTract'] = 'NO'
                 ch_processDict['C-ClosedOutflowTract'] = 'NO'
                 ch_processDict['G-LastProcessingStep'] = 'A'
-
+                
+        saveDict(filename, processDict , 'processDict', directories[1], False)
+        
     except: #First time processing:
         q_autom = ask4input('Do you want to AUTOMATICALLY CLOSE THE CONTOURS of '+filename+'/'+channel+'? [0]:no/[1]:yes: ',bool)
         if q_autom:
@@ -208,7 +210,18 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
             ch_processDict['C-ClosedInflowTract'] = 'NO'
             ch_processDict['C-ClosedOutflowTract'] = 'NO'
             ch_processDict['G-LastProcessingStep'] = 'A'
-
+        
+        else: 
+            processDict = dict()
+            ch_processDict = processDict[channel] = dict()
+            ch_processDict['G-Slc_tissueLayerFirst'] = 0
+            ch_processDict['G-Slc_tissueLayerLast'] = len(stack)
+            ch_processDict['A-AutomCloseContours'] = 'DONE'
+            ch_processDict['B-ManualCloseContours'] = 'NO'
+            ch_processDict['C-ClosedInflowTract'] = 'NO'
+            ch_processDict['C-ClosedOutflowTract'] = 'NO'
+            ch_processDict['G-LastProcessingStep'] = 'A'
+                    
     saveDict(filename, processDict , 'processDict', directories[1], False)
 
     if done_autom:

@@ -100,8 +100,10 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
         mesh_dir = os.path.join(dir_stl, mesh_title)
         mesh_out = load(mesh_dir)
         print("\t>> Mesh loaded - "+mesh_title+"!")
-
-        mesh_colour = dict_colour[name]['colour']
+        try:    
+            mesh_colour = dict_colour[name]['colour']
+        except: 
+            mesh_colour = 'chocolate'
         mesh_out.alpha(alpha[i]).legend(legend_all[index]).wireframe().color(mesh_colour)
 
         meshes_out.append(mesh_out)
@@ -554,14 +556,14 @@ def addSurfArea2df (df_res, file_num,  meshes):
     """
 
     names = ['Myoc', 'Int.Myoc', 'Ext.Myoc', 'Endo', 'Int.Endo', 'Ext.Endo', 'CJ', 'Int.CJ', 'Ext.CJ']
-    df_resFilled = df_res
+    df_resFilled = df_res.copy()
 
     for n, name, mesh in zip(count(), names, meshes):
         area = mesh.area()
         df_resFilled.loc[file_num,'SurfArea_'+name] = area
 
         area_print = format(area, '.1f')
-        print('Name:', name, '- SurfArea: ', area_print, 'um^2')
+        print('-', name, '- SurfArea: ', area_print, 'um^2')
 
     return df_resFilled
 
@@ -3253,29 +3255,29 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, 
 
     # Atrial orientation
     orient_atr = Line(sph_inf.pos(), sph_atr.pos(), c="steelblue", lw=3).legend('lin_OrientAtr')
-    _, y_atrInf, z_atrInf = sph_inf.pos()
-    _, y_atrCent, z_atrCent = sph_atr.pos()
+    # _, y_atrInf, z_atrInf = sph_inf.pos()
+    # _, y_atrCent, z_atrCent = sph_atr.pos()
     if dORv == 'V':
         orient_atrX = orient_atr.clone().projectOnPlane('x').c('steelblue').x(0).legend('lin_OrientAtr(ProjX)')
     elif dORv == 'D':
         orient_atrX = orient_atr.clone().projectOnPlane('z').c('steelblue').x(0).legend('lin_OrientAtr(ProjX)')
 
-    pts_atr = orientVectors(orient_atrX)
+    pts_atr = orientVectors(orient_atrX, ref_pt = pts_heart[0])
     ang_atr = findAngleBtwVectorsZ(pts_atr, pts_heart)
     atr_txt = 'Atrial orientation with respect to heart (deg): '+ format(ang_atr,'.1f')
     print('\t>> '+atr_txt)
 
     # Ventricular orientation
     orient_vent = Line(sph_vent.pos(), sph_outf.pos(), c="hotpink", lw=3).legend('lin_OrientVent')
-    _, y_ventCent, z_ventCent = sph_vent.pos()
-    _, y_ventOutf, z_ventOutf = sph_outf.pos()
+    # _, y_ventCent, z_ventCent = sph_vent.pos()
+    # _, y_ventOutf, z_ventOutf = sph_outf.pos()
     if dORv == 'V':
         # azimuth = 90
         orient_ventX = orient_vent.clone().projectOnPlane('x').c('hotpink').x(0).legend('lin_OrientVent(ProjX)')
     elif dORv == 'D':
         # azimuth = 0
         orient_ventX = orient_vent.clone().projectOnPlane('z').c('hotpink').x(0).legend('lin_OrientVent(ProjX)')
-    pts_vent = orientVectors(orient_ventX)
+    pts_vent = orientVectors(orient_ventX, ref_pt = pts_heart[1])
     ang_vent = findAngleBtwVectorsZ(pts_vent, pts_heart)
     vent_txt = 'Ventricular orientation with respect to heart (deg): '+ format(ang_vent,'.1f')
     print('\t>> '+vent_txt)
@@ -4455,7 +4457,7 @@ def findAngleBtwVectorsZ(pts1, pts2):
     return angle
 
 #%% func - orientVectors
-def orientVectors(line):
+def orientVectors(line, ref_pt = []):
     """
     Function that orients the input line in a particular direction
 
@@ -4463,27 +4465,49 @@ def orientVectors(line):
     ----------
     line : line
         Line defining orientation (vedo line)
-
+    ref_pt : array of coordinates defining a point to use as reference
+        Coordinates defining the reference point to use to orient the vector. If line is atr_or, the reference point 
+        should be the point of linLine in the outflow tract. if line is vent_or, the reference point 
+        should be the point of linLine in the inflow tract.
+    
     Returns
     -------
-    pts_line : array of coordinates defining a vector
+    pts_linef : array of coordinates defining a vector
         Coordinates defining the head and tail of the reoriented vector
 
     """
-
+    pts_line = line.points()
     if line._legend  == 'lin_OrientAtr(ProjX)':
-        pts_line = line.points()
-        pts_line = pts_line[pts_line[:,2].argsort()]
+        print('OpA-Atrium')
+        pts_linef = np.ones_like(pts_line)
+        dist_0 = findDist(ref_pt, pts_line[0]) 
+        dist_1 = findDist(ref_pt, pts_line[1])
+        if dist_0 < dist_1:
+            pts_linef[0] = pts_line[0]
+            pts_linef[1] = pts_line[1]
+        else: 
+            pts_linef[0] = pts_line[1]
+            pts_linef[1] = pts_line[0]
+        #pts_line = pts_line[pts_line[:,1].argsort()[::-1]]
     elif line._legend == 'lin_OrientVent(ProjX)':
-        pts_line = line.points()
-        pts_line = pts_line[pts_line[:,2].argsort()[::-1]]
-    else: # Linear line
-        pts_line = line.points()
-        pts_line = pts_line[pts_line[:,2].argsort()]
+        print('OpB-Ventricle')
+        pts_linef = np.ones_like(pts_line)
+        dist_0 = findDist(ref_pt, pts_line[0]) 
+        dist_1 = findDist(ref_pt, pts_line[1])
+        if dist_0 < dist_1:
+            pts_linef[0] = pts_line[0]
+            pts_linef[1] = pts_line[1]
+        else: 
+            pts_linef[0] = pts_line[1]
+            pts_linef[1] = pts_line[0]
+        #pts_line = pts_line[pts_line[:,1].argsort()]#[::-1]]
+    else: # Linear line "linLine(ProjX)"
+        print('OpC-Heart')
+        pts_linef = pts_line[pts_line[:,1].argsort()[::-1]]
 
     #print(np.diff(pts_line, axis = 0))
 
-    return  pts_line
+    return  pts_linef
 
 #%% func - classifyPtsMx
 def classifyPtsMx(dict_planes, pl_name, pts_whole):
@@ -4976,60 +5000,6 @@ def plotPtClassif(filename, mesh, pts_whole, pts_class):
 
 
 #%% - PRINT
-#%% func - code4vmtkCL
-def code4vmtkCL(filename, mesh_name, dir_cl, printshow):
-    """
-    Function that prints the instructions that should be followed to get vmtk centreline data
-
-    Parameters
-    ----------
-    filename : str
-        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
-    mesh_name : list of str
-        List of meshes names
-    dir_cl : path
-        Path to the folder where the centreline data is saved.
-    printshow : boolean
-        True if you want to print the instructions, else False.
-
-    Returns
-    -------
-    cl_dirA : path
-        Path to the vtp file with centreline data A
-    cl_dirB : path
-        Path to the vtp file with centreline data B
-
-    """
-
-    mesh_titleA = filename+"_"+mesh_name[0]+".stl"
-    mesh_titleB = filename+"_"+mesh_name[1]+".stl"
-    # mesh_dirA = '"'+os.path.join(dir_cl, mesh_titleA)+'"'
-    # mesh_dirB = '"'+os.path.join(dir_cl, mesh_titleB)+'"'
-
-    meshML_titleA = filename+"_"+mesh_name[0]+"_cut4clML.stl"
-    meshML_titleB = filename+"_"+mesh_name[1]+"_cut4clML.stl"
-    meshML_dirA = '"'+os.path.join(dir_cl, meshML_titleA)+'"'
-    meshML_dirB = '"'+os.path.join(dir_cl, meshML_titleB)+'"'
-
-    cl_titleA = filename+"_"+mesh_name[0]+"_cl.vtp"
-    cl_titleB = filename+"_"+mesh_name[1]+"_cl.vtp"
-    cl_dirA = '"'+os.path.join(dir_cl, cl_titleA)+'"'
-    cl_dirB = '"'+os.path.join(dir_cl, cl_titleB)+'"'
-
-    if printshow:
-        print("You are done in python now... to get the centreline with each of the meshes follow the next steps:")
-        print(">>> 1. Open the files:  -", mesh_titleA,", ", mesh_titleB+" - in Meshlab")
-        print(">>> 2. Run Filters > Remeshing, Simpl.. > Screened Poisson Surf Reco (check Pre-clean)")
-        print(">>> 3. Cut outflow tract if needed and export the resulting surface adding '_ML' after _cut4cl in the same folder")
-        print(">>> 4. Open VMTK, copy the next text and run it...")
-        vmtktxtA = "vmtksurfacereader -ifile "+ meshML_dirA +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirA+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-        vmtktxtB = "vmtksurfacereader -ifile "+ meshML_dirB +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dirB+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
-        print(str(vmtktxtA), '\n\n\n', str(vmtktxtB))
-
-    alert("wohoo",1)
-
-    return cl_dirA, cl_dirB
-    
 #%% func - decodeDict
 def decodeDict (dict2classify, info):
     """
