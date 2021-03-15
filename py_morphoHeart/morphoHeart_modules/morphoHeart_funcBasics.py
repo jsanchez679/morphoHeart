@@ -191,7 +191,7 @@ def getMainDirectories(root_path):
     return dir_morphoHeart, dir_parent, dir_im_morphoHeart
 
 #%% func - exportDatasetCSV
-def exportDatasetCSV(dir_data2Analyse, end_name = '2A'):
+def exportDatasetCSV(dir_data2Analyse, end_name = '2A', out_type = 'csv'):
     """
     Function that finds all the folders within the dir_data2Analyse folder whose name ends with 2A (a.k.a: to analyse)
     and creates a dataframe including the embryo information (strain, stage, manipulation, genotype and lightsheet ref)
@@ -268,9 +268,11 @@ def exportDatasetCSV(dir_data2Analyse, end_name = '2A'):
         df_dataset = df_dataset[['Folder','LS_Session', 'Fish_ref','Strain','Stage', 'Manip',
                                   'Gene_A', 'Genotype_A','Gene_B', 'Genotype_B']]
 
-        dir_dfDataset = os.path.join(dir_data2Analyse,'df_dataset'+end_name+'.csv')
-
-    df_dataset.to_csv(dir_dfDataset)
+        dir_dfDataset = os.path.join(dir_data2Analyse,'df_dataset'+end_name+'.'+out_type)
+    if out_type == 'csv':
+        df_dataset.to_csv(dir_dfDataset)
+    else: #'xls
+        df_dataset.to_excel(dir_dfDataset, sheet_name='df_datasetR')
 
     return df_dataset
 

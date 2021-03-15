@@ -4034,6 +4034,7 @@ def heatmapUnlooped (filename, val2unloop, dataname, dir_results, dirImgs, names
         df = loadDF(filename, 'df_'+name, dir_results)
         df = df.drop(['taken'], axis=1)
         df.astype('float16').dtypes
+        
         heatmap = pd.pivot_table(df, values= val2unloop, columns = 'theta', index='z_plane', aggfunc=np.max)
         heatmap.astype('float16').dtypes
         
@@ -4060,8 +4061,8 @@ def heatmapUnlooped (filename, val2unloop, dataname, dir_results, dirImgs, names
             
         x_pos = ax.get_xticks()
         x_lab = ax.get_xticklabels()
-        x_pos_new = np.linspace(x_pos[0], x_pos[-1], 18)
-        x_lab_new = np.arange(-180,180,20)
+        x_pos_new = np.linspace(x_pos[0], x_pos[-1], 19)
+        x_lab_new = np.arange(-180,200,20)
         ax.set_xticks(x_pos_new) 
         ax.set_xticklabels(x_lab_new, rotation=30)
         
@@ -4100,6 +4101,82 @@ def heatmapUnlooped (filename, val2unloop, dataname, dir_results, dirImgs, names
         
     return heatmaps
     
+#%% func - filterUnloopedDF
+def filterUnloopedDF(filename, thickness, dir_results, dir_data2Analyse, names, save_names, saveHM = True):
+    """
+    
+
+    Parameters
+    ----------
+    filename : TYPE
+        DESCRIPTION.
+    dir_results : TYPE
+        DESCRIPTION.
+    names : TYPE
+        DESCRIPTION.
+    saveHM : TYPE, optional
+        DESCRIPTION. The default is True.
+
+    Returns
+    -------
+    heatmaps : TYPE
+        DESCRIPTION.
+
+    """
+    
+    heatmaps = []
+    for n, name in enumerate(names): 
+        df = loadDF(filename, 'df_'+name, dir_results)
+        df = df.drop(['taken'], axis=1)
+        df.astype('float16').dtypes
+        df_cols = list(df.columns)
+        
+        angles_f = np.linspace(-180,180,num = 360*6+1, endpoint = True)
+        step = round((angles_f[1]-angles_f[0])/2, 4)
+        
+        cjTh_list = []
+        myocIntBall_list = []
+        rad_list = []
+        zplane_list = []
+        theta_list = []
+        
+        for j, z_plane in enumerate(sorted(df.z_plane.unique())):
+            df_z = df[df['z_plane'] == z_plane]
+            #max? mean?
+            for i, ang in enumerate(angles_f):
+                theta_list.append(round(ang,3))
+                filt = df_z[(df_z['theta'] >= ang-step) & (df_z['theta'] < ang+step)]
+                cjTh_val = filt['cj_thickness'].max()
+                cjTh_list.append(cjTh_val)
+                
+                myocIntBall_val = filt['myoc_intBall'].max()
+                myocIntBall_list.append(myocIntBall_val)
+                
+                rad_val = filt['radius'].max()
+                rad_list.append(rad_val)
+                
+                zplane_list.append(round(z_plane, 3))
+        df_filt = pd.DataFrame(list(zip(zplane_list, theta_list, rad_list, cjTh_list, myocIntBall_list)), 
+                               columns =df_cols) 
+        
+        alert('wohoo', 1)
+        df_filt.astype('float16').dtypes
+        heatmap = pd.pivot_table(df_filt, values= thickness, columns = 'theta', index='z_plane', aggfunc=np.max)
+        heatmap.astype('float16').dtypes
+        fig, ax = plt.subplots(figsize=(16, 10))
+        ax = sns.heatmap(heatmap, cmap='jet')#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
+        plt.show()
+
+        if saveHM: 
+            saveDF(filename = filename, df2save = heatmap, df_name = 'hmf_'+save_names[n], dir2save = dir_results)
+            saveDF(filename = filename, df2save = heatmap, df_name = 'hmf_'+save_names[n], dir2save = os.path.join(dir_data2Analyse, 'R_All','df_hmf'))
+            
+            alert('frog', 1)
+        heatmaps.append(heatmap)
+        
+    return heatmaps
+        
+
 #%% - PROCESS DATA
 #%% func - rotation_matrix
 def rotation_matrix(axis, theta):

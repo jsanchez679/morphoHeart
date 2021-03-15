@@ -9,7 +9,7 @@ morphoHeart - F. MULTIPLOT HEARTS
 import os
 import numpy as np
 from itertools import count
-from vedo import *
+from vedo import Plotter, Cube, settings
 from vedo import embedWindow
 embedWindow(False)
 settings.legendSize = .3
@@ -34,7 +34,7 @@ root_path, init = setWorkingDir(os.getcwd(),init)
 
 c="k"; font= 'VTK'
 azimuth = 0
-alpha_cube = 0
+alpha_cube = 0.1
 s_cube = 350
 
 #%% Start F_MultiPlot
@@ -54,11 +54,12 @@ if init:
     objs = fcPlot.selectObjects()
     dict_paths = fcPlot.createDictPaths(objs, df_files, dir_data2Analyse)
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
-
+    
+    settings.legendSize = .3
     vp = Plotter(shape = (1, len(dict_paths)), axes=13, sharecam = True); m = 0
     for i, n, file in zip(count(), range(len(dict_paths)), df_files['Folder'].tolist()):
         txt = fcPlot.plotTitle(file, df_files)
-        scale_cube = Cube(pos=meshes[m].centerOfMass(), side=s_cube, c='white', alpha=alpha_cube)
+        scale_cube = Cube(pos=meshes[m].centerOfMass(), side=s_cube, c='gray', alpha=alpha_cube)
         if n != len(dict_paths)-1:
             vp.show(meshes[m:m+len(objs)], scale_cube, txt, at=n)
             m += len(objs)
@@ -89,4 +90,33 @@ if init:
         else:
             vp.show(meshes[m], scale_cube, at=n, zoom = 1.5, interactive=True)
 
+#%% 
+    from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
+    r_folders = df_files['Folder']
+    filename = [r_folders[i][2:] for i in range(len(r_folders))]
+    
+    for f, folder, name in zip(count(), r_folders, filename):
+        print(f, name)
+        dir_results = os.path.join(dir_data2Analyse, folder, 'Results_'+name)
+        heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'cj_thickness', 
+                                              dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+                                              names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+                                              save_names= ['unloopAtrCjTh', 'unloopVentCjTh'], 
+                                              saveHM = True)
+        
+    for f, folder, name in zip(count(), r_folders, filename):
+        print(f, name)
+        dir_results = os.path.join(dir_data2Analyse, folder, 'Results_'+name)
+        heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'myoc_intBall', 
+                                              dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+                                              names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+                                              save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
+                                              saveHM = True)
+        
+
+#%% Init
 init = True
+# from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
+# filename = file[2:]
+# fcMeshes.saveMesh(filename, meshes[0], 'endoExt_stl', dir_data2Analyse, 'stl')
+# fcMeshes.saveMesh(filename, meshes[1], 'endo_stl', dir_data2Analyse, 'stl')

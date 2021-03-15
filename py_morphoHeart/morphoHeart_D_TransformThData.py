@@ -133,7 +133,7 @@ if init:
     #   Again, be patient, it is worth it! :)
     #   ================================================================================================================
     
-    saveHM = True; savePlot = True; plotshow = True
+    saveHM = True; savePlot = True; plotshow = False
     df_AtrVent = np.asarray(df_cjThNmyocIntBall['AtrVent'])
     
     fcMeshes.plotPtClassif(filename = filename, mesh = m_cjTh, pts_whole = m_cjTh.points(), 
@@ -216,4 +216,61 @@ init = True
 #     # Save measurements dataframe
 #     fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
 #     fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = os.path.join(dir_data2Analyse, 'R_All', 'df_meas'))
+
+
+heatmapsf = fcMeshes.filterUnloopedDF(filename = filename, dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+                                      names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+                                      saveHM = True)
+
+angles_f = np.linspace(-180,180,num = 360*6+1, endpoint = True)
+step = round((angles_f[1]-angles_f[0])/2, 4)
+df_cols = list(df.columns)
+
+cjTh_list = []
+myocIntBall_list = []
+rad_list = []
+zplane_list = []
+theta_list = []
+
+for j, z_plane in enumerate(sorted(df.z_plane.unique())):
+    df_z = df[df['z_plane'] == z_plane]
+    #max? mean?
+    for i, ang in enumerate(angles_f):
+        
+        theta_list.append(ang)
+        filt = df_z[(df_z['theta'] >= ang-step) & (df_z['theta'] < ang+step)]
+        cjTh_val = filt['cj_thickness'].max()
+        cjTh_list.append(cjTh_val)
+        
+        myocIntBall_val = filt['myoc_intBall'].max()
+        myocIntBall_list.append(myocIntBall_val)
+        
+        rad_val = filt['radius'].max()
+        rad_list.append(rad_val)
+        
+        zplane_list.append(round(z_plane, 3))
+        
+        # if len(filt) > 0:
+        #     print('Angle:', ang, 'cjth:', cjTh_val, 'myocInt:', myocIntBall_val, 'radius:', rad_val)
+        #     print(filt)
+            
+df_filt = pd.DataFrame(list(zip(zplane_list, theta_list, rad_list, cjTh_list, myocIntBall_list)), 
+               columns =df_cols[1:]) 
+fcBasics.alert('wohoo', 1)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+df_filt.astype('float16').dtypes
+heatmap = pd.pivot_table(df_filt, values= 'cj_thickness', columns = 'theta', index='z_plane', aggfunc=np.max)
+heatmap.astype('float16').dtypes
+fig, ax = plt.subplots(figsize=(16, 10))
+ax = sns.heatmap(heatmap, cmap='jet')#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
+plt.show()
+fcBasics.alert('wohoo', 3)
+
+fcBasics.saveDF(filename = filename, df2save = heatmap, df_name = 'hmf_'+name, dir2save = dir_results)
+alert('frog', 1)
+plane_num = np.linspace(2-ksp_num,1-ksp_num,len(pl_normals))
+        
+        
         

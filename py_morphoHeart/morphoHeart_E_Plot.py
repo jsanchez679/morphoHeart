@@ -64,18 +64,27 @@ if init:
 
     #%% Load data
     # Import dictionaries
-    [dict_obj, myoc_int_npcl, endo_ext_npcl] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj','myoc_int_npcl','endo_ext_npcl'],
-                                                                    directories = [directories[0], directories[3], directories[3]])
+    [dict_obj, myoc_int_npcl] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj','myoc_int_npcl'],
+                                                                    directories = [directories[0], directories[3]])
     [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = fcMeshes.splitDicts(dict_obj)
     # Import meshes
-    m_names = ['myoc','myoc_atr','myoc_vent','endo','endo_atr','endo_vent','cj','cj_atr','cj_vent','cj_in']
+    # m_names = ['myoc','myoc_atr','myoc_vent','endo','endo_atr','endo_vent','cj','cj_atr','cj_vent','cj_in']
+    # m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
+    #                             dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
+    # m_myoc, m_atrMyoc, m_ventMyoc, m_endo, m_atrEndo, m_ventEndo, m_cj, m_atrCJ, m_ventCJ, m_cjIn = m_all
+    m_names = ['myoc','endo']
     m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
-    m_myoc, m_atrMyoc, m_ventMyoc, m_endo, m_atrEndo, m_ventEndo, m_cj, m_atrCJ, m_ventCJ, m_cjIn = m_all
-    mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_extBall']
+    m_myoc, m_endo = m_all
+    # mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
+    # [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
+    #                               dir_stl = directories[2], dir_txtNnpy = directories[1])
+    # m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll
+    mTh_names = ['cj_thickness']
     [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
                                   dir_stl = directories[2], dir_txtNnpy = directories[1])
-    m_cjTh, m_myocTh, m_endoTh, m_myocIntBall, m_myocExtBall = m_thAll
+    m_cjTh = m_thAll[0]
+
 
     #%%
 
@@ -206,6 +215,7 @@ if init:
 
 
     #%% cj thickness fixed range
+    dir2save = os.path.join(dir_data2Analyse, 'R_all', 'Videos', 'new')
     [cj_thickness] = fcBasics.loadNPY(filename = filename, names = ['cj_thickness'], dir_txtNnpy = directories[1])
     m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=0, vmax=20)
     m_cjTh.addScalarBar()
@@ -217,8 +227,12 @@ if init:
     vp.show(m_cjTh, at=0, azimuth = azimuth, elevation = elevation, interactive=True)
 
     fcMeshes.saveVideo (filename = filename, info = 'cj_thickness0to20', meshes4video = [m_cjTh],
-                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow=True)
+                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, plotshow=True)
+    
+    fcMeshes.saveVideo (filename = filename, info = 'heartAll', meshes4video = [m_myoc.alpha(0.01), m_endo.alpha(0.01)],
+                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, plotshow=True)
 
+#%%
 
     vp = Plotter(N=1, axes=13)
     vp.show(m_endo.alpha(0.5), m_cj.alpha(1), at=0, azimuth = azimuth, elevation = elevation, interactive=True)

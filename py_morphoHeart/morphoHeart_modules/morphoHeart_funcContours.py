@@ -560,17 +560,19 @@ def openMask (filename, chStr, dir_ims2Analyse, filetype):
 
     """
     # Import mask
-    maskfile = filename + "_"+chStr+"_mask.tif"
-    dir_mask = os.path.join(dir_ims2Analyse,str(maskfile))
-    maskSt = io.imread(dir_mask)
-
-    # Change mask to bool
-    maskSt[maskSt<255] = False
-    maskSt[maskSt==255] = True
-    maskSt = np.array(maskSt, dtype=bool)
-
     if filetype == 'tif':
-        print("-Using: \n\t- mask: ", maskfile)
+        maskfile = filename + "_"+chStr+"_mask.tif"
+        dir_mask = os.path.join(dir_ims2Analyse,str(maskfile))
+        maskSt = io.imread(dir_mask)
+    
+        # Change mask to bool
+        maskSt[maskSt<255] = False
+        maskSt[maskSt==255] = True
+        maskSt = np.array(maskSt, dtype=bool)
+
+        print("- Using: \n\t- mask: ", maskfile)
+    else: #'npy'
+        maskSt = []
 
     return maskSt
 
@@ -1940,8 +1942,10 @@ def maskContour (myIm, contour):
     # label image regions
     label_r_mask = label(r_mask_int)
     label_r_mask = np.transpose(label_r_mask)
+    # print(label_r_mask.shape, myIm.shape)
+    
     props = regionprops(label_r_mask, intensity_image = myIm)
-
+    
     area = props[0].area
     centroid = props[0].centroid
     max_int = props[0].max_intensity
@@ -2176,12 +2180,15 @@ def manuallyCloseContours (stack_closed, stack_o, slices, n_rows, chStr, exit_co
                 break
 
             plotSlcsRange(stack_closed, slc_tuple, 'CHECKING (after having closed)', slcs_per_im)
-            q_done = str(input('> Are you done CLOSING the contours for this - tuple ('+ str(slc_tuple[0])+','+str(slc_tuple[1]-1)+'?: \n - [0]:no/[1/ ]:yes! >>>>> ')).lower()
+            q_done = str(input('> Are you done CLOSING the contours for this - tuple ('+ str(slc_tuple[0])+','+str(slc_tuple[1]-1)+')?: \n - [0]:no/[1/ ]:yes! >>>>> ')).lower()
             if q_done == '1' or q_done == '':
                 if i == len(slices_first)-1:
-                    q_not_done_all = str(input('> Do you want to close any other slices? [0]:no/[1/ ]:yes! >>>>> ')).lower()
-                    if q_not_done_all: 
+                    q_not_done_all = str(input('> Do you want to close any other slices? [0]:no/[1/ ]:yes! >>>>> '))
+                    if q_not_done_all == '1' or q_not_done_all == '': 
                         slc_list, slc_end = getSlices((0,stack_closed.shape[0]), 'you would like to close')
+                    else: 
+                        exit_code = True
+                        break
                 else: 
                     break
             else:
@@ -2395,6 +2402,7 @@ def cropNcloseCont (clicks, myIm, wh, ww, plot_show = True):
         contours_crop = measure.find_contours(imCrop, 0.5, 'high', 'high')
         #Organize contours in terms of number of points to get the two biggest
         contours_crop = sorted(contours_crop, key = len, reverse=True)
+        
         if len(contours_crop) > 1:
             #Find euclidian distance beteen all points in contours
             dist = cdist(contours_crop[0],contours_crop[1])
@@ -2666,7 +2674,7 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
         # Run method selection for every XX slices in range
         if slc == slices[0]:
             _ = getContExpCont_plt (myIm, slc, chStr, 600,7)
-            method = str(input("\n> What method do you want to use for closing the inflow/outflow tract?\n\t[1/ ]:ConvexHull/[2]:Close (450x150)/[3]:Close (200x50)/[4]:Draw/[esc]:exit >>>>> ")).lower()
+            method = str(input("\n> What method do you want to use for closing the inflow/outflow tract?\n\t[1/ ]:ConvexHull\n\t[2]:Close (450x150)\n\t[3]:Close (500x200)\n\t[4]:Close (200x50)\n\t[5]:Draw/[esc]:exit >>>>> : ")).lower()
             if method == "1" or method == '':
                 # Use convexHull method to close inflow/outflow tract
                 alert('error',1)
@@ -2679,10 +2687,15 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
                 myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = [], option = 'first')
             elif method == "3":
                 # Use rectangle method to close inflow/outflow tract
+                rect_xC = 200
+                rect_yC = 500
+                myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = [], option = 'first')
+            elif method == "4":
+                # Use rectangle method to close inflow/outflow tract
                 rect_xB = 50
                 rect_yB = 200
                 myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = [], option = 'first')
-            elif method == "4":
+            elif method == "5":
                 myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', plot_show = False)
             elif method == 'esc':
                 last_slc = slc
@@ -2697,8 +2710,10 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
             elif method == "2":
                 myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = clicks_close, option = 'autom')
             elif method == "3":
-                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = clicks_close, option = 'autom')
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = clicks_close, option = 'autom')
             elif method == "4":
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = clicks_close, option = 'autom')
+            elif method == "5":
                 myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', plot_show = False)
 
         if slc == slices[1]-1:
@@ -2749,14 +2764,32 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
         plot_show = True
     else:
         plot_show = False
+    
+    contours_or = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, plot_show)
+    contours_or = sorted(contours_or, key = len, reverse=True)
+    ind_contours = []
+    for i, cont in enumerate(contours_or): 
+        props = maskContour(myIm_closed, cont)
+        if props[2] > 15000:
+            ind_contours.append(i)
 
+    print('ind_contours:', ind_contours)
     im_height, im_width = myIm_closed.shape
     black_array = np.uint16(np.zeros((150,im_width), dtype=int))
 
     myIm_closed = np.vstack((black_array,myIm_closed,black_array))
     myIm_closed = np.uint16(myIm_closed)
 
-    contours = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, plot_show)
+    contours_new = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, plot_show)
+    contours_new = sorted(contours_new, key = len, reverse=True)
+    
+    print('New contours: ',type(contours_new), len(contours_new))#, contours_new.shape)
+    
+    contours = []
+    for index in ind_contours:
+        contours.append(contours_new[index])
+    print('F contours: ',type(contours), len(contours))
+    
     # print('Get contours: ',type(contours), len(contours))
 
     if option == 'first':
@@ -2777,7 +2810,10 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
         y0, x0 = clicks
 
         xy_contours = xy_allContours(contours)
+        print(xy_contours.shape, type(xy_contours))
+
         point2add = np.array([[y0],[x0]])
+        print('point:', point2add.shape)
         xy_contours = np.concatenate((xy_contours, np.transpose(point2add)))
         qg_num = 'QG'+str(len(xy_contours)-1)
         # print(qg_num)
@@ -2880,23 +2916,28 @@ def selectHull (merge, xy_contours):
     eu_dist = []
     pts1 = []
     pts2 = []
-    for num, pair in enumerate(merge):
-        #print(num,pair)
-        x1 = xy_contours[pair[0]][0]
-        y1 = xy_contours[pair[0]][1]
-        xy1 = (x1,y1)
-
-        x2 = xy_contours[pair[1]][0]
-        y2 = xy_contours[pair[1]][1]
-        xy2 = (x2,y2)
-
-        eu_dist.append(distance.euclidean(xy1,xy2))
-        pts1.append(xy1)
-        pts2.append(xy2)
-
-        index4max = np.where(eu_dist == np.amax(eu_dist))
-        closing_pt1 = pts1[index4max[0][0]]
-        closing_pt2 = pts2[index4max[0][0]]
+    if len(merge) > 0:
+        for num, pair in enumerate(merge):
+            #print(num,pair)
+            x1 = xy_contours[pair[0]][0]
+            y1 = xy_contours[pair[0]][1]
+            xy1 = (x1,y1)
+    
+            x2 = xy_contours[pair[1]][0]
+            y2 = xy_contours[pair[1]][1]
+            xy2 = (x2,y2)
+    
+            eu_dist.append(distance.euclidean(xy1,xy2))
+            pts1.append(xy1)
+            pts2.append(xy2)
+    
+            index4max = np.where(eu_dist == np.amax(eu_dist))
+            closing_pt1 = pts1[index4max[0][0]]
+            closing_pt2 = pts2[index4max[0][0]]
+    else: 
+        closing_pt1 = []
+        closing_pt2 = []
+    
 
     return closing_pt1, closing_pt2
 

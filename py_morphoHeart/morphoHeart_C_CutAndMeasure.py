@@ -402,3 +402,8 @@ if init:
         
 #%% Init
 init = True
+
+# dict_colour = fcMeshes.saveMeshes(filename = filename, 
+#                                           meshes = [m_myoc, m_endo, m_cjTh],
+#                                           names = ['myoc_stl', 'endo_stl', 'cj_stl'],
+#                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
