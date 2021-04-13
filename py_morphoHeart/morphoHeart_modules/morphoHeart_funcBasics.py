@@ -2,9 +2,8 @@
 """
 morphoHeart_funcBasics
 
-Version: Jan 22, 2021
 @author: Juliana Sanchez-Posada
-
+Version: April 13, 2021
 """
 
 #%% Importing python packages

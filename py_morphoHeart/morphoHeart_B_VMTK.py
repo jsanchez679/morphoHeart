@@ -10,6 +10,7 @@ dictionary(ies) with numpy arrays, so that we can use them in future scripts.
 Happy centreline extraction!
 
 @author: Juliana Sanchez-Posada
+Version: 13th April, 2021
 """
 #%% Importing python packages
 import os
@@ -63,8 +64,12 @@ if init:
     #   centrelines will be saved as dictionaries and will be imported in the next script.
     #   ================================================================================================================
     
-    vmtktxt, mesh_name = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
-                                                dir_cl = directories[3], printshow = False)
+    mesh_name = []
+    while len(mesh_name) == 0: 
+        vmtktxt, mesh_name = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
+                                                    dir_cl = directories[3], printshow = False)
+        _ = fcBasics.ask4input('No meshes are recognised in the path: "'+ str('//'.join(os.path.normpath(directories[3]).split(os.sep)[-4:])) + '". \n\t Make sure you have named your cleaned meshes correctly after running the processing in Meshlab and press -Enter- when ready.', str)
+    
     
     for n, mesh in enumerate(mesh_name):
         #Create centrelines

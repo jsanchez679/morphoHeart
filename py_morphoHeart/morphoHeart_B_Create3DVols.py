@@ -17,6 +17,7 @@ saved in the 'centreline' folder.
 Happy running!
 
 @author: Juliana Sanchez-Posada
+Version: 13th April, 2021
 """
 
 #%% Importing python packages
@@ -45,7 +46,7 @@ def setWorkingDir (root_path, init):
 root_path, init = setWorkingDir(os.getcwd(),init)
 save = True
 
-#%% Start B_Create3DVols (***)
+#%% Start B_Create3DVols (*** 2)
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
@@ -53,7 +54,7 @@ if init:
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
     tic = perf_counter()
 
-    #%% SELECT FILE AND GET METADATA (***)
+    #%% SELECT FILE AND GET METADATA (*** 3)
     #   This section allows the user to select file to process, get its main directories and metadata,
     #   and define some properties
     #   ================================================================================================================
@@ -74,9 +75,13 @@ if init:
     txt = Text2D(filename, c="k", font= 'VTK'); initial_smooth = True
 
     #%% CLEAN ENDOCARDIUM
-    #   This section will import the external and layer endocardial contours and clean them using as a mask an inverted
-    #   stack of the filled internal myocardium. At the end of this step, numpy arrays of the cleaned masks will be saved
-    #   and a 3D interactive plot with the myocardium and endocardium (original and clean), will pop-up.
+    #   This section will import the external contour mask of the endocardium and the endocardial mask and clean them 
+    #   using the user selected mask (1: the myocardial tissue mask, or 2: the inverted internal myocardial mask, 
+    #   which is the recommended option). Use the 1st option if you want to keep pieces of the endocardium that might be 
+    #   present outside of the myocardium, but keep in mind that these pieces will be disconnected from the big 
+    #   endocardial tissue layer.
+    #   At the end of this step, numpy arrays of the cleaned masks will be saved and a 3D interactive plot with the
+    #   myocardium and endocardium (original and clean), will pop-up.
     #   ================================================================================================================
 
     # Load stacks
@@ -95,27 +100,35 @@ if init:
     endo_o = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext, resolution = res, layer = 'Endo',
                                          info = 'Original', plotshow = plotshow)
     
-    # # Clean Endocardium - Option 1 (Using just myocardial layer)
-    # # Clean Endocardium
-    # s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = '')
-    # fcCont.ch_clean_plt(mask_s3 = s3_ch0, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
-    #                           cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
-    # # Clean Ext Endocardium
-    # s3_ch1_rem, s3_ch1_ext_cl = fcCont.ch_clean(mask_s3 = s3_ch0, toClean_s3 = s3_ch1_ext, option = "clean")
-
-    # Clean Endocardium - Option 2 (Using inverted internal myocardium)
-    s3_endo_rem, s3_ch1_cl, s3_invIntMyoc = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1)
-    # Plot s3s of clean endocardium - (if plotshow = True)
-    fcCont.ch_clean_plt(mask_s3 = s3_invIntMyoc, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem,
-                              cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
+    m_selected = False
+    while not m_selected: 
+        method = fcBasics.ask4input('Select the mask you would like to use to clean the endocardial layer: \n\t[1]: Just the myocardial tissue layer \n\t[2]: (recommended) The inverted internal myocardium (more profound cleaning)', int)
+        # Clean Endocardium - Option 1 (Using just myocardial layer, so that the two tissue layers don't colocalise in space)
+        if method == 1:
+            m_selected = True
+            s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = '')
+            # Plot s3s of clean endocardium - (if plotshow = True)
+            fcCont.ch_clean_plt(mask_s3 = s3_ch0, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
+                                      cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
+            # Clean Ext Endocardium
+            _, s3_ch1_ext_cl = fcCont.ch_clean(mask_s3 = s3_ch0, toClean_s3 = s3_ch1_ext, option = "clean")
+            extractLargest = fcBasics.ask4input('Do you want to just keep the largest surface of the cleaned endocardium? \n\t[0]: no, keep all the pieces\n\t[1]: yes, just keep the biggest surface : ', bool)
+        # Clean Endocardium - Option 2 (Using inverted internal myocardium).
+        elif method == 2:
+            m_selected = True
+            s3_endo_rem, s3_ch1_cl, s3_invIntMyoc = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1)
+            # Plot s3s of clean endocardium - (if plotshow = True)
+            fcCont.ch_clean_plt(mask_s3 = s3_invIntMyoc, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem,
+                                      cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
+            # Clean Ext Endocardium
+            _, s3_ch1_ext_cl, _ = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1_ext)
+            extractLargest = True
+            
     fcCont.save_s3(filename = filename, s3 = s3_ch1_cl, dir_txtNnpy = directories[1], layer = 'ch1_cut')
-    # Clean Ext Endocardium
-    _, s3_ch1_ext_cl, _ = fcCont.clean_wInvIntMyoc(s3_ch0_int, s3_ch1_ext)
-    
-    
     fcCont.save_s3(filename = filename, s3 = s3_ch1_ext_cl, dir_txtNnpy = directories[1], layer = 'ch1_cut_ext')
     # Re-Create Ext Endocardial mesh - Ch1
-    endo_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, layer = 'Endo', info = 'Cleaned', plotshow = plotshow)
+    endo_ext = fcMeshes.createExtLayerMesh(filename = filename, s3_ext = s3_ch1_ext_cl, resolution = res, 
+                                           layer = 'Endo', info = 'Cleaned', plotshow = plotshow, extractLargest = extractLargest)
 
     # Plot Ext Myocardium and Clean Ext Endocardium
     myoc_o.alpha(0.1); endo_o.color('mediumorchid').legend('Orig.Ext.Endo'); settings.legendSize = .2
@@ -144,7 +157,7 @@ if init:
     #   NOTE: If the result of the cuts performed want to be seen agan, un-comment the commented plot.
     #   ================================================================================================================
 
-    #%Cut inflow and outflow regions of endocardium and myocardium and save all final s3s
+    #% Cut inflow and outflow regions of endocardium and myocardium and save all final s3s
     meshes_cut, dict_planes = fcMeshes.selectCutS3sOptMxLoad(filename = filename,
                                         m_endo = endo_ext, m_myoc = myoc_o,
                                         dict_planes = dict_planes, resolution = res,
@@ -226,15 +239,17 @@ if init:
                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'],
                                          dir2save = directories[0])
         
-    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE (***)
+    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE (*** 4)
     #   This section allows the user to create one or two meshes from which the centreline will be extracted. As the
     #   package used to create the centrelines (vmtk) needs a smooth mesh with blunt cuts in the inflow and outflow
     #   tracts, this section will smooth the meshes and ask the user to define planes to cut both the inflow and outflow
     #   tracts (following a similar process to the one previously used to cut the meshes).
     #   This section will save the resulting meshes (smoothed and cut).
-    #   Note: If when running this process the computer freezes and the kernel needs to be restarted, restart the kernel
-    #   and run the sections of the code that have a (***) at the end of the title. This process will allow you just to 
-    #   create the meshes for the centreline without having to run again all the code. 
+    #   NOTE: If when running this process the computer freezes and the kernel needs to be restarted, restart the kernel, 
+    #   make sure the rootpath is set correctly by right-cliking on this script's file name (tab on top) and selecting 
+    #   'Set console working directory'. Then run the sections of the code that have a (***) at the end of the title in 
+    #   the order given by the numbers (first code to run is at the end of the script). 
+    #   This process will allow you just to create the meshes for the centreline without having to run again all the code.
     #   ================================================================================================================
 
     if 'myoc_cut_int' not in locals():
@@ -286,9 +301,9 @@ if init:
             vp.show(meshes4clf[0], at=0, zoom=1)
             vp.show(meshes4clf[1], at=1, zoom=1, interactive=True)
 
-    #%% SAVE ALL AND PRINT INSTRUCTIONS (***)
+    #%% SAVE ALL AND PRINT INSTRUCTIONS (*** 5)
     #   This section allows the user to save the dictionaries created with all the planes, splines and spheres created
-    #    and and print the instructions the user needs to follow to extract the centreline(s).
+    #   and print the instructions the user needs to follow to extract the centreline(s).
     #   ================================================================================================================
 
     # Merge and save all dictionaries
@@ -304,5 +319,13 @@ if init:
     toc = perf_counter()
     fcBasics.printTime(tic, toc, 'Create 3D Volumes')
 
-#%% Init
+#%% Init (*** 1)
 init = True
+save = False
+import os
+from time import perf_counter
+from vedo import embedWindow, settings, Plotter, Text2D
+embedWindow(False)
+settings.legendSize = .3
+settings.legendFont="VTK"
+root_path = os.getcwd()
