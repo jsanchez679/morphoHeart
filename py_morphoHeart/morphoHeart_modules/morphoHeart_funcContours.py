@@ -3253,7 +3253,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
     return heartLayer, tuple_slc, numContours, exit_txt
 
 #%% func - askModifyDict
-def askModifyDict(filename, stack, heartLayer, channel):
+def askModifyDict(filename, stack, heartLayer, channel, processDict, directories):
     """
     Function that asks the user if the dictionary created wants to be modified
 
@@ -3267,20 +3267,33 @@ def askModifyDict(filename, stack, heartLayer, channel):
         Dictionary with information about the heart layer being processed including selected contours number and coordinates
     channel : str
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
-
+    processDict : dictionary
+        Dictionary with information about the processed carried out when closing contours
+    directories : list of paths
+        List of paths to the folders where the files are saved.
+        
     Returns
     -------
     heartLayer : dictionary
         Updated dictionary with information about the heart layer being processed including selected contours number and coordinates
+    stack : numpy array
+        Stack being processed.
+    processDict : dictionary
+        Updated dictionary with information about the processed carried out when closing contours
 
     """
 
     #% Check slices
     plotSelectedContours(imageEvery = 1, stack = stack, heartLayer = heartLayer, plot_all = False)
+    
     #% Correct dictionary if needed
     q_modifyDict = ask4input("Do you want to modify the created dictionary (change any of the selected contours per slice manually)? [0]:no/[1]:yes: ",bool)
     if q_modifyDict:
         while q_modifyDict:
+            q_firstClose = ask4input("Do you need to close any contours before you modify the dictionary? [0]:no/[1]:yes: ",bool)
+            if q_firstClose:
+                stack, processDict, _ = main_manuallyCloseContours(filename, channel, directories, stack, 
+                                                                         stack, processDict, 7, True)
             heartLayer = modifyDict(stack = stack, chStr = channel, heartLayer = heartLayer,
                                                   minLenContour = 250)
             q_modifyDict = ask4input("Do you want to modify any other part of the dictionary? [0]:no/[1]:yes: ",bool)
@@ -3293,7 +3306,7 @@ def askModifyDict(filename, stack, heartLayer, channel):
             else:
                 plotSelectedContours(imageEvery = 1, stack = stack, heartLayer = heartLayer)
 
-    return heartLayer
+    return heartLayer, stack, processDict
 
 #%% func - modifyDict
 def modifyDict(stack, chStr, heartLayer, minLenContour):

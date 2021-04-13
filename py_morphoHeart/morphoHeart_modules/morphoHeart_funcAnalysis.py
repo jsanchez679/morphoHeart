@@ -537,7 +537,7 @@ def getLegends(genots, strains, stages):
         
 #%% func - plotInGroups
 def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1):
+                     h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
     
     styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
     variables, ylabels = def_variables(script)
@@ -596,7 +596,7 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
         legend_new = gen_legend+['']+strain_legend
         
         marker_size = 12
-        dodge = False
+        dodge = True
         jitter = 0.2
         for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
             if n in index_no_plot:
@@ -626,16 +626,16 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
         fig.suptitle(title, fontsize = 30, y=1)
         dir2savef = os.path.join(dir2save, 'meas_all', 'R_')
         if info != '':
-            fig_title = dir2savef+info+"_"+title+".png"
+            fig_title = dir2savef+info+"_"+title+"."+ext
         else: 
-            fig_title = dir2savef+title+".png"
+            fig_title = dir2savef+title+"."+ext
         
         if save: 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
             
 #%% func - plotPerVariable
 def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot, w_plot, save, dir2save, info, dpi = 300, h_add = 5, w_add = 1):
+                     h_plot, w_plot, save, dir2save, info, dpi = 300, h_add = 5, w_add = 1, ext = 'png'):
     
     styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
     variables, ylabels = def_variables(script)
@@ -724,9 +724,9 @@ def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_lege
             fig.suptitle(title, fontsize = 30, y=1)
             dir2savef = os.path.join(dir2save, 'meas_Ind', 'R_')
             if info != '':
-                fig_title = dir2savef+info+"_Ind_"+var+".png"
+                fig_title = dir2savef+info+"_Ind_"+var+"."+ext
             else: 
-                fig_title = dir2savef+"Ind_"+var+".png"
+                fig_title = dir2savef+"Ind_"+var+"."+ext
             
             if save: 
                 plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)

@@ -3052,7 +3052,7 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
         # Create kspline with points
         kspl = KSpline(pts_int, res = 300)
 
-        kspl.color(colors[i]).legend('CL_'+layerNames[i]).lw(3)
+        kspl.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
         kspl_CL.append(kspl)
 
         linearLine = Line(pt2add_inf, pt2add_outf, c=color_linLines[i], lw=3)
@@ -4925,7 +4925,7 @@ def saveThickness(filename, arrays2save, names, dir2save):
     alert("countdown",1)
 
 #%% func - saveVideo
-def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, duration = 15):
+def saveVideo (filename, info, meshes4video, rotAngle, dir2save, alpha_cube, plotshow=True, duration = 15):
     """
     Function that saves video of rotating mesh
 
@@ -4941,6 +4941,8 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
         Heart inclination angle
     dir2save : path
         Path to the folder where the videos will be saved.
+    alpha_cube : float
+        Float number indicating the opacity of the scaling_cube
     plotshow : boolean, optional
         True if you want to see the resulting mesh in a plot, else False. The default is True.
     duration : int, optional
@@ -4951,6 +4953,8 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
     None.
 
     """
+    # alpha_cube = 0.1
+    s_cube = 350
 
     if rotAngle > 90:
         rotAngle = 180 - rotAngle
@@ -4965,12 +4969,17 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
             rot_mesh = mesh.rotateY(90)
             rot_mesh = rot_mesh.rotateZ(rotAngle)
         rotMeshes4video.append(rot_mesh)
+    
+    scale_cube = Cube(pos=rotMeshes4video[0].centerOfMass(), side=s_cube, c='white', alpha=0.1).legend('Cube')
+    rotMeshes4video.append(scale_cube)
 
     if plotshow:
         text = filename+"\n\n >> Rotated meshes"; txt = Text2D(text, c="k", font= font)
         vp1 = Plotter(N=1, axes=8)
         vp1.show(rotMeshes4video, txt, at=0, axes=8, zoom=1.2)
 
+    rotMeshes4video[-1].alpha(alpha_cube)
+    
     text2 = filename; txt2 = Text2D(text2, c="k", font= font)
 
     settings.legendSize = .3
@@ -4993,7 +5002,7 @@ def saveVideo (filename, info, meshes4video, rotAngle, dir2save, plotshow=True, 
     alert('wohoo',1)
 
 #%% func- saveMultVideos
-def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
+def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow, alpha_cube = 0):
     """
     Function that saves videos of rotating mesh given as input (meshes4video)
 
@@ -5011,6 +5020,8 @@ def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
         Path to the folder where the videos will be saved.
     plotshow : boolean
         True if you want to see the resulting mesh in a plot, else False.
+    alpha_cube : float, optional
+        Float number indicating the opacity of the scaling_cube. The default is 0.
 
     Returns
     -------
@@ -5021,8 +5032,8 @@ def saveMultVideos(filename, info, meshes4video, rotAngle, dir2save, plotshow):
     print('\nSaving videos... this might take a while (about 2 min/video)')
     bar = Bar('Saving' , max = len(info), suffix = suffix, check_tty=False, hide_cursor=False)
     for i, name, mesh in zip(count(), info, meshes4video):
-        saveVideo(filename = filename, info = name, meshes4video = [mesh],
-                        rotAngle = rotAngle, dir2save = dir2save, plotshow = plotshow)
+        saveVideo(filename = filename, info = name, meshes4video = mesh,
+                        rotAngle = rotAngle, dir2save = dir2save, alpha_cube = alpha_cube, plotshow = plotshow)
         bar.next()
     bar.finish()
     alert('whistle',1)

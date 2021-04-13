@@ -390,12 +390,12 @@ if init:
                 fcMeshes.saveMultVideos(filename = filename,
                     info = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall'],
                     meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1)],
-                    rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False)
+                    rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = True, alpha_cube = 0)
             else: 
                 fcMeshes.saveMultVideos(filename = filename,
                     info = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_extBall'],
                     meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1),m_myocExtBall.alpha(1)],
-                    rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False)
+                    rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False, alpha_cube = 0)
                 
         toc = perf_counter()
         fcBasics.printTime(tic, toc, 'Cut and Measure')

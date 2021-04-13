@@ -12,6 +12,7 @@ called txt_npy within the main folder of the heart being processed.
 Happy contour closing and selecting!
 
 @author: Juliana Sanchez-Posada
+Version: 13th April, 2021
 """
 
 #%% Importing python packages
@@ -73,7 +74,7 @@ if init:
     stack_closed, stack_o, file, stack_shape  =fcCont.main_importImages(filename, channel, directories, n_rows = n_rows)
 
     #%% ii. CLOSE CONTOURS
-    #   This section allows the user to run either/all of three different functions to close the channel's contours.
+    #   This section allows the user to run either/all of the three different functions to close the channel's contours.
     #   1. Automatic closure of the contours
     #   2. Manual closure / cleaning of the contours
     #   3. Inflow/Outflow tract closure
@@ -81,7 +82,7 @@ if init:
     #   of the file's channel and at the end will save the final closed stack as an numpy array.
     #   NOTE: Intermediate steps of this process can be saved.
     #   ================================================================================================================
-    # Import process dict!!!
+
     q_ABC = fcBasics.ask4input('Do you want to run any of these processes: \n\t- Automatically close contours \n\t- Manually close contours or \n\t- Close inflow/outflow tracts of this stack? \n\t >[0]:no/[1]:yes: ',bool)
     if q_ABC:
         ticABC = perf_counter()
@@ -110,6 +111,8 @@ if init:
                 fcBasics.printTime(ticABC, tocABC, 'close contours')
     else:
         q_ABC_done = fcBasics.ask4input('Checking: Are you done closing the contours and inflow/outflow tracts? [0]:no/[1]:yes!:', bool)
+        [processDict] = fcBasics.loadDicts(filename, ['processDict'], [directories[1]], print_txt = False)
+        processDict[channel]['B-ManualCloseContours'] = 'DONE'
         # fcCont.showGridContours(myStack = stack_closed, slices = (0,stack_closed.shape[0]), n_rows = n_rows)
 
 
@@ -126,7 +129,7 @@ if init:
     #   At the end of this step, numpy arrays with the masks of the internal, external and layer contours will be saved
     #   as well as a dictionary containing information about the selected contours per slice.
     #   Finally a surface reconstruction of the heart tissue layer will be created and plotted.
-    #   NOTE: There is no way an intermediate step of this process can be saved, so please make sure to run it 
+    #   NOTE: Intermediate step of this process cannot be saved, so please make sure to run it 
     #   completely before closing. 
     #   ================================================================================================================
     
@@ -160,7 +163,7 @@ if init:
                         print('EXIT!!');
                         break
                 if len(tuple_slc) == 0:
-                    heartLayer = fcCont.askModifyDict(filename, stack_closed, heartLayer, channel)
+                    heartLayer, stack, processDict = fcCont.askModifyDict(filename, stack_closed, heartLayer, channel, processDict, directories)
                     q_fullDict = fcBasics.ask4input('Is the dictionary full for '+channel+'? [0]:no/[1]:yes: ',bool)
                     if q_fullDict:
                         #% Create dictionary to save and save it
