@@ -14,6 +14,9 @@ Finally we smooth, clean and save the mesh (or meshes) from which we are going t
 At the end of this script you will end with all the created meshes saved in the 'meshes' folder and the centreline mesh(es) 
 saved in the 'centreline' folder.
 
+Important note: 
+Intermediate steps of this process can be saved, but I suggest 
+
 Happy running!
 
 @author: Juliana Sanchez-Posada
@@ -30,23 +33,23 @@ settings.legendSize = .3
 # settings.legendPos = 1
 settings.legendFont="VTK"
 
-init = False
 # Verify working dir
-def setWorkingDir (root_path, init):
+def setWorkingDir (root_path, init = False):
     if not init:
         wd = os.path.dirname(os.path.abspath(__file__))
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    init = not bool(int(input('Do you want to execute the script all at once or run it by cells? \n\t[0]: all at once (recommended if you are already familiar with the script)\n\t[1]: by cells (recommended if you are NOT yet familiar with the script OR \n\t\t you just need to create the mesh(es) to extract centreline). >>>: ')))
     print("Current working directory: {0}".format(os.getcwd()))
-
+    if not init: 
+        print('\nIMPORTANT NOTES:\n- Remember to start running from cell %Start B_Create3DVols.\n- NEVER run as an individual cell the cell called %Importing python packages')
     return root_path, init
 
-root_path, init = setWorkingDir(os.getcwd(),init)
+root_path, init = setWorkingDir(os.getcwd())
 save = True
 
-#%% Start B_Create3DVols (*** 2)
+#%% Start B_Create3DVols (*** 1)
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
@@ -54,7 +57,7 @@ if init:
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
     tic = perf_counter()
 
-    #%% SELECT FILE AND GET METADATA (*** 3)
+    #%% SELECT FILE AND GET METADATA (*** 2)
     #   This section allows the user to select file to process, get its main directories and metadata,
     #   and define some properties
     #   ================================================================================================================
@@ -63,7 +66,7 @@ if init:
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
     # Get file to process and directories
-    folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[0:-3]; dORv = filename[9:10]
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
     # Import the metadata to know pixel size and distance between slices
@@ -71,9 +74,19 @@ if init:
     res = [xy_Scaling_um,xy_Scaling_um,z_Scaling_um]
     # Initialise variables
     plotshow = False
-    dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict()
+    try: 
+        # Import dictionaries
+        dicts = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj'], directories = [directories[0]])
+        [dict_planes, dict_pts, dict_kspl, dict_colour] = fcMeshes.splitDicts(dicts[0])
+    except: 
+        dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict()
     txt = Text2D(filename, c="k", font= 'VTK'); initial_smooth = True
-
+    
+    if dORv == 'D' or 'CJ' in filename:
+        azimuth = -90
+    else: 
+        azimuth = 0
+        
     #%% CLEAN ENDOCARDIUM
     #   This section will import the external contour mask of the endocardium and the endocardial mask and clean them 
     #   using the user selected mask (1: the myocardial tissue mask, or 2: the inverted internal myocardial mask, 
@@ -102,11 +115,11 @@ if init:
     
     m_selected = False
     while not m_selected: 
-        method = fcBasics.ask4input('Select the mask you would like to use to clean the endocardial layer: \n\t[1]: Just the myocardial tissue layer \n\t[2]: (recommended) The inverted internal myocardium (more profound cleaning)', int)
+        method = fcBasics.ask4input('Select the mask you would like to use to clean the endocardial layer: \n\t[1]: Just the myocardial tissue layer \n\t[2]: (Recommended) The inverted internal myocardium (more profound cleaning). >>>: ', int)
         # Clean Endocardium - Option 1 (Using just myocardial layer, so that the two tissue layers don't colocalise in space)
         if method == 1:
             m_selected = True
-            s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = '')
+            s3_endo_rem, s3_ch1_cl = fcCont.ch_clean(s3_ch0, s3_ch1, option = "clean")
             # Plot s3s of clean endocardium - (if plotshow = True)
             fcCont.ch_clean_plt(mask_s3 = s3_ch0, toClean_s3 = s3_ch1, toRemove_s3 = s3_endo_rem, 
                                       cleaned_s3 = s3_ch1_cl, plotshow = plotshow, im_every = 15, option = "clean")
@@ -136,9 +149,9 @@ if init:
     vp.show(endo_o, txt, at=0, zoom=1)
     vp.show(myoc_o, endo_o, at=1, zoom=1)
     vp.show(myoc_o, endo_ext, at=2, zoom=1)
-    vp.show(endo_ext, at=3, zoom=1, interactive=True)
+    vp.show(endo_ext, at=3, zoom=1, azimuth = azimuth, interactive=True)
 
-    del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_invIntMyoc, s3_ch1_ext_cl, s3s
+    del s3_ch0_int, s3_ch0, s3_ch1_ext, s3_ch1, s3_endo_rem, s3_ch1_cl, s3_ch1_ext_cl, s3s
 
     #%% CUT INFLOW AND OUTFLOW TRACTS OF BOTH TISSUE LAYERS
     #   This section will allow the user to define planes to cut both the inflow and outflow regions of the myocardial
@@ -166,13 +179,13 @@ if init:
     myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext = meshes_cut
 
     # settings.legendSize = .3
-    # vp = Plotter(N=6, axes=7)
+    # vp = Plotter(N=6, axes=10)
     # vp.show(myoc_cut, txt, at=0, zoom=1)
     # vp.show(myoc_cut_int, at=1, zoom=1)
     # vp.show(myoc_cut_ext, at=2,  zoom=1)
     # vp.show(endo_cut, at=3,  zoom=1)
     # vp.show(endo_cut_int, at=4)
-    # vp.show(endo_cut_ext, at=5, zoom=1, interactive=True)
+    # vp.show(endo_cut_ext, at=5, zoom=1, azimuth = azimuth, interactive=True)
 
     if save:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [myoc_cut, myoc_cut_int, myoc_cut_ext, endo_cut, endo_cut_int, endo_cut_ext],
@@ -188,8 +201,13 @@ if init:
     #   ================================================================================================================
 
     # Extract cardiac jelly from contours
-    [s3_ch0_int_cut, s3_ch1_ext_cut], _ = fcCont.loadStacks(filename = filename, dir_txtNnpy = directories[1],
-                                                            end_name = ['ch0_cut_int','ch1_cut_ext' ])
+    try: 
+        [s3_ch0_int_cut, s3_ch1_ext_cut], _ = fcCont.loadStacks(filename = filename, dir_txtNnpy = directories[1],
+                                                                end_name = ['ch0_cut_int','ch1_cut_ext' ])
+    except:
+        [s3_ch0_int_cut, s3_ch1_ext_cut], _ = fcCont.loadStacks(filename = filename, dir_txtNnpy = directories[1],
+                                                                end_name = ['ch0_int','ch1_cut_ext' ])
+        
     # Plot s3s - channel side by side (if plotshow = True)
     fcCont.plt_s3(start_slc = 0, end_slc = s3_ch0_int_cut.shape[2]-1, im_every = 10,
                       s3_int = s3_ch0_int_cut, s3_ext = s3_ch1_ext_cut, plotshow = plotshow, option = "cardiacjelly")
@@ -216,7 +234,7 @@ if init:
     vp.show(myoc_cut_int.color('turquoise'), at=2,  zoom=1)
     vp.show(cj_all.clone().alpha(0.05), at=3,  zoom=1)
     vp.show(myoc_cut.clone().alpha(0.1), endo_cut, cj_all, at=4)
-    vp.show(endo_cut_ext.color('orchid'), at=5, zoom=1, interactive=True)
+    vp.show(endo_cut_ext.color('orchid'), at=5, zoom=1, azimuth = azimuth, interactive=True)
 
     del s3_ch0_int_cut, s3_ch1_ext_cut, s3_cjIn, s3_cj
 
@@ -239,7 +257,7 @@ if init:
                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour'],
                                          dir2save = directories[0])
         
-    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE (*** 4)
+    #%% CREATE, CUT AND EXPORT MESHES TO OBTAIN CENTRELINE (*** 3)
     #   This section allows the user to create one or two meshes from which the centreline will be extracted. As the
     #   package used to create the centrelines (vmtk) needs a smooth mesh with blunt cuts in the inflow and outflow
     #   tracts, this section will smooth the meshes and ask the user to define planes to cut both the inflow and outflow
@@ -251,7 +269,7 @@ if init:
     #   the order given by the numbers (first code to run is at the end of the script). 
     #   This process will allow you just to create the meshes for the centreline without having to run again all the code.
     #   ================================================================================================================
-
+    
     if 'myoc_cut_int' not in locals():
         # Import dictionaries
         dicts = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj'], directories = [directories[0]])
@@ -262,19 +280,34 @@ if init:
             [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
     
         # Import meshes
+        initial_smooth = True
         [myoc_cut_int, endo_cut_ext] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc_int', 'myoc_ext'],
                                                                   extension = 'vtk', dir_stl = directories[2],
                                                                   alpha = [1,1], dict_colour = dict_colour)
-    
-    # Create meshes for centreline
-    if initial_smooth:
-        meshes4cl, names_exp = fcMeshes.createMeshes4CL(filename = filename, meshes = [myoc_cut_int, endo_cut_ext],
-                                                        plotshow = True); initial_smooth = False
 
-    # Cut inflow and outflow tract of meshes for centreline
-    meshes4clf, dicts = fcMeshes.cutMeshes4CL(filename = filename, meshes = meshes4cl,
-                                              cuts = ['inflow', 'outflow'], cut_direction = [True, False],
-                                              dicts = [dict_planes, dict_pts, dict_kspl], plotshow = True)
+    # Create meshes for centreline
+    happyWithCuts = False
+    while not happyWithCuts:
+        if initial_smooth:
+            meshes4cl, names_exp = fcMeshes.createMeshes4CL(filename = filename, meshes = [myoc_cut_int, endo_cut_ext],
+                                                            plotshow = True); initial_smooth = False
+            meshes4cl_o = meshes4cl.copy()
+        else: 
+            meshes4cl = []; meshes4cl_names = []
+            q_selectMeshes = fcBasics.ask4input('Select the meshes you would like to export to extract centreline \n\t\t[0]: Int.Myocardium/[1]: Ext.Endocardium/[2]: both: ', int)
+            if q_selectMeshes in [0,2]:
+                meshes4cl.append(meshes4cl_o[0])
+                meshes4cl_names.append(names_exp[0])
+            if q_selectMeshes in [1,2]:
+                meshes4cl.append(meshes4cl_o[1])
+                meshes4cl_names.append(names_exp[1])
+    
+        # Cut inflow and outflow tract of meshes for centreline
+        meshes4clf, dicts = fcMeshes.cutMeshes4CL(filename = filename, meshes = meshes4cl,
+                                                  cuts = ['inflow', 'outflow'], cut_direction = [True, False],
+                                                  dicts = [dict_planes, dict_pts, dict_kspl], plotshow = True)
+        happyWithCuts = fcBasics.ask4input('Are you happy with the cuts made? \n\t[0]: no, I would like to recut the meshes\n\t[1]: yes, continue with next steps! >>>:', bool)
+    
     # Save
     if save:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = meshes4clf, names = names_exp,
@@ -289,19 +322,19 @@ if init:
         vp.show(meshes4clf[0], at=2,  zoom=1)
         vp.show(cj_all, at=3,  zoom=1)
         if len(meshes4clf) == 1:
-            vp.show(myoc_cut, endo_cut, cj_all, at=4, zoom=1, interactive=True)
+            vp.show(myoc_cut, endo_cut, cj_all, at=4, zoom=1, azimuth = azimuth, interactive=True)
         else:
             vp.show(myoc_cut, endo_cut, cj_all, at=4)
-            vp.show(meshes4clf[1], at=5, zoom=1, interactive=True)
+            vp.show(meshes4clf[1], at=5, zoom=1, azimuth = azimuth, interactive=True)
     else: 
         vp = Plotter(N=len(meshes4clf), axes=13)
         if len(meshes4clf) == 1:
-            vp.show(meshes4clf[0], at=0, zoom=1, interactive=True)
+            vp.show(meshes4clf[0], at=0, zoom=1, azimuth = azimuth, interactive=True)
         else:
             vp.show(meshes4clf[0], at=0, zoom=1)
-            vp.show(meshes4clf[1], at=1, zoom=1, interactive=True)
+            vp.show(meshes4clf[1], at=1, zoom=1, azimuth = azimuth, interactive=True)
 
-    #%% SAVE ALL AND PRINT INSTRUCTIONS (*** 5)
+    #%% SAVE ALL AND PRINT INSTRUCTIONS (*** 4)
     #   This section allows the user to save the dictionaries created with all the planes, splines and spheres created
     #   and print the instructions the user needs to follow to extract the centreline(s).
     #   ================================================================================================================
@@ -319,13 +352,5 @@ if init:
     toc = perf_counter()
     fcBasics.printTime(tic, toc, 'Create 3D Volumes')
 
-#%% Init (*** 1)
+#%% Init 
 init = True
-save = False
-import os
-from time import perf_counter
-from vedo import embedWindow, settings, Plotter, Text2D
-embedWindow(False)
-settings.legendSize = .3
-settings.legendFont="VTK"
-root_path = os.getcwd()

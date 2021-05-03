@@ -82,6 +82,8 @@ def main_importImages (filename, channel, directories, n_rows):
         Stack shape [x,y,z]
     processDict : dictionary
         Updated or newly created dictionary with information about the processed carried out so far in A_Contours script
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     """
 
@@ -93,9 +95,24 @@ def main_importImages (filename, channel, directories, n_rows):
                       dir_ims2Analyse = directories[5], filetype = filetype)
     stack, stack_o, stack_m = maskStack(stack, stack_o, stack_m, maskSt, filetype = filetype)
     
+    # Setting level 
+    try:
+        [processDict] = loadDicts(filename, ['processDict'], [directories[1]], print_txt = False)
+        level = processDict[channel]['level']
+    except: 
+        if 'LSCJ' in filename: 
+            chLevel = ask4input('Do you want to change the level to select contours from 0.5 to 200? [0]: no / [1]: yes!', bool)
+            if chLevel:
+                level = 200
+            else: 
+                level = 0.5
+        else: 
+            level = 0.5
+    print('-> Level : '+str(level))
+    
     # Show contours
-    print('\n- Plotting contours of imported stack...')
-    # showGridContours(myStack = stack, slices = (0,len(stack)), n_rows = n_rows)
+    print('\n- Plotting contours of imported stack... (Plots tab)')
+    showGridContours(myStack = stack, slices = (0,len(stack)), n_rows = n_rows, level = level)
 
     # Save stack shape
     stack_shape = np.array([stack.shape[1], stack.shape[2], stack.shape[0]])
@@ -117,6 +134,8 @@ def main_importImages (filename, channel, directories, n_rows):
             ch_processDict['C-ClosedInflowTract'] = 'NO'
             ch_processDict['C-ClosedOutflowTract'] = 'NO'
             ch_processDict['G-LastProcessingStep'] = '0'
+            ch_processDict['level'] = level
+            
     except: 
         # Define the first and last slice in the channel where there is heart tissue
         print('\n- Channel: ',channel,'- Number of slices: ', stack.shape[0])
@@ -132,7 +151,9 @@ def main_importImages (filename, channel, directories, n_rows):
         ch_processDict['C-ClosedInflowTract'] = 'NO'
         ch_processDict['C-ClosedOutflowTract'] = 'NO'
         ch_processDict['G-LastProcessingStep'] = '0'
-        
+        ch_processDict['level'] = level
+    
+    
     # # >> Save contours v0
     # q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
     # if q_saveCont:
@@ -140,10 +161,10 @@ def main_importImages (filename, channel, directories, n_rows):
     #                                   myStack = stack, chStr = channel,
     #                                   slices = (0,len(stack)), contVersion = '0')
 
-    return stack, stack_o, stack_m, file, stack_shape, processDict
+    return stack, stack_o, stack_m, file, stack_shape, processDict, level
 
 #%% A. func - main_automCloseCont
-def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows, processDict):
+def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows, processDict, level):
     """
     Function that automatically closes the contours of the stack being processed
 
@@ -164,6 +185,8 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
         Number of rows in subplot
     processDict : dictionary
         Dictionary with information about the processed carried out so far in A_Contours script
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -190,8 +213,8 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
             # Automatic close contours of stack
             stack_closed = createInitialClosedStack(myStack = stack, slices = (slc_firstAutom, slc_lastAutom))
             stack_closed, done_autom = automCloseStackContours(myStack = stack, ch = channel, slices = (slc_firstAutom, slc_lastAutom+1),
-                                                    new_stack = stack_closed, plotEvery = plotEvery)
-            showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows)
+                                                    new_stack = stack_closed, plotEvery = plotEvery, level = level)
+            showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows, level = level)
             ch_processDict['A-AutomCloseContours'] = 'DONE'
             ch_processDict['G-LastProcessingStep'] = 'A'
         else:
@@ -210,8 +233,8 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
             # Automatic close contours of stack
             stack_closed = createInitialClosedStack(myStack = stack, slices = (slc_firstAutom, slc_lastAutom))
             stack_closed, done_autom = automCloseStackContours(myStack = stack, ch = channel, slices = (slc_firstAutom, slc_lastAutom+1),
-                                                    new_stack = stack_closed, plotEvery = plotEvery)
-            showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows)
+                                                    new_stack = stack_closed, plotEvery = plotEvery, level = level)
+            showGridContours(myStack = stack_closed, slices = (0,len(stack)), n_rows = n_rows, level = level)
             ch_processDict['A-AutomCloseContours'] = 'DONE'
             ch_processDict['G-LastProcessingStep'] = 'A'
     
@@ -317,7 +340,7 @@ def main_automCloseCont(filename, channel, directories, stack, plotEvery, n_rows
     return stack_closed, processDict, done_autom
 
 #%% B. func - main_manuallyCloseContours
-def main_manuallyCloseContours(filename, channel, directories, stack_closed, stack_o, stack_m, processDict, n_rows, checking = False):
+def main_manuallyCloseContours(filename, channel, directories, stack_closed, stack_o, stack_m, processDict, n_rows, level, checking = False):
     """
     Function that allows the user to manually close/clean the contours of the stack being processed
 
@@ -340,6 +363,8 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
         Dictionary with information about the processed carried out so far in A_Contours script
     n_rows : int
         Number of rows in subplot
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
     checking : boolean
         True if you are running this function to just close some slices after closing inf/out tracts, else False.
         The default is False
@@ -390,7 +415,7 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
         # Process manually each slice
         stack_closed, last_slc, exit_code = manuallyCloseContours(stack_closed = stack_closed,
                                             stack_o = stack_o, stack_m = stack_m, slices =(slc_first, slc_last),
-                                            n_rows = n_rows, chStr = channel, exit_code = False)
+                                            n_rows = n_rows, chStr = channel, exit_code = False, level = level)
         if exit_code:
             done_manual = False
             processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
@@ -406,7 +431,9 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
             if not checking:
                 q_plotAll = ask4input('Do you want to plot all the slices to double check everything has been closed? [0]:no/[1]:yes: ', bool)
                 if q_plotAll:
-                    showGridContours(myStack = stack_closed, slices = (processDict[channel]['G-Slc_tissueLayerFirst'],processDict[channel]['G-Slc_tissueLayerLast']), n_rows = n_rows)
+                    showGridContours(myStack = stack_closed, 
+                                     slices = (processDict[channel]['G-Slc_tissueLayerFirst'],processDict[channel]['G-Slc_tissueLayerLast']), 
+                                     n_rows = n_rows, level = level)
                 # # Save contours vMan
                 # q_saveCont = ask4input('Do you want to save the images as PNGs with overlay of contours? [0]:no/[1]:yes: ',bool)
                 # if q_saveCont:
@@ -426,7 +453,8 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
                 continueManClosing = ask4input('Would you like to close some additional slices? [0]:no/[1]:yes: ', bool)
                 if continueManClosing: 
                     slc_list, slc_end = getSlices((0, len(stack_closed)), 'you would like to close')
-                    exit_code, slc_end, last_slc, stack_closed = manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, channel, exit_code)
+                    exit_code, slc_end, last_slc, stack_closed = manuallyCloseContoursTuple (slc_list, stack_closed, 
+                                                                                             stack_o, stack_m, channel, exit_code, level)
                     if exit_code:
                         alert('error',1)
                         print("\n- Exit script - last slice ", last_slc)
@@ -454,7 +482,7 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
     return stack_closed, processDict, done_manual
 
 #%% C. func - main_closeInfAndOutfTract
-def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, processDict, n_rows):
+def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, processDict, n_rows, level):
     """
     Function that allows the user to close de inflow and outflow tract of the stack being processed with different methods
 
@@ -473,6 +501,8 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
         Dictionary with information about the processed carried out so far in A_Contours script
     n_rows : int
         Number of rows in subplot
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -521,7 +551,8 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
                     processDict[channel]['C-Slc_closed'+region+'TractLast'] = slc_reg_last
 
                 stack_closed, slices_reg, exit_code = closeInfOutfStack(stack_closed = stack_closed,
-                                          slices = (slc_reg_first,slc_reg_last), chStr = channel, exit_code = False, region = region)
+                                          slices = (slc_reg_first,slc_reg_last), chStr = channel, exit_code = False, 
+                                          region = region, level = level)
                 slc_firstOut, _ = slices_reg
 
                 if exit_code:
@@ -532,14 +563,14 @@ def main_closeInfAndOutfTract(filename, channel, directories, stack_closed, proc
                     print('- EXIT: Closing '+region+' - last slice: '+str(slc_firstOut))
                     if slc_reg_first != slc_firstOut:
                         print('- Printing slices where '+ region + ' tract was closed')
-                        showGridContours(myStack = stack_closed, slices = (slc_reg_first,slc_firstOut), n_rows = n_rows)
+                        showGridContours(myStack = stack_closed, slices = (slc_reg_first,slc_firstOut), n_rows = n_rows, level = level)
                     q_saveNPY = ask4input("Do you want to save the stack you have closed so far before exiting? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
                     saveDict(filename, processDict , 'processDict', directories[1], False)
                     print('- EXITING!')
                     break
                 else:
                     print('- Plotting slices where '+ region + ' tract was closed')
-                    showGridContours(myStack = stack_closed, slices = (slc_reg_first,slc_reg_last), n_rows = n_rows)
+                    showGridContours(myStack = stack_closed, slices = (slc_reg_first,slc_reg_last), n_rows = n_rows, level = level)
                     q_region_done = ask4input('Are you done closing the '+region+' tract? \n\t[0]:no, there is another group of slices that needs to be closed\n\t[1]:yes, continue with next process!: ',bool)
                     if q_region_done:
                         q_region = False
@@ -627,7 +658,7 @@ def openStack (filename, chStr, dir_ims2Analyse, dir_txtNnpy):
                 dir_stack = os.path.join(dir_ims2Analyse,str(file))
                 stack = io.imread(dir_stack)
                 stack_o = io.imread(dir_stack)
-                stack_m = io.load(dir_stack)
+                stack_m = io.imread(dir_stack)
     else:
         filetype = 'tif'
         file = filename + "_"+chStr+"_EDC.tif"
@@ -835,7 +866,7 @@ def selectChannel():
 
 #%% - PLOTS
 #%% func - showContours
-def showContours (myStack, slices, minLenContour, plotEvery, figureSize, plotshow):
+def showContours (myStack, slices, minLenContour, plotEvery, figureSize, plotshow, level):
     """
     Function to plots the contours every X number of slices between the range defined by 'slices'
 
@@ -853,6 +884,8 @@ def showContours (myStack, slices, minLenContour, plotEvery, figureSize, plotsho
         Figure size (x,y)
     plotshow : boolean
         True to show plot, else False
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -870,7 +903,7 @@ def showContours (myStack, slices, minLenContour, plotEvery, figureSize, plotsho
 
             # Find all the contours of the image
             #find_contours(array, level, fully_connected='low', positive_orientation='low', *, mask=None)
-            contours = measure.find_contours(myIm, 0.5, 'high', 'high')
+            contours = measure.find_contours(myIm, level, 'high', 'high')
 
             # Display the image and plot an overlay of all contours found that have
             # more than minLenContour points
@@ -900,7 +933,7 @@ def showContours (myStack, slices, minLenContour, plotEvery, figureSize, plotsho
     alert('wohoo',1)
 
 #%% func - showGridContours
-def showGridContours(myStack, slices, n_rows):
+def showGridContours(myStack, slices, n_rows, level):
     """
     Function that generates a series of plots with subplots of slices and its contours between the range defined by 'slices'
 
@@ -912,6 +945,8 @@ def showGridContours(myStack, slices, n_rows):
         start_slice, end_slice
     n_rows : int
         Number of rows in subplot
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -931,12 +966,12 @@ def showGridContours(myStack, slices, n_rows):
 
     for i in range(len(slices_first)):
         slc_tuple = (slices_first[i], slices_last[i])
-        plotSlcsRange(myStack, slc_tuple, 'Contours', slcs_per_im)
+        plotSlcsRange(myStack, slc_tuple, 'Contours', slcs_per_im, level)
 
     alert('wohoo',1)
 
 #%% func - savePltContours
-def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVersion):
+def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVersion, level):
     """
     Function that saves plots of slices with overlay of contours as pngs. Plots are not shown.
 
@@ -954,6 +989,8 @@ def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVers
         start_slice, end_slice
     contVersion : int
         version number of contours.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -975,6 +1012,7 @@ def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVers
         os.mkdir(dir4tifs)
     tifPath = os.path.join(dir4tifs,tifName)
 
+    print('level:',str(level))
     bar = Bar('Saving slices with contours', max=slices[1]-slices[0], suffix = suffix, check_tty=False, hide_cursor=False)
     for slc in range(slices[0], slices[1]):
 
@@ -982,7 +1020,7 @@ def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVers
         myIm = myStack[slc,:,:]
 
         # Find all the contours of the image
-        contours = measure.find_contours(myIm, 0.5, 'high', 'high')
+        contours = measure.find_contours(myIm, level, 'high', 'high')
 
         # Display the image and plot an overlay of all contours found that have
         # more than 500 points
@@ -1028,7 +1066,7 @@ def savePltContours (dir_ims2Analyse, filename, myStack, chStr, slices, contVers
     print("- All subplots have been saved!")
 
 #%% func - plotSlcsRange
-def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im):
+def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im, level):
     """
     Function that generates a plot with subplots of slices and its contours between the range defined by 'slices_plot'
 
@@ -1042,6 +1080,8 @@ def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im):
         Text that describes the process being performed at the moment the plot gets displayed
     slcs_per_im : int
         Number of slices as subplots per plot.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -1069,23 +1109,26 @@ def plotSlcsRange(stack_closed, slices_plot, text, slcs_per_im):
         #Get Image and Label
         slc = slc_plot_list[im]
         # print(slc)
-        myIm = stack_closed[slc][:][:]
-        contours, numCont = getContExpCont (myIm, minLenContour = 250)
+        try: 
+            myIm = stack_closed[slc][:][:]
+            contours, numCont = getContExpCont (myIm, minLenContour = 250, level = level)
 
-        # Plot
-        ax = fig11.add_subplot(grid[im])
-        ax.imshow(myIm, cmap=plt.cm.gray)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        for n, contour in enumerate(contours):
-            ax.plot(contour[:, 1], contour[:, 0], linewidth=1)
-        ax.set_title("Slc "+str(slc))
+            # Plot
+            ax = fig11.add_subplot(grid[im])
+            ax.imshow(myIm, cmap=plt.cm.gray)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for n, contour in enumerate(contours):
+                ax.plot(contour[:, 1], contour[:, 0], linewidth=1)
+            ax.set_title("Slc "+str(slc))
+        except:
+            continue
 
     plt.suptitle(text +": Contours for slices ("+ str(slices_plot[0])+'-'+str(slices_plot[1]-1)+')', y=0.925, fontsize=14)
     plt.show()
 
 #%% func - getContExpCont_plt
-def getContExpCont_plt (myIm, slcNum, chStr, minLenContour, figSize, plot_show = True):
+def getContExpCont_plt (myIm, slcNum, chStr, minLenContour, figSize, level, plot_show = True):
     """
     Function that gets and returns the contours of a particular slice (slcNum) plotting the image with an overlay
     of the contours
@@ -1102,6 +1145,8 @@ def getContExpCont_plt (myIm, slcNum, chStr, minLenContour, figSize, plot_show =
         Minimum number of points making up contoura and used to filter contours found in each slice
     figSize : tuple
         Figure size (x,y)
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
     plot_show : boolean, optional
         True to show plot, else False. The default is True.
 
@@ -1117,7 +1162,7 @@ def getContExpCont_plt (myIm, slcNum, chStr, minLenContour, figSize, plot_show =
     arr_contours = []
 
     #Find all the contours of the image
-    contours = measure.find_contours(myIm, 0.5, 'high', 'high')
+    contours = measure.find_contours(myIm, level, 'high', 'high')
 
     if plot_show:
         # Display the image and plot an overlay of all contours found that have
@@ -1301,11 +1346,11 @@ def plt_s3 (start_slc, end_slc, im_every, s3_int, s3_ext, plotshow, option):
 
     if plotshow:
         if option == "cardiacjelly":
-            print('- Plotting ext myoc and int endo to get CJ ')
+            print('- Plotting ext myoc and int endo to get CJ (Plots tab)')
         elif option == "both ch":
-            print('- Plotting myoc and ext endo to clean endo ')
+            print('- Plotting myoc and ext endo to clean endo  (Plots tab)')
         elif option == "chamber ring":
-            print('- Plotting heart layer and chamber ring to cut chambers ')
+            print('- Plotting heart layer and chamber ring to cut chambers  (Plots tab)')
 
         for slc in range(start_slc, end_slc-1, im_every):
             fig, ax = plt.subplots(1,2, figsize = (8,4))
@@ -1635,7 +1680,7 @@ def update_tuple_pair(tuple_slc, numCont, heartLayer):
         not_new = True
         print('- There are no tuples in the list.')
         while not_new:
-            q_newTuples = ask4input('Do you want to select the contours for a new group of slices OR for individual slices? \n\t\t[0]:no/[1]:yes, group of slices/[2]:yes, individual slices: ', int)
+            q_newTuples = ask4input('Do you want to select the contours for a new group of slices OR for individual slices? \n\t[0]:no, I am done selecting contours\n\t[1]:yes, group of slices\n\t[2]:yes, individual slices: ', int)
             if q_newTuples == 1:
                 tuple_slc_up, numCont_upf = new_tuples_from_originals(heartLayer)
                 not_new = False
@@ -1705,6 +1750,54 @@ def new_tuples_from_originals(heartLayer):
 
     return tuple_slc_up, numCont_upf
 
+#%% func - new_indiv_tuples_OLD
+def new_indiv_tuples_old(heartLayer):
+    """
+    Function that returns a new group of tuples if user wants to fill the dictionary of individual slices
+
+    Parameters
+    ----------
+    heartLayer : dictionary
+        Dictionary with information about the heart layer being processed including selected contours number and coordinates
+
+    Returns
+    -------
+    tuple_slc_new : list of tuples of int
+        Updated List with tuples including remaining slices.
+    numCont_new : list of int
+        Updated List of contour numbers in the remaining contour groups.
+
+    """
+    numCont_o = heartLayer['info']['numCont_group']
+    numCont_o = [int(num) for num in numCont_o[1:-1].split(',')]
+    slcCont_o = heartLayer['info']['slcCont_group']
+    slcCont_o = [int(num) for num in slcCont_o[1:-1].split(',')]
+
+    q_slcCont_new = ask4input('Select the individual slices in which you would like to select the contours \n\t\t(e.g. to select contours of slices 15,20,21,22 type 15,20-22): ',str)
+    slcCont_new = []
+    comma_split = q_slcCont_new.split(',')
+    for string in comma_split:
+        if string == '':
+            pass
+        else:
+            slcCont_new.append(int(string))
+
+    numCont_new = []
+    for slc in slcCont_new:
+        try:
+            index_start = slcCont_o.index(slc)
+            numCont_new.append(numCont_o[index_start])
+        except:
+            slcCont_add = slcCont_o.copy()
+            slcCont_add.append(slc)
+            slcCont_add.sort()
+            index_start = slcCont_add.index(slc)
+            numCont_new.append(numCont_o[index_start-1])
+
+    tuple_slc_new = [(slc, slc+1) for slc in slcCont_new]
+
+    return tuple_slc_new, numCont_new
+
 #%% func - new_indiv_tuples
 def new_indiv_tuples(heartLayer):
     """
@@ -1728,11 +1821,17 @@ def new_indiv_tuples(heartLayer):
     slcCont_o = heartLayer['info']['slcCont_group']
     slcCont_o = [int(num) for num in slcCont_o[1:-1].split(',')]
 
-    q_slcCont_new = ask4input('Select the individual slices in which you would like to select the contours \n\t\t(e.g. to select contours of slices 15,20-22 type: 15,20,21,22): ',str)
+    q_slcCont_new = ask4input('Select the individual slices in which you would like to select the contours \n\t\t(e.g. to select contours of slices 15,20,21,22 type 15,20-22): ',str)
     slcCont_new = []
     comma_split = q_slcCont_new.split(',')
     for string in comma_split:
-        if string == '':
+        if '-' in string:
+                minus_split = string.split('-')
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    slcCont_new.append(n)
+        elif string == '':
             pass
         else:
             slcCont_new.append(int(string))
@@ -1786,7 +1885,7 @@ def getClicks (clicks, myIm, scale, text):
             #print ('\r    Seed: ' + str(y) + ', ' + str(x), myIm[y,x])
             clicks.append((y,x))
 
-    cv2.namedWindow(text)#,cv2.WINDOW_NORMAL)
+    cv2.namedWindow(text, cv2.WINDOW_NORMAL)#,cv2.WINDOW_NORMAL)
     cv2.resizeWindow(text, window_width, window_height)
     cv2.setMouseCallback(text, on_mouse, 0, )
     cv2.imshow(text, myIm)
@@ -1824,7 +1923,7 @@ def slcNum_def (slc):
 
 #%% - CONTOURS CLEAN AND CLOSURE
 #%% A. func - automCloseStackContours
-def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery):
+def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery, level):
     """
     Funtion that automatically closes the contours of the input slice between the range given by 'slices'
 
@@ -1840,6 +1939,8 @@ def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery):
         Initialised closed stack.
     plotEvery : int
         Number defining the interval in which slices will be plotted.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -1862,7 +1963,7 @@ def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery):
 
         myIm = myStack[slc][:][:]
         # Get the contours of slice
-        contours, numCont = getContExpCont (myIm, minLenContour = 100)
+        contours, numCont = getContExpCont (myIm, minLenContour = 100, level = level)
         # Sort the contours by length (bigger to smaller)
         contours = sorted(contours, key = len, reverse=True)
         # Get properties of each contour
@@ -1878,7 +1979,7 @@ def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery):
         # Draw lines between closer contours
         myIm_closedCont = automCloseContours (myIm, data2Connect)
         # Show new closed contours
-        new_contours, new_numCont = getContExpCont (myIm_closedCont, minLenContour = 100)
+        new_contours, new_numCont = getContExpCont (myIm_closedCont, minLenContour = 100, level = level)
         new_contours = sorted(new_contours, key = len, reverse=True)
         # if plotshow:
         #     print('\n-> FINAL CONTOURS')
@@ -1895,7 +1996,7 @@ def automCloseStackContours(myStack, ch, slices, new_stack, plotEvery):
     return new_stack, done_autom
 
 #%% func - getContExpCont
-def getContExpCont (myIm, minLenContour):
+def getContExpCont (myIm, minLenContour, level):
     """
     Function that gets and returns the contours of a particular slice (slcNum)
 
@@ -1905,6 +2006,8 @@ def getContExpCont (myIm, minLenContour):
         Imaged being processed
     minLenContour : int
         Minimum number of points making up contoura and used to filter contours found in each slice
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -1919,7 +2022,7 @@ def getContExpCont (myIm, minLenContour):
     arr_contour_slc = []
 
     # Find all the contours of the image
-    contours = measure.find_contours(myIm, 0.5, 'high', 'high')
+    contours = measure.find_contours(myIm, level, 'high', 'high')
 
     # Variable to save the number of contours found
     num_contour = 0
@@ -2245,7 +2348,7 @@ def automCloseContours (myIm, data2Connect):
     return myIm
 
 #%% B. func - manuallyCloseContours
-def manuallyCloseContours (stack_closed, stack_o, stack_m, slices, n_rows, chStr, exit_code):
+def manuallyCloseContours (stack_closed, stack_o, stack_m, slices, n_rows, chStr, exit_code, level):
     """
     Function used to manually close the contours of the stack
 
@@ -2265,6 +2368,8 @@ def manuallyCloseContours (stack_closed, stack_o, stack_m, slices, n_rows, chStr
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
     exit_code : boolean
         True if user wants to exit code, else False.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2293,22 +2398,23 @@ def manuallyCloseContours (stack_closed, stack_o, stack_m, slices, n_rows, chStr
 
     for i in range(len(slices_first)):#shape(slices_first)[0]):
         slc_tuple = (slices_first[i], slices_last[i])
-        plotSlcsRange(stack_closed, slc_tuple, 'INITIAL', slcs_per_im)
+        plotSlcsRange(stack_closed, slc_tuple, 'INITIAL', slcs_per_im, level)
         slc_list, slc_end = getSlices(slc_tuple, 'you would like to close')
         # print('AJA - slc_list:', slc_list)
 
         while len(slc_list) != 0:
-            exit_code, slc_end, last_slc, stack_closed = manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr, exit_code)
+            exit_code, slc_end, last_slc, stack_closed = manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, 
+                                                                                     stack_m, chStr, exit_code, level)
 
             if exit_code:
                 alert('error',1)
                 print("\n- Exit script - last slice ", last_slc)
                 break
 
-            plotSlcsRange(stack_closed, slc_tuple, 'CHECKING (after having closed)', slcs_per_im)
+            plotSlcsRange(stack_closed, slc_tuple, 'CHECKING (after having closed)', slcs_per_im, level)
             q_done = str(input('> Are you done CLOSING the contours for this - tuple ('+ str(slc_tuple[0])+','+str(slc_tuple[1]-1)+')?: \n - [0]:no/[1/ ]:yes! >>>>> ')).lower()
             if q_done == '1' or q_done == '':
-                print('slc list: ', slc_list)
+                # print('slc list: ', slc_list)
                 break
             #     if i == len(slices_first)-1:
             #         q_not_done_all = str(input('> Do you want to close any other slices? [0]:no/[1/ ]:yes! >>>>> '))
@@ -2333,7 +2439,7 @@ def manuallyCloseContours (stack_closed, stack_o, stack_m, slices, n_rows, chStr
     return stack_closed, last_slc, exit_code
 
 #%% func - manuallyCloseContoursTuple
-def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr, exit_code):
+def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr, exit_code, level):
     """
     Function used to manually close the contours of the slices in the slc_list given as input
 
@@ -2351,6 +2457,8 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
     exit_code : boolean
         True if user wants to exit code, else False.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2373,14 +2481,15 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
 
         print("- Processing contours - slice ", str(slc))
         # Get image
+
         myIm = stack_closed[slc][:][:]
         # Get contours for that slice
-        _ = getContExpCont_plt (myIm, slc, chStr, minLenContour=100, figSize=10)
+        _ = getContExpCont_plt (myIm, slc, chStr, minLenContour=100, figSize=10, level = level)
         myIm_closed = myIm
 
         # closeContours per slice
         k_size = 60
-        myIm_closed, done_close  = closeContoursSlc(myIm_closed, slc, chStr, k_size, k_size)
+        myIm_closed, done_close  = closeContoursSlc(myIm_closed, slc, chStr, k_size, k_size, level)
         if done_close == 'esc':
             last_slc = slc
             exit_code = True
@@ -2407,18 +2516,18 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
                 break
             # Draw contour black/Clean contours
             elif select_process == '1':
-                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'black')
+                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'black', level)
             # Draw contour white
             elif select_process == '2':
-                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white')
+                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', level)
             # Close contours
             elif select_process in list_close:
                 index_selected = list_close.index(select_process)
-                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, crop_size[index_selected][0], crop_size[index_selected][1])
+                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, crop_size[index_selected][0], crop_size[index_selected][1], level)
             elif select_process == '6':
                 input_size = ask4input('Enter the rectangle size to crop and close contours separated by a comma - x,y -: ', str)
                 x_size, y_size = input_size.split(',')
-                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, int(y_size), int(x_size))
+                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, int(y_size), int(x_size), level)
             # Done
             elif select_process == '9' or select_process == '':
                 done = 'OK'
@@ -2429,12 +2538,12 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
             elif select_process == '7':
                 myIm_closed = stack_o[slc][:][:]
                 done = 'reset_o_OK'
-                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, True)
+                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
                 
             elif select_process == '8':
                 myIm_closed = stack_m[slc][:][:]
                 done = 'reset_m_OK'
-                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, True)
+                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
                 
             else:
                 print('Error: Wrong input. Select only from the given options')
@@ -2447,7 +2556,7 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
     return exit_code, slc, last_slc, stack_closed
 
 #%% func - closeContoursSlc
-def closeContoursSlc(myIm_closed, slc, chStr, kw, kh):
+def closeContoursSlc(myIm_closed, slc, chStr, kw, kh, level):
     """
     Function that closes the contours of the input image using the cropNcloseCont function
 
@@ -2463,6 +2572,8 @@ def closeContoursSlc(myIm_closed, slc, chStr, kw, kh):
         width of the rectangular region to crop around the clicked point.
     kh : int
         length of the rectangular region to crop around the clicked point.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2477,9 +2588,9 @@ def closeContoursSlc(myIm_closed, slc, chStr, kw, kh):
     while True:
         clicks = getClicks([], myIm_closed, scale=1, text='CLOSING CONTOURS')
         #Close contours and get Image
-        myIm_closed = cropNcloseCont (clicks, myIm_closed, kw, kh)
+        myIm_closed = cropNcloseCont (clicks, myIm_closed, kw, kh, level)
         #Plot image with closed contours
-        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10)
+        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level)
         #Ask if done
         # print('\nAre you done CLOSING the contours for this -slice '+ str(slc)+'?: \n')
         # done_close = input('> Are you done CLOSING the contours for this -slice '+ str(slc)+'?: \n - [0]: no, [1/ ]: yes!, [esc]: exit >>>>> ')
@@ -2490,7 +2601,7 @@ def closeContoursSlc(myIm_closed, slc, chStr, kw, kh):
     return myIm_closed, done_close
 
 #%% func - cropNcloseCont
-def cropNcloseCont (clicks, myIm, wh, ww, plot_show = True):
+def cropNcloseCont (clicks, myIm, wh, ww, level, plot_show = True):
     """
     Function that crops a rectangular region of the input image centered by the click, gets the contours present in that
     region and connects the two closest contours with a white line
@@ -2505,6 +2616,8 @@ def cropNcloseCont (clicks, myIm, wh, ww, plot_show = True):
         length of the rectangular region to crop around the clicked point.
     ww : int
         width of the rectangular region to crop around the clicked point.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
     plot_show : boolean, optional
         True to show plot, else False. The default is True.
 
@@ -2536,7 +2649,7 @@ def cropNcloseCont (clicks, myIm, wh, ww, plot_show = True):
             ax[0].set_title("Original")
 
         #Get contours of the cropped image
-        contours_crop = measure.find_contours(imCrop, 0.5, 'high', 'high')
+        contours_crop = measure.find_contours(imCrop,level, 'high', 'high')
         #Organize contours in terms of number of points to get the two biggest
         contours_crop = sorted(contours_crop, key = len, reverse=True)
         
@@ -2572,7 +2685,7 @@ def cropNcloseCont (clicks, myIm, wh, ww, plot_show = True):
     return myIm
 
 #%% func - close_draw
-def close_draw (myIm_closed, slc, chStr, color_draw, plot_show = True):
+def close_draw (myIm_closed, slc, chStr, color_draw, level, plot_show = True):
     """
     Function that collects clicks positions given by the user and connects them using a white or black line given as
     input by 'color_draw' parameter
@@ -2587,6 +2700,8 @@ def close_draw (myIm_closed, slc, chStr, color_draw, plot_show = True):
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
     color_draw : str
         Color used when drawing line between clicks ('b'/'black': black, 'w'/'white': white)
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
     plot_show : boolean, optional
         True to show plot, else False. The default is True.
 
@@ -2604,7 +2719,7 @@ def close_draw (myIm_closed, slc, chStr, color_draw, plot_show = True):
         clicks = getClicks([], myIm_closed, scale=1, text='DRAWING SLICE ('+color_draw+')')
         # Draw white/black line following the clicked pattern
         myIm_closed = drawLine(clicks, myIm_closed, color_draw)
-        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, plot_show)
+        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, plot_show)
 
         if plot_show:
             print("- Are you done drawing ("+color_draw+") the contours for this - slice "+ str(slc)+"?: ")
@@ -2617,8 +2732,8 @@ def close_draw (myIm_closed, slc, chStr, color_draw, plot_show = True):
 
     return myIm_closed, done_draw
 
-#%% func - cleanSlice
-def cleanSlice (myIm_closed, slc, chStr):
+#%% func - cleanSlice - REMOVE?
+def cleanSlice (myIm_closed, slc, chStr, level):
     """
     Function that collects clicks positions given by the user and connects them using a black line
 
@@ -2630,6 +2745,8 @@ def cleanSlice (myIm_closed, slc, chStr):
         Slice number being processed.
     chStr : str
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2640,13 +2757,13 @@ def cleanSlice (myIm_closed, slc, chStr):
 
     """
 
-    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7)
+    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, level)
     while True:
         #Get clicks of positions to close contours
         clicks = getClicks([], myIm_closed, scale=1, text='CLEANING SLICE')
         # Draw black line following the clicked pattern
         myIm_closed = drawLine(clicks, myIm_closed, "b")
-        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7)
+        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, level)
         #Ask if done
         print("- Are you done CLEANING the contours for this -slice "+ str(slc)+"?: ")
         done_clean = str(input('>  - [0]:no/[1/ ]:yes!/[esc]:exit >>>>> ')).lower()
@@ -2705,7 +2822,7 @@ def drawLine (clicks, myIm, color_draw):
 
 
 #%% C. func - closeInfOutfStack
-def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
+def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region, level):
     """
     Function used to close the inflow/outflow tract of the stack
 
@@ -2721,6 +2838,8 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
         True if user wants to exit code, else False.
     region : str
         Text indicating the region being closed ('Inflow'/'Outflow').
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2749,7 +2868,7 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
             slc_end = end_InO
         print(slc_end)
         while not happy: #happy == False:
-             stack_closed, q_happy, last_slc, exit_code = closeInfOutfTuple(stack_closed, (slc,slc_end), chStr, exit_code)
+             stack_closed, q_happy, last_slc, exit_code = closeInfOutfTuple(stack_closed, (slc,slc_end), chStr, exit_code, level)
              if not q_happy and exit_code == False:
                  #Reset slices
                  stack_closed[slc:slc_end][:][:] = stack_o[slc:slc_end][:][:]
@@ -2773,7 +2892,7 @@ def closeInfOutfStack (stack_closed, slices, chStr, exit_code, region):
     return stack_closed, slices, exit_code
 
 #%% func - closeInfOutfTuple
-def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
+def closeInfOutfTuple (stack_closed, slices, chStr, exit_code, level):
     """
     Function used to close the inflow/outflow tract of the slices within the range of 'slices' given as input
 
@@ -2787,6 +2906,8 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
         Text indicating channel being processed ('ch0': myocardium/ 'ch1': endocardium).
     exit_code : boolean
         True if user wants to exit code, else False.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2811,40 +2932,40 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
         # Run method selection for every XX slices in range
         if slc == slices[0]:
             while not done:# and exit_code: 
-                _ = getContExpCont_plt (myIm, slc, chStr, 600,7)
+                _ = getContExpCont_plt (myIm, slc, chStr, 600,7, level)
                 method = str(input("\n> What method do you want to use for closing the inflow/outflow tract?\n\t[1/ ]:ConvexHull\n\t[2]:Close (450x150)\n\t[3]:Close (500x200)\n\t[4]:Close (200x50)\n\t[5]:Close (user input size)\n\t[6]:Draw\n\t[esc]:exit >>>>> : ")).lower()
                 if method == "1" or method == '':
                     # Use convexHull method to close inflow/outflow tract
                     alert('error',1)
                     print('- IMPORTANT NOTE: Remember to click a point outside the convex hull of the contours!')
-                    myIm_closed, clicks_chull = close_convexHull(myIm_closed, slc, chStr, clicks_in = [], option = 'first')
+                    myIm_closed, clicks_chull = close_convexHull(myIm_closed, slc, chStr, clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "2":
                     # Use rectangle method to close inflow/outflow tract
                     rect_xA = 150
                     rect_yA = 450
-                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = [], option = 'first')
+                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "3":
                     # Use rectangle method to close inflow/outflow tract
                     rect_xC = 200
                     rect_yC = 500
-                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = [], option = 'first')
+                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "4":
                     # Use rectangle method to close inflow/outflow tract
                     rect_xB = 50
                     rect_yB = 200
-                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = [], option = 'first')
+                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "5":
                     # Use rectangle method to close inflow/outflow tract
                     input_size = ask4input('Enter the rectangle size to crop and close contours separated by a comma - x,y -: ', str)
                     rect_xD, rect_yD = input_size.split(',')
-                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, int(rect_yD), int(rect_xD), clicks_in = [], option = 'first')
+                    myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, int(rect_yD), int(rect_xD), clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "6":
-                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', plot_show = False)
+                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', level, plot_show = False)
                     done = True
                 elif method == 'esc':
                     last_slc = slc
@@ -2857,21 +2978,21 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
         # Use the previous selected method for the rest of the XX-1 slices
         else:
             if method == "1" or method == '':
-                myIm_closed, _ = close_convexHull(myIm_closed, slc, chStr, clicks_in = clicks_chull, option = 'autom')
+                myIm_closed, _ = close_convexHull(myIm_closed, slc, chStr, clicks_in = clicks_chull, option = 'autom', level = level)
             elif method == "2":
-                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = clicks_close, option = 'autom')
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xA, rect_yA, clicks_in = clicks_close, option = 'autom', level = level)
             elif method == "3":
-                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = clicks_close, option = 'autom')
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xC, rect_yC, clicks_in = clicks_close, option = 'autom', level = level)
             elif method == "4":
-                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = clicks_close, option = 'autom')
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, rect_xB, rect_yB, clicks_in = clicks_close, option = 'autom', level = level)
             elif method == "5":
-                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, int(rect_yD), int(rect_xD), clicks_in = clicks_close, option = 'autom')
+                myIm_closed, _ = closeInfOutSlc(myIm_closed, slc, chStr, int(rect_yD), int(rect_xD), clicks_in = clicks_close, option = 'autom', level = level)
             elif method == "6":
-                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', plot_show = False)
+                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', level, plot_show = False)
 
         if slc == slices[1]-1:
             #print('I am the last slice of the group')
-            showGridContours(myStack = stack_closed, slices = (slices[0], slices[1]), n_rows = 3)
+            showGridContours(myStack = stack_closed, slices = (slices[0], slices[1]), n_rows = 3, level = level)
             q_happy = ask4input('Are you happy with the way the contours have been closed? \n\t [0]:no, let me select other method to close them\n\t [1]:yes, continue!: ',bool)
             last_slc = slices[0]
 
@@ -2884,7 +3005,7 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code):
     return stack_closed, q_happy, last_slc, exit_code
 
 #%% func - close_convexHull
-def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
+def close_convexHull(myIm_closed, slc, chStr, clicks_in, option, level):
     """
     Function that closes the inflow/ouflow tract of the input slice using convex hull
 
@@ -2902,6 +3023,8 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
         Text that indicates if the slice being processed is the first one or not. If 'first' user is prompted to click
         a point outside the contours close to the region than needs to be closed, else uses the click given in the first slice
         of that group of slices being closed which enters as input
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -2917,7 +3040,7 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
     else:
         plot_show = False
     
-    contours_or = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, plot_show)
+    contours_or = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, level, plot_show)
     contours_or = sorted(contours_or, key = len, reverse=True)
     ind_contours = []
     for i, cont in enumerate(contours_or): 
@@ -2932,7 +3055,7 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
     myIm_closed = np.vstack((black_array,myIm_closed,black_array))
     myIm_closed = np.uint16(myIm_closed)
 
-    contours_new = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, plot_show)
+    contours_new = getContExpCont_plt (myIm_closed, slc, chStr, 250, 7, level, plot_show)
     contours_new = sorted(contours_new, key = len, reverse=True)
     
     # print('New contours: ',type(contours_new), len(contours_new))#, contours_new.shape)
@@ -2944,14 +3067,16 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
     xy_contours = xy_allContours(contours)
     # print(xy_contours.shape, type(xy_contours))
 
+    clicks = []
     #Get click to use convex hull to close
     if option == 'first':
         print("\n- Closing Inflow/Outflow tract - slice ", str(slc))
         # Get click for point to create convex hull from
-        clicks = getClicks(clicks_in, myIm_closed, scale=0.6, text='CONVEX HULL')
-        clicks = clicks[-1]
+        while len(clicks) == 0:
+            clicks = getClicks(clicks_in, myIm_closed, scale=0.6, text='CONVEX HULL')
         # print('clicks first: ',str(clicks), type(clicks))
-    
+        clicks = clicks[-1]
+        
     elif option =='autom':
         clicks = clicks_in
         # print('clicks autom: ',str(clicks), type(clicks))
@@ -3002,7 +3127,7 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
                           int(closing_pt2[0]), int(closing_pt2[1]))
     myIm_closed[rr, cc] = val * 50000
 
-    contours_closed = measure.find_contours(myIm_closed, 0.5, 'high', 'high')
+    contours_closed = measure.find_contours(myIm_closed, level, 'high', 'high')
 
     if plot_show:
         ax[2].imshow(myIm_closed, cmap=plt.cm.gray)
@@ -3012,7 +3137,7 @@ def close_convexHull(myIm_closed, slc, chStr, clicks_in, option):
         ax[2].set_title("Closed")
         plt.show()
 
-    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, plot_show)
+    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, plot_show)
 
     myIm_closed = myIm_closed[150:150+im_height]
 
@@ -3102,7 +3227,7 @@ def selectHull (merge, xy_contours):
     return closing_pt1, closing_pt2
 
 #%% func - closeInfOutSlc
-def closeInfOutSlc(myIm_closed, slc, chStr, kw, kh, clicks_in, option):
+def closeInfOutSlc(myIm_closed, slc, chStr, kw, kh, clicks_in, option, level):
     """
     Function that closes the inflow/outflow tract of the input image using the cropNcloseCont function
 
@@ -3124,6 +3249,8 @@ def closeInfOutSlc(myIm_closed, slc, chStr, kw, kh, clicks_in, option):
         Text that indicates if the slice being processed is the first one or not. If 'first' user is prompted to click
         a point in between the contours to close, else uses the clicks given in the first slice
         of that group of slices being closed which enters as input
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -3147,9 +3274,9 @@ def closeInfOutSlc(myIm_closed, slc, chStr, kw, kh, clicks_in, option):
         else:
             clicks = clicks_in
         #Close contours and get Image
-        myIm_closed = cropNcloseCont (clicks, myIm_closed, kw, kh)
+        myIm_closed = cropNcloseCont (clicks, myIm_closed, kw, kh, level)
         #Plot image with closed contours
-        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, plot_show)
+        _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, plot_show)
         break
 
     final_click = clicks
@@ -3244,7 +3371,7 @@ def dictCreation (filename, file, minLenContour, chStr, slcCont, numCont,
     return heartLayer, int(vNum), update
 
 #%% func - dictFill
-def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
+def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour, level):
     """
     Function to fill the dictionary with info about the contours
 
@@ -3262,6 +3389,8 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
         Dictionary with information about the heart layer being processed including selected contours number and coordinates
     minLenContour : int
         Minimum number of points making up contoura and used to filter contours found in each slice
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -3325,7 +3454,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
 
                 #Get the contours of slice
                 # --getContExpCont_slc (myIm, sliceNum, chNum, minLenContour, plotshow, imageEvery)
-                contours, numCont = getContExpCont(myIm, minLenContour)
+                contours, numCont = getContExpCont(myIm, minLenContour, level)
                 #Sort the contours by length (bigger to smaller)
                 contours = sorted(contours, key = len, reverse=True)
 
@@ -3413,7 +3542,7 @@ def dictFill (tuple_slc, numContours, stack, chStr, heartLayer, minLenContour):
     return heartLayer, tuple_slc, numContours, exit_txt
 
 #%% func - askModifyDict
-def askModifyDict(filename, stack, heartLayer, channel, processDict, directories):
+def askModifyDict(filename, stack, stack_o, stack_m, heartLayer, channel, processDict, directories, level):
     """
     Function that asks the user if the dictionary created wants to be modified
 
@@ -3423,6 +3552,10 @@ def askModifyDict(filename, stack, heartLayer, channel, processDict, directories
         Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
     stack : numpy array
         Stack being processed.
+    stack_o : numpy array
+        Copy of closed stack.
+    stack_m : numpy array
+        Copy of original masked stack to process.
     heartLayer : dictionary
         Dictionary with information about the heart layer being processed including selected contours number and coordinates
     channel : str
@@ -3431,6 +3564,9 @@ def askModifyDict(filename, stack, heartLayer, channel, processDict, directories
         Dictionary with information about the processed carried out when closing contours
     directories : list of paths
         List of paths to the folders where the files are saved.
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
+    
         
     Returns
     -------
@@ -3447,20 +3583,21 @@ def askModifyDict(filename, stack, heartLayer, channel, processDict, directories
     plotSelectedContours(imageEvery = 1, stack = stack, heartLayer = heartLayer, plot_all = False)
     
     #% Correct dictionary if needed
-    q_modifyDict = ask4input("Do you want to modify the created dictionary (change any of the selected contours per slice manually)? [0]:no/[1]:yes: ",bool)
+    q_modifyDict = ask4input("Do you want to modify the created dictionary (change any of the selected contours)? [0]:no/[1]:yes: ",bool)
     if q_modifyDict:
         while q_modifyDict:
             q_firstClose = ask4input("Do you need to close any contours before you modify the dictionary? [0]:no/[1]:yes: ",bool)
             if q_firstClose:
                 stack, processDict, _ = main_manuallyCloseContours(filename, channel, directories, stack, 
-                                                                         stack, processDict, 7, True)
+                                                                         stack_o, stack_m, processDict, 7, level, True)
             heartLayer = modifyDict(stack = stack, chStr = channel, heartLayer = heartLayer,
-                                                  minLenContour = 250)
+                                                  minLenContour = 250, level = level)
             q_modifyDict = ask4input("Do you want to modify any other part of the dictionary? [0]:no/[1]:yes: ",bool)
             if not q_modifyDict:
                 q_plotAll = ask4input('Do you want to plot the final selected contour masks for '+channel+'? [0]:no/[1]:yes: ',bool)
                 if q_plotAll:
                     imageEvery = ask4input('Plot selected contours every X number of slices. X= ',int)
+                    print('\n- Plotting selected contours ... (Plots tab)')
                     plotSelectedContours(imageEvery = imageEvery, stack = stack, heartLayer = heartLayer, plot_all = True)
                 break
             else:
@@ -3469,7 +3606,7 @@ def askModifyDict(filename, stack, heartLayer, channel, processDict, directories
     return heartLayer, stack, processDict
 
 #%% func - modifyDict
-def modifyDict(stack, chStr, heartLayer, minLenContour):
+def modifyDict(stack, chStr, heartLayer, minLenContour, level):
     """
     Function to modify the contour info saved in the dictionary
 
@@ -3483,6 +3620,8 @@ def modifyDict(stack, chStr, heartLayer, minLenContour):
         Dictionary with information about the heart layer being processed including selected contours number and coordinates
     minLenContour : int
         Minimum number of points making up contoura and used to filter contours found in each slice
+    level : float 
+        Value along which to find contours in the array. Parameter for skimage.measure.find_contours
 
     Returns
     -------
@@ -3491,12 +3630,12 @@ def modifyDict(stack, chStr, heartLayer, minLenContour):
 
     """
 
-    alert('frog',1); print("- Running script to modify dict...!")
+    alert('frog',1); print("\n- Running script to modify dict...!")
 
     exit_txt = False
     not_new = True
     while not_new:
-        q_newTuples = ask4input('Do you want to select the contours for a new group of slices OR for individual slices? \n\t\t[0]:no/[1]:yes, group of slices\n\t\t[2]:yes, individual slices: ', int)
+        q_newTuples = ask4input('Do you want to select the contours for a new group of slices OR for individual slices? \n\t[0]:no, I am done selecting contours\n\t[1]:yes, group of slices\n\t[2]:yes, individual slices: ', int)
         if q_newTuples == 1:
             tuple_slc_up, numCont_upf = new_tuples_from_originals(heartLayer)
             not_new = False
@@ -3515,7 +3654,7 @@ def modifyDict(stack, chStr, heartLayer, minLenContour):
 
     while len(tuple_slc_up) != 0:
         heartLayer, tuple_slc_up, numCont_upf, exit_txt = dictFill (tuple_slc = tuple_slc_up, numContours = numCont_upf,
-                                            stack = stack, chStr = chStr, heartLayer = heartLayer, minLenContour = 250)
+                                            stack = stack, chStr = chStr, heartLayer = heartLayer, minLenContour = 250, level = level)
         if exit_txt:
             print('EXIT - Modifying dictionary!!');
             break
@@ -3671,7 +3810,7 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
        while not sureBoth:
            # Internal
            #print('- \n[Ch'+str(chNum)+'/Slc'+str(slcNum)+']')
-           print('Enter the contour numbers for slice '+str(slcNum)+':')
+           print('- Enter the contour numbers for slice '+str(slcNum)+':')
            selecContInt = str(input("\t> INTERNAL contours (separated by SPACES)/'esc': ")).lower()
            if selecContInt == 'esc':
                exit_txt = True
@@ -3941,7 +4080,10 @@ def automSelectContours (propContSelected, propsAllCont, numContours_pair):
                         if dif_per[numCont] > max_per:
                             max_per = dif_per[numCont]
 
-                dif_area = dif_area/max_area
+                try: 
+                    dif_area = dif_area/max_area
+                except: 
+                    dif_area = 0
                 dif_cent = dif_cent/max_cent
                 dif_meanInt = dif_meanInt/max_meanInt
                 dif_per = dif_per/max_per
@@ -4316,6 +4458,7 @@ def ch_clean (mask_s3, toClean_s3, option):
     toRemove_s3 = np.empty((toClean_s3.shape[0],toClean_s3.shape[1],toClean_s3.shape[2]))
     cleaned_s3 = np.empty((toClean_s3.shape[0],toClean_s3.shape[1],toClean_s3.shape[2]))
 
+    bar = Bar('- Cleaning endocardial slices', max=toClean_s3.shape[2], suffix = suffix, check_tty=False, hide_cursor=False)
     for slc in range(toClean_s3.shape[2]):
         mask_slc = mask_s3[:,:,slc]
         toClean_slc = toClean_s3[:,:,slc]
@@ -4325,7 +4468,9 @@ def ch_clean (mask_s3, toClean_s3, option):
 
         toRemove_s3[:,:,slc] = toRemove_slc
         cleaned_s3[:,:,slc] = cleaned_slc
+        bar.next()
 
+    bar.finish()
     toRemove_s3 = toRemove_s3.astype('uint8')
     cleaned_s3 = cleaned_s3.astype('uint8')
 

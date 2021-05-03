@@ -17,20 +17,20 @@ import os
 import vmtk
 from vmtk import pypes, vmtkscripts
 
-init = False
 # Verify working dir
-def setWorkingDir (root_path, init):
+def setWorkingDir (root_path, init = False):
     if not init:
         wd = os.path.dirname(os.path.abspath(__file__))
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    init = not bool(int(input('Do you want to execute the script all at once or run it by cells? \n\t[0]: all at once (recommended if you are already familiar with the script)\n\t[1]: by cells (recommended if you are NOT yet familiar with the script). >>>: ')))
     print("Current working directory: {0}".format(os.getcwd()))
-
+    if not init: 
+        print('\nIMPORTANT NOTES:\n- Remember to start running from cell %Start B_VMTK.\n- NEVER run as an individual cell the cell called %Importing python packages')
     return root_path, init
 
-root_path, init = setWorkingDir(os.getcwd(),init)
+root_path, init = setWorkingDir(os.getcwd())
 
 #%% Start B_VMTK
 if init:
@@ -46,7 +46,7 @@ if init:
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
     # Get file to process and directories
-    folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
 
@@ -68,7 +68,8 @@ if init:
     while len(mesh_name) == 0: 
         vmtktxt, mesh_name = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
                                                     dir_cl = directories[3], printshow = False)
-        _ = fcBasics.ask4input('No meshes are recognised in the path: "'+ str('//'.join(os.path.normpath(directories[3]).split(os.sep)[-4:])) + '". \n\t Make sure you have named your cleaned meshes correctly after running the processing in Meshlab and press -Enter- when ready.', str)
+        if len(mesh_name) == 0:
+            _ = fcBasics.ask4input('No meshes are recognised in the path: "'+ str('//'.join(os.path.normpath(directories[3]).split(os.sep)[-4:])) + '". \n\t Make sure you have named your cleaned meshes correctly after running the processing in Meshlab and press -Enter- when ready.', str)
     
     
     for n, mesh in enumerate(mesh_name):

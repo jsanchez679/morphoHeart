@@ -17,8 +17,8 @@ import math
 from progress.bar import Bar
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
-from vedo import *
-from vedo import embedWindow#, Plotter, Text2D, settings, load
+# from vedo import *
+from vedo import embedWindow, Text2D, load#,Plotter, settings
 embedWindow(False)
 
 c="k"
@@ -46,14 +46,18 @@ def createDictPaths(names, df_files, dir_data2Analyse):
     -------
     dict_paths : TYPE
         DESCRIPTION.
+    names_out : 
+        
 
     """
 
     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
                     'endo','endo_int','endo_ext','endo_atr','endo_vent',
-                    'cj','cj_in','cj_out','cj_atr','cj_vent']
+                    'cj','cj_in','cj_out','cj_atr','cj_vent',
+                     'myocExt_atr','myocExt_vent','endInt_atr','endInt_vent']
     names_thickness = ['myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness']
 
+    names_out = []
     dict_paths = dict()
     for file in df_files['Folder'].tolist():
         filename = file[2:]
@@ -67,17 +71,22 @@ def createDictPaths(names, df_files, dir_data2Analyse):
         file_dict['path_stl'] =  os.path.join(dir_meshes)
         for name in names:
             if name in names_meshes:
-                file_dict['path_'+name] = os.path.join(dir_meshes,filename+'_'+name+'.vtk')
-
+                path2add = os.path.join(dir_meshes,filename+'_'+name+'.vtk')
+                if os.path.exists(path2add):
+                    names_out.append(name)
+                    file_dict['path_'+name] = path2add
+                    
             elif name in names_thickness:
-                file_dict['path_'+name] = os.path.join(dir_meshes,filename+'_'+name+'.vtk')
-                file_dict['thickness_'+name] = os.path.join(dir_txtNnpy,filename+'_'+name+'.npy')
+                path2add = os.path.join(dir_meshes,filename+'_'+name+'.vtk')
+                if os.path.exists(path2add):
+                    names_out.append(name)
+                    file_dict['path_'+name] = path2add
+                    file_dict['thickness_'+name] = os.path.join(dir_txtNnpy,filename+'_'+name+'.npy')
+            # else:
+            #     file_dict['path_myocInt_CL'] = os.path.join(dir_cl,filename+'_myoc_int_npcl.json')
+            #     file_dict['path_endoExt_CL'] = os.path.join(dir_cl,filename+'_endo_ext_npcl.json')
 
-            else:
-                file_dict['path_myocInt_CL'] = os.path.join(dir_cl,filename+'_myoc_int_npcl.json')
-                file_dict['path_endoExt_CL'] = os.path.join(dir_cl,filename+'_endo_ext_npcl.json')
-
-    return dict_paths
+    return dict_paths, names_out
 
     #Later to create all
 #     [dict_obj, myoc_int_npcl, endo_ext_npcl] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj','myoc_int_npcl','endo_ext_npcl'],
@@ -127,8 +136,13 @@ def plotTitle(file, df_files, additional_title = ''):
 #%% func - selectObjects
 def selectObjects ():
     """
+    Function to select objects to plot
 
-
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+        
     Returns
     -------
     objs2loop : TYPE
@@ -139,7 +153,8 @@ def selectObjects ():
     objs = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
               'endo','endo_int','endo_ext','endo_atr','endo_vent',
               'cj','cj_in','cj_out','cj_atr','cj_vent',
-              'myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness']
+              'myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness', 
+              'myocExt_atr','myocExt_vent','endInt_atr','endInt_vent']
     objsN = []
     print('\nObjects:')
     for c, obj in zip(count(), objs):
@@ -150,9 +165,9 @@ def selectObjects ():
         objsN.append(txt)
     list_columns(objsN)
 
-    input_obj = input('Select the objects you would like to plot: ')
+    input_obj = input('Select the objects you would like to plot: ').lower()
 
-    if input_obj == 'All':
+    if input_obj == 'all':
         obj_num = list(range(0,len(objs),1))
 
     else:
@@ -175,6 +190,110 @@ def selectObjects ():
 
     return objs2loop
 
+#%% func - selectMeshes4Video
+def selectMeshes4Video (names, meshes, ranges, filename = '', dir_meshes = '', dir_txtNnpy = ''):
+    """
+    Function to select the meshes to save rotating videos. 
+
+    Parameters
+    ----------
+    names : TYPE
+        DESCRIPTION.
+    meshes : TYPE
+        DESCRIPTION.
+    ranges : 
+        
+
+    Returns
+    -------
+    names4video : TYPE
+        DESCRIPTION.
+    meshes4video : TYPE
+        DESCRIPTION.
+    rangeThBall : list of strs/tuples
+        List of tuples indicating the min and max value for scalar range of thickness/ballooning meshes. 
+
+    """
+
+    objsN = []
+    print('\nMeshes:')
+    for c, obj in zip(count(), names):
+        if obj != '':
+            txt = str(c)+'. '+ obj
+        else:
+            txt = obj
+        objsN.append(txt)
+    list_columns(objsN, cols = 2)
+
+    input_obj = input('- Select the meshes you would like to save rotating videos of. \n  (Enter individual numbers separated by a comma, to select just some of the meshes or type "all", to save videos of all.) >>>: ').lower()
+
+    if input_obj == 'all':
+        obj_num = list(range(0,len(names),1))
+
+    else:
+        obj_num = []
+        comma_split = input_obj.split(',')
+
+        for string in comma_split:
+            if '-' in string:
+                minus_split = string.split('-')
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    obj_num.append(n)
+            else:
+                obj_num.append(int(string))
+    
+    # # Load meshes 
+    # if isinstance(meshes, list) and len(meshes) == 0:
+    #     for i, num in enumerate(obj_num):
+    #         names4video.append(names[num])
+    #         if 'thickness' in names[num] or 'Ball' in names[num]:
+    #             try: 
+    #                 [[mesh], [thickness]] = fcMeshes.openThicknessMeshes(filename = filename,
+    #                                                                    meshes_names = [names[num]], 
+    #                                                                    extension = 'vtk', dir_stl = dir_meshes, 
+    #                                                                    dir_txtNnpy = dir_txtNnpy)
+    #             except: 
+    #                 print('- There is no '+names[num]+' saved within the ')
+                
+        
+    names4video = []
+    meshes4video = []
+    rangeThBall = []
+    for i, num in enumerate(obj_num):
+        range_def = ranges[num]
+        names4video.append(names[num])
+        meshes4video.append(meshes[num])
+        if 'thickness' in names[num] or 'Ball' in names[num]:
+            if 'thickness' in names[num]:
+                scale_default = '0-25 um'
+                q_min = 0
+                q_max = 25
+            elif 'Ball' in names[num]:
+                scale_default = '0-100 um'
+                q_min = 0
+                q_max = 100
+                
+            correct = False
+            while not correct:
+                min_val = format(range_def[0],'.2f')# format(area, '.1f')
+                max_val = format(range_def[1],'.2f')# format(area, '.1f')
+                scale_bar = ask4input('Do you want to set a range to the scale bar of -'+ names[num]+'-? \n\t[0]: no, set according to mesh ('+min_val+'-'+max_val+'um)\n\t[1]: no, keep the default values ('+scale_default+')\n\t[2]: yes, I would like to set the range! >>>: ', int)
+                if scale_bar == 1: 
+                    rangeThBall.append((q_min, q_max)); correct = True
+                elif scale_bar == 2: 
+                    q_min = ask4input('Minimum value for scale bar of -'+names[num]+'- [um]: ',float)
+                    q_max = ask4input('Maximum value for scale bar of -'+names[num]+'- [um]: ',float)
+                    rangeThBall.append((q_min, q_max)); correct = True
+                elif scale_bar == 0: 
+                    rangeThBall.append('-'); correct = True
+                else: 
+                    continue
+        else: 
+            rangeThBall.append('-')
+
+    return names4video, meshes4video, rangeThBall
 
 #%% func - list_columns
 def list_columns(obj, cols=4, columnwise=True, gap=4):
@@ -233,7 +352,8 @@ def loadMultMeshes(names, dict_paths):
 
     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
                     'endo','endo_int','endo_ext','endo_atr','endo_vent',
-                    'cj','cj_in','cj_out','cj_atr','cj_vent']
+                    'cj','cj_in','cj_out','cj_atr','cj_vent',
+                    'myocExt_atr','myocExt_vent','endInt_atr','endInt_vent']
 
     names_thickness = ['myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness']
 
@@ -241,12 +361,14 @@ def loadMultMeshes(names, dict_paths):
     names_all = ['myoc','myoc_ext','myoc_int','myoc_atr','myoc_vent',
                   'endo','endo_ext','endo_int','endo_atr','endo_vent',
                   'cj','cj_out','cj_in','cj_atr','cj_vent',
-                  'myoc_intBall', 'myoc_extBall', 'myoc_thickness','endo_thickness','cj_thickness']
+                  'myoc_intBall', 'myoc_extBall', 'myoc_thickness','endo_thickness','cj_thickness',
+                  'myocExt_atr','myocExt_vent','endInt_atr','endInt_vent']
 
     legend_all = ['Myocardium','Ext.Myoc', 'Int.Myoc','Atrium(Myoc)','Ventricle(Myoc)',
                   'Endocardium', 'Ext.Endo', 'Int.Endo','Atrium(Endo)','Ventricle(Endo)',
                   'CardiacJelly','Ext.CJ','Int.CJ','Atrium(CJ)','Ventricle(CJ)',
-                  'Int.Myoc Ball.','Ext.Myoc Ball.','Myoc.Thickness','Endo.Thickness','CJ.Thickness']
+                  'Int.Myoc Ball.','Ext.Myoc Ball.','Myoc.Thickness','Endo.Thickness','CJ.Thickness',
+                  'Heart Atrium','Heart Ventricle','Atrial Lumen','Ventricular Lumen']
 
     bar_names_all = ['Int.Myoc\nBalloning\n[um]','Ext.Myoc\nBalloning\n[um]','Myoc.Thickness\n[um]','Endo.Thickness\n[um]','CJ.Thickness\n[um]']
     alpha_all = [1,1,0.1,1,1]
@@ -294,9 +416,12 @@ def loadMultMeshes(names, dict_paths):
                     alphas.append(q_alpha)
                     # print ('\n')
                     mins.append(0)
-                    maxs.append(20)
+                    maxs.append(25)
 
-                mesh_colour = dict_colour[name]['colour']
+                try: 
+                    mesh_colour = dict_colour[name]['colour']
+                except: 
+                    mesh_colour = 'gold'
                 mesh_out.alpha(alphas[m]).legend(legend_all[index]).wireframe().color(mesh_colour).rotateY(rotY).rotateX(rotX)
                 # x0,y0,z0 = mesh_out.centerOfMass().tolist()
                 # mesh_out = mesh_out.x(x0-xc).y(y0-yc).z(z0-zc)
@@ -316,8 +441,8 @@ def loadMultMeshes(names, dict_paths):
                 path_thickness = dict_paths[file]['thickness_'+name]
                 sp_colour = np.load(path_thickness)
                 mesh_out.pointColors(sp_colour, cmap="jet", vmin = mins[m], vmax =maxs[m])
-                mesh_out.addScalarBar(title=bar_names_all[index-15])
-                mesh_out.alpha(alpha_all[index-15]).legend(legend_all[index]).wireframe().rotateY(rotY).rotateX(rotX)
+                mesh_out.addScalarBar(title=bar_names_all[index-len(names_meshes)])
+                mesh_out.alpha(alpha_all[index-len(names_meshes)]).legend(legend_all[index]).wireframe().rotateY(rotY).rotateX(rotX)
                 # x0,y0,z0 = mesh_out.centerOfMass().tolist()
                 # mesh_out = mesh_out.x(x0-xc).y(y0-yc).z(z0-zc)
                 # print(x0, y0, z0)
@@ -333,63 +458,63 @@ def loadMultMeshes(names, dict_paths):
     return list_meshes
 
 #%% func - yieldMultMeshes
-def yieldMultMeshes(names, dict_paths):
-    """
+# def yieldMultMeshes(names, dict_paths):
+#     """
 
 
-    Parameters
-    ----------
-    names : TYPE
-        DESCRIPTION.
-    dict_paths : TYPE
-        DESCRIPTION.
+#     Parameters
+#     ----------
+#     names : TYPE
+#         DESCRIPTION.
+#     dict_paths : TYPE
+#         DESCRIPTION.
 
-    Yields
-    ------
-    list_meshes : TYPE
-        DESCRIPTION.
+#     Yields
+#     ------
+#     list_meshes : TYPE
+#         DESCRIPTION.
 
-    """
-    #https://www.programiz.com/python-programming/generator
+#     """
+#     #https://www.programiz.com/python-programming/generator
 
-    names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
-                    'endo','endo_int','endo_ext','endo_atr','endo_vent',
-                    'cj','cj_in','cj_out','cj_atr','cj_vent']
-    names_thickness = ['myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness']
+#     names_meshes = ['myoc','myoc_int','myoc_ext','myoc_atr','myoc_vent',
+#                     'endo','endo_int','endo_ext','endo_atr','endo_vent',
+#                     'cj','cj_in','cj_out','cj_atr','cj_vent']
+#     names_thickness = ['myoc_extBall','myoc_intBall','myoc_thickness','endo_thickness', 'cj_thickness']
 
-    # - Names and legends
-    legend_all = ['Myocardium','Ext.Myoc', 'Int.Myoc','Atrium(Myoc)','Ventricle(Myoc)',
-                  'Endocardium', 'Ext.Endo', 'Int.Endo','Atrium(Endo)','Ventricle(Endo)',
-                  'CardiacJelly','Ext.CJ','Int.CJ','Atrium(CJ)','Ventricle(CJ)']
-    names_all = ['myoc','myoc_ext','myoc_int','myoc_atr','myoc_vent',
-                  'endo','endo_ext','endo_int','endo_atr','endo_vent',
-                  'cj','cj_out','cj_in','cj_atr','cj_vent']
+#     # - Names and legends
+#     legend_all = ['Myocardium','Ext.Myoc', 'Int.Myoc','Atrium(Myoc)','Ventricle(Myoc)',
+#                   'Endocardium', 'Ext.Endo', 'Int.Endo','Atrium(Endo)','Ventricle(Endo)',
+#                   'CardiacJelly','Ext.CJ','Int.CJ','Atrium(CJ)','Ventricle(CJ)']
+#     names_all = ['myoc','myoc_ext','myoc_int','myoc_atr','myoc_vent',
+#                   'endo','endo_ext','endo_int','endo_atr','endo_vent',
+#                   'cj','cj_out','cj_in','cj_atr','cj_vent']
 
-    for n, file in enumerate(dict_paths.keys()):
-        list_meshes = []
-        #Check best way to get this df either going into each folder or getting the big collated df?
-        df_res = loadDF(filename = file[2:], file = 'ResultsDF', dir_results = dict_paths['R_'+file[2:]]['path_results'])
-        [dict_obj] = loadDicts(filename = file[2:], dicts_name = ['dict_obj'], directories = [dict_paths['R_'+file[2:]]['path_dict']])
-        [_, _, _, dict_colour, _] = splitDicts(dict_obj)
+#     for n, file in enumerate(dict_paths.keys()):
+#         list_meshes = []
+#         #Check best way to get this df either going into each folder or getting the big collated df?
+#         df_res = loadDF(filename = file[2:], file = 'ResultsDF', dir_results = dict_paths['R_'+file[2:]]['path_results'])
+#         [dict_obj] = loadDicts(filename = file[2:], dicts_name = ['dict_obj'], directories = [dict_paths['R_'+file[2:]]['path_dict']])
+#         [_, _, _, dict_colour, _] = splitDicts(dict_obj)
 
-        for name in names:
-            if name in names_meshes:
-                index = names_all.index(name)
-                path = dict_paths[file]['path_'+name]
-                mesh_out = load(path)
-                mesh_colour = dict_colour[name]['colour']
-                mesh_out.alpha(1).legend(legend_all[index]).wireframe().color(mesh_colour)
+#         for name in names:
+#             if name in names_meshes:
+#                 index = names_all.index(name)
+#                 path = dict_paths[file]['path_'+name]
+#                 mesh_out = load(path)
+#                 mesh_colour = dict_colour[name]['colour']
+#                 mesh_out.alpha(1).legend(legend_all[index]).wireframe().color(mesh_colour)
 
-                # vp = Plotter(N=1, axes=10)
-                # vp.show(mesh_out, at=0, interactive=True)
+#                 # vp = Plotter(N=1, axes=10)
+#                 # vp.show(mesh_out, at=0, interactive=True)
 
-                list_meshes.append(mesh_out)
+#                 list_meshes.append(mesh_out)
 
-    # return list_meshes
-        print(file)
-        print(list_meshes)
+#     # return list_meshes
+#         print(file)
+#         print(list_meshes)
 
-        yield list_meshes
+#         yield list_meshes
 
 #%% func - getVarsANDLabels
 def getVarsANDLabels (variables, labels):

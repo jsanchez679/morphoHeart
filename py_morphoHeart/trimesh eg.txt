@@ -1,0 +1,172 @@
+####################
+https://www.sciencedirect.com/topics/engineering/principal-axis
+
+> mesh_atr.moment_inertia
+
+> mesh_atr.principal_inertia_vectors
+
+> mesh_atr.principal_inertia_components
+
+
+> ch = mesh_atr.convex_hull
+
+> mesh_atr.bounds
+
+> trimesh.bounds.corners(mesh_atr.bounds)
+
+
+############# 
+~Find the oriented bounding box for a Trimesh
+> trimesh.bounds.oriented_bounds(mesh_atr)
+
+> mesh_atr.bounding_box_oriented.primitive.extents
+
+#####
+~The length, width, and height of the axis aligned bounding box of the mesh.
+> mesh_atr.extents
+
+
+
+
+
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+mesh_atr.moment_inertia
+Out[11]: 
+array([[-3.55122998e+09,  2.26691692e+08, -4.91822711e+07],
+       [ 2.26691692e+08, -1.90725210e+09,  2.76464061e+08],
+       [-4.91822711e+07,  2.76464061e+08, -3.62740271e+09]])
+
+ch = mesh_atr.convex_hull
+
+ch.bounds
+Out[13]: 
+array([[  81.39820862, -298.63366699,  -70.88556671],
+       [ 203.78092957,  -96.70044708,   46.29927063]])
+
+mesh_atr.bounds
+Out[14]: 
+array([[  81.39820862, -298.63366699,  -70.88556671],
+       [ 203.78092957,  -96.70044708,   46.29927063]])
+
+mesh_atr.bounding_box_oriented
+Out[15]: <trimesh.primitives.Box>
+
+mesh_atr.bounding_box_oriented()
+Traceback (most recent call last):
+
+  File "<ipython-input-16-9f67345aec3e>", line 1, in <module>
+    mesh_atr.bounding_box_oriented()
+
+TypeError: 'Box' object is not callable
+
+
+mesh_atr.bounding_box_oriented
+Out[17]: <trimesh.primitives.Box>
+
+mesh_atr.bounds_corners
+Traceback (most recent call last):
+
+  File "<ipython-input-18-3ae1898ea187>", line 1, in <module>
+    mesh_atr.bounds_corners
+
+AttributeError: 'Trimesh' object has no attribute 'bounds_corners'
+
+
+mesh_atr.bounding_box
+Out[19]: <trimesh.primitives.Box>
+
+mesh_atr.bounds
+Out[20]: 
+array([[  81.39820862, -298.63366699,  -70.88556671],
+       [ 203.78092957,  -96.70044708,   46.29927063]])
+
+trimesh.bounds.corners(mesh_atr.bounds)
+Out[21]: 
+array([[  81.39820862, -298.63366699,  -70.88556671],
+       [ 203.78092957, -298.63366699,  -70.88556671],
+       [ 203.78092957,  -96.70044708,  -70.88556671],
+       [  81.39820862,  -96.70044708,  -70.88556671],
+       [  81.39820862, -298.63366699,   46.29927063],
+       [ 203.78092957, -298.63366699,   46.29927063],
+       [ 203.78092957,  -96.70044708,   46.29927063],
+       [  81.39820862,  -96.70044708,   46.29927063]])
+
+trimesh.bounds.minimum_cylinder(mesh_atr)
+Out[22]: 
+{'transform': array([[-2.57568187e-04,  9.99871208e-01, -1.60468640e-02,
+          1.40983564e+02],
+        [ 1.60468640e-02,  1.60489310e-02,  9.99742432e-01,
+         -1.97548463e+02],
+        [ 9.99871208e-01,  5.75850299e-20, -1.60489310e-02,
+         -1.50772898e+01],
+        [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          1.00000000e+00]]),
+ 'radius': 63.35157149237834,
+ 'height': 201.14191705590076}
+
+trimesh.bounds.oriented_bounds(mesh_atr)
+Out[23]: 
+(array([[ 5.33358439e-02, -8.51560139e-03, -9.98540321e-01,
+         -2.15272259e+01],
+        [-9.89168564e-01,  1.36490408e-01, -5.39992597e-02,
+          1.67172705e+02],
+        [ 1.36751012e-01,  9.90604792e-01, -1.14353412e-03,
+          1.77026804e+02],
+        [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          1.00000000e+00]]),
+ array([117.56164706, 117.56405589, 201.06136382]))
+
+mesh_atr.extents
+Out[24]: array([122.38272095, 201.93321991, 117.18483734])
+
+type(mesh_atr)
+Out[25]: trimesh.base.Trimesh
+
+mesh_atr.bounding_box_oriented.primitive.extents
+Out[26]: TrackedArray([117.56164706, 117.56405589, 201.06136382])
+
+mesh_atr.bounding_cylinder
+Out[27]: <trimesh.primitives.Cylinder>
+
+mesh_atr.bounding_cylinder.extents
+Out[28]: array([129.91452158, 203.96565668, 129.91493734])
+
+type(mesh_atr.bounding_box_oriented.primitive.transform)
+Out[29]: trimesh.caching.TrackedArray
+
+mesh_atr.bounding_box_oriented.primitive.transform
+Out[30]: 
+TrackedArray([[ 5.33358439e-02, -9.89168564e-01,  1.36751012e-01,
+                1.42301562e+02],
+              [-8.51560139e-03,  1.36490408e-01,  9.90604792e-01,
+               -1.98364388e+02],
+              [-9.98540321e-01, -5.39992597e-02, -1.14353412e-03,
+               -1.22661646e+01],
+              [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+                1.00000000e+00]])
+
+tA=mesh_atr.bounding_box_oriented.primitive.transform
+
+t_mesh_atr=mesh_atr.apply_transform(tA)
+
+type(t_mesh_atr)
+Out[33]: trimesh.base.Trimesh
+
+t_mesh_atr.extents
+Out[34]: array([194.39791953, 123.37219139, 127.32884041])
+
+mesh_atr.extents
+Out[24]: array([122.38272095, 201.93321991, 117.18483734])
+
+mesh_atr.bounding_box_oriented.primitive.extents
+Out[26]: TrackedArray([117.56164706, 117.56405589, 201.06136382])
+
+
+

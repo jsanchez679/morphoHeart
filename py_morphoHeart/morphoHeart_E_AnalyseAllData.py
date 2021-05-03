@@ -13,9 +13,8 @@ import pandas as pd
 import glob
 from itertools import count
 
-init = False
 # Verify working dir
-def setWorkingDir (root_path, init):
+def setWorkingDir (root_path, init = False):
     if not init:
         wd = os.path.dirname(os.path.abspath(__file__))
         if root_path != wd:
@@ -26,7 +25,7 @@ def setWorkingDir (root_path, init):
 
     return root_path, init
 
-root_path, init = setWorkingDir(os.getcwd(),init)
+root_path, init = setWorkingDir(os.getcwd())
 
 #%% Start D_AnalyseData
 if init:
@@ -66,18 +65,29 @@ if init:
     
     #% Plot results
     save = fcBasics.ask4input('Do you want to save the created figures? [0]:no/[1]:yes: ', bool)
-    info = fcBasics.ask4input('Add info for plot name: ', str)
+    if save: 
+        info = fcBasics.ask4input('Add info for plot name: ', str)
+        svgORpng = fcBasics.ask4input('Do you want to save the created figures as png or svg? : ', str)
+    else: 
+        info = ''
+        svgORpng = ''
     
     titles = ['Surface Areas','Heart Size','Lumen Size', 'Heart Looping', 'Tissue Layer Volumes - Myocardium',
               'Tissue Layer Volumes - Endocardium','Tissue Layer Volumes - Cardiac Jelly','Angles']
     input_vars = ['0-8','10,32,33','11,34,35','13,15,30','17-19','20-22','23-25','27-29']
     fcAn.plotInGroups('morphoHeart_D', input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300, ext='svg')#, sharey = True)
+                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300, ext=svgORpng)#, sharey = True)
     
     titles = ['Heart and Lumen Size','Tissue Layer Volumes']
     input_vars = ['10,32,33,11,34,35','17-19,20-22,23-25']
     fcAn.plotPerVariable('morphoHeart_D', input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300, ext='svg')
+                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300, ext=svgORpng)
+    
+    #%% Plots with embryo ref labels
+    titles = ['Heart and Lumen Size','Tissue Layer Volumes','Surface Areas','Heart Looping','Angles']
+    input_vars = ['10,32,33,11,34,35','17-19,20-22,23-25','0-8','13,15,30','27-29']
+    fcAn.plotPerVariableLabels('morphoHeart_D', input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
+                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300)
     
     #%%
     import seaborn as sns
@@ -102,24 +112,29 @@ if init:
             
             dir2savef = os.path.join(dir_pl_meas, 'meas_svg', 'R_'+info)
             fig_title = dir2savef+var+".svg"
-            plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
+            # plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
     
-    #%% Plots with embryo ref labels
-    titles = ['Heart and Lumen Size','Tissue Layer Volumes','Surface Areas','Heart Looping','Angles']
-    input_vars = ['10,32,33,11,34,35','17-19,20-22,23-25','0-8','13,15,30','27-29']
-    fcAn.plotPerVariableLabels('morphoHeart_D', input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot = 8, w_plot = 6, save = save, dir2save = dir_pl_meas, info = info, dpi = 300)
-
     #%% Create plots for df_cjPDFs 
     # Get directories
     all_CSVs = glob.glob(dir_R_cjPdfs + "/*.csv")
     df_cjPDF = pd.concat((pd.read_csv(f) for f in all_CSVs))
     df_cjPDF2plot, genots, strains, stages = fcAn.filterDF2Plot(df_cjPDF, 'kde')
     
+    #% Plot results
+    save = fcBasics.ask4input('Do you want to save the created figures? [0]:no/[1]:yes: ', bool)
+    if save: 
+        info = fcBasics.ask4input('Add info for plot name: ', str)
+        svgORpng = fcBasics.ask4input('Do you want to save the created figures as png or svg? : ', str)
+    else: 
+        info = ''
+        svgORpng = ''
+        
     classif = ['AtrVent', 'LeftRight', 'DorsVent']
     classif_lab = ['Atrium-Ventricle', 'Left-Right', 'Dorsal-Ventral']
-    fcAn.plotKDEs(classif, classif_lab, df_PDF = df_cjPDF2plot, save = save, dir2save = dir_pl_meas, info = 'cj', dpi = 300)
-    fcAn.plotKDEIndiv(classif, classif_lab, df_PDF = df_cjPDF2plot, save = save, dir2save = dir_pl_meas, info = 'cj', dpi = 300)
+    fcAn.plotKDEs(classif, classif_lab, df_PDF = df_cjPDF2plot, save = save, dir2save = dir_pl_meas, 
+                  info = info+'_cj', ext=svgORpng, dpi = 300)
+    fcAn.plotKDEIndiv(classif, classif_lab, df_PDF = df_cjPDF2plot, save = save, dir2save = dir_pl_meas, 
+                      info = info+'_cj', ext=svgORpng, dpi = 300)
     
     #%% Just for wt
     #% Filter if needed
@@ -145,17 +160,18 @@ if init:
     # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt'), 
     #           ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), 
     #           ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
-    groups = [('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')]
+    # groups = [('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')]
+    groups = [('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
     
     for group in groups:
         # print(group)
         folders = fcAn.filterR_Autom (df_dataset, filters, group, col_out = 'Folder')
         for chamber in ['Atr', 'Vent']:
-            print('Unifying group: ', group, '- chamber: ', chamber, ' - n = ', len(folders))
+            print('Unifying group: ', group, '- chamber: ', chamber)
             thickness = 'CjTh'
-            df_hmf = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf)
-            df_hmf_std = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'std')
-            df_hmf_sem = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'sem')
+            df_hmf, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf)
+            df_hmf_std, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'std')
+            df_hmf_sem, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'sem')
             gen_info = list(group[1])
             if '/' in gen_info:
                 ind_sep = gen_info.index('/') 
@@ -167,45 +183,46 @@ if init:
                 ind_gen[1] -= 1
             [gen_info.pop(ind) for ind in ind_gen]
             gen_info  = ''.join(gen_info)
-            
+            vmax = 0; vmin = 25
             fcAn.unifyHeatmap(df_hmf, chamber, genotype=group[1], gen_info = gen_info+'_241', stage=group[0], thickness= thickness, 
-                      vmin=0, vmax=25, n_val = len(folders), dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
             fcAn.unifyHeatmap(df_hmf_std, chamber, genotype=group[1], gen_info = gen_info+'_241std', stage=group[0], thickness= thickness, 
-                      vmin=0, vmax=25, n_val = len(folders), dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
             fcAn.unifyHeatmap(df_hmf_sem, chamber, genotype=group[1], gen_info = gen_info+'_241sem', stage=group[0], thickness= thickness, 
-                      vmin=0, vmax=25, n_val = len(folders), dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
             
             
-    # for group in groups:
-    #     folders = fcAn.filterR_Autom (df_dataset, filters, group, col_out = 'Folder')
-    #     for chamber in ['Atr', 'Vent']:
-    #         print('Unifying group: ', group, '- chamber: ', chamber)
-    #         thickness = 'myocIntBall'
-    #         df_hmf = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf)
-    #         gen_info = list(group[1])
-    #         if '/' in gen_info:
-    #             ind_sep = gen_info.index('/') 
-    #             gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
-    #         ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
-    #         for ind in ind_gen:
-    #             gen_info[ind+1] = gen_info[ind+1].upper()
-    #         if len(ind_gen) == 2:
-    #             ind_gen[1] -= 1
-    #         [gen_info.pop(ind) for ind in ind_gen]
-    #         gen_info  = ''.join(gen_info)
-            
-    #         fcAn.unifyHeatmap(df_hmf, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= thickness, 
-    #                   vmin=0, vmax=100, n_val = len(folders), dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+    for group in groups:
+        folders = fcAn.filterR_Autom (df_dataset, filters, group, col_out = 'Folder')
+        for chamber in ['Atr', 'Vent']:
+            print('Unifying group: ', group, '- chamber: ', chamber)
+            thickness = 'myocIntBall'
+            df_hmf, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf)
+            df_hmf_std, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'std')
+            df_hmf_sem, num = fcAn.getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'sem')
+            gen_info = list(group[1])
+            if '/' in gen_info:
+                ind_sep = gen_info.index('/') 
+                gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
+            ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
+            for ind in ind_gen:
+                gen_info[ind+1] = gen_info[ind+1].upper()
+            if len(ind_gen) == 2:
+                ind_gen[1] -= 1
+            [gen_info.pop(ind) for ind in ind_gen]
+            gen_info  = ''.join(gen_info)
+            vmax = 0; vmin = 100
+            fcAn.unifyHeatmap(df_hmf, chamber, genotype=group[1], gen_info = gen_info+'_241', stage=group[0], thickness= thickness, 
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+            fcAn.unifyHeatmap(df_hmf_std, chamber, genotype=group[1], gen_info = gen_info+'_241std', stage=group[0], thickness= thickness, 
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
+            fcAn.unifyHeatmap(df_hmf_sem, chamber, genotype=group[1], gen_info = gen_info+'_241sem', stage=group[0], thickness= thickness, 
+                      vmin=vmin, vmax=vmax, n_val = num, dir2save = dir_pl_meas, savePlot = True, cmap = 'jet')
             
             
     
     
-    #https://stackoverflow.com/questions/38940946/average-of-multiple-dataframes-with-the-same-columns-and-indices
-    
-    # heatmapsf = fcMeshes.filterUnloopedDF(filename = filename, dir_results = dir_results, 
-    #                                   names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
-    #                                   saveHM = True)
-    
+
     
     
 #%%

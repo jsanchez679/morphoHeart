@@ -46,7 +46,7 @@ if init:
 
     #%% Get directories and file
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = '')
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R')
 
     #%% Plot things for just one heart
     # Get file to process and directories
@@ -76,10 +76,11 @@ if init:
     m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
     m_myoc, m_endo, m_cj = m_all
-    # mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
-    # [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
-    #                               dir_stl = directories[2], dir_txtNnpy = directories[1])
-    # m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll
+    mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
+    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
+                                  dir_stl = directories[2], dir_txtNnpy = directories[1])
+    m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll
+    cj_thickness, myoc_thickness, endo_thickness, myoc_intBall = colour_thAll
     mTh_names = ['cj_thickness']
     [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
                                   dir_stl = directories[2], dir_txtNnpy = directories[1])

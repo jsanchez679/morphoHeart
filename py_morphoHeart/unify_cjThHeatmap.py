@@ -22,7 +22,7 @@ def setWorkingDir (root_path, init):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    init = True
+    # init = True
     print("Current working directory: {0}".format(os.getcwd()))
 
     return root_path, init
@@ -41,14 +41,16 @@ if init:
 
     #%% Get directories and file
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = '2A')
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R')
 
     #%% Plot things for just one heart
     # Get file to process and directories
-    folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[0:-3]; dORv = filename[9:10]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset)
+    filename = folder[2:]; dORv = filename[9:10]
+    #filename = folder[0:-3]; dORv = filename[9:10]
     #stage = df_file.loc[file_num,'Stage']
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
-    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
+    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = 'R')
 
     # Import df_results
     df_res = fcBasics.loadDF(filename = filename, file = 'ResultsDF', dir_results = dir_results)
@@ -58,13 +60,14 @@ if init:
     elevation = df_res.loc[file_num,'ang_Heart']
     
     #%% Get plot of cardiac jelly thickness heatmap with thickness range given as user input 
-    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = ['cj_thickness'], extension = 'vtk',
+    var = 'myoc_intBall'
+    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = [var], extension = 'vtk',
                                   dir_stl = directories[2], dir_txtNnpy = directories[1])
     m_cjTh = m_thAll[0]
     q_min = fcBasics.ask4input('Enter minimum value for -cardiac jelly thickness- heatmap range: ',float)
     q_max = fcBasics.ask4input('Enter maximum value for -cardiac jelly thickness- heatmap range: ',float)
     
-    [cj_thickness] = fcBasics.loadNPY(filename = filename, names = ['cj_thickness'], dir_txtNnpy = directories[1])
+    [cj_thickness] = fcBasics.loadNPY(filename = filename, names = [var], dir_txtNnpy = directories[1])
     m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=q_min, vmax=q_max)
     m_cjTh.addScalarBar()
     m_cjTh.alpha(1)
@@ -75,7 +78,7 @@ if init:
     
     saveVideo = fcBasics.ask4input('Do you want to save rotating video with the set range? [0]:no/[1]:yes: ',bool)
     if saveVideo:
-        fcMeshes.saveVideo (filename = filename, info = 'cj_thicknessUserRange', meshes4video = [m_cjTh],
+        fcMeshes.saveVideo (filename = filename, info = var+'_UserRange', meshes4video = [m_cjTh],
                             rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save =  directories[4], alpha_cube = 0, plotshow=True)
 
 #%% Init

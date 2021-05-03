@@ -68,7 +68,7 @@ def alert(sound, times):
     elif sound == 'whistle':
         sound2play = 'Sounds/Swanee-whistle-down.mp3'
     elif sound == 'jump':
-        sound2play = 'Sounds/Jumping-sound-effect.mp3'
+        sound2play = 'Sounds/sms-tone.mp3'#Jumping-sound-effect.mp3'
     elif sound == 'beep':
         sound2play = 'Sounds/Error-beep-sound-effect.mp3'
     elif sound == 'bubble':
@@ -406,14 +406,19 @@ def selectFile (df_dataset):
     """
 
     df_datasetTemp = df_dataset.copy()
-    df_datasetTemp['Folder_2A'] = df_dataset['Folder'].str.slice(0,10)
+    df_datasetTemp['Folder_2A'] = df_dataset['Folder'].str.slice(0,18)
     df_datasetTemp['Gene A'] = df_dataset['Gene_A']+': '+df_dataset['Genotype_A']
     df_datasetTemp['Gene B'] = df_dataset['Gene_B']+': '+df_dataset['Genotype_B']
 
-    print('\n--- HEARTS TO BE PROCESSED ---')
+    blind = ask4input('Do you want to process blind? \n\t[0]: no, show me the genotype of the heart I am processing \n\t[1]: yes, do not print the genotype of the heart being processed. >>>: ', bool)
+                                
+    print('\n--- HEARTS TO BE ANALYSED ---')
     df_datasetTemp = df_datasetTemp.sort_values(by=['Stage','Strain','Gene_A','Genotype_A','Gene_B','Genotype_B'],
                                                 ascending = (True, True, True, False, True, False))
-    print(df_datasetTemp[['Folder_2A','Strain','Stage','Gene A','Gene B']])
+    if not blind: 
+        print(df_datasetTemp[['Folder_2A','Strain','Stage','Gene A','Gene B']])
+    else: 
+        print(df_datasetTemp[['Folder_2A','Strain','Stage']])
 
     list_folder = df_dataset['Folder'].tolist()
 
@@ -427,9 +432,13 @@ def selectFile (df_dataset):
 
     print('\n\t\t\tFILE SELECTED ')
     df_file = df_dataset.loc[df_dataset['Folder'] == filename]
-    print(df_file.T,'\n')
+    if not blind: 
+        print(df_file.T,'\n')
+    else: 
+        df_fileTemp = df_file[['Folder','LS_Session', 'Fish_ref','Strain','Stage', 'Manip']]
+        print(df_fileTemp.T,'\n')
 
-    return filename, df_file, input_num
+    return filename, df_file, input_num, blind
 
 #%% func - selectHearts
 def selectHearts (df_dataset):
@@ -756,7 +765,7 @@ def saveDF(filename, df2save, df_name, dir2save):
     dir_DF = os.path.join(dir2save, name_csv)
     df2save.to_csv(dir_DF)
 
-    print('-', df_name, ' has been saved!')
+    print('-', df_name, ' has been saved!\n')
     alert('wohoo',1)
 
 #%% func - saveDict

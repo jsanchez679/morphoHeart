@@ -9,6 +9,18 @@ all the information of the internal, external and tissue layer contours of eithe
 This scipt thus need to be run twice, one time for each tissue layer. You can find the final arrays saved in a folder 
 called txt_npy within the main folder of the heart being processed.
 
+IMPORTANT NOTE: 
+If for any reason, the code breaks while you are closing the contours, and you get an error, don't panic!
+Go to the line at the end of the code called (#%% *** Save the stack you have processed so far) and run it, to make sure 
+you save all the changes you have made to your stack, and don't loose all your time. tHEN, try re-running the cell 
+ii. CLOSE CONTOURS. 
+If you still get the error, send me an email, a message through slack/gmail chat, or create an issue in gitHub 
+with the error you are getting, and I can try and guide you through the process of solving it. Before closing Spyder, 
+just make sure you have saved the changes you made to your stack running the cell just mentioned. 
+If for any reason, the code breaks while you are selecting contours, don't panic and try re-running the select contours 
+cell, and continue processing. If you still get the error, as there is no way to save an intermediate step of this process, 
+leave Spyder open and drop me a message so that I can help you solving it! :)
+
 Happy contour closing and selecting!
 
 @author: Juliana Sanchez-Posada
@@ -20,20 +32,20 @@ import os
 from time import perf_counter
 from vedo import Plotter
 
-init = False
 # Verify working dir
-def setWorkingDir (root_path, init):
+def setWorkingDir (root_path, init = False):
     if not init:
         wd = os.path.dirname(os.path.abspath(__file__))
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    # init = True
+    init = not bool(int(input('> Do you want to execute the script all at once or run it by cells? \n\t[0]: all at once \n\t[1]: by cells (recommended for this script). >>>: ')))
     print("Current working directory: {0}".format(os.getcwd()))
-
+    if not init: 
+        print('\nIMPORTANT NOTES:\n- Remember to start running from cell %Start A_Contours.\n- NEVER run as an individual cell the cell called %Importing python packages')
     return root_path, init
 
-root_path, init = setWorkingDir(os.getcwd(),init)
+root_path, init = setWorkingDir(os.getcwd())
 
 #%% Start A_Contours
 if init:
@@ -58,7 +70,7 @@ if init:
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
     # Get file to process and directories
-    folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[0:-3]
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
     # Import the metadata to know pixel size and distance between slices
@@ -73,7 +85,7 @@ if init:
     # Get channel to process
     channel = fcCont.selectChannel()
     # Import stack
-    stack_closed, stack_o, stack_m, file, stack_shape, processDict = fcCont.main_importImages(filename, channel, directories, n_rows = n_rows)
+    stack_closed, stack_o, stack_m, file, stack_shape, processDict, level = fcCont.main_importImages(filename, channel, directories, n_rows = n_rows)
 
     #%% ii. CLOSE CONTOURS
     #   This section allows the user to run either/all of the three different functions to close the channel's contours.
@@ -90,17 +102,20 @@ if init:
         ticABC = perf_counter()
         # >> Automatically close contours
         stack_closed, processDict, done_autom = fcCont.main_automCloseCont(filename, channel, directories, stack_closed, 
-                                                                           plotEvery = 100, n_rows = n_rows, processDict = processDict)
+                                                                           plotEvery = 100, n_rows = n_rows, 
+                                                                           processDict = processDict, level = level)
         # >> Manually close remaining contours
         stack_closed, processDict, done_manual = fcCont.main_manuallyCloseContours(filename, channel, directories, 
-                                                               stack_closed, stack_o, stack_m, processDict, n_rows = n_rows)
-        if done_autom and done_manual:
+                                                               stack_closed, stack_o, stack_m, processDict, 
+                                                               n_rows = n_rows, level = level)
+        if done_manual:
             # >> Close inflow and outflow tracts
-            stack_closed, processDict, done_infOutf = fcCont.main_closeInfAndOutfTract(filename, channel, 
-                                                           directories, stack_closed, processDict, n_rows = n_rows)
+            stack_closed, processDict, done_infOutf = fcCont.main_closeInfAndOutfTract(filename, channel, directories, 
+                                                           stack_closed, processDict, n_rows = n_rows, level = level)
             # >> Manually close additional contours (if needed)
             stack_closed, processDict, done_manual = fcCont.main_manuallyCloseContours(filename, channel, 
-                                       directories, stack_closed, stack_o, stack_m, processDict, n_rows = n_rows, checking = True)
+                                       directories, stack_closed, stack_o, stack_m, processDict, n_rows = n_rows, 
+                                       level = level, checking = True)
             # if done_infOutf:
             q_ABC_done = fcBasics.ask4input('Checking: Are you done closing the contours and inflow/outflow tracts? [0]:no/[1]:yes!:', bool)
             if q_ABC_done:
@@ -108,7 +123,8 @@ if init:
                 fcCont.saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
                 first = processDict[channel]['G-Slc_tissueLayerFirst']
                 last = processDict[channel]['G-Slc_tissueLayerLast']
-                fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows)
+                print('\n- Plotting all closed slices ... (Plots tab)')
+                fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows, level = level)
                 tocABC = perf_counter()
                 fcBasics.printTime(ticABC, tocABC, 'close contours')
     else:
@@ -154,12 +170,13 @@ if init:
                 # Fill dictionary of selected contours
                 while len(tuple_slc) != 0:
                     heartLayer, tuple_slc, numCont, exit_txt = fcCont.dictFill (tuple_slc = tuple_slc, numContours = numCont,
-                                                        stack = stack_closed, chStr = channel, heartLayer = heartLayer, minLenContour = 250)
+                                                        stack = stack_closed, chStr = channel, heartLayer = heartLayer, minLenContour = 250, level = level)
                     if exit_txt:
                         print('EXIT!!');
                         break
                 if len(tuple_slc) == 0:
-                    heartLayer, stack, processDict = fcCont.askModifyDict(filename, stack_closed, heartLayer, channel, processDict, directories)
+                    heartLayer, stack, processDict = fcCont.askModifyDict(filename, stack_closed, stack_o, stack_m, 
+                                                                          heartLayer, channel, processDict, directories, level)
                     q_fullDict = fcBasics.ask4input('Is the dictionary full for '+channel+'? [0]:no/[1]:yes: ',bool)
                     if q_fullDict:
                         #% Create dictionary to save and save it
@@ -176,33 +193,33 @@ if init:
         print('- You need to have closed all the contours and inflow/outflow tracts of the stack to continue with the selection-of-contours process')
 
 #%% OTHER FUNCTIONS
-#   This section allows the user to re-run individual functions in case they are needed. Ignore otherwise. 
+#   This section allows the user to re-run individual functions in case they are needed. Otherwise ignore. 
 #   ====================================================================================================================
 others = False
 if others:
     #%% Save PNGs of the closed stack as individual PNGs in a folder inside Im_LSXX_FXX folder
-    name = fcBasics.ask4input('Enter reference version (integer number) of the slices you want to save as PNGs: ', int)
+    name = fcBasics.ask4input('Enter reference version of the slices you want to save as PNGs: ', str)
     fcCont.savePltContours(dir_ims2Analyse = directories[5], filename = filename,
                                       myStack = stack_closed, chStr = channel,
-                                      slices = (0,len(stack_closed)), contVersion = '0')
+                                      slices = (0,len(stack_closed)), contVersion = name, level = level)
     
-    #%% Save the stack you have processed so far
+    #%% *** Save the stack you have processed so far
     fcCont.saveStackAsNPY(stack_closed, filename, channel, 'closedCJ', directories[1])
 
     #%% Manually close the contours or clean any slices you might have missed
     stack_closed, processDict, _ = fcCont.main_manuallyCloseContours(filename, channel, directories, stack_closed, 
-                                                                     stack_o, stack_m, processDict, 7, True)
+                                                                     stack_o, stack_m, processDict, n_rows, level, True)
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
     # Enter in 'first' and 'last' any slice number within the number of slices in the stack
     first = 110
     last = 130
-    fcCont.showGridContours(myStack = stack_m, slices = (first,last+1), n_rows = n_rows)
+    fcCont.showGridContours(myStack = stack_m, slices = (first,last+1), n_rows = n_rows, level = level)
     
     #%% Plot all the contours of the stack in a grid
     first = 0
     last = stack_closed.shape[0]
-    fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows)
+    fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows, level = level)
 
     #%% Plot the selected contours (masks) of a selected group of slices to double check
     fcCont.plotSelectedContours(imageEvery = 1, stack = stack_closed, heartLayer = heartLayer)
@@ -213,3 +230,9 @@ if others:
 
 #%% Init
 init = True
+
+#%%
+# level = 200
+# slc = 38
+# myIm = stack_closed[slc][:][:]
+# cont = fcCont.getContExpCont_plt (myIm, slc, channel, minLenContour=100, figSize=10, level = level, plot_show = True)

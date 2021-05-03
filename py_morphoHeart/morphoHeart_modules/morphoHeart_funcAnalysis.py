@@ -10,10 +10,10 @@ Version: Nov, 2020
 import os
 import numpy as np
 from sklearn.neighbors import KernelDensity
-from sklearn.model_selection import GridSearchCV
+# from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import random
+# import random
 
 import pandas as pd
 import seaborn as sns
@@ -45,12 +45,12 @@ def getVariables (list_vars, name):
 
     """
 
-    print('\nVariables:')
+    print('\n- Variables:')
     for c, value in enumerate(list_vars, 1):
         print(c-1, value)
-    input_var = input('Select the '+ name +' you would like to process: ')
+    input_var = ask4input('Select the '+ name +' you would like to process: ', str)
 
-    if input_var == 'All':
+    if input_var == 'all':
         var_num = list(range(0,len(list_vars),1))
 
     else:
@@ -161,12 +161,12 @@ def getVarsANDLabels_UserInput (variables, labels):
 
     """
 
-    print('\nVariables:')
+    print('\- nVariables:')
     for c, value in enumerate(variables, 1):
         print(c-1, value)
-    input_var = input('Select the variables you would like to process: ')
+    input_var = ask4input('Select the variables you would like to process: ', str)
 
-    if input_var == 'All':
+    if input_var == 'all':
         var_num = list(range(0,len(variables),1))
 
     else:
@@ -302,7 +302,8 @@ def kdeThPlots(filename, df_file, file_num, variable, thData, dir2save, save = T
     df_pdfs['x_grid'] = x_grid
     plot_dir = os.path.join(dir2save, filename+"_")
     
-    bar = Bar('Creating density plots', max=3, suffix = suffix, check_tty=False, hide_cursor=False)
+    print('\n- Creating density plots... this process takes a while, about 8-12 min/plot out of 3 plots, be patient :)' )
+    bar = Bar('- Creating density plots', max=3, suffix = suffix, check_tty=False, hide_cursor=False)
     for i, reg, col in zip(count(), regions_div, color):
         df_one = thData[thData[reg[0]] == reg[1]]
         th_one = df_one[variable]
@@ -385,7 +386,7 @@ def filterDF2Plot (df_input, df_type = 'meas'):
     strains_or = sorted(df_input.Strain.unique())
     stages_or = sorted(df_input.Stage.unique())
     
-    print('Information found in the imported dataframe:')
+    print('- Information found in the imported dataframe:')
     print(' - Genotypes: ', genots_or)
     print(' - Strains: ', strains_or)      
     print(' - Stages: ', stages_or)
@@ -565,9 +566,9 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
         stages = sorted(df2plot.Stage.unique())
         
         if i == 0: 
-            print('Genotypes: ', genots)
-            print('Strains: ', strains)
-            print('Stages: ', stages)
+            print('- Genotypes: ', genots)
+            print('- Strains: ', strains)
+            print('- Stages: ', stages)
         
         palettes = ['mediumturquoise', 'darkmagenta']
        
@@ -660,9 +661,9 @@ def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_lege
         index_no_plot = list(range(3,(plots_per_col+1)*plots_per_row,4))
 
         if i == 0: 
-            print('Genotypes: ', genots)
-            print('Strains: ', strains)
-            print('Stages: ', stages)
+            print('- Genotypes: ', genots)
+            print('- Strains: ', strains)
+            print('- Stages: ', stages)
         
         palettes = ['mediumturquoise', 'darkmagenta']
         
@@ -758,9 +759,9 @@ def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strai
         index_no_plot = list(range(3,(plots_per_col+1)*plots_per_row,4))
 
         if i == 0: 
-            print('Genotypes: ', genots)
-            print('Strains: ', strains)
-            print('Stages: ', stages)
+            print('- Genotypes: ', genots)
+            print('- Strains: ', strains)
+            print('- Stages: ', stages)
         
         palettes = ['mediumturquoise', 'darkmagenta']
         
@@ -836,15 +837,15 @@ def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strai
             fig.suptitle(title, fontsize = 30, y=1)
             dir2savef = os.path.join(dir2save, 'meas_Lab', 'R_')
             if info != '':
-                fig_title = dir2save+"Lab_"+info+"_"+var+".png"
+                fig_title = dir2savef+"Lab_"+info+"_"+var+".png"
             else: 
-                fig_title = dir2save+"Lab_"+var+".png"
+                fig_title = dir2savef+"Lab_"+var+".png"
             
             if save: 
                 plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
 
-#%% func - plotPDFs
-def plotKDEs(classif, classif_lab, df_PDF, save, dir2save, info, dpi = 300):
+#%% func - plotKDEs
+def plotKDEs(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 300):
     
     stages = sorted(df_PDF.Stage.unique())
     n_stages = len(stages)
@@ -886,10 +887,10 @@ def plotKDEs(classif, classif_lab, df_PDF, save, dir2save, info, dpi = 300):
         
         dir2savef = os.path.join(dir2save, 'kde', 'R_')
         if save: 
-            plt.savefig(dir2savef+info+"kdeAll_"+cl+".png", dpi=300, bbox_inches='tight', transparent=True)
+            plt.savefig(dir2savef+info+"kdeAll_"+cl+"."+ext, dpi=300, bbox_inches='tight', transparent=True)
 
 #%% func - plotKDEIndiv
-def plotKDEIndiv(classif, classif_lab, df_PDF, save, dir2save, info, dpi = 300):
+def plotKDEIndiv(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 300):
     
     stages_o = sorted(df_PDF.Stage.unique())
     n_stages = len(stages_o)
@@ -930,7 +931,7 @@ def plotKDEIndiv(classif, classif_lab, df_PDF, save, dir2save, info, dpi = 300):
                 
         dir2savef = os.path.join(dir2save, 'kde', 'R_')
         if save: 
-            plt.savefig(dir2save+info+"kdeIndivAll_"+cl+".png", dpi=300, bbox_inches='tight', transparent=True)
+            plt.savefig(dir2savef+info+"kdeIndivAll_"+cl+"."+ext, dpi=300, bbox_inches='tight', transparent=True)
             
 #%% func - fill_under_lines
 def fill_under_lines(color, ax=None, alpha=.2, **kwargs):
@@ -946,11 +947,17 @@ def fill_under_lines(color, ax=None, alpha=.2, **kwargs):
 def getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'mean'):
     
     dfs_hmf = []
+    num = 0
     for n, file in enumerate(folders):
         # print(file)
         hmf_file = 'hmf_unloop'+chamber+thickness
-        dfs_hmf.append(loadDF(file[2:], hmf_file, dir_R_hmf))
-    
+        try: 
+            dfs_hmf.append(loadDF(file[2:], hmf_file, dir_R_hmf))
+            num += 1
+        except: 
+            print('-No hmf heatmap dataframe found for '+thickness+' within '+file+' results folder!')
+            continue
+        
     if operation == 'std':
         df_hmf = pd.concat(dfs_hmf).groupby(level=0).std()
     elif operation == 'mean':
@@ -958,7 +965,8 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'mean'
     elif operation == 'sem':
         df_hmf = pd.concat(dfs_hmf).groupby(level=0).sem()
     
-    return df_hmf
+    
+    return df_hmf, num
 
 #%% func - unifyHeatmap
 def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, n_val, dir2save, savePlot, cmap = 'jet'):
@@ -1005,7 +1013,7 @@ def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, 
     plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=10)
     plt.title(title, fontsize = 15)
     
-    dir4heatmap = os.path.join(dir2save,'hmf', 'hmfAll_'+chamber+'_'+stage+'_'+gen_info+'.png')
+    dir4heatmap = os.path.join(dir2save,'hmf', 'hmfAll_'+thickness+'_'+chamber+'_'+stage+'_'+gen_info+'.png')
 
     if savePlot: 
         plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
