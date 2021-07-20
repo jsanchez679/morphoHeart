@@ -78,6 +78,7 @@ if init:
     # Initialise variables
     dict_shapes = dict()
     txt = Text2D(filename, c="k", font= 'CallingCode')
+    df_res = fcBasics.spAnalysis(df_res, file_num)
 
     #%% LOAD MESHES, CENTRELINES AND OBJECTS
     #   This section will load all the objects and dataframes needed to unloop the heart and create distribution plots
@@ -111,7 +112,8 @@ if init:
                                                        dict_kspl = dict_kspl, dict_shapes = dict_shapes,
                                                        colors = ['deepskyblue', 'tomato'])
     # Get centreline ribbon
-    cl_ribbonV, kspl_ext, _, _, _ = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
+    cl_ribbonV, kspl_ext, _, _, _ = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
+                                                   df_res = df_res, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
                                                    mesh = m_cjTh, dict_kspl = dict_kspl, dict_shapes = dict_shapes, 
                                                    dict_planes = dict_planes, clRib_type = 'extV', plotshow = True)
     
@@ -121,11 +123,18 @@ if init:
                     axis = cyl_chamber['cyl_axis'], c = 'purple', cap = True, res = 300)
     
     #%%
-    # Get centreline ribbon
-    cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
-                                                                 mesh = m_cjTh, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
+    # # Get centreline ribbon
+    # cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
+    #                                                              mesh = m_cjTh, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
     
-    [m_cjThLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh], cl_ribbon = cl_ribbon)
+    # [m_cjThLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh], cl_ribbon = cl_ribbon)
+    
+    #%% TESTS
+    # kspl_vSurf = fcMeshes.getExtCLonSurf(filename,  m_cjTh.alpha(0.05), kspl_ext, dict_planes['pl_Parallel2LinLine'])
+    
+    # kspl_CLnew = fcMeshes.getExtCLHighRes(filename, m_cjTh.alpha(0.05), kspl_ext, kspl_CL[0], dict_planes)
+    
+    # vent, atr, dict_pts, sph_cut = fcMeshes.ksplChamberCut(m_cjTh.alpha(0.05), kspl_CLnew, dict_shapes, dict_pts)
 
     #%% UNLOOP HEART
     #   Now we can unloop the heart to create 2D heatmaps of any of the thickness or ballooning measurements already 
@@ -156,7 +165,7 @@ if init:
     saveHM = True; savePlot = True; plotshow = False
     df_AtrVent = np.asarray(df_cjThNmyocIntBall['AtrVent'])
     
-    fcMeshes.plotPtClassif(filename = filename, mesh = m_cjTh, pts_whole = m_cjTh.points(), 
+    fcMeshes.plotPtClassif(filename = filename, mesh = m_cjTh.alpha(1), pts_whole = m_cjTh.points(), 
                            pts_class = [df_cjThNmyocIntBall['AtrVent'], df_cjThNmyocIntBall['DorsVent'], 
                                         df_cjThNmyocIntBall['LeftRight']])
 
@@ -172,15 +181,15 @@ if init:
     
     print('- Creating heatmaps for each chamber... Note: this can take a while.')
     heatmaps_cj, scale_cj = fcMeshes.heatmapUnlooped(filename = filename, val2unloop = 'cj_thickness', dataname = 'CjTh',
-                                           dir_results = dir_results, dirImgs = directories[4], 
-                                           names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
-                                           saveHM = saveHM, savePlot = savePlot)
+                                            dir_results = dir_results, dirImgs = directories[4], 
+                                            names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
+                                            saveHM = saveHM, savePlot = savePlot)
     del heatmaps_cj
     
-    heatmaps_ball, scale_ball = fcMeshes.heatmapUnlooped(filename = filename, val2unloop = 'myoc_intBall', dataname = 'myocIntBall',
-                                           dir_results = dir_results, dirImgs = directories[4], 
-                                           names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
-                                           saveHM = saveHM, savePlot = savePlot)
+    # heatmaps_ball, scale_ball = fcMeshes.heatmapUnlooped(filename = filename, val2unloop = 'myoc_intBall', dataname = 'myocIntBall',
+    #                                        dir_results = dir_results, dirImgs = directories[4], 
+    #                                        names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'],
+    #                                        saveHM = saveHM, savePlot = savePlot)
     del heatmaps_ball
     
     if 'kspl_vSurf' not in locals() or 'arr_all' not in locals():
@@ -194,8 +203,8 @@ if init:
     vp = Plotter(N=4, axes = 4)
     vp.show(m_cjTh.alpha(1), cl_ribbonV, disk, txt, at = 0)
     vp.show(m_myocIntBall.alpha(1), cl_ribbonV, disk,  at = 1)
-    vp.show(m_cjTh.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, arr_all, disk, at = 2)
-    vp.show(m_myocIntBall.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, disk, at = 3, interactive = True)
+    vp.show(m_cjTh.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, arr_all, at = 2)
+    vp.show(m_myocIntBall.clone().alpha(0.01), kspl_vSurf, kspls_HR, kspl_ext, at = 3, interactive = True)
     
     _ = fcMeshes.filterUnloopedDF(filename = filename, thickness = 'cj_thickness', 
                                           dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
@@ -207,6 +216,17 @@ if init:
                                           names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
                                           save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
                                           saveHM = True)
+    
+    # _ = fcMeshes.normUnloopedDF(filename = filename, thickness = 'cj_thickness', 
+    #                                   dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+    #                                   names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+    #                                   save_names= ['unloopAtrCjTh', 'unloopVentCjTh'], 
+    #                                   saveHM = True)
+    # _ = fcMeshes.normUnloopedDF(filename = filename, thickness = 'myoc_intBall', 
+    #                                       dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+    #                                       names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+    #                                       save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
+    #                                       saveHM = True)
     
     #%% GET THICKNESS REGION PLOTS (PROBALITY DENSITY ESTIMATION PLOTS)
     #   Finally, we can create distribution plots that will allow us to compare the cardiac thickness distribution between 

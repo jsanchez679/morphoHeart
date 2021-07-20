@@ -451,7 +451,7 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
                     q_saveNPY = ask4input("Do you want to save the final stack you manually closed? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
             else:
                 continueManClosing = ask4input('Would you like to close some additional slices? [0]:no/[1]:yes: ', bool)
-                if continueManClosing: 
+                while continueManClosing: 
                     slc_list, slc_end = getSlices((0, len(stack_closed)), 'you would like to close')
                     exit_code, slc_end, last_slc, stack_closed = manuallyCloseContoursTuple (slc_list, stack_closed, 
                                                                                              stack_o, stack_m, channel, exit_code, level)
@@ -465,12 +465,20 @@ def main_manuallyCloseContours(filename, channel, directories, stack_closed, sta
                         # Save contours v1
                         if not checking:
                             q_saveNPY = ask4input("Do you want to save the stack you manually closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
-
+                    continueManClosing = ask4input('Would you like to close some additional slices? [0]:no/[1]:yes: ', bool)
+                    
                 else:         
-                    done_manual = False
-                    processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-B'
-                    processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
-                    processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
+                    q_saveClosedCont = ask4input('Are you done manually closing the contours? [0]:no/[1]:yes: ',bool)
+                    if q_saveClosedCont: 
+                        done_manual = True
+                        processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-B'
+                        processDict[channel]['B-ManualCloseContours'] = 'DONE'
+                        processDict[channel]['B-Slc_manuallyClosedLast'] = processDict[channel]['G-Slc_tissueLayerLast']
+                    else: 
+                        done_manual = False
+                        processDict[channel]['G-LastProcessingStep'] = processDict[channel]['G-LastProcessingStep']+'-B'
+                        processDict[channel]['B-ManualCloseContours'] = 'Ongoing'
+                        processDict[channel]['B-Slc_manuallyClosedLast'] = last_slc
                     # Save contours v1
                     if not checking:
                         q_saveNPY = ask4input("Do you want to save the stack you manually closed so far? \n\t[0]:no, I am going to continue processing, so I'll save it on a later stage \n\t[1]:yes, I might stop processing now / yes, I want to save it just in case\n >>> : ",bool)
@@ -1506,7 +1514,7 @@ def getSlices (slc_tuple, text):
     if input_slc == 'all' or input_slc == '':
         slc_list = list(range(slc_tuple[0],slc_tuple[1],1))
         # print(slc_list)
-    elif input_slc == 'n':
+    elif input_slc in ['n', 'N']:
         slc_list = []
     else:
         slc_list = []
@@ -1746,7 +1754,7 @@ def new_tuples_from_originals(heartLayer):
         slcCont_up = slcCont_add[:index_end+1]
         numCont_up = numCont_up[:index_end]
 
-    tuple_slc_up, numCont_upf, _ = tuple_pairs(numCont_up, slcCont_up, False, 20)
+    tuple_slc_up, numCont_upf, _ = tuple_pairs(numCont_up, slcCont_up, False, 40) #HEREEE
 
     return tuple_slc_up, numCont_upf
 
@@ -2473,85 +2481,89 @@ def manuallyCloseContoursTuple (slc_list, stack_closed, stack_o, stack_m, chStr,
 
     """
     select_process = 'esc'
-
-    for slc in slc_list:
-        if exit_code:
-            print('- EXIT! - slc: '+ str(slc)+' - Process: '+ select_process)
-            break
-
-        print("- Processing contours - slice ", str(slc))
-        # Get image
-
-        myIm = stack_closed[slc][:][:]
-        # Get contours for that slice
-        _ = getContExpCont_plt (myIm, slc, chStr, minLenContour=100, figSize=10, level = level)
-        myIm_closed = myIm
-
-        # closeContours per slice
-        k_size = 60
-        myIm_closed, done_close  = closeContoursSlc(myIm_closed, slc, chStr, k_size, k_size, level)
-        if done_close == 'esc':
+    if len(slc_list) > 0: 
+        for slc in slc_list:
+            if exit_code:
+                print('- EXIT! - slc: '+ str(slc)+' - Process: '+ select_process)
+                break
+    
+            print("- Processing contours - slice ", str(slc))
+            # Get image
+    
+            myIm = stack_closed[slc][:][:]
+            # Get contours for that slice
+            _ = getContExpCont_plt (myIm, slc, chStr, minLenContour=100, figSize=10, level = level)
+            myIm_closed = myIm
+    
+            # closeContours per slice
+            k_size = 60
+            myIm_closed, done_close  = closeContoursSlc(myIm_closed, slc, chStr, k_size, k_size, level)
+            if done_close == 'esc': #done_close in ['esc', 'n', 'N']
+                last_slc = slc
+                exit_code = True
+                break
+    
             last_slc = slc
-            exit_code = True
-            break
-
-        last_slc = slc
-        add_step = ['', '1']
-        while not exit_code and done_close in add_step:   #exit_code == False:
-            list_close = ['3', '4', '5']
-            crop_size = [(120,120), (50,50), (100,300)]
-            print('\n - Additional processes for - Slc '+str(slc)+':')
-            print('   -[1]:draw black/clean slice\t\t-[2]:draw white')
-            print('   -[3]:close (120x120)\t\t\t\t-[4]:close (50x50)')
-            print('   -[5]:close (300x100)\t\t\t\t-[6]:close (user input size)')
-            print('   -[7]:reset slice (to original after automatic contour closure)')
-            print('   -[8]:reset slice (to original image - just masked)')
-            print('   -[9/ ]:save (slice done!)\t\t-[esc]:exit')
-            select_process = str(input('> Select: ')).lower()
-
-            if select_process == 'esc':
-                done = select_process
-                last_slc = slc;
-                exit_code = True
-                break
-            # Draw contour black/Clean contours
-            elif select_process == '1':
-                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'black', level)
-            # Draw contour white
-            elif select_process == '2':
-                myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', level)
-            # Close contours
-            elif select_process in list_close:
-                index_selected = list_close.index(select_process)
-                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, crop_size[index_selected][0], crop_size[index_selected][1], level)
-            elif select_process == '6':
-                input_size = ask4input('Enter the rectangle size to crop and close contours separated by a comma - x,y -: ', str)
-                x_size, y_size = input_size.split(',')
-                myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, int(y_size), int(x_size), level)
-            # Done
-            elif select_process == '9' or select_process == '':
-                done = 'OK'
-                stack_closed[slc][:][:] = myIm_closed
-                last_slc = slc
-                break
-            #Reset slc
-            elif select_process == '7':
-                myIm_closed = stack_o[slc][:][:]
-                done = 'reset_o_OK'
-                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
-                
-            elif select_process == '8':
-                myIm_closed = stack_m[slc][:][:]
-                done = 'reset_m_OK'
-                _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
-                
-            else:
-                print('Error: Wrong input. Select only from the given options')
-
-            if done == 'esc':
-                last_slc = slc
-                exit_code = True
-                break
+            add_step = ['', '1']
+            while not exit_code and done_close in add_step:   #exit_code == False:
+                list_close = ['3', '4', '5']
+                crop_size = [(120,120), (50,50), (100,300)]
+                print('\n - Additional processes for - Slc '+str(slc)+':')
+                print('   -[1]:draw black/clean slice\t\t-[2]:draw white')
+                print('   -[3]:close (120x120)\t\t\t\t-[4]:close (50x50)')
+                print('   -[5]:close (300x100)\t\t\t\t-[6]:close (user input size)')
+                print('   -[7]:reset slice (to original after automatic contour closure)')
+                print('   -[8]:reset slice (to original image - just masked)')
+                print('   -[9/ ]:save (slice done!)\t\t-[esc]:exit')
+                select_process = str(input('> Select: ')).lower()
+    
+                if select_process == 'esc':
+                    done = select_process
+                    last_slc = slc;
+                    exit_code = True
+                    break
+                # Draw contour black/Clean contours
+                elif select_process == '1':
+                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'black', level)
+                # Draw contour white
+                elif select_process == '2':
+                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', level)
+                # Close contours
+                elif select_process in list_close:
+                    index_selected = list_close.index(select_process)
+                    myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, crop_size[index_selected][0], crop_size[index_selected][1], level)
+                elif select_process == '6':
+                    input_size = ask4input('Enter the rectangle size to crop and close contours separated by a comma - x,y -: ', str)
+                    x_size, y_size = input_size.split(',')
+                    myIm_closed, done = closeContoursSlc(myIm_closed, slc, chStr, int(y_size), int(x_size), level)
+                # Done
+                elif select_process == '9' or select_process == '':
+                    done = 'OK'
+                    stack_closed[slc][:][:] = myIm_closed
+                    last_slc = slc
+                    break
+                #Reset slc
+                elif select_process == '7':
+                    myIm_closed = stack_o[slc][:][:]
+                    done = 'reset_o_OK'
+                    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
+                    
+                elif select_process == '8':
+                    myIm_closed = stack_m[slc][:][:]
+                    done = 'reset_m_OK'
+                    _ = getContExpCont_plt (myIm_closed, slc, chStr, 250, 10, level, True)
+                    
+                else:
+                    print('Error: Wrong input. Select only from the given options')
+    
+                if done == 'esc':
+                    last_slc = slc
+                    exit_code = True
+                    break
+    else: 
+        exit_code = False
+        last_slc = 0
+        slc = 0
 
     return exit_code, slc, last_slc, stack_closed
 
@@ -4084,9 +4096,18 @@ def automSelectContours (propContSelected, propsAllCont, numContours_pair):
                     dif_area = dif_area/max_area
                 except: 
                     dif_area = 0
-                dif_cent = dif_cent/max_cent
-                dif_meanInt = dif_meanInt/max_meanInt
-                dif_per = dif_per/max_per
+                try: 
+                    dif_cent = dif_cent/max_cent
+                except: 
+                    dif_cent = 0
+                try:
+                    dif_meanInt = dif_meanInt/max_meanInt
+                except: 
+                    dif_meanInt = 0
+                try: 
+                    dif_per = dif_per/max_per
+                except: 
+                    dif_per = 0
 
                 # print(dif_area)
                 # print(dif_cent)

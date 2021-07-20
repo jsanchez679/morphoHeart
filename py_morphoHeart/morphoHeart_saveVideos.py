@@ -1,38 +1,36 @@
 # -*- coding: utf-8 -*-
 """
-morphoHeart - F. PLOT
+morphoHeart - saveVideos
 
 @author: Juliana Sanchez-Posada
+Version: 20th July, 2021
 """
 
 #%% Importing python packages
 import os
 from pathlib import Path
-from vedo import *
-from vedo import embedWindow#, settings, Plotter, Text2D
+from vedo import embedWindow, settings, Plotter, Text2D
 embedWindow(False)
-settings.legendSize = .3
-settings.legendFont="VTK"
 
-init = False
 # Verify working dir
-def setWorkingDir (root_path, init):
+def setWorkingDir (root_path, init = False):
     if not init:
         wd = os.path.dirname(os.path.abspath(__file__))
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    # init = True
+    init = not bool(int(input('Do you want to execute the script all at once or run it by cells? \n\t[0]: all at once (recommended if you are already familiar with the script)\n\t[1]: by cells (recommended if you are NOT yet familiar with the script). >>>: ')))
     print("Current working directory: {0}".format(os.getcwd()))
-
+    if not init: 
+        print('\nIMPORTANT NOTES:\n- Remember to start running from cell %Start saveVideos.\n- NEVER run as an individual cell the cell called %Importing python packages')
     return root_path, init
 
-root_path, init = setWorkingDir(os.getcwd(),init)
+root_path, init = setWorkingDir(os.getcwd())
 
-c="k"; font= 'VTK' # 'CallingCode'
+c="k"; font= 'VTK' 
 azimuth = 0
 
-#%% Start E_Plot
+#%% Start saveVideos
 if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
@@ -63,16 +61,25 @@ if init:
     vtk_meshes = []
     # Import dictionaries
     [dicts] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj'], directories = [directories[0]])
-    zoom = 1; duration = 15
     
     for name in vtk_in_dir.glob('*.vtk*'):
         mesh_name =  os.path.split(name)
-        # print('Mesh: ', mesh_name[1][19:-4])
         vtk_meshes.append(mesh_name[1][19:-4])
         
     obj_num = fcBasics.selectFromList (vtk_meshes, 'meshes','save rotating videos of')
     vtk_selected = list(vtk_meshes[i] for i in obj_num)
     print('Selected meshes: ',vtk_selected)
+    
+    # Change zoom or duration of videos
+    zoom = 1; duration = 15
+    ch_zoom = fcBasics.ask4input('Do you want to change the zoom of the meshes within the rotating videos? \n\t[0]: no, keep the default (1)\n\t[1]: yes, please! >>:', bool)
+    if ch_zoom: 
+        print('- IMPORTANT NOTE: Videos in all versions of morphoHeart have been saved with a zoom of 1. \n  Making this change will make the meshes in the new videos look bigger (>1) or smaller (<1), so keep this in mind ;)')
+        zoom = fcBasics.ask4input('Enter new zoom value: ', float)
+    ch_duration = fcBasics.ask4input('Do you want to change the duration of the rotating videos? \n\t[0]: no, keep the default (15 sec)\n\t[1]: yes, please! >>:', bool)
+    if ch_duration: 
+        print('- IMPORTANT NOTE: Videos in all versions of morphoHeart have been saved with a duration of 15 sec. \n  Making this change will make your new videos rotate at a different speed, so keep this in mind ;)')
+        duration = fcBasics.ask4input('Enter new duration value (sec): ', int)
     
     meshes = []
     min_max = []
@@ -122,7 +129,6 @@ if init:
                                 rotAngle = rotAngle, dir2save = directories[4], 
                                 dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0, 
                                 duration = duration, zoom = zoom)
-
 
 #%% Init
 init = True

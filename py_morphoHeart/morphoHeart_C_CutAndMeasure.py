@@ -68,7 +68,6 @@ if init:
     #stage = df_file.loc[file_num,'Stage']
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
-
     # Import the metadata to know pixel size and distance between slices
     xy_Scaling_um, z_Scaling_um = fcBasics.metadataExt(filename,dir_data2Analyse)
     res = [xy_Scaling_um,xy_Scaling_um,z_Scaling_um]
@@ -121,6 +120,8 @@ if init:
         vp.show(m_cjOut, at=4)
         vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 2, azimuth = azimuth, interactive=True)
 
+    df_res = fcBasics.spAnalysis(df_res, file_num)
+    
     #%% Create ksplines, points, lines and centrelines
     #   This section will create spline(s) of the centreline(s) using the information from the loaded dictionary(ies) and
     #   return first a 3D interactive plot with the myocardium, endocardium and centreline(s) and second a new plot
@@ -173,9 +174,10 @@ if init:
                                                         title = 'Endo.Thickness', plotshow = False)
 
     if plot:
+        settings.legendSize = .20
         vp = Plotter(N=3, axes=10)
-        vp.show(m_cjTh.alpha(1), txt, at=0)
-        vp.show(m_myocTh.alpha(1), at=1)
+        vp.show(m_cjTh.alpha(1), scale_cube, txt, at=0)
+        vp.show(m_myocTh.alpha(1), scale_cube, at=1)
         vp.show(m_endoTh.alpha(1), scale_cube, at=2, zoom=2, azimuth = azimuth, elevation = 0, interactive=True)
 
     if save:
@@ -184,6 +186,14 @@ if init:
         dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_cjTh, m_myocTh, m_endoTh],
                                 names = ['cj_thickness','myoc_thickness','endo_thickness'],
                                 dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
+    
+    #% NOTE: Uncomment in case you have already run this section and just want to re-load results
+    # [[m_cjTh, m_myocTh, m_endoTh], [cj_thickness, myoc_thickness, endo_thickness]] = fcMeshes.openThicknessMeshes(filename = filename, 
+    #                                                                                       meshes_names = ['cj_thickness','myoc_thickness','endo_thickness'], 
+    #                                                                                       extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1]); 
+    # cj_minmax = (min(cj_thickness), max(cj_thickness))
+    # myoc_minmax = (min(myoc_thickness), max(myoc_thickness))
+    # endo_minmax = (min(endo_thickness), max(endo_thickness))
     
     #%% GET BALLOONING HEATMAPS 
     #   This section of the code will extract the balloning heatmaps of the internal and external myocardial meshes
@@ -227,16 +237,27 @@ if init:
             vp = Plotter(N=4, axes = 13)
             vp.show(m_myocInt.alpha(0.01), sph_ballonning, at=0)
             vp.show(m_myocInt.alpha(0.01), m_myocExt.alpha(0.01), sph_ballonning, at=1)
-            vp.show(meshes_ball[0].alpha(0.01), sph_ballonning, at=2)
-            vp.show(m_cjTh, scale_cube, at=3, azimuth = azimuth, elevation = 0, zoom = 2, interactive = True)
+            vp.show(meshes_ball[0].alpha(1), sph_ballonning, at=2)
+            vp.show(m_cjTh.alpha(1), scale_cube, at=3, azimuth = azimuth, elevation = 0, zoom = 2, interactive = True)
         elif q_selectMeshes == 2: 
             vp = Plotter(N=6, axes = 13)
             vp.show(m_myocInt.alpha(0.01), sph_ballonning, at=0)
             vp.show(m_myocExt.alpha(0.01), sph_ballonning, at=1)
             vp.show(m_myocInt.alpha(0.01), m_myocExt.alpha(0.01), sph_ballonning, at=2)
-            vp.show(meshes_ball[0].alpha(0.01), sph_ballonning, at=3)
-            vp.show(meshes_ball[1].alpha(0.01), sph_ballonning, at=4)
-            vp.show(m_cjTh, scale_cube, at=5, azimuth = azimuth, elevation = 0, zoom = 2, interactive = True)
+            vp.show(meshes_ball[0].alpha(1), sph_ballonning, at=3)
+            vp.show(meshes_ball[1].alpha(1), sph_ballonning, at=4)
+            vp.show(m_cjTh.alpha(1), scale_cube, at=5, azimuth = azimuth, elevation = 0, zoom = 2, interactive = True)
+            
+    #% NOTE: Uncomment in case you have already run this section and just want to re-load results
+    # q_selectMeshes = fcBasics.ask4input('Select the meshes from which you would like to extract the ballooning heatmaps \n\t\t[0]: Int.Myocardium/[1]: Ext.Endocardium/[2]: both: ', int)
+    # if q_selectMeshes in [0,2]:
+    #     [[m_myocIntBall], [myoc_intBall]] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = ['myoc_intBall'], 
+    #                                                                   extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1]); 
+    #     myocInt_minmax = (min(myoc_intBall), max(myoc_intBall))
+    # if q_selectMeshes in [1,2]:
+    #     [[m_myocExtBall], [myoc_extBall]] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = ['myoc_extBall'], 
+    #                                                                   extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1]); 
+    #     myocExt_minmax = (min(myoc_extBall), max(myoc_extBall))
 
     #%% CUT HEART TISSUE LAYERS INTO CHAMBERS
     #   This section will allow the user to define a plane through the atrio-ventricular canal to cut all the heart
@@ -245,17 +266,17 @@ if init:
     #   centreline) every 10th point starting from the outflow to the inflow tract of the heart. A 3D interactive plot will
     #   pop-up showing the myocardium, the centreline and the series of spheres, to allow the user to roughly define
     #   the centreline point number through which the atrio-ventricular canal is located. Using this information a
-    #   very think disk will be initialised and a new plot will pop-up in which the user will be able to rotate and 
-    #   translate this disk to the position and orientation that will best cut the heart into atrial and ventricular 
-    #   regions. When the user is happy with the disk position and orientation, he/she should close the window. A 
+    #   very think disc will be initialised and a new plot will pop-up in which the user will be able to rotate and 
+    #   translate this disc to the position and orientation that will best cut the heart into atrial and ventricular 
+    #   regions. When the user is happy with the disc position and orientation, he/she should close the window. A 
     #   new pop-up window will appear showing the selected plane and heart tissue layers. When the window is closed the 
-    #   user will be asked if he/she is happy with the defined disk. If so, the radius of the disk will be 
-    #   re-calculated based on the myocardial mesh points the disk cuts. The user will then see a new plot of the 
+    #   user will be asked if he/she is happy with the defined disc. If so, the radius of the disc will be 
+    #   re-calculated based on the myocardial mesh points the disc cuts. The user will then see a new plot of the 
     #   myocardium and the created ring to double check if the radius of the ring is sufficient to split the heart without 
     #   affecting any of its chambers. If the user is happy, a mask of the created ring will be used to divide the masks
     #   of each tissue layer. Once the myocardial mesh has been divided, a 3D interactive plot will appear showing the
     #   resulting mesh and asking the user if the cut was successful and he/she is happy with it. If not, the user can
-    #   re-define the disk position, orientation and size. When happy with the myocardial cut, the code will continue 
+    #   re-define the disc position, orientation and size. When happy with the myocardial cut, the code will continue 
     #   cutting the other heart meshes (endocardium,  cardiac jelly, external myocardium, internal endocardium and external
     #   cardiac jelly). This process can take between 10-20mins. 
     #   When all the volumetric reconstructions of the chambers of all the tissue layers have been generated, an
@@ -298,7 +319,8 @@ if init:
                                           meshes = [m_myoc, m_atrMyoc, m_ventMyoc, m_atrExtMyo, m_ventExtMyo,
                                                     m_endo, m_atrEndo, m_ventEndo, m_atrIntEnd, m_ventIntEnd,
                                                     m_cj, m_atrCJ, m_ventCJ])
-
+    df_res = fcMeshes.addSurfArea2df(df_res = df_res,  file_num = file_num,
+                            meshes = [m_atrExtMyo, m_atrIntEnd, m_atrExtCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ])
     if save:
         # Save measurements dataframe
         fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
@@ -309,18 +331,23 @@ if init:
                                           names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr',
                                                    'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent'],
                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
-        # dict_colour = fcMeshes.saveMeshes(filename = filename, 
-        #                                   meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ,
-        #                                             m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ],
-        #                                   names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr',
-        #                                            'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent'],
-        #                                   dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
-
+        dict_colour = fcMeshes.saveMeshes(filename = filename, 
+                                          meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ,
+                                                    m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ],
+                                          names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr',
+                                                    'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent'],
+                                          dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
+        
     #%% GET CHAMBERS AND HEART ORIENTATION
     #   This section of the code will measure the chambers and heart orientations and save them in the dataframe with
     #   the rest of the measurements already made. At the end, a 3D plot showing the chambers orientation will pop-up.
     #   ================================================================================================================
 
+    [m_atrMyoc, m_ventMyoc] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc_atr','myoc_vent'],
+                                                                  extension = 'vtk', dir_stl = directories[2],
+                                                                  alpha = [1,1], dict_colour = dict_colour)
+    num_pt = dict_pts['numPt_CLChamberCut']
+    
     sph_orient, lines_orient, dict_pts, dict_kspl, df_res = fcMeshes.getChambersOrientation(filename = filename, file_num = file_num, 
                                                                     num_pt = num_pt, kspl_CL2use = kspl_CL[0], distFromCl = 50,
                                                                     myoc_meshes = [m_myoc, m_atrMyoc, m_ventMyoc], linLine = linLines[0],
@@ -345,14 +372,19 @@ if init:
     [pl_DnV_Atr, pl_DnV_Vent], dict_planes = fcMeshes.createDVPlanes(filename = filename, sph_orient = sph_orient, mesh = m_myoc,
                                                   kspl_CL = kspl_CL[0], orient_lines = [orient_atr, orient_vent], dict_planes = dict_planes)
     # Get centreline ribbon
-    cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, kspl_CL2use = kspl_CL[0], linLine = linLines[0],
-                                                                 mesh = m_myoc, dict_kspl = dict_kspl, dict_shapes = dict_shapes, dict_planes = dict_planes)
+    cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
+                                                                                       df_res = df_res, kspl_CL2use = kspl_CL[0], 
+                                                                                       linLine = linLines[0], mesh = m_myoc, 
+                                                                                       dict_kspl = dict_kspl, dict_shapes = dict_shapes, 
+                                                                                       dict_planes = dict_planes)
     
-    # Divide meshes using ribbon (Left/Right) and disk (Atrium/Ventricle)
+    # Divide meshes using ribbon (Left/Right) and disc (Atrium/Ventricle)
     if q_selectMeshes in [0,2]:
-        [m_cjThLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh], cl_ribbon = cl_ribbon)
+        [m_cjThLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh], cl_ribbon = cl_ribbon, file_num = file_num, 
+                                                                                       df_res = df_res)
     if q_selectMeshes in [1,2]:
-        [m_cjThLnR, m_myocExtLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh, m_myocExtBall], cl_ribbon = cl_ribbon)
+        [m_cjThLnR, m_myocExtLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cjTh, m_myocExtBall], cl_ribbon = cl_ribbon, 
+                                                             file_num = file_num, df_res = df_res)
 
     #%% CLASSIFY THICKNESS AND BALLOONING POINTS
     #   Now that we have defined the planes and ribbon that section the heart into atrial-ventricular, dorsal-ventral,
@@ -365,8 +397,13 @@ if init:
     #   dataframe will be saved for future analysis.
     #   ================================================================================================================
 
+    [m_atrExtCJ] = fcMeshes.openMeshes(filename = filename, meshes_names = ['cjExt_atr'],
+                                                                  extension = 'vtk', dir_stl = directories[2],
+                                                                  alpha = [1], dict_colour = dict_colour)
+
     if q_selectMeshes in [0,2]:
-        df_cjThNmyocIntBall = fcMeshes.classifyHeartPts(filename = filename, dict_planes = dict_planes,
+        df_cjThNmyocIntBall = fcMeshes.classifyHeartPts(filename = filename, df_res = df_res, file_num = file_num,
+                                            dict_planes = dict_planes,
                                             m_whole = m_cjTh, m_left = m_cjThLnR[0], m_atr = m_atrExtCJ, 
                                             data = [cj_thickness, myoc_intBall], 
                                             names_data = ['cj_thickness', 'myoc_intBall'], plot_show = True)
@@ -397,6 +434,7 @@ if init:
             dir_R_all = os.path.join(dir_data2Analyse, 'R_All'); dir_df_meas = os.path.join(dir_R_all, 'df_meas')
             os.mkdir(dir_R_all); os.mkdir(dir_df_meas)
         fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = os.path.join(dir_data2Analyse, 'R_All', 'df_meas'))
+        # Save rotating videos
         if q_selectMeshes == 0:
             names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_endo']
             meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
@@ -411,9 +449,12 @@ if init:
             range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocInt_minmax, myocExt_minmax,'']
             
         names4video, meshes4video, rangeThBall = fcPlot.selectMeshes4Video(names = names4video, meshes = meshes4video, ranges = range4video)
-        fcMeshes.saveMultVideos(filename, info = names4video, meshes4video = meshes4video, rangeThBall = rangeThBall, 
-                                rotAngle = df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], 
-                                dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0)
+        sure = fcBasics.ask4input('Are you sure about orientation for videos? >>: ', bool)
+        if sure: 
+            rotAngle =  df_res.loc[file_num,'ang_Heart']#0
+            fcMeshes.saveMultVideos(filename, info = names4video, meshes4video = meshes4video, rangeThBall = rangeThBall, 
+                                    rotAngle = rotAngle, dir2save = directories[4], 
+                                    dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0)
         
         toc = perf_counter()
         fcBasics.printTime(tic, toc, 'Cut and Measure')
@@ -429,7 +470,7 @@ init = True
 # mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
 # [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
 #                               dir_stl = directories[2], dir_txtNnpy = directories[1])
-# m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll
+# m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll1
 # cj_thickness, myoc_thickness, endo_thickness, myoc_intBall = colour_thAll
 # cj_minmax = (cj_thickness.min(), cj_thickness.max())
 # myoc_minmax = (myoc_thickness.min(), myoc_thickness.max())

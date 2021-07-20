@@ -54,7 +54,7 @@ if init:
     from morphoHeart_modules import morphoHeart_funcContours as fcCont
     from morphoHeart_modules.morphoHeart_funcMeshes import createLayerMesh
 
-    # Creating global variable
+    # Creating global variables
     global heartLayer, stack_closed, processDict
 
     #%% Set-up variables to start running code 
@@ -135,7 +135,7 @@ if init:
     #   Before starting the user should scan through the plotted closed slices and write down a list with:
     #   1. all the (first) slices in which a group of consecutive slices have the same number of contours 
     #   2. the corresponding number of contours in each group
-    #   At the beggininng of the process the user will be asked to enter this information. Then the contour groups will 
+    #   At the beggininng of the process the user \will be asked to enter this information. Then the contour groups will 
     #   be subdivided into groups containing each a maximum of 40 slices. The user will be asked to select the internal 
     #   and external contours for the first slice of each group and the next 39 (or less) slices the contours will be
     #   automatically selected. 
@@ -212,9 +212,9 @@ if others:
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
     # Enter in 'first' and 'last' any slice number within the number of slices in the stack
-    first = 110
-    last = 130
-    fcCont.showGridContours(myStack = stack_m, slices = (first,last+1), n_rows = n_rows, level = level)
+    first = 50
+    last = 140
+    fcCont.showGridContours(myStack = stack_closed, slices = (first,last+1), n_rows = n_rows, level = level)
     
     #%% Plot all the contours of the stack in a grid
     first = 0

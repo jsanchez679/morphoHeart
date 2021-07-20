@@ -50,7 +50,7 @@ if init:
 
     #%% Plot things for just one heart
     # Get file to process and directories
-    folder, df_file, file_num = fcBasics.selectFile(df_dataset); filename = folder[2:]; dORv = filename[9:10]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[2:]; dORv = filename[9:10]
     #stage = df_file.loc[file_num,'Stage']
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = 'R')
@@ -61,6 +61,7 @@ if init:
     if dORv == 'D':
         azimuth = -90
     elevation = df_res.loc[file_num,'ang_Heart']
+
 
     #%% Load data
     # Import dictionaries
@@ -76,6 +77,28 @@ if init:
     m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
     m_myoc, m_endo, m_cj = m_all
+    #%%
+    mTh_names = ['cj_thickness']
+    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
+                                  dir_stl = directories[2], dir_txtNnpy = directories[1])
+    m_cjTh = m_thAll[0]
+    #%%
+    dir2save = os.path.join(dir_data2Analyse, 'R_all', 'Videos', 'cube')
+    [cj_thickness] = fcBasics.loadNPY(filename = filename, names = ['cj_thickness'], dir_txtNnpy = directories[1])
+    m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=0, vmax=25)
+    m_cjTh.addScalarBar()
+    m_cjTh.alpha(1)
+    m_cjTh.mapper().SetScalarRange(0,25)
+    
+    scale_cube = Cube(pos=m_myoc.centerOfMass(), side=350, c='white', alpha=0.01)
+    settings.legendSize = .20
+    vp = Plotter(N=3, axes=13)
+    vp.show(m_myoc.alpha(0.01), m_endo.alpha(0.01), scale_cube, at=0)
+    vp.show(m_cj.alpha(0.01), scale_cube, at=1)
+    vp.show(m_cjTh.alpha(1), at=2, azimuth = azimuth, elevation = elevation, zoom = 1, interactive=True)
+    
+    #%%
+    
     mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
     [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
                                   dir_stl = directories[2], dir_txtNnpy = directories[1])
@@ -92,10 +115,22 @@ if init:
                                                                                           dict_kspl = dict_kspl, dict_shapes = dict_shapes,
                                                                                           colors = ['tomato'])
 
+     # Import meshes
+    [[m_cjTh, m_myocIntBall], [cj_thickness, myoc_intBall]] = fcMeshes.openThicknessMeshes(filename = filename,
+                                                                   meshes_names = ['cj_thickness','myoc_intBall'], 
+                                                                   extension = 'vtk', dir_stl = directories[2], 
+                                                                   dir_txtNnpy = directories[1])
+
+    scale_cube = Cube(pos=m_myoc.centerOfMass(), side=350, c='white', alpha=0.01)
+    vp = Plotter(N=2, axes=13)
+    vp.show(m_myoc.alpha(0.01),scale_cube, at=0)
+    vp.show(m_cj.alpha(0.01), scale_cube, at=1, azimuth = azimuth, elevation = elevation, zoom = 2, interactive=True)
+    
     #%%
     # fcMeshes.saveMultVideos(filename = filename, info = ['myoc_endo','cj', 'cj_thickness'],
     #                         meshes4video = [[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]],[m_cj.alpha(0.01)],[m_cjTh]],
     #                         rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = False, alpha_cube = 0)
+    
     
     mTh_names = ['cj_thickness']
     [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
@@ -104,15 +139,61 @@ if init:
     
     dir2save = os.path.join(dir_data2Analyse, 'R_all', 'Videos', 'cube')
     [cj_thickness] = fcBasics.loadNPY(filename = filename, names = ['cj_thickness'], dir_txtNnpy = directories[1])
-    m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=0, vmax=25)
+    m_cjTh.pointColors(cj_thickness, cmap="jet", vmin=0, vmax=18)
     m_cjTh.addScalarBar()
     m_cjTh.alpha(1)
-    m_cjTh.mapper().SetScalarRange(0,25)
+    m_cjTh.mapper().SetScalarRange(0,18)
+    scale_cube = Cube(pos=m_cjTh.centerOfMass(), side=350, c='white', alpha=0.01)
 
     vp = Plotter(N=1, axes=13)
-    vp.show(m_cjTh, at=0, azimuth = azimuth, elevation = elevation, interactive=True)
+    vp.show(m_cjTh, scale_cube, at=0, azimuth = azimuth, elevation = elevation, zoom = 2, interactive=True)
+    
+    #%%
+    mTh_names = ['myoc_intBall']
+    [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
+                                  dir_stl = directories[2], dir_txtNnpy = directories[1])
+    m_ballTh = m_thAll[0]
+    
+    dir2save = os.path.join(dir_data2Analyse, 'R_all', 'Videos', 'cube')
+    [myoc_intBall] = fcBasics.loadNPY(filename = filename, names = ['myoc_intBall'], dir_txtNnpy = directories[1])
+    m_ballTh.pointColors(myoc_intBall, cmap="jet", vmin=0, vmax=100)
+    m_ballTh.addScalarBar()
+    m_ballTh.alpha(1)
+    m_ballTh.mapper().SetScalarRange(0,100)
+    scale_cube = Cube(pos=m_ballTh.centerOfMass(), side=350, c='white', alpha=0.01)
+
+    vp = Plotter(N=1, axes=13)
+    vp.show(m_ballTh, scale_cube, at=0, azimuth = azimuth, elevation = elevation, zoom = 2, interactive=True)
+
+    fcMeshes.saveVideo (filename = filename, info = 'myoc_intBall', meshes4video = [m_ballTh],
+                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, alpha_cube = 0, plotshow=True)
+   #%% 
+    vp = Plotter(N=2, axes=13)
+    vp.show(m_cjTh, scale_cube, at=0)
+    vp.show(m_ballTh, scale_cube, at=1, azimuth = azimuth, elevation = elevation, zoom = 2, interactive=True)
+    
+    #%%
 
     fcMeshes.saveVideo (filename = filename, info = 'cj_thickness0to25', meshes4video = [m_cjTh],
+                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, alpha_cube = 0, plotshow=True)
+    
+    [dict_obj, myoc_int_npcl] = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj','myoc_int_npcl'],
+                                                                    directories = [directories[0], directories[3]])
+    [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = fcMeshes.splitDicts(dict_obj)
+    
+    m_names = ['myoc','endo', 'cj']
+    m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
+                                dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
+    m_myoc, m_endo, m_cj = m_all
+    
+    vp = Plotter(N=2, axes=13)
+    vp.show(m_myoc.alpha(0.01), m_endo.alpha(0.01), scale_cube, at=0)
+    vp.show(m_cj.alpha(0.01), scale_cube, at=1, azimuth = azimuth, elevation = elevation, zoom = 2, interactive=True)
+    
+    fcMeshes.saveVideo (filename = filename, info = 'myoc_endo', meshes4video = [m_myoc.alpha(0.01), m_endo.alpha(0.01)],
+                        rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, alpha_cube = 0, plotshow=True)
+    
+    fcMeshes.saveVideo (filename = filename, info = 'cj', meshes4video = [m_cj.alpha(0.01)],
                         rotAngle  = df_res.loc[file_num,'ang_Heart'], dir2save = dir2save, alpha_cube = 0, plotshow=True)
     
     # fcMeshes.saveMultVideos(filename = filename, info = ['cj', 'cj_thickness'],
@@ -120,6 +201,7 @@ if init:
     #                         rotAngle= df_res.loc[file_num,'ang_Heart'], dir2save = directories[4], plotshow = True, alpha_cube = 0)
 
 #%%
+
     m_names = ['myoc_int']
     m_all = fcMeshes.openMeshes(filename = filename, meshes_names = m_names, extension = 'vtk',
                                 dir_stl = directories[2], alpha = [1]*len(m_names), dict_colour = dict_colour)
@@ -129,6 +211,7 @@ if init:
     vp.show(m_myoc_int, at=0, interactive=True)
 
     fcMeshes.saveMesh(filename, m_myoc_int, 'myoc_int', directories[2], 'stl')
+    
     #%%
     # plot_dir = os.path.join(directories[4], filename+"_")
     vp = Plotter(N=9, axes=13)
@@ -155,8 +238,11 @@ if init:
     kspl_CL, linLines, sph_CL, sph_CL_colour, dict_shapes, dict_kspl = fcMeshes.createCLs(dict_cl = [myoc_int_npcl,endo_ext_npcl], dict_pts = dict_pts,
                                                                                           dict_kspl = dict_kspl, dict_shapes = dict_shapes,
                                                                                           colors = ['deepskyblue', 'tomato'])
-    vp = Plotter(N=1, axes=10)
-    vp.show(txt, kSplinesCuts, sphCuts, kspl_CL, linLines, m_myoc.alpha(0.01), m_endo.alpha(0.01), at=0, azimuth = azimuth, interactive=True)
+    vp = Plotter(N=1, axes=4)
+    vp.show(kspl_CL[0], m_myoc.alpha(0.01), m_endo.alpha(0.01), at=0, azimuth = azimuth, elevation = elevation,interactive=True)
+    
+    vp = Plotter(N=1, axes=4)
+    vp.show(kspl_CL[0], m_myoc.alpha(0.01), at=0, azimuth = azimuth, elevation = elevation,interactive=True)
 
 
     plane_Ch = Plane(pos=dict_planes['pl2CutMesh_Chamber']['pl_centre'],normal=dict_planes['pl2CutMesh_Chamber']['pl_normal'], sx=500)

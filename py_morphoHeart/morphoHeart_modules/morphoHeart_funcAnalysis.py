@@ -498,14 +498,14 @@ def getLegends(genots, strains, stages):
                   'hapln1a:ht/spaw:wt', 'hapln1a:ht/spaw:ht', 'hapln1a:ht/spaw:mt',
                   'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:ht', 'hapln1a:mt/spaw:mt',
                   'hapln1a_OE:gu', 'hapln1a_OE:g', 'hapln1a_OE:u', 'hapln1a_OE:wt',
-                  'vcana:wt', 'vcana:ht', 'vcana:mt',]
+                  'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
     
     leg_genots = ['$hapln1a^{+/+}$', '$hapln1a^{+/-}$', '$hapln1a^{-/-}$', 
                   '$hapln1a^{+/+}/spaw^{+/+}$', '$hapln1a^{+/+}/spaw^{+/-}$', '$hapln1a^{+/+}/spaw^{-/-}$', 
                   '$hapln1a^{+/-}/spaw^{+/+}$', '$hapln1a^{+/-}/spaw^{+/-}$', '$hapln1a^{+/-}/spaw^{-/-}$',
                   '$hapln1a^{-/-}/spaw^{+/+}$', '$hapln1a^{-/-}/spaw^{+/-}$', '$hapln1a^{-/-}/spaw^{-/-}$',
                   'hapln1a_OE:gu', 'hapln1a_OE:g', 'hapln1a_OE:u', 'hapln1a_OE:wt',
-                  '$vcana^{+/+}$', '$vcana^{+/-}$', '$vcana^{-/-}$',]
+                  '$vcana^{+/+}$', '$vcana^{+/-}$', '$vcana^{-/-}$', 'wt']
     
     out_genots = []
     for gen in genots:
@@ -513,11 +513,13 @@ def getLegends(genots, strains, stages):
     
     all_strains = ['hapln1a prom187/+ (F2s) InX','hapln1a prom187/+ (F3s) InX', 
                    'hapln1a prom241/+ (F2s) InX', 'hapln1a prom241/+ (F3s) InX',
-                   'spaw+/-; hapln1a prom241/+ InX, vcana prom365/+ (F2s) InX']
+                   'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ (F2s) InX',
+                   'myl7lckGFP_kdrlRasCherry']
     
     leg_strains = ["$hapln1a^{\Delta 187} (F2s)$", "$hapln1a^{\Delta 187} (F3s)$", 
                    "$hapln1a^{\Delta 241} (F2s)$", "$hapln1a^{\Delta 241} (F3s)$",
-                   "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$"]
+                   "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$",
+                   'myl7:lck-GFP; kdrl:rasCherry']
     
     out_strains = []
     for strain in strains:
@@ -538,6 +540,106 @@ def getLegends(genots, strains, stages):
         
 #%% func - plotInGroups
 def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
+                     h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
+    
+    # styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] 
+    styles = ['o', 'o', 's', 's', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
+    variables, ylabels = def_variables(script)
+    
+    for i, input_var, title in zip(count(), input_vars, titles):
+        vars2plot, labels2plot = getVarsANDLabels_Autom(variables, ylabels, input_var)
+        sns.set_context('poster') # notebook, talk, poster, paper
+        # Set up the matplotlib figure
+        num_vars = len(vars2plot)
+        plots_per_col = 3
+        plots_per_row = math.ceil(num_vars/plots_per_col)
+        
+        index_no_plot = list(range(3,(plots_per_col+1)*plots_per_row,4))
+        for index in index_no_plot:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+            
+        # Set up the matplotlib figure
+        size_col = (plots_per_col+1)*h_plot+h_add
+        size_row = plots_per_row*w_plot+w_add
+        
+        # Genotypes and Strains being plotted 
+        genots = sorted(df2plot.GenotypeAll.unique(), reverse=True)
+        strains = sorted(df2plot.Strain.unique())
+        stages = sorted(df2plot.Stage.unique())
+        
+        if i == 0: 
+            print('- Genotypes: ', genots)
+            print('- Strains: ', strains)
+            print('- Stages: ', stages)
+        
+        palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']
+       
+        #  Create figure  - plt.clf()
+        gridkw = dict(width_ratios=[1,1,1,0.2])
+        fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+        fig.subplots_adjust(hspace=0.5, wspace=0.5)
+        
+        sns.set_style("ticks")
+        sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                        "ytick.labelsize":8, "lines.linewidth": 2.5,
+                                                        "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+        # Define legends for strain and genotype
+        legend_elem_gen = []
+        for gen, gen_lab in enumerate(gen_legend):
+            legend_elem_gen.append(Line2D([0], [0], marker='h', color='w', label=gen_lab,
+                                    markerfacecolor=palettes[gen], markersize=20))
+        space = [Line2D([0], [0], marker='o', color='w', label='',
+                                    markerfacecolor='w', markersize=20)]
+        legend_elem_strain = []
+        for n_str, str_lab, mark in zip(count(), strain_legend, styles):
+            legend_elem_strain.append(Line2D([0], [0], marker=mark, color='w', label=str_lab,
+                                    markerfacecolor='k', markersize=15))
+            
+        handle_new = legend_elem_gen+space+legend_elem_strain
+        legend_new = gen_legend+['']+strain_legend
+        
+        marker_size = 12
+        dodge = True
+        jitter = 0.3
+        for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+            if n in index_no_plot:
+                if n == 3:
+                    ax.set_axis_off()
+                    ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+                else: 
+                    ax.remove()
+            else: 
+                for j, strain, style in zip(count(), strains, styles):
+                    df_plot = df2plot[df2plot['Strain'] == strain]
+                    m = sns.stripplot(x="Stage", y=var, hue="GenotypeAll", hue_order = genots, data=df_plot, ax = ax, order=['32-34','48-50','72-74'],
+                                  marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+                    box = ax.get_position()
+                    ax.set(xlabel="Stage [hpf]", ylabel=ylabel);
+                    ax.set_position([box.x0, box.y0, box.width*1, box.height])
+                    ax.get_legend().remove()
+                    
+                    # ax.legend(handles0[:],labels0[:],loc='center left', bbox_to_anchor=(1, 0.5))
+                    sns.despine()
+                    
+                    if n == 0:
+                        handles, labels = m.get_legend_handles_labels()
+                        #print(handles)
+                        print(labels)
+
+        fig.suptitle(title, fontsize = 30, y=1)
+        if save: 
+            for extf in ext: 
+                dir2savef = os.path.join(dir2save, 'meas_all', 'R_')
+                if info != '':
+                    fig_title = dir2savef+info+"_"+title+"."+extf
+                else: 
+                    fig_title = dir2savef+title+"."+extf
+
+                plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+#%% func - plotRelPlotInGroups
+def plotRelPlotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
     
     styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
@@ -570,7 +672,7 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
             print('- Strains: ', strains)
             print('- Stages: ', stages)
         
-        palettes = ['mediumturquoise', 'darkmagenta']
+        palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']
        
         #  Create figure  - plt.clf()
         gridkw = dict(width_ratios=[1,1,1,0.2])
@@ -596,10 +698,11 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
         handle_new = legend_elem_gen+space+legend_elem_strain
         legend_new = gen_legend+['']+strain_legend
         
-        marker_size = 12
-        dodge = True
-        jitter = 0.2
         for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+            # if n == 0:
+            #     min_val = 0.8*df2plot[var].min()
+            #     max_val = 1.2*df2plot[var].max()
+                
             if n in index_no_plot:
                 if n == 3:
                     ax.set_axis_off()
@@ -607,22 +710,23 @@ def plotInGroups(script, input_vars, titles, df2plot, gen_legend, strain_legend 
                 else: 
                     ax.remove()
             else: 
-                for j, strain, style in zip(count(), strains, styles):
-                    df_plot = df2plot[df2plot['Strain'] == strain]
-                    m = sns.stripplot(x="Stage", y=var, hue="GenotypeAll", hue_order = genots, data=df_plot, ax = ax, order=['32-34','48-50','72-74'],
-                                  marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
-                    box = ax.get_position()
-                    ax.set(xlabel="Stage [hpf]", ylabel=ylabel);
-                    ax.set_position([box.x0, box.y0, box.width*1, box.height])
-                    ax.get_legend().remove()
-                    
-                    # ax.legend(handles0[:],labels0[:],loc='center left', bbox_to_anchor=(1, 0.5))
-                    sns.despine()
-                    
-                    if n == 0:
-                        handles, labels = m.get_legend_handles_labels()
-                        #print(handles)
-                        print(labels)
+                m = sns.lineplot(x="time_point", y=var,
+                    estimator=None, data= df2plot, palette = 'Set2', 
+                    ax = ax)
+                box = ax.get_position()
+                # ax.set_ylim([min_val, max_val])
+                ax.set(xlabel="Heart phase contraction", ylabel=ylabel);
+                ax.set_position([box.x0, box.y0, box.width*1, box.height])
+                try:
+                    ax.label_outer()
+                except:
+                    pass
+                sns.despine()
+        
+                # if n == 0:
+                #     handles, labels = m.get_legend_handles_labels()
+                #     #print(handles)
+                #     print(labels)
 
         fig.suptitle(title, fontsize = 30, y=1)
         dir2savef = os.path.join(dir2save, 'meas_all', 'R_')
@@ -665,13 +769,13 @@ def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_lege
             print('- Strains: ', strains)
             print('- Stages: ', stages)
         
-        palettes = ['mediumturquoise', 'darkmagenta']
+        palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']
         
         for nn, var, ylabel in zip(count(), vars2plot, labels2plot):
             #  Create figure  - plt.clf()
             gridkw = dict(width_ratios=[1,1,1,0.2])
             fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col+1, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
-            fig.subplots_adjust(hspace=1.5, wspace=0.05)
+            fig.subplots_adjust(hspace=1.5, wspace=0.2)
             
             sns.set_style("ticks")
             sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
@@ -687,7 +791,7 @@ def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_lege
             
             marker_size = 10
             dodge = False
-            jitter = 0.2
+            jitter = 0.3
             for n, ax, stg in zip(count(), axes.flatten(), stages):
                 # print(n)
                 if n in index_no_plot:
@@ -723,14 +827,16 @@ def plotPerVariable(script, input_vars, titles, df2plot, gen_legend, strain_lege
                         print(var, '- Genotypes: ',labels)
     
             fig.suptitle(title, fontsize = 30, y=1)
-            dir2savef = os.path.join(dir2save, 'meas_Ind', 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_Ind_"+var+"."+ext
-            else: 
-                fig_title = dir2savef+"Ind_"+var+"."+ext
             
             if save: 
-                plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+                for extf in ext: 
+                    dir2savef = os.path.join(dir2save, 'meas_Ind', 'R_')
+                    if info != '':
+                        fig_title = dir2savef+info+"_Ind_"+var+"."+extf
+                    else: 
+                        fig_title = dir2savef+"Ind_"+var+"."+ext
+    
+                    plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
                 
 #%% func - plotPerVariableLabels
 def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
@@ -949,8 +1055,9 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir_R_hmf, operation = 'mean'
     dfs_hmf = []
     num = 0
     for n, file in enumerate(folders):
-        # print(file)
+        print(file)
         hmf_file = 'hmf_unloop'+chamber+thickness
+        # hmf_file = 'hmN_unloop'+chamber+thickness
         try: 
             dfs_hmf.append(loadDF(file[2:], hmf_file, dir_R_hmf))
             num += 1

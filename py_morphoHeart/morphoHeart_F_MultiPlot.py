@@ -114,7 +114,7 @@ if init:
     meshes = fcPlot.loadMultMeshes(objs, dict_paths)
     
     settings.legendSize = .1
-    vp = Plotter(shape = (1, len(dict_paths)), axes=13, sharecam = False); m = 0
+    vp = Plotter(shape = (1, len(dict_paths)), axes=13, sharecam = True); m = 0
     for i, n, file in zip(count(), range(len(dict_paths)), df_files['Folder'].tolist()):
         txt = fcPlot.plotTitle(file, df_files)
         scale_cube = Cube(pos=meshes[m].centerOfMass(), side=s_cube, c='gray', alpha=alpha_cube)
@@ -157,23 +157,32 @@ if init:
         name = folder[2:]
         print(f, name)
         dir_results = os.path.join(dir_data2Analyse, folder, 'Results_'+name)
-        heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'cj_thickness', 
-                                              dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
-                                              names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
-                                              save_names= ['unloopAtrCjTh', 'unloopVentCjTh'], 
-                                              saveHM = True)
+        # heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'cj_thickness', 
+        #                                       dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+        #                                       names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+        #                                       save_names= ['unloopAtrCjTh', 'unloopVentCjTh'], 
+        #                                       saveHM = True)
+        _ = fcMeshes.normUnloopedDF(filename = name, thickness = 'cj_thickness', 
+                                  dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+                                  names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+                                  save_names= ['unloopAtrCjTh', 'unloopVentCjTh'], 
+                                  saveHM = True)
         
     for f, folder in zip(count(), r_folders):
         name = folder[2:]
         print(f, name)
         dir_results = os.path.join(dir_data2Analyse, folder, 'Results_'+name)
-        heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'myoc_intBall', 
-                                              dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
-                                              names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
-                                              save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
-                                              saveHM = True)
+        # heatmapsf = fcMeshes.filterUnloopedDF(filename = name, thickness = 'myoc_intBall', 
+        #                                       dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+        #                                       names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+        #                                       save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
+        #                                       saveHM = True)
+        _ = fcMeshes.normUnloopedDF(filename = name, thickness = 'myoc_intBall', 
+                                      dir_results = dir_results, dir_data2Analyse = dir_data2Analyse,
+                                      names= ['unloopAtrCjTh_myocIntBall', 'unloopVentCjTh_myocIntBall'], 
+                                      save_names= ['unloopAtrmyocIntBall', 'unloopVentmyocIntBall'], 
+                                      saveHM = True)
         
-
 #%% Init
 init = True
 # from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes

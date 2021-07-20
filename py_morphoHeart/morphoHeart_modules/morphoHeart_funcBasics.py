@@ -17,6 +17,7 @@ from itertools import count
 import json
 import shutil
 import psutil
+import math
 
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
@@ -823,7 +824,109 @@ def printTime(tic, toc, txt):
     time = toc-tic
     print("\t>> Total time taken to "+txt+" = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
 
+#%% func - spAnalysis 
+def spAnalysis(df_res, file_num):
+    """
+    
 
+    Parameters
+    ----------
+    df_res : TYPE
+        DESCRIPTION.
+    file_num : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    df_resFilled : TYPE
+        DESCRIPTION.
+
+    """
+
+    spAn = 'normal'
+    if 'spaw' in df_res.loc[file_num,'Strain']:
+        spaw_analysis = ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
+        if spaw_analysis:
+            spAn = 'spaw'
+        else: 
+            spAn = 'normal'
+    
+    df_resFilled = df_res.copy()
+    df_resFilled.loc[file_num,'spAnalysis'] = spAn
+    
+    return df_resFilled
+            
+#%% func - selectFromList
+def selectFromList (input_list, text0, text1, cols = 4):
+    
+    objsN = []
+    print('\nMeshes:')
+    for c, obj in zip(count(), input_list):
+        if obj != '':
+            txt = str(c)+'. '+ obj
+        else:
+            txt = obj
+        objsN.append(txt)
+    list_columns(objsN, cols = cols)
+
+    input_obj = input('- Select the '+text0+' you would like to '+text1+'. \n  (Enter individual numbers separated by a comma, to select just some of the meshes or type "all", to save videos of all.) >>>: ').lower()
+
+    if input_obj == 'all':
+        obj_num = list(range(0,len(input_list),1))
+
+    else:
+        obj_num = []
+        comma_split = input_obj.split(',')
+
+        for string in comma_split:
+            if '-' in string:
+                minus_split = string.split('-')
+                #print(minus_split)
+                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
+                    #print(n)
+                    obj_num.append(n)
+            else:
+                obj_num.append(int(string))
+                
+                
+    return obj_num
+
+#%% func - list_columns
+def list_columns(obj, cols=4, columnwise=True, gap=4):
+    """
+    Print the given list in evenly-spaced columns.
+
+    Parameters
+    ----------
+    obj : list
+        The list to be printed.
+    cols : int
+        The number of columns in which the list should be printed.
+    columnwise : bool, default=True
+        If True, the items in the list will be printed column-wise.
+        If False the items in the list will be printed row-wise.
+    gap : int
+        The number of spaces that should separate the longest column
+        item/s from the next column. This is the effective spacing
+        between columns based on the maximum len() of the list items.
+    """
+    # #https://stackoverflow.com/questions/1524126/how-to-print-a-list-more-nicely
+    # for a,b,c,d,e in zip(objsN[::5],objsN[1::5],objsN[2::5],objsN[3::5],objsN[4::5]):
+    #     print ('{:<25}{:<25}{:<25}{:<25}{:<}'.format(a,b,c,d,e))
+
+    sobj = [str(item) for item in obj]
+    if cols > len(sobj): cols = len(sobj)
+    max_len = max([len(item) for item in sobj])
+    if columnwise: cols = int(math.ceil(float(len(sobj)) / float(cols)))
+    plist = [sobj[i: i+cols] for i in range(0, len(sobj), cols)]
+    if columnwise:
+        if not len(plist[-1]) == cols:
+            plist[-1].extend(['']*(len(sobj) - len(plist[-1])))
+        plist = zip(*plist)
+    printer = '\n'.join([''.join([c.ljust(max_len + gap) for c in p]) for p in plist])
+
+    print(printer)
+    
 #%% func - changeDirName
 def changeDirName(filename, dir_o):
     """

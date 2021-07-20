@@ -118,7 +118,7 @@ def plotTitle(file, df_files, additional_title = ''):
     file_num = df_files[df_files['Folder']==file].index.values[0]
     text_file = file[2:]
     text_strain = "\n >> Strain: " + df_files.loc[file_num,'Strain']
-    text_stage = "\n >> Stage: " + df_files.loc[file_num,'Stage']+" hpf"
+    text_stage = "\n >> Stage: " + str(df_files.loc[file_num,'Stage'])+" hpf"
     text_genotype = "\n >> Genotype " + df_files.loc[file_num,'Gene_A']+': '+df_files.loc[file_num,'Genotype_A']
 
     if df_files.loc[file_num,'Gene_B'] != '-':
@@ -294,6 +294,7 @@ def selectMeshes4Video (names, meshes, ranges, filename = '', dir_meshes = '', d
             rangeThBall.append('-')
 
     return names4video, meshes4video, rangeThBall
+
 
 #%% func - list_columns
 def list_columns(obj, cols=4, columnwise=True, gap=4):
