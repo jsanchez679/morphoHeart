@@ -37,15 +37,21 @@ if init:
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
 
     #%% Get directories and file
+    end_name_opt = ['2A', 'R']
+    end_name = end_name_opt[fcBasics.ask4input('Select group of files you want to process: \n\t[0]: 2A \n\t[1]: R >>:', bool)]
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = '2A')
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = end_name)
 
     #%% Plot things for just one heart
     # Get file to process and directories
-    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset)
-    filename = folder[0:-3]; dORv = filename[9:10]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset, end_name = end_name)
+    if end_name == '2A': 
+        filename = folder[0:-3]
+    else: 
+        filename = folder[2:]
+    dORv = filename[9:10]
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
-    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
+    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = end_name)
 
     # Import df_results
     df_res = fcBasics.loadDF(filename = filename, file = 'ResultsDF', dir_results = dir_results)
@@ -56,7 +62,7 @@ if init:
         azimuth = 0
     elevation = df_res.loc[file_num,'ang_Heart']
     
-    #%% Get plot of cardiac jelly thickness heatmap with thickness range given as user input 
+    #% Get plot of cardiac jelly thickness heatmap with thickness range given as user input 
     vtk_in_dir = Path(directories[2])
     vtk_meshes = []
     # Import dictionaries
@@ -72,7 +78,7 @@ if init:
     
     # Change zoom or duration of videos
     zoom = 1; duration = 15
-    ch_zoom = fcBasics.ask4input('Do you want to change the zoom of the meshes within the rotating videos? \n\t[0]: no, keep the default (1)\n\t[1]: yes, please! >>:', bool)
+    ch_zoom = fcBasics.ask4input('Do you want to change the zoom of the meshes within the rotating videos? \n\t[0]: no, keep the default (zoom = 1)\n\t[1]: yes, please! >>:', bool)
     if ch_zoom: 
         print('- IMPORTANT NOTE: Videos in all versions of morphoHeart have been saved with a zoom of 1. \n  Making this change will make the meshes in the new videos look bigger (>1) or smaller (<1), so keep this in mind ;)')
         zoom = fcBasics.ask4input('Enter new zoom value: ', float)
@@ -132,4 +138,5 @@ if init:
 
 #%% Init
 init = True
+
     

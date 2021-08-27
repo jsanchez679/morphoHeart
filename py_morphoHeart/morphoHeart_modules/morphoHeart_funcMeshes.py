@@ -19,6 +19,7 @@ from itertools import count
 
 from skimage import measure#, io
 from scipy.interpolate import splprep, splev, interpn
+from scipy.spatial.distance import cdist
 import pandas as pd
 
 # from datetime import datetime
@@ -29,7 +30,7 @@ c="k"
 font= 'VTK'
 
 # from vedo import *
-from vedo import embedWindow, Plotter, settings, load, Text2D, Mesh, KSpline, Sphere, Plane, Ribbon, Points, merge
+from vedo import embedWindow, Plotter, settings, load, Text2D, Mesh, KSpline, Sphere, Plane, Ribbon, Points, merge, shapes
 from vedo import fitPlane, Spheres, Line, Cylinder, colorMap, Cube, Arrow, Video, vedo2trimesh, trimesh2vedo #, Ellipsoid
 import trimesh
 from time import perf_counter
@@ -40,7 +41,7 @@ import json
 
 #%% Importing morphoHeart packages
 from .morphoHeart_funcBasics import alert, ask4input, loadNPY, saveDF, loadDF #, saveDict
-from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks, plt_s3, drawLine
+from .morphoHeart_funcContours import save_s3, save_s3s, loadStacks, drawLine #, plt_s3
 
 #%% class - NumpyArrayEncoder
 # Definition of class to save dictionary
@@ -3550,7 +3551,7 @@ def createSpheres(dict_pts, pts_list):
     return sph_out
 
 #%% func - createCLs
-def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
+def createCLs(dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc):
     """
     Function that creates the centrelines using the points given as input in the dict_cl
 
@@ -3584,11 +3585,9 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
 
     """
 
-    print('- Creating centreline and associated objects...')
+    print('- Creating centreline(s)...')
     kspl_CL = []
     linLines = []
-    spheres_CL = []
-    spheres_CL_col = []
 
     layerNames = ['Int.Myoc(Cut)', 'Ext.Endo(Cut)']
     sph_genName  = ['sph_Cut4CL_inflow-', 'sph_Cut4CL_outflow-']
@@ -3598,29 +3597,126 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
     for i, dictLayer in enumerate(dict_cl):
         #Get cl points from vmtk
         pts_cl = np.asarray(dictLayer['Points'])
-        sphData_cl = np.asarray(dictLayer['PointData']['MaximumInscribedSphereRadius'])
-
-        #Get inflow and outflow point for that layer
-        sph_inf = sph_genName[0]+layerNames[i]
-        pt2add_inf = dict_pts[sph_inf]['sph_position']
+        # Interpolate points of original centreline
+        pts_int_o = getInterpolatedPts(points=pts_cl, nPoints = 300)
+        # Create kspline with original points
+        kspl_o = KSpline(pts_int_o, res = 300).color('darkorange').legend('CLo_'+layerNames[i]).lw(5)
+        # Create IFT and OFT spheres to show original points position 
+        sph_inf_o = Sphere(pts_int_o[-1], r = 3, c='tomato')
+        sph_outf_o = Sphere(pts_int_o[0], r = 3, c='navy')
+        
+        # Get outflow point for that layer
         sph_outf = sph_genName[1]+layerNames[i]
         pt2add_outf = dict_pts[sph_outf]['sph_position']
-
         pts_withOutf = np.insert(pts_cl, 0, np.transpose(pt2add_outf), axis=0)
-        pts_all = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf), axis=0)
+
+        #Get inflow point for that layer (two options)
+        # - Option 1 (add point obtained when creating mesh for centreline - vmtk)
+        sph_inf = sph_genName[0]+layerNames[i]
+        pt2add_inf = dict_pts[sph_inf]['sph_position']
+        pts_all_opt1 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf), axis=0)
 
         # Interpolate points
-        pts_int = getInterpolatedPts(points=pts_all, nPoints = 300)
+        pts_int_opt1 = getInterpolatedPts(points=pts_all_opt1, nPoints = 300)
         # Create kspline with points
-        kspl = KSpline(pts_int, res = 300)
+        kspl_opt1 = KSpline(pts_int_opt1, res = 300)
+        kspl_opt1.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+        
+        # - Option 2 (add point of extended original centreline)
+        pt_m5 = pts_int_o[-10]
+        pt_m1 = pts_int_o[-1]
+        dir_v = pt_m1-pt_m5
+        pts_ext = np.array([pt_m5, pt_m1, pt_m1+dir_v*2,pt_m1+dir_v*4,pt_m1+dir_v*6,pt_m1+dir_v*8,pt_m1+dir_v*10])
+        # print(pts_ext)
+        xd = np.diff(pts_ext[:,0])
+        yd = np.diff(pts_ext[:,1])
+        zd = np.diff(pts_ext[:,2])
+        dist = np.sqrt(xd**2+yd**2+zd**2)
+        u = np.cumsum(dist)
+        u = np.hstack([[0],u])
+        t = np.linspace(0, u[-1],100)
+        resamp_pts = interpn((u,), pts_ext, t)
+        # print(len(resamp_pts))
+        kspl_resamp = KSpline(resamp_pts, res = 100).lw(5).color('deeppink')
+        
+        pl_centre = dict_planes['pl2CutMesh4CL_inflow']['pl_centre']
+        pl_normal = dict_planes['pl2CutMesh4CL_inflow']['pl_normal']
+        pl_IFT = Plane(pos = pl_centre, normal = pl_normal)
+        kspl_testB = kspl_resamp.clone().cutWithMesh(pl_IFT, invert = True).color('gold')
+        pt2add = kspl_testB.points()[-1]
 
-        kspl.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
-        kspl_CL.append(kspl)
+        pts_all_opt2 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add), axis=0)
 
-        linearLine = Line(pt2add_inf, pt2add_outf, c=color_linLines[i], lw=3)
+        # Interpolate points
+        pts_int_opt2 = getInterpolatedPts(points=pts_all_opt2, nPoints = 300)
+        # Create kspline with points
+        kspl_opt2 = KSpline(pts_int_opt2, res = 300)
+        kspl_opt2.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+        
+        settings.legendSize = .20
+        txt1 = Text2D('Option A', c=c, font = font)
+        txt2 = Text2D('Option B', c=c, font = font)
+        vp = Plotter(N=2, axes=10)
+        vp.show(kspl_opt1, sph_inf_o, sph_outf_o, myoc.alpha(0.01), txt1, at=0)
+        vp.show(kspl_opt2, sph_inf_o, sph_outf_o, myoc.alpha(0.01), txt2,  at=1, interactive=True)
+        
+        #Select the CL to use
+        q_select = ask4input('Select the preferred centreline for processing this heart \n\t-[0]: Option A -left \n\t-[1]: Option B -right >>:',bool )
+        if not q_select:
+            kspl_CL.append(kspl_opt1)
+            pt2add_final = pt2add_inf
+        else: 
+            kspl_CL.append(kspl_opt2)
+            pt2add_final = pt2add
+
+        # Get linear lines
+        linearLine = Line(pt2add_final, pt2add_outf, c=color_linLines[i], lw=3)
         linearLine.legend('linLine_'+layerNames[i])
         linLines.append(linearLine)
 
+        dict_kspl = addKSplines2Dict(kspls = [linearLine, kspl_CL[-1]], info = ['',''], dict_kspl = dict_kspl)
+
+    return kspl_CL, linLines, [kspl_o, sph_inf_o, sph_outf_o], dict_kspl
+
+#%% func -createColouredCL
+def createColouredCL(dict_cl, dict_shapes):
+    """
+    Function that creates the centrelines using the points given as input in the dict_cl
+
+    Parameters
+    ----------
+    dict_cl : dictionary
+        Initialised dictionary with centreline information.
+    dict_shapes : dictionary
+        Initialised dictionary with shapes information.
+
+    Returns
+    -------
+    spheres_CL : Spheres
+        Group of spheres with maximum inscribed centreline radius and positions given by VMTK and color coded by actual sphere radius.
+    spheres_CL_col : Spheres
+        Group of spheres with actual sphere radius in the positions given by VMTK.
+    dict_shapes : dictionary
+        Resulting dictionary with shapes information updated.
+
+    """
+
+    print('- Creating centreline associated objects...')
+
+    spheres_CL = []
+    spheres_CL_col = []
+
+    layerNames = ['Int.Myoc(Cut)', 'Ext.Endo(Cut)']
+
+    # Iterate through layer
+    for i, dictLayer in enumerate(dict_cl):
+        #Get cl points from vmtk
+        pts_cl = np.asarray(dictLayer['Points'])
+
+        #Get cl points from vmtk
+        pts_cl = np.asarray(dictLayer['Points'])
+        
+        sphData_cl = np.asarray(dictLayer['PointData']['MaximumInscribedSphereRadius'])
         #Plot spheres through centreline inside mesh.
         vcols = [colorMap(v, "jet", sphData_cl.max(), sphData_cl.min()) for v in sphData_cl]
         sph_cl = Spheres(pts_cl, c='red', r=sphData_cl).legend('sphs_maxInsSphRad_'+layerNames[i])
@@ -3630,9 +3726,8 @@ def createCLs(dict_cl, dict_pts, dict_kspl, dict_shapes, colors):
         spheres_CL_col.append(sph_cl_colour)
 
         dict_shapes = addShapes2Dict(shapes = [sph_cl, sph_cl_colour], dict_shapes = dict_shapes, radius = [[],sphData_cl])
-        dict_kspl = addKSplines2Dict(kspls = [linearLine, kspl], info = ['',''], dict_kspl = dict_kspl)
 
-    return kspl_CL, linLines, spheres_CL, spheres_CL_col, dict_shapes, dict_kspl
+    return spheres_CL, spheres_CL_col, dict_shapes
 
 #%% func - createCLRibbon
 def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes, clRib_type = 'extDV', plotshow = True):
@@ -4341,6 +4436,7 @@ def getExtCLHighRes(filename, mesh, kspl_ext, kspl_CL, dict_planes, process_plot
     
     add_pts = 50
     try: 
+        # print('-CLHR Opt A')
         kspl_CLnew = kspl_ext.clone()
         # Cut with inflow plane
         n_points_In = -10
@@ -4357,6 +4453,7 @@ def getExtCLHighRes(filename, mesh, kspl_ext, kspl_CL, dict_planes, process_plot
         num_pt_inf = kspl_ext.NPoints()-1
     
     try: 
+        # print('-CLHR Opt B')
         n_points_Out = -10
         for invert in inv:
             kspl_test = kspl_ext.clone().cutWithMesh(Plane(pos=dict_planes['pl2CutMesh_outflow']['pl_centre'], normal=dict_planes['pl2CutMesh_outflow']['pl_normal'], sx=300), invert=invert)
@@ -4406,6 +4503,7 @@ def ksplChamberCut(mesh, kspl_CLnew, dict_shapes, dict_pts, process_plotshow = T
     # Find position within new kspline cut by disc used to cut chambers (num_pt new)
     ksplCL_cut = kspl_CLnew.clone().cutWithMesh(Plane(pos=dict_shapes['cyl2CutChambers_final']['cyl_centre'], normal=dict_shapes['cyl2CutChambers_final']['cyl_axis'], sx=300), invert=True)
     # Find point of new kspline closer to last point of kspline cut
+    # print('-ChCut')
     _, num_pt = findClosestPtGuess(ksplCL_cut.points(), kspl_CLnew.points(),350)
     # print('num_pt',num_pt)
     
@@ -4820,8 +4918,8 @@ def unloopChambers_OLD2(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbo
     #return df_unlooped, kspl_vSurf, kspls_HR, arr_all, arr_valve, dict_pts, dict_shapes, 
     return df_unlooped, kspl_vSurf, kspls_HR, arr_all, spheres_cut, dict_pts, dict_shapes, dict_kspl
 
-#%% func - unloopChambers
-def unloopChambers(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_kspl, 
+#%% func - unloopChambers - Functioning
+def unloopChambersF(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_kspl, 
                    dict_shapes, dict_pts, dict_planes, dir_results, plotshow = False, tol = 0.05):
     """
     Function to unloop the heart and get two dataframes with the data for the unlooped hearts
@@ -4909,7 +5007,6 @@ def unloopChambers(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, pa
     # vp.show(ksplCL_cut, arr_vectPlCut, kspl_vSurf, mesh, sph_cut, at = 0)
     vp.show(mesh, kspl_vent, sph_cut, at=1)
     vp.show(mesh, kspl_atr, sph_cut, at=2, interactive = True)
-    
     
     # NOW UNLOOP EACH CHAMBER
     kspls_HR = [kspl_atr, kspl_vent]
@@ -5096,6 +5193,286 @@ def unloopChambers(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, pa
     #return df_unlooped, kspl_vSurf, kspls_HR, arr_all, arr_valve, dict_pts, dict_shapes, 
     return df_unlooped, kspl_vSurf, kspls_HR, arr_all, spheres_cut, dict_pts, dict_shapes, dict_kspl
 
+#%% func - unloopChambers - TESTING
+def unloopChambers(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_kspl, 
+                   dict_shapes, dict_pts, dict_planes, dir_results, plotshow = True, tol = 0.05, print_txt = False):
+   
+    print('\n\n- Unlooping the heart chambers...')
+    dfs_unlooped = []
+    spheres_zeroDeg = []
+    arr_vectZeroDeg = []
+    
+    if plotshow:
+        plotevery = no_planes // 5
+        print('- Plotting every X number of planes:', plotevery)
+    
+    # KSpline on surface
+    kspl_vSurf = getExtCLonSurf(filename, mesh, kspl_ext, pl_CLRibbon, False)
+    # print(len(kspl_vSurf.points()))
+
+    # Create new extended and cut kspline with higher resolution
+    kspl_CLnew = getExtCLHighRes(filename, mesh, kspl_ext, kspl_CL, dict_planes, False) 
+
+    # # Create kspline for each chamber
+    kspl_vent, kspl_atr, dict_pts, sph_cut =  ksplChamberCut(mesh, kspl_CLnew, dict_shapes, dict_pts, False)
+    # Find position within new kspline cut by disc used to cut chambers (num_pt new)
+    num_pt_AVC = dict_pts['numPt_CLChamberCutHighRes']
+    
+    #Add all ksplines created to dictionary
+    dict_kspl = addKSplines2Dict(kspls = [kspl_ext, kspl_vSurf, kspl_atr, kspl_vent], info = ['','','',''], dict_kspl = dict_kspl)
+    
+    vp = Plotter(N=3, axes=4)
+    vp.show(kspl_CLnew, kspl_vSurf, kspl_ext, mesh, sph_cut, at = 0)
+    # vp.show(ksplCL_cut, arr_vectPlCut, kspl_vSurf, mesh, sph_cut, at = 0)
+    vp.show(mesh, kspl_vent, sph_cut, at=1)
+    vp.show(mesh, kspl_atr, sph_cut, at=2, interactive = True)
+    
+    # colours_sphs = range(no_planes+2)
+    # NOW UNLOOP EACH CHAMBER
+    kspls_HR = [kspl_atr, kspl_vent]
+    texts = ['- Unlooping atrium', '- Unlooping ventricle']
+    names= ['unloopAtr', 'unloopVent']
+
+    for ksp_num, kspl in enumerate(kspls_HR):
+        # Create matrix with all data
+        #0:x, 1:y, 2:z, 3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: parameters
+        matrix_unlooped = np.zeros((len(mesh.points()),9))
+        matrix_unlooped[:,0:3] = mesh.points()
+        matrix_unlooped[:,7] = param[0]
+        matrix_unlooped[:,8] = param[1]
+    
+        # Get normals and centres of planes to cut heart (number of planes given as input+2)
+        pl_normals, pl_centres = getPlaneNormals(no_planes = no_planes, spline_pts = kspl.points())
+        # Give a number between 1-2 to each atrial plane, and between 0-1 to each ventricular plane
+        plane_num = np.linspace(2-ksp_num,1-ksp_num,len(pl_normals))
+        # Initialise index for HR centreline to identify chamber in which planes are cutting and flip plane values for ventricle
+        # - Ventricle
+        if ksp_num == 1:
+            plane_num = plane_num[::-1]
+        # - Atrium
+        else: # ksp_num == 0
+            index_guess = len(kspl_CLnew.points())-1
+        
+        bar = Bar(texts[ksp_num], max=len(pl_normals), suffix = suffix, check_tty=False, hide_cursor=False)
+        # Iterate through planeS
+        for i, normal, centre in zip(count(), pl_normals, pl_centres):
+            # print('\n>-Plane num:', i, 'normal:', normal)
+            # Initialise variables for each chamber
+            if ksp_num == 1:
+                normal = -normal
+            # print('new_normal:', normal)
+            # A. Get cut plane info
+            # - Info Plane (Plane orientation/normal representation)
+            arr_vectPlCut = Arrow(centre, centre+normal*10, s = 0.1, c='orange') #*
+            #arr_vectPlCut_all.append(arr_vectPlCut)  #*
+            
+            # B. Cut high resolution centreline with plane and define chamber
+            ksplCL_cut = kspl_CLnew.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True).lw(5).color('tomato')
+            # Find point of centreline closer to last point of kspline that was cut by plane (ksplCL_cut)
+            # If kspl_CLnew wasn't cut, then initialise it with last index of cl
+            if len(ksplCL_cut.points()) == 0:
+                pts_o = [kspl_CLnew.points()[-1]] #???
+                # print('IF: length of cut centreline: ',len(pts_o))
+            # Else, initialise it with all the points of the cut cl
+            else: 
+                pts_o = ksplCL_cut.points(); 
+                # print('ELSE: length of cut centreline: ',len(pts_o))
+            
+            # If the ventricle is the one being unlooped, then initialise index as length of centreline
+            if ksp_num == 1:
+                index_guess= len(ksplCL_cut.points())
+            # print('index_guess:',index_guess)
+            
+            #Find closest point between the pts_o and the high resolution centreline, initialising it using the index_guess prev defined
+            pt_out, pt_num = findClosestPtGuess(pts_o, kspl_CLnew.points(), index_guess)
+            index_guess = pt_num
+            # print(index_guess)
+            
+            if pt_num < num_pt_AVC:
+                chamber = 'ventricle'
+            else: 
+                chamber = 'atrium'
+            
+            # C. Cut surface centreline (kspl_vSurf) with plane and identify 0 deg angle point
+            # Find point of surf_centreline cut by plane (ksplCL_vSurf_cut)
+            kspl_vSurf_split_TF = []
+            try: 
+                kspl_vSurf_cut_T = kspl_vSurf.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=True).lw(5).color('magenta')
+                kspl_vSurf_split_T = kspl_vSurf_cut_T.splitByConnectivity()
+                kspl_vSurf_split_TF.append(kspl_vSurf_split_T)
+                # print('lenT',len(kspl_vSurf_split_T))
+            except: 
+                pass
+            try: 
+                kspl_vSurf_cut_F = kspl_vSurf.clone().cutWithMesh(Plane(pos=centre, normal=normal, sx=300), invert=False).lw(5).color('deepskyblue')
+                kspl_vSurf_split_F = kspl_vSurf_cut_F.splitByConnectivity()
+                kspl_vSurf_split_TF.append(kspl_vSurf_split_F)
+                # print('lenF',len(kspl_vSurf_split_F))
+            except: 
+                pass
+            # print('lenTF',len(kspl_vSurf_split_TF))
+
+            # Initilise index_vSurf_cut when i == 0 for each chamber
+            # print('>>>>>>>> i:', i)
+            if i == 0:
+                if ksp_num == 0:
+                    print('IN_ATRIUM')
+                    index_vSurf_cut = len(kspl_vSurf.points())-1
+                    sph_pt_uniq = Sphere(pos=kspl_vSurf.points()[index_vSurf_cut], r=3,c='hotpink')
+                    plane = Plane(pos=centre, normal=normal, sx=300, alpha=0.5).color('medium orchid')
+                    tol2use = 0.01
+                elif ksp_num == 1: 
+                    print('IN_VENTRICLE')
+                    index_vSurf_cut = 0
+                    tol2use = tol
+            else: 
+                tol2use = tol
+                    
+            # Get all points of kspl_vSurf_cut in plane
+            colors = ['orangered','gold', 'olive','lime', 'teal', 'aqua', 'dodgerblue', 'navy', 'indigo', 'purple', 'hotpink','chocolate']
+            oo = 0
+            kspl_split_plane = []
+            pts_in_plane = []
+            for jj, split_TF in enumerate(kspl_vSurf_split_TF):
+                for kk, kspl_split in  enumerate(split_TF):
+                    kspl_split_plane.append(kspl_split.color(colors[oo]).lw(2))
+                    oo+=1
+                    pts_split = [kspl_split.points()[0], kspl_split.points()[-1]]
+                    for pt in pts_split: 
+                        if isPointinInPlane(normal, centre, pt, tol = 0.001):
+                            pts_in_plane.append(pt)
+
+            pts_in_plane = np.unique(np.array(pts_in_plane), axis = 0)
+            # print('\npts_in_plane:', pts_in_plane, '- shape:', pts_in_plane.shape)
+            # indexes_min_dist = []
+            if print_txt: 
+                print('index_vSurf_cut_in:', index_vSurf_cut)
+            
+            # One or more points in plane
+            if pts_in_plane.shape[0] > 0:
+                # Initialised previous index
+                if isinstance(index_vSurf_cut, int) or isinstance(index_vSurf_cut, np.int64):
+                    sph_pt_uniq, index_vSurf_cut = find_sph_pt_uniq(pts_in_plane, kspl_vSurf, index_vSurf_cut = index_vSurf_cut)
+
+                # Not initilised previous index
+                else: 
+                    if print_txt: 
+                        print('aja! - Not initilised previous index!')
+                    sphs_in_plane = []
+                    for pp, pt in enumerate(pts_in_plane):
+                        sph_pt = Sphere(pos = pt, c=colors[pp], r=3)
+                        sph_pt.name = f"No.{pp}"
+                        sphs_in_plane.append(sph_pt)
+                    
+                    ind_sph_sel = []
+                    plane_new = Plane(pos=centre, normal=normal, sx=300, alpha=0.5).color('light steel blue')
+                    def select_sph_in_plane(evt):
+                        if not evt.actor: return
+                        if isinstance(evt.actor, shapes.Sphere): 
+                            sil = evt.actor.silhouette().lineWidth(6).c('red5')
+                            print("You clicked: Sphere "+evt.actor.name)
+                            plt.remove(silcont.pop()).add(sil)
+                            silcont.append(sil)
+                            ind_sph_sel.append(evt.actor.name.split('.')[-1])
+                
+                    silcont = [None]
+                    
+                    txt_sel = Text2D('> Select best point cutting plane...', c=c, font=font)
+                    plt = Plotter(axes=1, bg='gainsboro')
+                    plt.addCallback('mouse click', select_sph_in_plane)
+                    plt.show(mesh, kspl, plane_new, plane, kspl_vSurf, sphs_in_plane, sph_pt_uniq, txt_sel, zoom=1.2).close()
+                    # print('ind_sph_sel:', ind_sph_sel)
+                    if len(ind_sph_sel) > 0:
+                        pts_in_plane_us = np.array([pts_in_plane[int(ind_sph_sel[-1])]])
+                        sph_pt_uniq, index_vSurf_cut = find_sph_pt_uniq(pts_in_plane_us, kspl_vSurf, index_vSurf_cut = 0)
+                    else: 
+                        index_vSurf_cut = 'empty_notSelected'
+            
+            # No points in plane
+            else: 
+                if print_txt: 
+                    print('aja! - No points in plane')
+                index_vSurf_cut = 'empty2'
+            
+            plane = Plane(pos=centre, normal=normal, sx=300, alpha=0.5).color('medium orchid')
+            
+            if print_txt: 
+                print('FINAL: index_vSurf_cut_out:', index_vSurf_cut, '- type:', type(index_vSurf_cut))
+            
+            if not isinstance(index_vSurf_cut, str):
+                spheres_zeroDeg.append(sph_pt_uniq)
+                # Vector from centre to cl_surface point being cut by plane
+                v_zero = unit_vector(kspl_vSurf.points()[index_vSurf_cut] - centre)
+                arr_vectZeroDeg.append(Arrow(centre, kspl_vSurf.points()[index_vSurf_cut], s = 0.1, c='dodgerblue'))
+                
+                # D. Get points of mesh at plane
+                d_points = np.absolute(np.dot(np.subtract(matrix_unlooped[:,0:3],np.asarray(centre)),np.asarray(normal)))
+                # Find the indexes of the points that have not been yet taken, are at the plane and are in the 
+                # chamber being analysed
+                index_ptsAtPlane = np.where((d_points <= tol2use) & (matrix_unlooped[:,3] == 0) & (df_AtrVent == chamber))
+                # print(d_points.min(), d_points.max(),'-lenptsatplane:',len(index_ptsAtPlane[0]))
+                # Define new matrix just with the points on plane
+                new_matrix = matrix_unlooped[index_ptsAtPlane,:][0]
+                # - Get points of mesh that are on plane, centered on centreline point
+                ptsC = np.subtract(new_matrix[:,0:3],np.asarray(centre))
+                # - Get the radius of those points
+                radius = [np.linalg.norm(x) for x in ptsC]
+                
+                # E. Find direction of point with respect to plane that includes central point, vC and the normal of the cutting plane
+                # Vector normal to plane normal and v_zero (vector defined from centre of plane to cut-pt in centreline surface)
+                normal_divLR = np.cross(normal, v_zero)
+                # Define using these vectors if the points are all lying in the same side or not (1, -1)
+                lORr = np.sign(np.dot(ptsC, np.asarray(normal_divLR)))
+    
+                # F. Get angle of points in that plane using v_zero
+                av = np.dot(ptsC,v_zero)
+                cosTheta = np.divide(av, radius) # vectors of magnitude one
+                theta = np.arccos(cosTheta)*180/np.pi
+                theta_corr = np.multiply(lORr, theta)
+                
+                # - Save all obtained values in matrix_unlooped
+                for num, index in enumerate(index_ptsAtPlane[0]):
+                    #3:taken, 4:z_plane, 5:theta, 6: radius, 7-8: param
+                    matrix_unlooped[index,3] = 1
+                    matrix_unlooped[index,4] = plane_num[i]
+                    matrix_unlooped[index,5] = theta_corr[num]
+                    matrix_unlooped[index,6] = radius[num]
+            
+                # Plot stuff every X planes
+                if plotshow:
+                    if i % plotevery==0:
+                        text = filename+'\n\n >> Unlooping the heart (chamber: '+chamber+') - Plane No: '+str(i)+'/'+str(no_planes+2)
+                        txt = Text2D(text, c=c, font=font)
+                        plane = Plane(pos=centre, normal=normal, sx=300, alpha=0.5).color('medium orchid')
+                        sph_centre = Sphere(centre, r=2, c='red')
+                        arr_centre2vzero = Arrow(centre, kspl_vSurf.points()[index_vSurf_cut], s = 0.1, c='light green')
+                        # kspl_vSurf_cut_all.append(kspl_vSurf_cut)
+                        vp= Plotter(N=1, axes=13)
+                        vp.show(mesh, kspl, plane, arr_vectPlCut, kspl_vSurf, kspl_split_plane, sph_pt_uniq, sph_centre, arr_centre2vzero, txt, at=0, interactive=True)
+            
+            else: 
+                print('-Plane No.', i, ' - PASS!')
+
+            bar.next()
+        
+        # Save shapes 
+        dict_shapes = addShapes2Dict (shapes = [kspl_vSurf, kspl_CLnew, kspl_atr, kspl_vent], dict_shapes = dict_shapes, radius = [[],[],[],[]], print_txt = False)
+        
+        df_unlooped = pd.DataFrame(matrix_unlooped, columns=['x','y','z','taken','z_plane','theta','radius','cj_thickness', 'myoc_intBall'])
+        df_unlooped = df_unlooped[df_unlooped['taken']==1]
+        df_unlooped_f = df_unlooped.drop(['x', 'y','z'], axis=1)
+        df_unlooped_f.astype({'taken': 'bool','z_plane':'float16','theta':'float16','radius':'float16','cj_thickness':'float16','myoc_intBall':'float16' }).dtypes
+        print('\n')
+        saveDF(filename = filename, df2save = df_unlooped_f, df_name = 'df_'+names[ksp_num]+param_name,
+                        dir2save = dir_results)
+        dfs_unlooped.append(df_unlooped_f)
+        
+        bar.finish()
+        return_list = [spheres_zeroDeg, arr_vectZeroDeg]
+        
+    return return_list,  kspl_vSurf, dfs_unlooped
+            
+            
 #%% func - unloopChambers_OLD
 def unloopChambers_OLD(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon, param, param_name, df_AtrVent, dict_kspl, 
                    dict_shapes, dict_pts, dict_planes, dir_results, plotshow = False, tol = 0.05):
@@ -5445,6 +5822,7 @@ def unloopChambers_OLD(filename, mesh, kspl_CL, kspl_ext, no_planes, pl_CLRibbon
         
     return df_unlooped, kspl_vSurf, kspls_HR, arr_all, arr_valve, dict_pts, dict_shapes, dict_kspl
 
+
 #%% func - heatmapUnlooped
 def heatmapUnlooped (filename, val2unloop, dataname, dir_results, dirImgs, names, saveHM = True, savePlot = True, default = False):
     """
@@ -5658,7 +6036,7 @@ def filterUnloopedDF(filename, thickness, dir_results, dir_data2Analyse, names, 
         
     return heatmaps
 
-#%% normUnloopedDF
+#%% func - normUnloopedDF
 def normUnloopedDF(filename, thickness, dir_results, dir_data2Analyse, names, save_names, saveHM = True):
     """
     #https://stackoverflow.com/questions/38940946/average-of-multiple-dataframes-with-the-same-columns-and-indices
@@ -5866,30 +6244,42 @@ def findClosestPt(pt_o, pts):
 
     """
 
-    min_dist = 9999999
-    for n in range(len(pts)):
-        pt = pts[n]
-        squared_dist = np.sum((pt-pt_o)**2, axis=0)
+    minima_distancia = 9999999
+    # for n in range(len(pts)):
+    for index, value in enumerate(pts):
+        # pt = pts[n]
+        squared_dist = np.sum((value-pt_o)**2, axis=0)
         dist = np.sqrt(squared_dist)
 
-        if dist < min_dist:
-            min_dist = dist
-            pt_out = pt
-            num_pt = n
-
+        if dist < minima_distancia:
+            minima_distancia = dist
+            pt_out = value
+            num_pt = index
+        print(f"num:{minima_distancia}")
+        if dist==0:
+            print(pt_o)
+            print(value)
+            print(squared_dist)
+            print(dist)
+            input()
+            
+    print(f"Distancia:{dist}")
+   
+    if not num_pt:
+        raise Exception("no num")
     return pt_out, num_pt
 
 #%% func - findClosestPtGuess
-def findClosestPtGuess(pts_o, pts, index_guess):
+def findClosestPtGuess(pts_cut, pts, index_guess):
     """
-    Function that finds the closest point of the centreline where a plane cuts it with a point given as initial guess
+    Function that finds the closest point of the centreline where a plane cuts given a point index as an initial guess
 
     Parameters
     ----------
-    pts_o : array of coordinates
+    pts_cut : array of coordinates
         np array with the x,y,z coordinates of all the points that make the cut section of the kspline
     pts : array of coordinates
-        Array with x,y,z coordinates of the centreline points
+        Array with x,y,z coordinates of ALL the centreline points
     index_guess : int
         Index of the point guessed to be closest to new closest point
 
@@ -5901,22 +6291,24 @@ def findClosestPtGuess(pts_o, pts, index_guess):
         Index of the centreline point closer to the plane that cuts the kspline.
 
     """
-    # First find the closes point of the input pts_o to pt_guess = pts[index]
+    # First find the closes point of the input pts_cut to pt_guess = pts[index]
     pt_guess = pts[index_guess]
     min_dist_guess = 999999999999999999
-    for k in range(len(pts_o)):
-        pt = pts_o[k]
-        squared_dist_guess = np.sum((pt-pt_guess)**2, axis=0)
+    for pt_1 in pts_cut:
+        squared_dist_guess = np.sum((pt_1-pt_guess)**2, axis=0)
         dist_guess = np.sqrt(squared_dist_guess)
 
         if dist_guess < min_dist_guess:
             min_dist_guess = dist_guess
-            pt_o = pt
+            pt_o = pt_1
+            
+    # print('>> pt_o:', pt_o,'- pt_guess:', pt_guess, '- min_dist_guess:', min_dist_guess)
     
-    # Find the closest point of all the centreline points closest to pt_o
+    # Now that we know the coordinates (pt_o) of the cut centreline that is cut by the plane and closest to the pt_guess then
+    # find the closest point of all the centreline points closest to pt_o and get also its index
     min_dist = 999999999999999999
-    for n in range(len(pts)):
-        pt = pts[n]
+    for n, pt in enumerate(pts):#range(len(pts)):
+        # pt = pts[n]
         squared_dist = np.sum((pt-pt_o)**2, axis=0)
         dist = np.sqrt(squared_dist)
 
@@ -5924,9 +6316,22 @@ def findClosestPtGuess(pts_o, pts, index_guess):
             min_dist = dist
             pt_out = pt
             num_pt = n
+    
+    # print('>> pt_out:', pt_out,'- num_pt:', num_pt, '- min_dist:', min_dist)
+    # input()
 
     return pt_out, num_pt
 
+#%% func - isPointinInPlane
+def isPointinInPlane(normal, centre, point, tol=0.001):
+    # print('tol:',tol)
+    diff_points = point - centre
+    # print('dot:',np.dot(diff_points,normal))
+    if abs(np.dot(diff_points,normal)) < tol:
+        return True
+    else: 
+        return False
+    
 #%% func - findDist
 def findDist(pt1, pt2):
     """
@@ -5950,6 +6355,27 @@ def findDist(pt1, pt2):
 
     return dist
 
+#%% func - find_sph_pt_uniq
+def find_sph_pt_uniq(pts_in_plane, kspl_vSurf, index_vSurf_cut = 0):
+    
+    indexes_min_dist = []
+    dists = cdist(pts_in_plane,kspl_vSurf.points())
+    print('shape:', dists.shape)
+    min_dists = np.amin(dists, axis=1)
+    for x in range(pts_in_plane.shape[0]):
+        where = np.where(dists[x,:] == min_dists[x])
+        indexes_min_dist.append(where[0][0])
+    print('indexes_min_dist:', indexes_min_dist)
+    diff_indexes = abs(np.array(indexes_min_dist) - index_vSurf_cut)
+    # print('diff_indexes:', diff_indexes)
+    ind_min_diff_indexes = np.where(diff_indexes == np.min(diff_indexes))[0][0]
+    index_vSurf_cut = indexes_min_dist[ind_min_diff_indexes]
+    print('index_vSurf_cut_out:', index_vSurf_cut, '- type:', type(index_vSurf_cut))
+    pt_uniq = kspl_vSurf.points()[index_vSurf_cut]
+    sph_pt_uniq = Sphere(pos=pt_uniq, r=3,c='hotpink')
+    
+    return sph_pt_uniq, index_vSurf_cut
+    
 #%% func - getPointsAtPlane
 def getPointsAtPlane (points, pl_normal, pl_centre, tol=2, addData = []):
     """

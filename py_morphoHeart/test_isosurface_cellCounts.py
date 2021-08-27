@@ -29,3 +29,5 @@ vp = Plotter(N=3, axes = 7)
 vp.show(em1, at = 0)
 vp.show(em2, at = 1)
 vp.show(em0, at=2, interactive = True)
+
+

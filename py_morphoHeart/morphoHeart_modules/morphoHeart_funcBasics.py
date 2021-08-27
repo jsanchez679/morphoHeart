@@ -385,7 +385,7 @@ def loadDicts(filename, dicts_name, directories, print_txt = True):
     return dicts_out
 
 #%% func - selectFile
-def selectFile (df_dataset):
+def selectFile (df_dataset, end_name = '2A'):
     """
     Function that allows the user to select the file to be processed, printing the names of all the folders in the
     input dataframe and prompting the user to input the file number to process.
@@ -407,7 +407,11 @@ def selectFile (df_dataset):
     """
 
     df_datasetTemp = df_dataset.copy()
-    df_datasetTemp['Folder_2A'] = df_dataset['Folder'].str.slice(0,18)
+    if end_name == '2A':
+        df_datasetTemp['Folder'] = df_dataset['Folder'].str.slice(0,18)
+    elif end_name == 'R':
+        df_datasetTemp['Folder'] = df_dataset['Folder'].str.slice(0,20)
+        
     df_datasetTemp['Gene A'] = df_dataset['Gene_A']+': '+df_dataset['Genotype_A']
     df_datasetTemp['Gene B'] = df_dataset['Gene_B']+': '+df_dataset['Genotype_B']
 
@@ -417,9 +421,9 @@ def selectFile (df_dataset):
     df_datasetTemp = df_datasetTemp.sort_values(by=['Stage','Strain','Gene_A','Genotype_A','Gene_B','Genotype_B'],
                                                 ascending = (True, True, True, False, True, False))
     if not blind: 
-        print(df_datasetTemp[['Folder_2A','Strain','Stage','Gene A','Gene B']])
+        print(df_datasetTemp[['Folder','Strain','Stage','Gene A','Gene B']])
     else: 
-        print(df_datasetTemp[['Folder_2A','Strain','Stage']])
+        print(df_datasetTemp[['Folder','Strain','Stage']])
 
     list_folder = df_dataset['Folder'].tolist()
 

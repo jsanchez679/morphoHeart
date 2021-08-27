@@ -12,7 +12,7 @@ called txt_npy within the main folder of the heart being processed.
 IMPORTANT NOTE: 
 If for any reason, the code breaks while you are closing the contours, and you get an error, don't panic!
 Go to the line at the end of the code called (#%% *** Save the stack you have processed so far) and run it, to make sure 
-you save all the changes you have made to your stack, and don't loose all your time. tHEN, try re-running the cell 
+you save all the changes you have made to your stack, and don't loose all your time. Then, try re-running the cell 
 ii. CLOSE CONTOURS. 
 If you still get the error, send me an email, a message through slack/gmail chat, or create an issue in gitHub 
 with the error you are getting, and I can try and guide you through the process of solving it. Before closing Spyder, 
@@ -59,7 +59,7 @@ if init:
 
     #%% Set-up variables to start running code 
     initial_runABC = True; initial_runD = True
-    q_ABC_done = False; q_fullDict = False
+    q_ABC_done = False; q_fullDict = False; q_happy = False
     n_rows = fcBasics.ask4input('Enter the number of rows you want to see when plotting slices with contours in grid \n\t (Note: if running in analysis computer the recommended is max 5):', int)
     
     #%% SELECT FILE AND GET METADATA 
@@ -183,10 +183,13 @@ if init:
                         heartLayer2S = fcCont.smallDict2Save(heartLayer)
                         fcBasics.saveDict(filename, heartLayer2S , "heartlayer2S_"+channel, directories[0])
                         _, _, s3_all = fcCont.save_s3s_fromDict(filename = filename, chStr = channel, stack_shape = stack_shape,
-                                                         heartLayer = heartLayer, dir_txtNnpy = directories[1], save = True)
+                                                          heartLayer = heartLayer, dir_txtNnpy = directories[1], save = True)
                         #Find surfaces in 3D for channel analysed
                         mesh = createLayerMesh(filename = filename, s3 = s3_all, resolution = res, layer = 'Channel '+str(channel),
                                                     name = 'Channel '+str(channel), colour = 'cornflowerblue', alpha = 1, plotshow=True)
+                        q_happy = fcBasics.ask4input('Are you happy with the segmented mesh? \n\t[0]: no, I would like to clean some slices and/or make some changes to the dictionary \n\t[1]: yes, this channel is finished! >>: ', bool)
+                    if q_fullDict and not q_happy:
+                        q_fullDict = False
                     tocD = perf_counter()
                     fcBasics.printTime(ticD, tocD, 'select contours')
     else:

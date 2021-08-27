@@ -41,20 +41,24 @@ if init:
 
     #%% Get main directories (check which ones are actually used)
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    dir_R_All = os.path.join(dir_data2Analyse,'R_All')
+    dir_R_All = os.path.join(dir_data2Analyse,'R_All', 'df_meas')
 
     #%% Get directories
     all_CSVs = glob.glob(dir_R_All + "/*.csv")
     df_all = pd.concat((pd.read_csv(f) for f in all_CSVs))
     df_all['Looping_Ratio_Myoc'] = df_all['Length_CL_Int.Myoc(Cut)']/ df_all['linLine_Int.Myoc(Cut)']
     df_all['Looping_Ratio_Endo'] = df_all['Length_CL_Ext.Endo(Cut)']/ df_all['linLine_Ext.Endo(Cut)']
-
+    df_all['Ratio_VolCJoVolExtMyoc'] = df_all['Vol_CJ']/ df_all['Vol_Ext.Myoc']
+    df_all_o = df_all.copy()
+    #%%
     #%% Plot results
-    variables, ylabels = fcAn.def_variables('morphoHeart_D_AnalyseData')
+    variables, ylabels = fcAn.def_variables('morphoHeart_D')
     vars2plot, labels2plot = fcPlot.getVarsANDLabels(variables, ylabels)
     
     #%%
     title = fcBasics.ask4input('Title: ', str, keep = True)
+    #%%
+    df_all = df_all[df_all['Strain'].str.startswith('hapln1a prom241/+')]
     #%%
     # Set up the matplotlib figure
     num_vars = len(vars2plot)
@@ -121,58 +125,58 @@ if init:
     fig, axes = plt.subplots(1, 4, figsize=(10,2.5), dpi=100, sharex=True, sharey=True)
     colors = ['tab:blue', 'tab:orange', 'tab:pink', 'tab:green', 'tab:olive']
 
-    for i, (ax, Class) in enumerate(zip(axes.flatten(), df_filtAtr.Class.unique())):
-        print(Class)
-        x = df_filtAtr.loc[df_filtAtr.Class==Class, 'Thickness']
-        ax.hist(x, alpha=0.7, bins=100, density=True, stacked=True, label=str(Class), color=colors[i])
-        ax.set_title(Class)
+    # for i, (ax, Class) in enumerate(zip(axes.flatten(), df_filtAtr.Class.unique())):
+    #     print(Class)
+    #     x = df_filtAtr.loc[df_filtAtr.Class==Class, 'Thickness']
+    #     ax.hist(x, alpha=0.7, bins=100, density=True, stacked=True, label=str(Class), color=colors[i])
+    #     ax.set_title(Class)
 
-    title = filename[0] + ' - Probability Histogram of Thickness'
-    plt.suptitle(title, y=1.05, size=12)
-    ax.set_xlim(-5, 25);
-    ax.set_ylim(0, 0.6);
-    plt.tight_layout();
+    # title = filename[0] + ' - Probability Histogram of Thickness'
+    # plt.suptitle(title, y=1.05, size=12)
+    # ax.set_xlim(-5, 25);
+    # ax.set_ylim(0, 0.6);
+    # plt.tight_layout();
 
-#%% https://stackoverflow.com/questions/38650895/how-do-i-add-multiple-markers-to-a-stripplot-in-seaborn
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-tips = sns.load_dataset("tips")
-
-plt.clf()
-thu_fri_sat = tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
-colors = ['blue','yellow','green','red']
-m = sns.stripplot('size','total_bill',hue='day',
-                  marker='o',data=thu_fri_sat, jitter=0.1, 
-                  palette=sns.xkcd_palette(colors),
-                  dodge=True,linewidth=2,edgecolor="gray")
-
-sun = tips[tips['day']=='Sun']
-n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
-                  marker='^',data=sun, jitter=0.1, 
-                  dodge=True,linewidth=0)
-handles, labels = n.get_legend_handles_labels()
-n.legend(handles[:4], labels[:4])
-
-    #%%
-    sns.set_style("white")
-    A_vL = df_filtAtr.loc[df_filtAtr.Class=='A_vL', 'Thickness']
-    A_vR = df_filtAtr.loc[df_filtAtr.Class=='A_vR', 'Thickness']
-    A_dL = df_filtAtr.loc[df_filtAtr.Class=='A_dL', 'Thickness']
-    A_dR = df_filtAtr.loc[df_filtAtr.Class=='A_dR', 'Thickness']
-
-    # Plot
-    kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
-
-    plt.figure(figsize=(10,7), dpi= 80)
-    sns.distplot(A_vL, color="dodgerblue", label="A_vL", **kwargs)
-    sns.distplot(A_vR, color="orange", label="A_vR", **kwargs)
-    sns.distplot(A_dL, color="deeppink", label="A_dL", **kwargs)
-    sns.distplot(A_dR, color="lime", label="A_dR", **kwargs)
-    plt.xlim(-5,25)
-    plt.ylim(0,0.6)
-    plt.suptitle(title, y=0.95, size=12)
-    plt.legend();
+    #%% https://stackoverflow.com/questions/38650895/how-do-i-add-multiple-markers-to-a-stripplot-in-seaborn
+    # import seaborn as sns
+    # import matplotlib.pyplot as plt
+    
+    # tips = sns.load_dataset("tips")
+    
+    # plt.clf()
+    # thu_fri_sat = tips[(tips['day']=='Thur') | (tips['day']=='Fri') | (tips['day']=='Sat')]
+    # colors = ['blue','yellow','green','red']
+    # m = sns.stripplot('size','total_bill',hue='day',
+    #                   marker='o',data=thu_fri_sat, jitter=0.1, 
+    #                   palette=sns.xkcd_palette(colors),
+    #                   dodge=True,linewidth=2,edgecolor="gray")
+    
+    # sun = tips[tips['day']=='Sun']
+    # n = sns.stripplot('size','total_bill',color='red',hue='day',alpha=0.5,
+    #                   marker='^',data=sun, jitter=0.1, 
+    #                   dodge=True,linewidth=0)
+    # handles, labels = n.get_legend_handles_labels()
+    # n.legend(handles[:4], labels[:4])
+    
+    #     #%%
+    #     sns.set_style("white")
+    #     A_vL = df_filtAtr.loc[df_filtAtr.Class=='A_vL', 'Thickness']
+    #     A_vR = df_filtAtr.loc[df_filtAtr.Class=='A_vR', 'Thickness']
+    #     A_dL = df_filtAtr.loc[df_filtAtr.Class=='A_dL', 'Thickness']
+    #     A_dR = df_filtAtr.loc[df_filtAtr.Class=='A_dR', 'Thickness']
+    
+    #     # Plot
+    #     kwargs = dict(hist_kws={'alpha':.6}, kde_kws={'linewidth':2})
+    
+    #     plt.figure(figsize=(10,7), dpi= 80)
+    #     sns.distplot(A_vL, color="dodgerblue", label="A_vL", **kwargs)
+    #     sns.distplot(A_vR, color="orange", label="A_vR", **kwargs)
+    #     sns.distplot(A_dL, color="deeppink", label="A_dL", **kwargs)
+    #     sns.distplot(A_dR, color="lime", label="A_dR", **kwargs)
+    #     plt.xlim(-5,25)
+    #     plt.ylim(0,0.6)
+    #     plt.suptitle(title, y=0.95, size=12)
+    #     plt.legend();
 
 init = True
     #%%
