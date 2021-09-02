@@ -9,7 +9,7 @@ Version: Nov, 2020
 #%% Importing python packages
 import os
 import numpy as np
-from sklearn.neighbors import KernelDensity
+# from sklearn.neighbors import KernelDensity
 # from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -18,8 +18,8 @@ import matplotlib as mpl
 
 import pandas as pd
 import seaborn as sns
-from itertools import count
-from progress.bar import Bar
+from itertools import count, combinations
+# from progress.bar import Bar
 import math
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US')  
@@ -366,7 +366,7 @@ def filterR_Autom (df_input, filters, group, col_out = ''):
 
 #%% func - printDFINfo
 def printDFINfo(df2plot, q_return = False, df_type = 'meas'):
-    print('>> Information found in the imported dataframe:')
+    print('\n>> Information found in the imported dataframe:')
     if df_type != 'kde':
         genot = sorted(df2plot.GenotypeAll.unique(), reverse = True)
     else: 
@@ -463,15 +463,15 @@ def def_variables(plot_type):
                        'Vol_Atr.Tissue' : 'Atrial Tissue Volume [um$^3$]', 
                        'Vol_Vent.Tissue' : 'Ventricular Tissue Volume [um$^3$]',
                        
-                       'Ratio_VolMyoc2VolExtMyoc' : 'Myocardial Volume / Heart Volume', 
-                       'Ratio_VolEndo2VolExtMyoc' : 'Endocardial Volume / Heart Volume',
-                       'Ratio_VolCJ2VolExtMyoc' : 'Cardiac Jelly Volume / Heart Volume', 
-                       'Ratio_VolLumen2VolExtMyoc' : 'Lumen Volume / Heart Volume',
+                       'Ratio_VolMyoc2VolExtMyoc' : 'Myocardial Volume / \nHeart Volume', 
+                       'Ratio_VolEndo2VolExtMyoc' : 'Endocardial Volume / \nHeart Volume',
+                       'Ratio_VolCJ2VolExtMyoc' : 'Cardiac Jelly Volume / \nHeart Volume', 
+                       'Ratio_VolLumen2VolExtMyoc' : 'Lumen Volume / \nHeart Volume',
                        
-                       'Ratio_VolMyoc2VolTissue' : 'Myocardial Volume / Tissue Volume', 
-                       'Ratio_VolEndo2VolTissue' : 'Endocardial Volume / Tissue Volume',
-                       'Ratio_VolCJ2VolTissue' : 'Cardiac Jelly Volume / Tissue Volume', 
-                       'Ratio_VolLumen2VolTissue' : 'Lumen Volume / Tissue Volume'}
+                       'Ratio_VolMyoc2VolTissue' : 'Myocardial Volume / \nTissue Volume', 
+                       'Ratio_VolEndo2VolTissue' : 'Endocardial Volume / \nTissue Volume',
+                       'Ratio_VolCJ2VolTissue' : 'Cardiac Jelly Volume / \nTissue Volume', 
+                       'Ratio_VolLumen2VolTissue' : 'Lumen Volume / \nTissue Volume'}
         
     
     elif plot_type == 'bar_plots':
@@ -545,7 +545,7 @@ def plot_groups():
                  'Angles' :
                      {'title': 'Angles', 
                       'vars' : ['ang_Atr', 'ang_Vent', 'ang_BtwChambers'],
-                      'n_cols': 3, 'yticks_lab':'d.'},
+                      'n_cols': 3, 'yticks_lab':'d. - 0'},
                  'Volume Percentages' : 
                      {'title': 'Heart Composition', 
                       'vars' : ['Ratio_VolMyoc2VolExtMyoc', 'Ratio_VolEndo2VolExtMyoc', 'Ratio_VolCJ2VolExtMyoc', 'Ratio_VolLumen2VolExtMyoc'],
@@ -806,16 +806,616 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
     df4plot_pct_change = pd.concat(df_pct_change)
     
     return df_pct_change, df4plot_pct_change
+
+#%% func - meanHM
+def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save):
+    
+    # Get minimum and max values for each group of heatmaps 
+    # (_o: originals, _W: normalised using whole heart, _C: normalised per chamber)
+    normalise, perChamber, norm_type = opt_norm
+    min_vals_o = []; max_vals_o = []; min_vals_N = []; max_vals_N = []
+    for group in groups:
+        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+        print(folders)
+        # print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
+        if normalise: 
+            [dfs_o, dfs_hmN], num, _  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
+            min_vals_N.append(df_hmW.min().min())
+            max_vals_N.append(df_hmW.max().max())
+            
+        else: 
+            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+
+        df_of = concatHeatmaps(dfs_o, operation = 'mean')
+        min_vals_o.append(df_of.min().min())
+        max_vals_o.append(df_of.max().max())
+        
+    min_o = math.floor(min(min_vals_o))
+    max_o = math.ceil(max(max_vals_o))
+    if normalise: 
+        max_N = math.ceil(max(max_vals_N))
+
+    for group in groups:
+        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
+        print('\t - Maximum value_o:', max_o)
+        if normalise: 
+            print('\t - Maximum value_N:', max_N)
+            [dfs_o, dfs_hmN], num, norm_vals  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
+            norm_vals = ['{:.2f}'.format(val) for val in norm_vals]
+            print('\t - Normalisation: ', norm_type, ' - Norm_val:', norm_vals)
+        else: 
+            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+        df_of = concatHeatmaps(dfs_o, operation = 'mean')
+
+        gen_info = list(group[1])
+        if '/' in gen_info:
+            ind_sep = gen_info.index('/') 
+            gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
+        ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
+        for ind in ind_gen:
+            gen_info[ind+1] = gen_info[ind+1].upper()
+        if len(ind_gen) == 2:
+            ind_gen[1] -= 1
+        [gen_info.pop(ind) for ind in ind_gen]
+        gen_info  = ''.join(gen_info)
+        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
+                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, cmap = 'turbo')
+        if normalise:
+            if perChamber:
+                txt_title = 'normCh-'+norm_type
+            else: 
+                txt_title = 'normWh-'+norm_type
+            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
+                      vmin=0, vmax=max_N, n_val = num, normalise = txt_title,  dir2save = dir2save_hmf, 
+                      save = save, cmap = 'inferno')
+
+#%% func - concatHeatmaps
+def concatHeatmaps(df2concat, operation = 'mean'):
+    
+    if operation == 'std':
+        df_concat = pd.concat(df2concat).groupby(level=0).std()
+    elif operation == 'mean':
+        df_concat = pd.concat(df2concat).groupby(level=0).mean()
+    elif operation == 'sem':
+        df_concat = pd.concat(df2concat).groupby(level=0).sem()
+
+    return df_concat
+
+#%% - STATISTICAL ANALYSIS
+#%% func - normalityTests
+def normalityTests (alpha, factor, fact_levels, variable, data, test):
+    
+    pval_norm = np.ones(((len(fact_levels)),3))
+    
+    all_data_normal = True
+    txt_normtest = test +' Normality tests ('+r'$\alpha$:'+str(alpha)+'), \n- p-val: - '
+    data_groups = []
+    
+    for num, level in enumerate(fact_levels):
+        data2testNorm = data.groupby(factor)[variable].get_group(level)
+        print(' > Factor level:',level)
+        # print(data2testNorm)
+
+        # D’Agostino and Pearson’s - stats.normaltest()
+        if test == 'D''Agostino & Pearson':
+            k1, p1 = stats.normaltest(data2testNorm)
+            pval_norm[num,0] = p1
+            p = p1
+        # Shapiro-Wilk test - stats.shapiro()
+        elif test == 'Shapiro-Wilk':
+            k2, p2 = stats.shapiro(data2testNorm)
+            pval_norm[num,1] = p2
+            p = p2
+        # Kolmogorov-Smirnov test - stats.kstest(rvs, cdf, args=(), N=20, alternative='two-sided', mode='approx')
+        elif test == 'Kolmogorov-Smirnov':
+            k3, p3 = stats.kstest(data2testNorm, 'norm')
+            pval_norm[num,2] = p3
+            p = p3
+        
+        if p >= alpha:  # null hypothesis: factor comes from a normal distribution
+            print("\t-",level, ": Data is normally distributed,: p-value={:.5f}".format(p))
+        else:
+            print("\t-",level, ": Data is NOT normally distributed: p-value={:.5f}".format(p))
+            all_data_normal = False
+        
+        normtxt = level+':'+str(format(p,'.3f'))
+        if level != fact_levels[-1]:
+            txt_normtest = txt_normtest + normtxt +' / '
+        else: 
+            txt_normtest = txt_normtest + normtxt + ' - '  
+        
+        data_groups.append(data2testNorm)
+    print(" >> Data normally distributed?", all_data_normal)
+    
+    return pval_norm, txt_normtest, all_data_normal, data_groups
+    
+# D’Agostino and Pearson’s - stats.normaltest()
+# Shapiro-Wilk test - stats.shapiro()
+# Kolmogorov-Smirnov test - stats.kstest(rvs, cdf, args=(), N=20, alternative='two-sided', mode='approx')
+
+#%% func - selectStatisticalTest
+def selectStatisticalTest (fact_levels, all_data_normal, variable):
+    #Define variables for which the analysis should always be non-parametric
+    vars4nonParam = ['Looping_Ratio', 'Index_Value']
+    
+    # Define statistical test to use 
+    if variable not in vars4nonParam:
+        if len(fact_levels) > 2:
+            if all_data_normal == False: 
+                test2use = 'Kruskal'
+                test_txt = "Non-Parametric test \n Kruskal-Wallis"
+                multcomp_txt = "Dunn's (Bonferroni Corr.)"
+            else: 
+                test2use = 'One-way-ANOVA'
+                test_txt = 'Parametric test -\n One-way-ANOVA'
+                multcomp_txt = "Tukey's Multiple Comparison"
+        
+        elif len(fact_levels) == 2:
+            if all_data_normal == False: 
+                test2use = 'Mann-Whitney'
+                test_txt = 'Non-Parametric test -\n Mann-Whitney-Wilcoxon \ntest two-sided'#', Bonferroni Correction'
+                multcomp_txt = ''
+            else: 
+                test2use = 't-test_ind'
+                test_txt = 'Parametric test -\n Independend t-test'
+                multcomp_txt = ''
+    else:
+        print(" - Non-parametric variable!")
+        if len(fact_levels) > 2:
+            test2use = 'Kruskal'
+            test_txt = "Non-Parametric test \n Kruskal-Wallis"
+            multcomp_txt = "Dunn's (Bonferroni Corr.)"
+        elif len(fact_levels) == 2:
+            test2use = 'Mann-Whitney'
+            test_txt = 'Non-Parametric test \n Mann-Whitney-Wilcoxon \ntest two-sided'#', Bonferroni Correction'
+            multcomp_txt = ''
+        
+    print(" >> Test selected to use: ", test2use)
+    txt_testSelected = 'Test: '+test_txt
+    
+    return test2use, multcomp_txt, txt_testSelected
+
+#%% func - runStatisticalTests
+def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, vars_group, alpha):
+    
+    list_of_lists = True
+    var_filt = []
+    opt_filt = []
+    for filt in filters: 
+        for filt_val in sorted(data[filt].unique()):
+            var_filt.append(filt)
+            opt_filt.append(filt_val)
+    
+    dict_stats = dict()
+    for var in vars_group: 
+        print("\n>>>> Running normality tests for variable:", var)#, "/ allele: ", alleleName, '\n')
+        dict_spStatisticalRes = dict()
+        pvals_mc = []
+        txt_selected = []
+        txt_norm = []
+        for n, pair_f, pair_all in zip(count(), box_pairs_f, box_pairs_all): 
+            
+            # print('pair_all:', pair_all)
+            inter = list(set(pair_all[0]).intersection(*pair_all[1:]))[0]
+            filt_var = var_filt[opt_filt.index(inter)]
+            print(' >> Groups being analysed:',pair_all)#, '\n - inter:',inter, '- filt_var:', filt_var)
+            data_out = filterR_Autom (data, [filt_var], inter)
+            factor = list(set(filters) -set([filt_var]))[0]
+            fact_levels = sorted(data[factor].unique())
+            # print(' - factor:',factor, '- fact_levels:', fact_levels)
+            
+            # print('pair_f:',pair_f) 
+            indiv_pairs = get_indiv_pairs(pair_f, inter)
+            # print('indiv_pairs:', indiv_pairs)
+            
+            dict_spStatisticalRes_in = dict()
+            print('\n > Group: ', inter)
+            
+            pvalues_norm, txt_normtest, all_data_normal, data_groups = normalityTests (alpha, factor, fact_levels, var, data_out, norm_test)
+            test2use, multcomp_txt, txt_testSelected = selectStatisticalTest (fact_levels, all_data_normal, var)
+            
+            dict_spStatisticalRes_in['pvalues_norm'] = pvalues_norm
+            dict_spStatisticalRes_in['txt_normtest'] = txt_normtest
+            dict_spStatisticalRes_in['all_data_normal'] = all_data_normal
+            dict_spStatisticalRes_in['test2use'] = test2use
+            dict_spStatisticalRes_in['multcomp_txt'] = multcomp_txt
+            
+            if test2use == 'One-way-ANOVA':
+                pval_spTest, pval_mcTest, pval_multComp = stTest_OWANOVA (factor, var, indiv_pairs, data_out, data_groups)
+                dict_spStatisticalRes_in['pval_test'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp_o'] = pval_mcTest
+                dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
+                dict_spStatisticalRes_in['stat_test'] = False
+                dict_spStatisticalRes_in['test'] = []
+                txt_testSelected = txt_testSelected+" (ANOVA's p-val: "+str(format(pval_spTest,'.3f'))+'), \n'+multcomp_txt
+                
+            elif test2use == 'Kruskal':
+                pval_spTest, pval_mcTest, pval_multComp = stTest_Kruskal (factor, var, indiv_pairs, data_out, data_groups)
+                dict_spStatisticalRes_in['pval_test'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp_o'] = pval_mcTest
+                dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
+                dict_spStatisticalRes_in['stat_test'] = False
+                dict_spStatisticalRes_in['test'] = []
+                txt_testSelected = txt_testSelected+" (Dunn's 'p-val: "+str(format(pval_spTest,'.3f'))+'), \n'+multcomp_txt
+            
+            # Two variables
+            elif test2use == 'Mann-Whitney': 
+                pval_spTest, pval_multComp = stTest_Mann_Whitney(data_groups)
+                dict_spStatisticalRes_in['pval_test'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp_o'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
+                dict_spStatisticalRes_in['stat_test'] = False
+                dict_spStatisticalRes_in['test'] = []
+                txt_testSelected = txt_testSelected+' (U-statistic: '+str(format(pval_spTest,'.3f'))+'),'#+multcomp_txt
+                list_of_lists = False
+            
+            elif test2use == 't-test_ind':
+                pval_spTest, pval_multComp = stTest_t_test_indVar(data_groups)
+                dict_spStatisticalRes_in['pval_test'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp_o'] = pval_spTest
+                dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
+                dict_spStatisticalRes_in['stat_test'] = False
+                dict_spStatisticalRes_in['test'] = []
+                txt_testSelected = txt_testSelected+' (t-statistic: '+str(format(pval_spTest,'.3f'))+'),'#+multcomp_txt
+                list_of_lists = False
+                
+            else: 
+                pval_multComp = []
+                dict_spStatisticalRes_in['stat_test'] = True
+                dict_spStatisticalRes_in['test'] = test2use
+                dict_spStatisticalRes_in['pval_test'] = None
+                dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
+                
+            dict_spStatisticalRes_in['txt_testSelected'] = txt_testSelected
+            dict_spStatisticalRes[inter] = dict_spStatisticalRes_in
+            # print(dict_spStatisticalRes_in)
+            # input()
+            pvals_mc.append(pval_multComp)
+            txt_selected.append(txt_testSelected)
+            txt_norm.append(txt_normtest)
+            print('\n')
+        
+        if list_of_lists:
+            pval_multComp_all = [item for sublist in pvals_mc for item in sublist]
+        else: 
+            pval_multComp_all = pvals_mc
+            
+        box_pairs = [item for sublist in box_pairs_f for item in sublist]
+        # print('box_pairs:', box_pairs)
+        # print('pval_multComp_all:', pval_multComp_all)
+        
+        dict_spStatisticalRes['box_pairs'] = box_pairs
+        dict_spStatisticalRes['pval_multComp_all'] = pval_multComp_all
+        dict_spStatisticalRes['txt_testSelected_all'] = txt_selected
+        dict_spStatisticalRes['txt_normtest_all'] = txt_norm
+        
+        # input()
+        
+        dict_stats[var] = dict_spStatisticalRes
+        
+    return dict_stats
+
+#%% func - stTest_OWANOVA
+def stTest_OWANOVA (factor, var, indiv_pairs, data_out, data_groups):
+    
+    if len(data_groups) == 3:
+        statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2])
+        
+    elif len(data_groups) == 4:
+        statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2], data_groups[3])
+    
+    pval_Tukey_o = sp.posthoc_tukey(data_out, var, factor)
+    print ("p-values Tukey's test:\n", pval_Tukey_o)
+    
+    pval_Tukey = []
+    for pair in indiv_pairs:
+        # print(pair[0], pair[1])
+        pval = pval_Tukey_o.loc[pair[0],pair[1]]
+        pval_Tukey.append(list(pval.iloc[0])[0])
+    
+    return pval_OWA, pval_Tukey_o, pval_Tukey
+
+#%% func - stTest_Kruskal
+def stTest_Kruskal (factor, var, indiv_pairs, data_out, data_groups): #(x: factor, y:variable, vals, data
+    
+    if len(data_groups) == 3:
+        statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2])
+        
+    elif len(data_groups) == 4:
+        statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2], data_groups[3])
+        
+    pval_Dunn_o = sp.posthoc_dunn(data_out, var, factor, 'bonferroni')
+    print (" - p-values Dunn's test:\n", pval_Dunn_o)
+    
+    pval_Dunn = []
+    for pair in indiv_pairs:
+        # print(pair[0], pair[1])
+        pval = pval_Dunn_o.loc[pair[0],pair[1]]
+        pval_Dunn.append(list(pval.iloc[0])[0])
+    
+    return pval_Kruskal, pval_Dunn_o, pval_Dunn
+
+#%% func - stTest_Mann_Whitney
+def stTest_Mann_Whitney(data):
+    
+    u_stat, pval = stats.mannwhitneyu(data[0], data[1], alternative='two-sided')
+    print (" -Mann-Whitney U-statistic: ", format(pval,'.3f'))
+    
+    return u_stat, pval
+
+#%% fun - stTest_t_test_indVar
+def stTest_t_test_indVar(data):
+    
+    stat, pval = stats.ttest_ind(a=data[0], b=data[1])
+    print (" - t-statistic t-test independent samples: ", format(pval,'.3f'))
+    
+    return stat, pval
+    
+#%% func - def_box_pairs
+def def_box_pairs(data, x_val, hue_val, btw_x = True, btw_hue = False):
+    
+    if x_val =='GenotypeAll':
+        reverse_x = True
+    else: 
+        reverse_x = False
+    x_values = sorted(data[x_val].unique(), reverse=reverse_x)
+    
+    if hue_val =='GenotypeAll':
+        reverse_hue = True
+    else: 
+        reverse_hue = False
+    hue_values = sorted(data[hue_val].unique(), reverse=reverse_hue)
+    
+    box_pairs_all = []
+    if btw_x:
+        box_pairs = []
+        for x_val in x_values: 
+            box_units = []
+            for hue in hue_values: 
+                box_units.append((x_val, hue))
+            box_pairs.append(tuple(box_units))
+        box_pairs_all.append(box_pairs)
+    
+    if btw_hue: 
+        box_pairs = []
+        for hue in hue_values: 
+            box_units = []
+            for x_val in x_values: 
+                box_units.append((x_val, hue))
+            box_pairs.append(tuple(box_units))
+        box_pairs_all.append(box_pairs)
+    # print(box_pairs_all)
+    
+    box_pairs_all_f = []
+    for box in box_pairs_all[0]:
+        box_pairs_f = []
+        # print('box:',box)
+        if len(box) > 2:
+            boxes = list(combinations(box, 2))
+            for b in boxes:
+                box_pairs_f.append(b)
+                # print('b:',b)
+        else: #elif len(box) == 2: 
+            box_pairs_f.append(box)
+        box_pairs_all_f.append(box_pairs_f)
+            
+    return box_pairs_all[0], box_pairs_all_f
+
+#%% func - get_indiv_pairs 
+def get_indiv_pairs(pair_f, inter):
+    
+    indiv_pairs = []
+    for pair in pair_f:
+        # print(pair)
+        in_pair = []
+        for p in pair:
+            p = list(p)
+            # print(p)
+            p.remove(inter)
+            in_pair.append(p)
+            # print('p_r:',p)
+        indiv_pairs.append(in_pair)
+        
+    return indiv_pairs
+    
+#%% func - txtMultComp
+def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, alpha):
+    txt_multcomp = '\n - - - - - - - - - - \n'
+    num = int(len(box_pairs)/len(x_values))
+    chunks = [box_pairs[x:x+num] for x in range(0, len(box_pairs), num)]
+    
+    n = 0
+    for j, chunk, x_val, x_lab, test, norm in zip(count(), chunks, x_values, x_labels, test_selected, test_norm):
+        txt_multcomp = txt_multcomp + x_lab + ': '+ norm +'\n'+ test + '\n - p-val: '
+        for i, pair in enumerate(chunk):
+            a_pair = list(pair[0]); b_pair = list(pair[1])
+            a_pair.remove(x_val);b_pair.remove(x_val)
+            pval_txt = str(format(pval[n],'.3f'))
+            if pval[n] <= alpha:
+                pval_txt = pval_txt +'*'
+            pairtxt =  str(a_pair)+ ' vs. '+ str(b_pair) +': '+pval_txt
+            n += 1
+            if i < len(chunk)-1:
+                txt_multcomp = txt_multcomp + pairtxt + ' \n '
+            else: 
+                txt_multcomp = txt_multcomp +  pairtxt + ' - '
+        
+        # print(j, len(x_values))
+        # if j < len(x_values)-1:
+        txt_multcomp = txt_multcomp+'\n - - - - - - - - - - \n'
+            
+    # print(txt_multcomp)
+    
+    # for i, pair in enumerate(box_pairs):
+    #     pairtxt = str(pair[0])+ ' vs. '+ str(pair[1]) +': '+str(format(pval[i],'.3f'))
+    #     if i < len(box_pairs)-1:
+    #         txt_multcomp = txt_multcomp + pairtxt + ' \n '
+    #     else: 
+    #         txt_multcomp = txt_multcomp +  pairtxt + ' - '
+    # print(txt_multcomp)
+        
+    return txt_multcomp
+
 #%% - CREATE PLOTS
 styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] 
 # styles = ['o', 'o', 's', 's', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
 palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']
 # def plotInGroups(plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
 #                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
-    
 
 #%% func - plotInGroups
 def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
+                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+                  save = True, dpi = 300, ext = 'png'):
+    
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    sns.set_context('poster') # notebook, talk, poster, paper
+    # Get legends
+    dict_legends = def_legends(df2plot)
+    
+    # Set up the matplotlib figure
+    num_vars = len(vars2plot)
+    n_rows = math.ceil(num_vars/n_cols)
+    # print('n_rows:' , n_rows)
+    
+    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+
+    for index in index_no_plot:
+        vars2plot.insert(index, '')
+        labels2plot.insert(index, '')
+    
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    # Genotypes and Strains being plotted 
+    values = []
+    for var in [x_var, hue_var, shape_var]:
+        if var =='GenotypeAll':
+            reverse = True
+        else: 
+            reverse = False
+        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    x_values, hue_values, shape_values = values
+    
+    # - number of x_var
+    n_x = len(x_values)
+    
+    #  Create figure  - plt.clf()
+    gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    sns.set_style("ticks")
+    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
+                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+    # Define legends for shape and hue
+    hue_legend = dict_legends[hue_var]
+    legend_elem_hue = []
+    for aa, hue_val in enumerate(hue_legend):
+        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+                                markerfacecolor=palettes[aa], markersize=20))
+    space = [Line2D([0], [0], marker='o', color='w', label='',
+                                markerfacecolor='w', markersize=20)]
+    shape_legend = dict_legends[shape_var]
+    legend_elem_shape = []
+    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+                                markerfacecolor='k', markersize=15))
+        
+    handle_new = legend_elem_hue+space+legend_elem_shape
+    legend_new = hue_legend+['']+shape_legend
+    
+    marker_size = 12
+    dodge = True
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        # Create list to contain info of yticks and ist highest value
+        y_vals_all = []
+        max_y_vals = []
+    
+        if n == 0: 
+            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+                print('\t- '+svar+': ', value)
+                
+        if n in index_no_plot:
+            if n == n_cols:
+                ax.set_axis_off()
+                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+            else: 
+                ax.remove()
+        else: 
+            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                              palette = palettes, dodge = dodge, size = marker_size)
+            box = ax.get_position()
+            if yticks_lab == '1e6 - d.':
+                ylabel = ylabel +' x 10$^6$'
+            elif yticks_lab == '1e3 - d.':
+                ylabel = ylabel +' x 10$^3$'
+            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+            # ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels(dict_legends[x_var], rotation=0)
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            ax.get_legend().remove()
+            sns.despine()
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
+            if n_x > 1: 
+                vline_pos = list(range(1,n_x,1))
+                for pos in vline_pos:
+                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+            # Define axes based on higherst bar
+            max_y_index = max_y_vals.index(max(max_y_vals))
+            ax.set_yticks(y_vals_all[max_y_index])
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+
+    fig.suptitle(title+'\n', fontsize = 30, y=1)
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"."+extf
+            else: 
+                fig_title = dir2savef+title+"."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+#%% func - plotInGroupsShape
+def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
                   save = True, dpi = 300, ext = 'png'):
     
@@ -938,9 +1538,13 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
             if yticks_lab == '1e6 - d.':
                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
             elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
             elif yticks_lab == 'th,':
                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
             elif yticks_lab == 'd.':
                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
 
@@ -954,6 +1558,360 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
                 fig_title = dir2savef+title+"."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+    
+#%% func - plotInGroupsStats
+def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
+                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+                      save = True, dpi = 300, ext = 'png'):
+    
+    if stats_set[0]: 
+        tests_res = []
+        box_pairs_all = []
+        stats = True
+        dict_stats = stats_set[1]
+        alpha = stats_set[2]
+        txt_multcomp_all = []
+        
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    sns.set_context('poster') # notebook, talk, poster, paper
+    # Get legends
+    dict_legends = def_legends(df2plot)
+    
+    # Set up the matplotlib figure
+    num_vars = len(vars2plot)
+    n_rows = math.ceil(num_vars/n_cols)+1
+    # print('n_rows:' , n_rows)
+    # print('n_cols:' , n_cols)
+    
+    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,n_cols+1))
+    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+    index_stats = sorted(list(set(index_no_graph).difference(set(index_right_col))))
+    # print(index_stats)
+
+    for index in index_no_plot:
+        vars2plot.insert(index, '')
+        labels2plot.insert(index, '')
+    
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    # Genotypes and Strains being plotted 
+    values = []
+    for var in [x_var, hue_var, shape_var]:
+        if var =='GenotypeAll':
+            reverse = True
+        else: 
+            reverse = False
+        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    x_values, hue_values, shape_values = values
+    
+    # - number of x_var
+    n_x = len(x_values)
+    
+    #  Create figure  - plt.clf()
+    gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1.2])
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    sns.set_style("ticks")
+    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
+                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+    # Define legends for shape and hue
+    hue_legend = dict_legends[hue_var]
+    legend_elem_hue = []
+    for aa, hue_val in enumerate(hue_legend):
+        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+                                markerfacecolor=palettes[aa], markersize=20))
+    space = [Line2D([0], [0], marker='o', color='w', label='',
+                                markerfacecolor='w', markersize=20)]
+    shape_legend = dict_legends[shape_var]
+    legend_elem_shape = []
+    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+                                markerfacecolor='k', markersize=15))
+        
+    handle_new = legend_elem_hue+space+legend_elem_shape
+    legend_new = hue_legend+['']+shape_legend
+    
+    marker_size = 10
+    dodge = True
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        
+        # Create list to contain info of yticks and ist highest value
+        y_vals_all = []
+        max_y_vals = []
+    
+        if n == 0: 
+            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+                print('\t- '+svar+': ', value)
+        
+        if n in index_no_plot:
+            if n == n_cols:
+                ax.set_axis_off()
+                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+            else: 
+                if n in index_stats:
+                    text2add = txt_multcomp_all[n-n_cols-1]
+                    ax.text(0.5, 0.5, text2add, size=20, ha='center', va='center')
+                    # ax.remove()
+                    ax.set_axis_off()
+                    # ax.get_xaxis().set_visible(False)
+                    # ax.get_yaxis().set_visible(False)
+                else: 
+                    ax.remove()
+                
+        else: 
+            print(' > ',var,'\n')
+            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                              palette = palettes, dodge = dodge, size = marker_size)
+            if stats: 
+                box_pairs = dict_stats[var]['box_pairs']
+                stat_test = False
+                test = None
+                p_val = dict_stats[var]['pval_multComp_all']
+                txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+                txt_normtest_all = dict_stats[var]['txt_normtest_all']
+                
+                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+                                                       hue_order = hue_values, order = x_values,
+                                                        box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+                                                        pvalues=p_val, comparisons_correction=None, #'bonferroni',
+                                                        line_offset_to_box=0.4, line_offset=0.1,
+                                                        line_height=0.015, text_offset=5,
+                                                        text_format='star', loc='inside', fontsize='small', verbose=0);
+                tests_res.append(p_val)
+                box_pairs_all.append(box_pairs)
+                txt_multcomp = txtMultComp (box_pairs, p_val, x_values, dict_legends[x_var], txt_testSelected_all, txt_normtest_all, alpha)
+                txt_multcomp_all.append(txt_multcomp)
+                # print('txt_multcomp:', txt_multcomp)
+                
+            box = ax.get_position()
+            if yticks_lab == '1e6 - d.':
+                ylabel = ylabel +' x 10$^6$'
+            elif yticks_lab == '1e3 - d.':
+                ylabel = ylabel +' x 10$^3$'
+            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+            # ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels(dict_legends[x_var], rotation=0)
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            ax.get_legend().remove()
+            sns.despine()
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
+            if n_x > 1: 
+                vline_pos = list(range(1,n_x,1))
+                for pos in vline_pos:
+                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+            # Define axes based on higherst bar
+            max_y_index = max_y_vals.index(max(max_y_vals))
+            ax.set_yticks(y_vals_all[max_y_index])
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+
+    fig.suptitle(title+'\n', fontsize = 30, y=0.95)
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'pl_stats', 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            else: 
+                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+    
+    if stats: 
+        return tests_res, box_pairs_all, x_values, dict_legends[x_var]
+    
+#%% func - plotInGroupsStatsBU
+def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
+                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+                      save = True, dpi = 300, ext = 'png'):
+    
+    if stats_set[0]: 
+        tests_res = []
+        stats = True
+        dict_stats = stats_set[1]
+        
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    sns.set_context('poster') # notebook, talk, poster, paper
+    # Get legends
+    dict_legends = def_legends(df2plot)
+    
+    # Set up the matplotlib figure
+    num_vars = len(vars2plot)
+    n_rows = math.ceil(num_vars/n_cols)+1
+    print('n_rows:' , n_rows)
+    
+    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+    print(index_no_plot)
+
+    for index in index_no_plot:
+        vars2plot.insert(index, '')
+        labels2plot.insert(index, '')
+    
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    # Genotypes and Strains being plotted 
+    values = []
+    for var in [x_var, hue_var, shape_var]:
+        if var =='GenotypeAll':
+            reverse = True
+        else: 
+            reverse = False
+        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    x_values, hue_values, shape_values = values
+    
+    # - number of x_var
+    n_x = len(x_values)
+    
+    #  Create figure  - plt.clf()
+    gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1])
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    sns.set_style("ticks")
+    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
+                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+    # Define legends for shape and hue
+    hue_legend = dict_legends[hue_var]
+    legend_elem_hue = []
+    for aa, hue_val in enumerate(hue_legend):
+        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+                                markerfacecolor=palettes[aa], markersize=20))
+    space = [Line2D([0], [0], marker='o', color='w', label='',
+                                markerfacecolor='w', markersize=20)]
+    shape_legend = dict_legends[shape_var]
+    legend_elem_shape = []
+    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+                                markerfacecolor='k', markersize=15))
+        
+    handle_new = legend_elem_hue+space+legend_elem_shape
+    legend_new = hue_legend+['']+shape_legend
+    
+    marker_size = 10
+    dodge = True
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        
+        # Create list to contain info of yticks and ist highest value
+        y_vals_all = []
+        max_y_vals = []
+    
+        if n == 0: 
+            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+                print('\t- '+svar+': ', value)
+        
+        if n in index_no_plot:
+            if n == n_cols:
+                ax.set_axis_off()
+                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+            else: 
+                ax.remove()
+        else: 
+            print(' > ',var,'\n')
+            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                              palette = palettes, dodge = dodge, size = marker_size)
+            if stats: 
+                box_pairs = dict_stats[var]['box_pairs']
+                stat_test = False
+                test = None
+                p_val = dict_stats[var]['pval_multComp_all']
+                
+                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+                                                       hue_order = hue_values, order = x_values,
+                                                        box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+                                                        pvalues=p_val, comparisons_correction=None, #'bonferroni',
+                                                        line_offset_to_box=0.4, line_offset=0.1,
+                                                        line_height=0.015, text_offset=5,
+                                                        text_format='star', loc='inside', verbose=0);
+                tests_res.append(test_results)
+                # txt_multcomp = txtMultComp(box_pairs, test_results)
+                # print('txt_multcomp:', txt_multcomp)
+                
+            box = ax.get_position()
+            if yticks_lab == '1e6 - d.':
+                ylabel = ylabel +' x 10$^6$'
+            elif yticks_lab == '1e3 - d.':
+                ylabel = ylabel +' x 10$^3$'
+            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+            # ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels(dict_legends[x_var], rotation=0)
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            ax.get_legend().remove()
+            sns.despine()
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
+            if n_x > 1: 
+                vline_pos = list(range(1,n_x,1))
+                for pos in vline_pos:
+                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+            # Define axes based on higherst bar
+            max_y_index = max_y_vals.index(max(max_y_vals))
+            ax.set_yticks(y_vals_all[max_y_index])
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+
+    fig.suptitle(title+'\n', fontsize = 30, y=1)
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"."+extf
+            else: 
+                fig_title = dir2savef+title+"."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+    
+    if stats: 
+        return tests_res
 
 #%% func - relPlotInGroups
 def relPlotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
@@ -1203,7 +2161,7 @@ def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strai
 
 #%% func - barPlots
 def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt_title, ylabel, 
-             dir2save, info='', stack100 = True, sub_bar_lab = True, save = True, ext = ['png']): 
+             dir2save, yticks_lab, info='', stack100 = True, sub_bar_lab = True, save = True, ext = ['png']): 
     
     mpl.rcParams.update(mpl.rcParamsDefault)
     print('\n> '+title)
@@ -1292,7 +2250,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
             # Plot each layer of the bar, adding each bar to the "bottom" so
             # the next bar starts higher.
             for i, colm in enumerate(df_col.columns):
-                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i])
+                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
                 ax.set_xticklabels(df2plot_titles, rotation=30)
@@ -1302,6 +2260,8 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
             
             if n == 0:
                 handles, labels = ax.get_legend_handles_labels()
+                if not stack100 and yticks_lab == '1e3 - d.':
+                    ylabel = ylabel +' x 10$^3$'
                 ax.set(ylabel=ylabel)
                 
             # Sum up the rows of our data to get the total value of each bar.
@@ -1312,11 +2272,20 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                 # Add labels to each bar.
                 for i, total in enumerate(totals):
                     if total < 100:
-                          ax.text(i, total + y_offset, total, ha='center', weight='bold', size =10)
+                          ax.text(i, total + y_offset, 
+                                  ['{:.1f}'.format(w) for w in total], 
+                                  ha='center', weight='bold', size =10)
                     else: 
-                          ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center',
-                                  weight='bold', size =9)
-
+                          # ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center', weight='bold', size =9)
+                          if yticks_lab == '1e3 - d.':
+                              ax.text(i, total + y_offset ,
+                                      '{:.1f}'.format(total/1e3),
+                                      ha='center', weight='bold', size =9)
+                          elif yticks_lab == 'th,':
+                              ax.text(i, total + y_offset ,
+                                      locale.format("%d", total, grouping=True),
+                                      ha='center', weight='bold', size =9)
+                              
             # Let's put the annotations inside the bars themselves by using a
             # negative offset.
             if sub_bar_lab: 
@@ -1329,7 +2298,10 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                     if bar.get_height() < 100:
                         bar_height = "{0:.1f}".format(bar.get_height())
                     else: 
-                        bar_height = locale.format("%d",  bar.get_height(), grouping=True)
+                        if yticks_lab == '1e3 - d.':
+                            bar_height = '{:.1f}'.format(bar.get_height()/1e3)
+                        elif yticks_lab == 'th,':
+                            bar_height = locale.format("%d",  bar.get_height(), grouping=True)
                     ax.text(
                           # Put the text in the middle of each bar. get_x returns the start
                           # so we add half the width to get to the middle.
@@ -1359,7 +2331,11 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
     if not stack100:
         max_y_index = max_y_vals.index(max(max_y_vals))
         ax.set_yticks(y_vals_all[max_y_index])
-        ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+        # ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+        if yticks_lab == '1e3 - d.':
+            ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+        elif yticks_lab == 'th,':
+            ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
         # ax.ticklabel_format(axis='y', style='plain')
 
     fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01)
@@ -1461,7 +2437,7 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
                         bottom[v] = bottom_negative[v]
                         bottom_negative[v] += val
                 #print('bottom', bottom)
-                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i])
+                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
                 ax.set_xticklabels(df2plot_titles, rotation=30)
@@ -1733,367 +2709,8 @@ def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, 
     if save: 
         plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
         
-#%% func - meanHM
-def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save):
-    
-    # Get minimum and max values for each group of heatmaps 
-    # (_o: originals, _W: normalised using whole heart, _C: normalised per chamber)
-    normalise, perChamber, norm_type = opt_norm
-    min_vals_o = []; max_vals_o = []; min_vals_N = []; max_vals_N = []
-    for group in groups:
-        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
-        # print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
-        if normalise: 
-            [dfs_o, dfs_hmN], num, _  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
-            min_vals_N.append(df_hmW.min().min())
-            max_vals_N.append(df_hmW.max().max())
-            
-        else: 
-            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-
-        df_of = concatHeatmaps(dfs_o, operation = 'mean')
-        min_vals_o.append(df_of.min().min())
-        max_vals_o.append(df_of.max().max())
-        
-    min_o = math.floor(min(min_vals_o))
-    max_o = math.ceil(max(max_vals_o))
-    if normalise: 
-        max_N = math.ceil(max(max_vals_N))
-
-    for group in groups:
-        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
-        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
-        print('\t - Maximum value_o:', max_o)
-        if normalise: 
-            print('\t - Maximum value_N:', max_N)
-            [dfs_o, dfs_hmN], num, norm_vals  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
-            norm_vals = ['{:.2f}'.format(val) for val in norm_vals]
-            print('\t - Normalisation: ', norm_type, ' - Norm_val:', norm_vals)
-        else: 
-            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-        df_of = concatHeatmaps(dfs_o, operation = 'mean')
-
-        gen_info = list(group[1])
-        if '/' in gen_info:
-            ind_sep = gen_info.index('/') 
-            gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
-        ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
-        for ind in ind_gen:
-            gen_info[ind+1] = gen_info[ind+1].upper()
-        if len(ind_gen) == 2:
-            ind_gen[1] -= 1
-        [gen_info.pop(ind) for ind in ind_gen]
-        gen_info  = ''.join(gen_info)
-        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
-                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, cmap = 'turbo')
-        if normalise:
-            if perChamber:
-                txt_title = 'normCh-'+norm_type
-            else: 
-                txt_title = 'normWh-'+norm_type
-            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
-                      vmin=0, vmax=max_N, n_val = num, normalise = txt_title,  dir2save = dir2save_hmf, 
-                      save = save, cmap = 'inferno')
-
-#%% func - concatHeatmaps
-def concatHeatmaps(df2concat, operation = 'mean'):
-    
-    if operation == 'std':
-        df_concat = pd.concat(df2concat).groupby(level=0).std()
-    elif operation == 'mean':
-        df_concat = pd.concat(df2concat).groupby(level=0).mean()
-    elif operation == 'sem':
-        df_concat = pd.concat(df2concat).groupby(level=0).sem()
-
-    return df_concat
 
 
-#%% - STATISTICAL ANALYSIS
-#%% func - normalityTests
-def normalityTests (alpha, x, variable, genotypes2filter, data, test):
-    
-    y = variable
-    pval_norm = np.ones(((len(genotypes2filter)),3))
-    
-    all_data_normal = True
-    txt_normtest = 'Normality tests ('+r'$\alpha$:'+str(alpha)+'), p-values: - '
-    
-    for num, genotype in enumerate(genotypes2filter):
-        data2testNorm = data.groupby(x)[y].get_group(genotype)
-        # D’Agostino and Pearson’s - stats.normaltest()
-        k1, p1 = stats.normaltest(data2testNorm)
-        pval_norm[num,0] = p1
-        # Shapiro-Wilk test - stats.shapiro()
-        k2, p2 = stats.shapiro(data2testNorm)
-        pval_norm[num,1] = p2
-        # Kolmogorov-Smirnov test - stats.kstest(rvs, cdf, args=(), N=20, alternative='two-sided', mode='approx')
-        k3, p3 = stats.kstest(data2testNorm, 'norm')
-        pval_norm[num,2] = p3
-        
-        if test == 'DAgostino':
-            p = p1
-        elif test == 'ShapiroWilk':
-            p = p2
-        elif test == 'Kolmogorov':
-            p = p3
-        
-        if p < alpha:  # null hypothesis: x comes from a normal distribution
-            print("   -",genotype, ": Data is normally distributed,: p-value={:.5f}".format(p))
-        else:
-            print("   -",genotype, ": Data is NOT normally distributed: p-value={:.5f}".format(p))
-            all_data_normal = False
-        
-        normtxt = genotype+':'+str(format(p,'.3f'))
-        if genotype != genotypes2filter[-1]:
-            txt_normtest = txt_normtest + normtxt +' / '
-        else: 
-            txt_normtest = txt_normtest + normtxt + ' - '  
-    print("\n>>>> Data normally distributed?", all_data_normal, '\n')
-    
-    return pval_norm, txt_normtest, all_data_normal
-    
-# D’Agostino and Pearson’s - stats.normaltest()
-# Shapiro-Wilk test - stats.shapiro()
-# Kolmogorov-Smirnov test - stats.kstest(rvs, cdf, args=(), N=20, alternative='two-sided', mode='approx')
-
-#%% func - selectStatisticalTest
-def selectStatisticalTest (genotypes2filter, all_data_normal, variable):
-    #Define variables for which the analysis should always be non-parametric
-    vars4nonParam = ['Looping_Ratio', 'Index_Value']
-    
-    # Define statistical test to use 
-    if variable not in vars4nonParam:
-        if len(genotypes2filter) > 2:
-            if all_data_normal == False: 
-                test2use = 'Kruskal'
-                test_txt = "Non-Parametric test - Kruskal-Wallis"
-                multcomp_txt = "Dunn's (Bonferroni Corr.)"
-            else: 
-                test2use = 'One-way-ANOVA'
-                test_txt = 'Parametric test - One-way-ANOVA'
-                multcomp_txt = "Tukey's Multiple Comparison"
-        
-        elif len(genotypes2filter) == 2:
-            if all_data_normal == False: 
-                test2use = 'Mann-Whitney'
-                test_txt = 'Non-Parametric test - Mann-Whitney-Wilcoxon test two-sided'#', Bonferroni Correction'
-                multcomp_txt = ''
-            else: 
-                test2use = 't-test_ind'
-                test_txt = 'Parametric test - Independend t-test'
-                multcomp_txt = ''
-    else:
-        print("Non-parametric variable!")
-        if len(genotypes2filter) > 2:
-            test2use = 'Kruskal'
-            test_txt = "Non-Parametric test - Kruskal-Wallis"
-            multcomp_txt = "Dunn's (Bonferroni Corr.)"
-        elif len(genotypes2filter) == 2:
-            test2use = 'Mann-Whitney'
-            test_txt = 'Non-Parametric test - Mann-Whitney-Wilcoxon test two-sided'#', Bonferroni Correction'
-            multcomp_txt = ''
-        
-    print(">>>> Test selected to use: ", test2use, '\n')
-    txt_testSelected = 'Test: '+test_txt
-    
-    return test2use, multcomp_txt, txt_testSelected
-
-#%% func - stTest_OWANOVA
-def stTest_OWANOVA (x, y, data):
-    data_wt = data.groupby(x)[y].get_group('wt').reset_index().drop(['index'], axis=1).to_numpy()
-    data_ht = data.groupby(x)[y].get_group('ht').reset_index().drop(['index'], axis=1).to_numpy()
-    data_mt = data.groupby(x)[y].get_group('mt').reset_index().drop(['index'], axis=1).to_numpy()
-    
-    statOWA, pval_OWA = stats.f_oneway(data_wt, data_ht, data_mt)
-
-    # len_data = [len(data_wt), len(data_ht), len(data_mt)]
-    # max_len = max(len_data)
-    
-    # datawt = np.ones((max_len))*123456789
-    # data_wt2 = datawt
-    # data_wt2[0:len_data[0]] = data_wt[:,0]
-    
-    # dataht = np.ones((max_len))*123456789
-    # data_ht2 = dataht
-    # data_ht2[0:len_data[1]] = data_ht[:,0]
-    
-    # datamt = np.ones((max_len))*123456789
-    # data_mt2 = datamt
-    # data_mt2[0:len_data[2]] = data_mt[:,0]
-    
-    # #Multiple comparison with Tukey
-    # # - Put into dataframe
-    # df_Tukey = pd.DataFrame()
-    # df_Tukey['wt']= data_wt2
-    # df_Tukey['ht']= data_ht2
-    # df_Tukey['mt']= data_mt2
-    
-    # # - Stack the data (and rename columns):
-    # stacked = df_Tukey.stack().reset_index()
-    # stacked = stacked.rename(columns={'level_0': 'id',
-    #                                   'level_1': x,
-    #                                   0:y})
-    # # Show the first 8 rows:
-    # stacked = stacked[stacked[y]!=123456789]
-    
-    # # Set up the data for comparison (creates a specialised object)
-    # MultiComp = MultiComparison(stacked[y], stacked[x])
-
-    # # Print the comparisons
-    # tukey_res = MultiComp.tukeyhsd()
-    # print(MultiComp.tukeyhsd().summary())
-    
-    # pval_Tukey = tukey_res.pvalues 
-    
-    pval_Tukey_o = sp.posthoc_tukey(data, y, x)
-    wtVht_0 = pval_Tukey_o.loc['wt','ht']
-    htVmt_1 = pval_Tukey_o.loc['ht','mt']
-    wtVmt_2 = pval_Tukey_o.loc['wt','mt']
-    
-    pval_Tukey = np.array([wtVht_0, htVmt_1, wtVmt_2])
-    print ("p-values Tukey's test:\n", pval_Tukey_o)
-    
-    return pval_OWA[0], pval_Tukey_o, pval_Tukey
-
-#%% func - stTest_Kruskal
-def stTest_Kruskal (x, y, data):
-    
-    data_wt = data.groupby(x)[y].get_group('wt').reset_index().drop(['index'], axis=1).to_numpy()
-    data_ht = data.groupby(x)[y].get_group('ht').reset_index().drop(['index'], axis=1).to_numpy()
-    data_mt = data.groupby(x)[y].get_group('mt').reset_index().drop(['index'], axis=1).to_numpy()
-    
-    statKruskal, pval_Kruskal = stats.kruskal(data_wt, data_ht, data_mt)
-    
-    pval_Dunn_o = sp.posthoc_dunn(data, y, x, 'bonferroni')
-    
-    wtVht_0 = pval_Dunn_o.loc['wt','ht']
-    htVmt_1 = pval_Dunn_o.loc['ht','mt']
-    wtVmt_2 = pval_Dunn_o.loc['wt','mt']
-    pval_Dunn = np.array([wtVht_0, htVmt_1, wtVmt_2])
-    
-    print ("p-values Dunn's test:\n", pval_Dunn_o)
-    
-    return pval_Kruskal, pval_Dunn_o, pval_Dunn
-
-#%%func - plotStatistics
-def plotStatistics(data, x, y, x_label, y_label, box_pairs, figsize, genot2filter,
-                    colors_bgd, colors_pts, order2plot,
-                    alleleName, txt_normtest, multcomp_txt, txt_testSelected, txt_note,
-                    test2use, pval_test, pval_multComp,
-                    plots_dir, saveFig, ext='png'):
-    
-    if test2use == 'One-way-ANOVA' or test2use == 'Kruskal':
-        stat_test = False
-        p_val = pval_multComp
-        test = None
-        txt_testSelected = txt_testSelected+' (p-value: '+str(format(pval_test,'.3f'))+'), '+multcomp_txt
-    else: 
-        stat_test = True
-        p_val = None
-        test = test2use
-    
-    data_filtered = data[data[y].notnull()]
-    exp_ref_order = sorted(data_filtered.Exp_Ref.unique().tolist())
-    
-    n_wt = str(len(data_filtered[data_filtered['Genotype']=='wt']))
-    n_ht = str(len(data_filtered[data_filtered['Genotype']=='ht']))
-    n_mt = str(len(data_filtered[data_filtered['Genotype']=='mt']))
-    
-    #Define xtickslabel and figure sizes
-    if genot2filter == 'A':
-        xticklabel = ["$hapln1a^{+/+}$\nn ="+n_wt, "$hapln1a^{+/-}$\nn ="+n_ht, "$hapln1a^{-/-}$\nn ="+n_mt]
-        figsize = (6, 8.5)
-    else:
-        xticklabel = ["$hapln1a^{+/+}$\nn ="+n_wt, "$hapln1a^{-/-}$\nn ="+n_mt]
-        figsize = (5, 8.5)
-    
-    gridkw = dict(height_ratios=[4, 1])
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize, gridspec_kw=gridkw)
-    # Axis 1
-    g = sns.violinplot(x=x, y=y, palette = colors_bgd, inner='quartile', scale='count',
-                        width=0.5, linewidth=0.5, legend_out=True, data=data, 
-                        order=order2plot, ax=ax1)
-    sns.swarmplot(x=x, y=y, hue="Exp_Ref", hue_order= exp_ref_order, palette = colors_pts, size=5, 
-                  order=order2plot, data=data, ax=ax1).set(xlabel=x_label, ylabel=y_label)
-    
-    ax1, test_results = add_stat_annotation(g, data=data, x=x, y=y,
-                                            perform_stat_test=stat_test, 
-                                            test=test,
-                                            pvalues=p_val,
-                                            comparisons_correction=None,#'bonferroni'
-                                            order=order2plot, box_pairs=box_pairs,
-                                            line_offset_to_box=0.1, line_offset=0.01,
-                                            line_height=0.015, 
-                                            text_format='star', verbose=0)
-    ax1.legend(bbox_to_anchor=(1, 1), loc=0)
-    
-    txt_multcomp = txtMultComp(box_pairs, test_results)
-        
-    g.set_xticklabels(xticklabel)
-    
-    # Axis 2
-    ax2.set_axis_off()        
-    t = (txt_normtest+'\n'+txt_testSelected+'\n'+txt_multcomp+'\n'+txt_note)
-    ax2.text(0.5, 0.25, t, fontdict=font, wrap=True)
-    plt.suptitle(alleleName+" - "+y_label, y=0.92)
-    
-    if saveFig:
-        plt.savefig(plots_dir+y+"_st."+ext, dpi=300, bbox_inches='tight')
-    
-    return test_results
-
-#%% func - txtMultComp
-def txtMultComp (box_pairs, test_results):
-    txt_multcomp = 'p-values: - '
-    for pair in range(len(box_pairs)):
-        pairtxt = test_results[pair].box1+ ' vs. '+ test_results[pair].box2 +': '+str(format(test_results[pair].pval,'.3f'))
-        if pair < len(box_pairs)-1:
-            txt_multcomp = txt_multcomp + pairtxt + ' / '
-        else: 
-            txt_multcomp = txt_multcomp +  pairtxt + ' - '
-            
-    return txt_multcomp
-
-#%% func - getVariables
-def getVariablesStAn (variables):
-    
-    print('\nVariables:')
-    for c, value in enumerate(variables, 1):
-        print(c-1, value)
-    input_var = input('Select the variables you would like to process: ')
-    
-    if input_var == 'All':
-        var_num = list(range(0,len(variables),1))
-   
-    else:
-        var_num = []
-        comma_split = input_var.split(',')
-              
-        for string in comma_split:
-            if '-' in string:
-                minus_split = string.split('-')
-                #print(minus_split)
-                for n in list(range(int(minus_split[0]),int(minus_split[1])+1,1)):
-                    #print(n)
-                    var_num.append(n)
-            else:
-                var_num.append(int(string))
-   
-    variables2loop = []
-    for i, num in enumerate(var_num):
-        variables2loop.append(variables[num])
-    
-    return variables2loop
 
 #%% Palette stuff
     # Save a palette to a variable:
@@ -2233,7 +2850,74 @@ alert('jump',1)
 # sns.lineplot(data=flights, x="year", y="passengers", hue="month")
 
 #%% TO REMOVE
-# #%% func - kde_sklearn
+#%%func - plotStatisticsOLD
+# def plotStatisticsOLD(data, x, y, x_label, y_label, box_pairs, figsize, genot2filter,
+#                     colors_bgd, colors_pts, order2plot,
+#                     alleleName, txt_normtest, multcomp_txt, txt_testSelected, txt_note,
+#                     test2use, pval_test, pval_multComp,
+#                     plots_dir, saveFig, ext='png'):
+    
+#     if test2use == 'One-way-ANOVA' or test2use == 'Kruskal':
+#         stat_test = False
+#         p_val = pval_multComp
+#         test = None
+#         txt_testSelected = txt_testSelected+' (p-value: '+str(format(pval_test,'.3f'))+'), '+multcomp_txt
+#     else: 
+#         stat_test = True
+#         p_val = None
+#         test = test2use
+    
+#     data_filtered = data[data[y].notnull()]
+#     exp_ref_order = sorted(data_filtered.Exp_Ref.unique().tolist())
+    
+#     n_wt = str(len(data_filtered[data_filtered['Genotype']=='wt']))
+#     n_ht = str(len(data_filtered[data_filtered['Genotype']=='ht']))
+#     n_mt = str(len(data_filtered[data_filtered['Genotype']=='mt']))
+    
+#     #Define xtickslabel and figure sizes
+#     if genot2filter == 'A':
+#         xticklabel = ["$hapln1a^{+/+}$\nn ="+n_wt, "$hapln1a^{+/-}$\nn ="+n_ht, "$hapln1a^{-/-}$\nn ="+n_mt]
+#         figsize = (6, 8.5)
+#     else:
+#         xticklabel = ["$hapln1a^{+/+}$\nn ="+n_wt, "$hapln1a^{-/-}$\nn ="+n_mt]
+#         figsize = (5, 8.5)
+    
+#     gridkw = dict(height_ratios=[4, 1])
+#     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize, gridspec_kw=gridkw)
+#     # Axis 1
+#     g = sns.violinplot(x=x, y=y, palette = colors_bgd, inner='quartile', scale='count',
+#                         width=0.5, linewidth=0.5, legend_out=True, data=data, 
+#                         order=order2plot, ax=ax1)
+#     sns.swarmplot(x=x, y=y, hue="Exp_Ref", hue_order= exp_ref_order, palette = colors_pts, size=5, 
+#                   order=order2plot, data=data, ax=ax1).set(xlabel=x_label, ylabel=y_label)
+    
+#     ax1, test_results = add_stat_annotation(g, data=data, x=x, y=y,
+#                                             perform_stat_test=stat_test, 
+#                                             test=test,
+#                                             pvalues=p_val,
+#                                             comparisons_correction=None,#'bonferroni'
+#                                             order=order2plot, box_pairs=box_pairs,
+#                                             line_offset_to_box=0.1, line_offset=0.01,
+#                                             line_height=0.015, 
+#                                             text_format='star', verbose=0)
+#     ax1.legend(bbox_to_anchor=(1, 1), loc=0)
+    
+#     txt_multcomp = txtMultComp(box_pairs, test_results)
+        
+#     g.set_xticklabels(xticklabel)
+    
+#     # Axis 2
+#     ax2.set_axis_off()        
+#     t = (txt_normtest+'\n'+txt_testSelected+'\n'+txt_multcomp+'\n'+txt_note)
+#     ax2.text(0.5, 0.25, t, fontdict=font, wrap=True)
+#     plt.suptitle(alleleName+" - "+y_label, y=0.92)
+    
+#     if saveFig:
+#         plt.savefig(plots_dir+y+"_st."+ext, dpi=300, bbox_inches='tight')
+    
+#     return test_results
+
+#%% func - kde_sklearn
 # def kde_sklearn(x, x_grid, bandwidth=0.2, **kwargs):
 #     """Kernel Density Estimation with Scikit-learn"""
 #     kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)

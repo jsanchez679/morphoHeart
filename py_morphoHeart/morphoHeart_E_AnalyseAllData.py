@@ -10,9 +10,6 @@ import os
 import pandas as pd
 import glob
 from itertools import count
-# import seaborn as sns
-# import math
-# import matplotlib.pyplot as plt
 
 # Verify working dir
 def setWorkingDir (root_path, init = False):
@@ -21,9 +18,9 @@ def setWorkingDir (root_path, init = False):
         if root_path != wd:
             os.chdir(wd)
             root_path = os.getcwd()
-    # init = True
-    print("Current working directory: {0}".format(os.getcwd()))
-
+    print("- Current working directory: {0}".format(os.getcwd()))
+    if not init: 
+        print('\nIMPORTANT NOTE:\n- Remember to start running from cell %Start D_AnalyseData.\n- NEVER run as an individual cell the cell called %Importing python packages')
     return root_path, init
 
 root_path, init = setWorkingDir(os.getcwd())
@@ -44,36 +41,64 @@ if init:
     all_CSVs = glob.glob(dir_R_meas + "/*.csv")
     df_meas = pd.concat((pd.read_csv(f) for f in all_CSVs))
     df_meas = df_meas.loc[:, ~df_meas.columns.str.contains('^Unnamed')]
-    df2plot = []
+    df2plot = []; df_cjPDF2plot = []
     
     #%% Add all other measurements to dataframe
     df_meas = fcAn.sortDFCols(fcAn.getVarRatios(fcAn.getMainStrain(fcAn.getGenotypeAll(df_meas))))
     fcAn.printDFINfo(df_meas)
-    # fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_meas','R_temp'))
+    # fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
+    # fcBasics.saveDF('hapln1a241s_wtmt', df2plot, 'df2plot', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     
     #%% Filter dataset
     df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
     fcAn.printDFINfo(df2plot)
     save, info, ext = fcAn.q_savePlot()
     
-    #%% Plot in groups or per variable
-    groups = ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
-              'Tissue Endocardium','Tissue Cardiac Jelly','Angles','Volume Percentages','Tissue Volume Percentages'] 
-    
+    # Settings for plots
     pl_groups = fcAn.plot_groups()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-    # x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
-    x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #***
+    groups = ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
+              'Tissue Endocardium','Tissue Cardiac Jelly','Angles','Volume Percentages','Tissue Volume Percentages'] 
+    # groups = ['Volume Percentages']
+    
+    x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
+    # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #***
+    
+    # Settings for statistical analysis
+    run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
+    pause = fcBasics.ask4input('Pause after every variable? [0]:no / [1]: yes! >> : ', bool)
+    filters = ['Stage', 'GenotypeAll']; alpha = 0.05
+    btw_x = True; btw_hue = False
+    
+    #% Plot in groups or per variable
     for group in groups: 
         vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group])
-        fcAn.plotInGroups (df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
-                           title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
-                           n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
-                           yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
-        
+        if not run_stats: 
+            fcAn.plotInGroupsShape(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
+                               title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
+                               n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
+                               yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
+        else: 
+            # Define all the multiple comparisons to calculate defining box_pairs 
+            box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df2plot, x_var, hue_var, btw_x, btw_hue)
+            dict_stats = fcAn.runStatisticalTests(data = df2plot, filters = filters, norm_test = 'Shapiro-Wilk', 
+                                                  box_pairs_all = box_pairs_all, box_pairs_f = box_pairs_f, 
+                                                  vars_group = vars2plot, alpha = alpha)
+            stats = True; stats_set = [stats, dict_stats, alpha]
+            if pause:
+                input()
+            # Plot using the defined statistics in the dictionary
+            test_res, box_pairs_all, x_values, x_labels  = fcAn.plotInGroupsStats(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
+                               title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
+                               stats_set = stats_set, n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 2, sharey = False, 
+                               yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
+            # if pause:
+            #     input()
+
     #%% Tissue composition (whole, atrium and ventricle)
     print('\n=> TISSUE COMPOSITION ANALYSIS')
     fcAn.printDFINfo(df2plot)
+    save, info, ext = fcAn.q_savePlot()
 
     colours = ['lightseagreen','darkorange','darkmagenta' ]
     vars2plot_all = [['Vol_Myoc','Vol_CJ','Vol_Endo'],
@@ -82,9 +107,8 @@ if init:
     add_vars2plot_all = ['Vol_Int.Endo','Vol_Atr.IntEndo','Vol_Vent.IntEndo']
     title_sp_all = ['Whole Heart ','Atrial ', 'Ventricular ']
     
-    save, info, ext = fcAn.q_savePlot()
     # x = 'GenotypeAll'; col = 'Stage'; per = 'per Stage and Genotype'
-    x = 'Stage'; col = 'GenotypeAll'; per = 'per Genotype and Stage'
+    x = 'Stage'; col = 'GenotypeAll'; per = 'per Genotype and Stage'#**
     group_vars = ['Stage', 'GenotypeAll']
     txt_title = fcAn.get_txt_title(['Strain_o'], df2plot)
     for n, vars2plot, add_var, title_sp in zip(count(), vars2plot_all, add_vars2plot_all, title_sp_all):
@@ -93,13 +117,13 @@ if init:
             fcAn.barPlots(df2plot = df2plot, vars2plot = vars2plot, group_vars = group_vars, 
                           x_var = x, col_var = col, colours = colours, 
                           title = title_sp +'Tissue Composition '+ per, txt_title = txt_title,
-                          ylabel = title_sp +'Tissue Composition'+unit, dir2save = dir_pl_meas,
+                          ylabel = title_sp +'Tissue Composition'+unit, dir2save = dir_pl_meas, yticks_lab = '1e3 - d.',
                           info = info, stack100 = stack100, sub_bar_lab = True, save = save, ext = ext)
             # => Including lumen 
             fcAn.barPlots(df2plot = df2plot, vars2plot = vars2plot + [add_var], group_vars = group_vars, 
                           x_var = x, col_var = col, colours = colours + ['tomato'], 
                           title = title_sp +'Composition '+ per, txt_title = txt_title,
-                          ylabel = title_sp +'Composition'+unit, dir2save = dir_pl_meas,
+                          ylabel = title_sp +'Composition'+unit, dir2save = dir_pl_meas, yticks_lab = '1e3 - d.',
                           info = info, stack100 = stack100, sub_bar_lab = True, save = save, ext = ext)
     
     #%% Tissue Expansion or Shrinkage
@@ -150,11 +174,11 @@ if init:
     groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt'), 
               ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), 
               ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
-    # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')] 
+    groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')] 
     # groups = [('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')]
     # groups = [('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
     
-    normalise = True; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
+    normalise = False; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
     for variable in ['CjTh', 'myocIntBall']:
         for chamber in ['Atr', 'Vent']:
             fcAn.meanHM(df_dataset_hm = df_dataset_hm, filters = filters, groups = groups, chamber = chamber, 
@@ -168,7 +192,7 @@ if init:
     df_cjPDF = df_cjPDF.loc[:, ~df_cjPDF.columns.str.contains('^Unnamed')]
     df_cjPDF = fcAn.getMainStrain(df_cjPDF)
     fcAn.printDFINfo(df_cjPDF,  df_type = 'kde')
-    df_cjPDF2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_cjPDF, df2plot = [], df_type = 'kde')
+    df_cjPDF2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_cjPDF, df_cjPDF2plot, df_type = 'kde')
     
     #% Plot results
     save, info, ext = fcAn.q_savePlot()
@@ -200,54 +224,42 @@ if init:
                            n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
                            yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
     
-    #%% - STATISTICS!!!
-    print("Select genotypes to include in analysis: ")
-    genot2filter = input ("[A] = 'wt','ht','mt' / [B] = 'wt','mt': ")
-
-    if genot2filter == 'A':
-        genotypes2filter = ['wt','ht','mt']
-        box_pairs = [("wt", "ht"), ("ht", "mt"), ("wt", "mt")]
-    else:
-        genotypes2filter = ['wt','mt']
-        box_pairs = [("wt", "mt")] 
+    #%% - STATISTICS EASY FOR FUTURE DEVELOPMENT!!!
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from statannot import add_stat_annotation
     
-    df2analyse_o = df2analyse_o[df2analyse_o['Genotype'].isin(genotypes2filter)]
-    order2plot = genotypes2filter
-    gen2txt = ''.join(genotypes2filter)
+    df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
+    fcAn.printDFINfo(df2plot)
     
-    alpha = 0.05
-    x ='Genotype'
-    vars2loop = stAn.getVariables(variables)
-    for var in vars2loop:
-        print(">>>> Running normality tests for variable:", var, "/ allele: ", alleleName, '\n')
-        pvalues_norm, txt_normtest, all_data_normal = fcAn.normalityTests (alpha, x, var, genotypes2filter, df2plot, 'ShapiroWilk')
+    groups = ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
+             'Tissue Endocardium','Tissue Cardiac Jelly','Angles','Volume Percentages','Tissue Volume Percentages'] 
+    group = groups[fcBasics.ask4input('Select variable from groups [int]:', int)]
+    test2use = fcBasics.ask4input("test2use (Two vars: 't-test_ind'/'Mann-Whitney' - Three vars: 'Kruskal'): ", str, True)
+    vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group])
+    for var in vars2plot: 
+        print(var)
+        x = 'Stage' # factor
+        y = var
+        hue = 'GenotypeAll'
+        hue_order = ['hapln1a:wt', 'hapln1a:mt']
+        order = ['32-34', '48-50', '72-74']
+        box_pairs = [(('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')),
+                      (('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')),
+                      (('72-74','hapln1a:wt'), ('72-74','hapln1a:mt'))]#, 
+                      # (('32-34','hapln1a:wt'), ('48-50','hapln1a:wt')),
+                      # (('48-50','hapln1a:wt'), ('72-74','hapln1a:wt')),
+                      # (('32-34','hapln1a:wt'), ('72-74','hapln1a:wt'))]
+        
+        fig = plt.subplots()
+        ax = sns.swarmplot(data = df2plot, x=x, y=y, hue=hue, order = order, dodge = True)
+        ax1, test_results = add_stat_annotation(ax, data=df2plot, x=x, y=y, hue=hue, order = order,
+                                                box_pairs=box_pairs,perform_stat_test=True, test = test2use,
+                                                comparisons_correction=None,
+                                                line_offset_to_box=0.1, line_offset=0.01,
+                                                line_height=0.015, 
+                                                text_format='star', loc='inside', verbose=2);
     
-        test2use, multcomp_txt, txt_testSelected = fcAn.selectStatisticalTest (genotypes2filter, all_data_normal, var)
-        
-        x_label= 'Genotype'
-        y_label= titles[variables.index(var)]+"\n"
-        
-        if test2use == 'One-way-ANOVA':
-            pval_OWA, pval_Tukey_o, pval_Tukey = stAn.stTest_OWANOVA (x, var, df2plot)
-            test_res = stAn.plotStatistics (df2plot, x, var, x_label, y_label, box_pairs, figsize_St, genot2filter,
-                                 colors_bgd, colors_pts, order2plot,
-                                 alleleName, txt_normtest, multcomp_txt, txt_testSelected, txt_note,
-                                 test2use, pval_OWA, pval_Tukey,
-                                 plots_dir, saveFig_St, ext='svg')
-        elif test2use == 'Kruskal': 
-            pval_Kruskal, pval_Dunn_o, pval_Dunn = stAn.stTest_Kruskal (x, var, df2plot)
-            test_res = stAn.plotStatistics (df2plot, x, var, x_label, y_label, box_pairs, figsize_St, genot2filter,
-                                 colors_bgd, colors_pts, order2plot,
-                                 alleleName, txt_normtest, multcomp_txt, txt_testSelected, txt_note,
-                                 test2use, pval_Kruskal, pval_Dunn,
-                                 plots_dir, saveFig_St, ext='svg')
-        else:
-            test_res = stAn.plotStatistics (df2plot, x, var, x_label, y_label, box_pairs, figsize_St, genot2filter,
-                                 colors_bgd, colors_pts, order2plot,
-                                 alleleName, txt_normtest, multcomp_txt, txt_testSelected, txt_note,
-                                 test2use, [], [],
-                                 plots_dir, saveFig_St, ext='svg')
-        
     #%% OTHERS TO CHECK LATER!!!
     #%% Plots with embryo ref labels
     # save = True
