@@ -605,6 +605,16 @@ def createDirectories2Save (filename, dir_data2Analyse, end_name):
 
     return dir_results, directories
 
+#%% func - new_dir 
+def new_dir(dir_base, new_folder, print_txt = True):
+    
+    dir2create = os.path.join(dir_base, new_folder)
+    if os.path.isdir(dir2create) == False:
+        os.mkdir(dir2create)
+        if print_txt: 
+            print("\t-",new_folder, " was created as a directory!")
+    return dir2create
+            
 #%% func - metadataExt
 def metadataExt (filename, dir_data2Analyse):
     """
@@ -714,7 +724,7 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
     return vmtktxtsf, namesf
 
 #%% func - saveFilledDF
-def saveFilledDF(filename, df_res, dir2save):
+def saveFilledDF(filename, df_res, dir2save, name = 'ResultsDF'):
     """
     Function that exports the filled dataframe containing all the measured data obtained in the processing of the images
     (e.g. surface area, volumes, orientation angles, etc) as a '.csv' file in the directory given as input
@@ -737,7 +747,7 @@ def saveFilledDF(filename, df_res, dir2save):
     print('\n- File dataframe for '+filename+' has been saved!')
     # print(df_res.T.head(1:2),'\n')
 
-    name_csv = filename+'_ResultsDF.csv'
+    name_csv = filename+'_'+name+'.csv'
     dir_filledDF = os.path.join(dir2save, name_csv)
     df_res.to_csv(dir_filledDF)
 
@@ -958,6 +968,9 @@ def changeDirName(filename, dir_o):
 
         print('- Processed folder has changed name - ', new_name)
 
+#%% func - get_screenshot
+# def get_screenshot():
+    
 #%% Code to create documentation
 # from pathlib import Path
 # # pdoc --html <path to code> --output-dir <path to documentation>

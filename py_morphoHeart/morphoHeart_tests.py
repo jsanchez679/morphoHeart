@@ -226,6 +226,7 @@ if init:
     contour = car.intersectWith(tube).lineWidth(4).c('black')
     
     show(car, tube, contour, __doc__, axes=7)
+    
     #%%
     cyls = []
     for j, h in enumerate(np.linspace(0.225/2,0.225*5,9)):
