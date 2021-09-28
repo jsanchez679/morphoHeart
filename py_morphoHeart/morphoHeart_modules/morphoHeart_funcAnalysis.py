@@ -407,6 +407,10 @@ def getVarRatios(df_meas):
     df_meas['Ratio_VolCJ2VolTissue'] = df_meas['Vol_CJ']/ df_meas['Vol_Tissue']
     df_meas['Ratio_VolLumen2VolTissue'] = df_meas['Vol_Int.Endo']/ df_meas['Vol_Tissue']
     
+    df_meas['Ratio_VolLeftCJ2VolRightCJ'] = df_meas['Vol_CJ.Left']/ df_meas['Vol_CJ.Right']
+    df_meas['Ratio_VolAtrCJ2VolVentCJ'] = df_meas['Vol_Atr.CJ']/ df_meas['Vol_Vent.CJ']
+    
+    
     
     return df_meas
 
@@ -415,11 +419,27 @@ def def_variables(plot_type):
 
     if plot_type == 'strip_plots':
         
-        vars_dict = {"ang_Heart" : "Angle Heart wrt Sample (\N{DEGREE SIGN})",
-                       "ang_Atr" : "Atrial Angle (\N{DEGREE SIGN})",
-                       "ang_Vent" : "Ventricular Angle (\N{DEGREE SIGN})",
-                       "ang_BtwChambers" : "Angle between Chambers (\N{DEGREE SIGN})",
+        vars_dict = {   # Angles
+                       "ang_Heart" : "Angle Heart wrt Sample (\N{DEGREE SIGN})",
+                       "ang_AtrS" : "Sagittal Atrial Angle (\N{DEGREE SIGN})",
+                       "ang_VentS" : "Sagittal Ventricular Angle (\N{DEGREE SIGN})",
+                       "ang_BtwChambersS" : "Sagittal Angle between Chambers (\N{DEGREE SIGN})",
                        
+                       "ang_AtrV" : "Ventral Atrial Angle (\N{DEGREE SIGN})",
+                       "ang_VentV" : "Ventral Ventricular Angle (\N{DEGREE SIGN})",
+                       "ang_BtwChambersV" : "Ventral Angle between Chambers (\N{DEGREE SIGN})",
+                       
+                       # Ellipse measurements
+                       "EllipAtr_Asphericity" : "Atrial Ellipse Asphericity",
+                       "EllipAtr_Depth" : "Atrial depth [um]",
+                       "EllipAtr_Length" : "Atrial length [um]",
+                       "EllipAtr_Width" : "Atrial width [um]",
+                       "EllipVent_Asphericity" : "Ventricular Ellipse Asphericity",
+                       "EllipVent_Depth" :"Ventricular depth [um]",
+                       "EllipVent_Length" : "Ventricular length [um]",
+                       "EllipVent_Width" : "Ventricular width [um]",
+                       
+                       # Surface Areas
                        "SurfArea_Myoc" : "Surface Area\nMyocardium [um$^2$]",
                        "SurfArea_Int.Myoc" : "Surface Area\nInt.Myocardium [um$^2$]",
                        "SurfArea_Ext.Myoc" : "Surface Area\nExt.Myocardium [um$^2$]",
@@ -436,13 +456,15 @@ def def_variables(plot_type):
                        "SurfArea_Vent.ExtMyoc" : "Ventricular Heart\nSurface Area [um$^2$]",
                        "SurfArea_Vent.IntEndo" : "Ventricular Lumen\nSurface Area [um$^2$]",
                         
-                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length (Int.Myoc) [um]",
-                       "linLine_Ext.Endo(Cut)" : "Linear Heart Length (Ext.Endo) [um]",
-                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length (Int.Myoc) [um]",
-                       "Length_CL_Ext.Endo(Cut)" : "Looped Heart Length (Ext.Endo) [um]",
+                       # Looping ratio
+                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length\n(Int.Myoc) [um]",
+                       "linLine_Ext.Endo(Cut)" : "Linear Heart Length\n(Ext.Endo) [um]",
+                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length\n(Int.Myoc) [um]",
+                       "Length_CL_Ext.Endo(Cut)" : "Looped Heart Length\n(Ext.Endo) [um]",
                        'Looping_Ratio_Myoc' : 'Looping Ratio (Int.Myoc)',
                        'Looping_Ratio_Endo' : 'Looping Ratio (Ext.Endo)',
                         
+                       # Volumes
                        "Vol_Int.Myoc" : "Volume Int.Myocardium [um$^3$]",
                        "Vol_Ext.Myoc" : "Heart Volume [um$^3$]",
                        "Vol_Int.Endo" : "Heart Lumen Volume [um$^3$]",
@@ -461,10 +483,14 @@ def def_variables(plot_type):
                        'Vol_Atr.IntEndo' : 'Atrial Lumen Volume [um$^3$]',
                        'Vol_Vent.IntEndo' : 'Ventricular Lumen Volume [um$^3$]',
                        
+                       'Vol_CJ.Left' : "Left Volume\nCardiac Jelly [um$^3$]",
+                       'Vol_CJ.Right' : "Right Volume\nCardiac Jelly [um$^3$]",
+                       
                        'Vol_Tissue' : 'Tissue Volume [um$^3$]',
                        'Vol_Atr.Tissue' : 'Atrial Tissue Volume [um$^3$]', 
                        'Vol_Vent.Tissue' : 'Ventricular Tissue Volume [um$^3$]',
                        
+                       # Volume Ratios 
                        'Ratio_VolMyoc2VolExtMyoc' : 'Myocardial Volume / \nHeart Volume', 
                        'Ratio_VolEndo2VolExtMyoc' : 'Endocardial Volume / \nHeart Volume',
                        'Ratio_VolCJ2VolExtMyoc' : 'Cardiac Jelly Volume / \nHeart Volume', 
@@ -473,7 +499,10 @@ def def_variables(plot_type):
                        'Ratio_VolMyoc2VolTissue' : 'Myocardial Volume / \nTissue Volume', 
                        'Ratio_VolEndo2VolTissue' : 'Endocardial Volume / \nTissue Volume',
                        'Ratio_VolCJ2VolTissue' : 'Cardiac Jelly Volume / \nTissue Volume', 
-                       'Ratio_VolLumen2VolTissue' : 'Lumen Volume / \nTissue Volume'}
+                       'Ratio_VolLumen2VolTissue' : 'Lumen Volume / \nTissue Volume', 
+                       
+                       'Ratio_VolLeftCJ2VolRightCJ' : 'Left Vol.Cardiac Jelly / \nRight Vol.Cardiac Jelly', 
+                       'Ratio_VolAtrCJ2VolVentCJ' : 'Atrial Vol.Cardiac Jelly / \nVentricular Vol.Cardiac Jelly'}
         
     
     elif plot_type == 'bar_plots':
@@ -515,47 +544,71 @@ def plot_groups():
     pl_groups = {'Surface Area': 
                      {'title': 'Surface Areas', 
                       'vars' : ['SurfArea_Ext.Myoc','SurfArea_Int.Endo'],
-                      'n_cols': 2, 'yticks_lab':'1e3 - d.'},
+                      'n_cols': 2, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
                  'Surface Area CJ': 
                      {'title': 'Cardiac Jelly Thickness Analysis', 
                       'vars' : ['SurfArea_Ext.CJ'],
-                      'n_cols': 1, 'yticks_lab':'th,'},
+                      'n_cols': 1, 'yticks_lab':'th,', 'ylim' : ''},
                  'Heart Size': 
                      {'title': 'Heart Size', 
                       'vars' : ['Vol_Ext.Myoc', 'Vol_Atr.ExtMyoc', 'Vol_Vent.ExtMyoc'],
-                      'n_cols': 3, 'yticks_lab':'1e6 - d.'},
+                      'n_cols': 3, 'yticks_lab':'1e6 - d.', 'ylim' : ''},
                  'Lumen Size' : 
                      {'title': 'Lumen Size', 
                       'vars' : ['Vol_Int.Endo', 'Vol_Atr.IntEndo', 'Vol_Vent.IntEndo'],
-                      'n_cols': 3, 'yticks_lab':'1e6 - d.'}, 
+                      'n_cols': 3, 'yticks_lab':'1e6 - d.', 'ylim' : ''}, 
                  'Heart Looping': 
                      {'title': 'Heart Looping', 
                       'vars' : ['linLine_Int.Myoc(Cut)', 'Length_CL_Int.Myoc(Cut)', 'Looping_Ratio_Myoc'],
-                      'n_cols': 3, 'yticks_lab':'d.'}, 
+                      'n_cols': 3, 'yticks_lab':'d.', 'ylim' : ''}, 
                  'Tissue Myocardium':  
                      {'title': 'Tissue Layer Volumes - Myocardium', 
                       'vars' : ['Vol_Myoc', 'Vol_Atr.Myoc', 'Vol_Vent.Myoc'],
-                      'n_cols': 3, 'yticks_lab':'1e3 - d.'},
+                      'n_cols': 3, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
                  'Tissue Endocardium': 
                      {'title': 'Tissue Layer Volumes - Endocardium', 
                       'vars' : ['Vol_Endo', 'Vol_Atr.Endo', 'Vol_Vent.Endo'],
-                      'n_cols': 3, 'yticks_lab':'1e3 - d.'},
-                 'Tissue Cardiac Jelly' : 
-                     {'title': 'Tissue Layer Volumes - Cardiac Jelly', 
+                      'n_cols': 3, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                 'Tissue Cardiac Jelly (AtrVent)' : 
+                     {'title': 'Tissue Layer Volumes - Cardiac Jelly (Atr&Vent)', 
                       'vars' : ['Vol_CJ', 'Vol_Atr.CJ', 'Vol_Vent.CJ'],
-                      'n_cols': 3, 'yticks_lab':'1e3 - d.'},
-                 'Angles' :
-                     {'title': 'Angles', 
-                      'vars' : ['ang_Atr', 'ang_Vent', 'ang_BtwChambers'],
-                      'n_cols': 3, 'yticks_lab':'d. - 0'},
+                      'n_cols':3, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                 'Tissue Cardiac Jelly (LR)' : 
+                     {'title': 'Tissue Layer Volumes - Cardiac Jelly (L&R)', 
+                      'vars' : ['Vol_CJ','Vol_CJ.Left', 'Vol_CJ.Right'],
+                      'n_cols':3, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                 'Ratios Cardiac Jelly' : 
+                     {'title': 'Ratios Tissue Layer Volumes - Cardiac Jelly', 
+                      'vars' : ['Ratio_VolAtrCJ2VolVentCJ', 'Ratio_VolLeftCJ2VolRightCJ'],
+                      'n_cols': 2, 'yticks_lab':'d.', 'ylim' : ((2,12), (0,35))},
+                 'AtrEllipse' : 
+                     {'title': 'Atrial Ellipse', 
+                      'vars' : ['EllipAtr_Depth','EllipAtr_Length', 'EllipAtr_Width'],
+                      'n_cols': 3, 'yticks_lab':'d. - 0', 'ylim' : ''},
+                 'VentEllipse' : 
+                     {'title': 'Ventricular Ellipse', 
+                      'vars' : ['EllipVent_Depth','EllipVent_Length', 'EllipVent_Width'],
+                      'n_cols': 3, 'yticks_lab':'d. - 0', 'ylim' : ''},
+                 'ChamberAsphericity' : 
+                     {'title': 'Chamber Asphericity', 
+                      'vars' : ['EllipAtr_Asphericity','EllipVent_Asphericity'],
+                      'n_cols': 2, 'yticks_lab':'d.', 'ylim' : ''},
+                 'Sagittal Angles' :
+                     {'title': 'Sagittal Angles', 
+                      'vars' : ['ang_AtrS', 'ang_VentS', 'ang_BtwChambersS'],
+                      'n_cols': 3, 'yticks_lab':'d. - 0', 'ylim' : ''},
+                 'Ventral Angles' :
+                     {'title': 'Ventral Angles', 
+                      'vars' : ['ang_AtrV', 'ang_VentV', 'ang_BtwChambersV'],
+                      'n_cols': 3, 'yticks_lab':'d. - 0', 'ylim' : ''},
                  'Volume Percentages' : 
                      {'title': 'Heart Composition', 
                       'vars' : ['Ratio_VolMyoc2VolExtMyoc', 'Ratio_VolEndo2VolExtMyoc', 'Ratio_VolCJ2VolExtMyoc', 'Ratio_VolLumen2VolExtMyoc'],
-                      'n_cols': 4, 'yticks_lab':'d.'},
+                      'n_cols': 4, 'yticks_lab':'d.', 'ylim' : ''},
                  'Tissue Volume Percentages' : 
                      {'title': 'Tissue Volume Composition', 
                       'vars' : ['Ratio_VolMyoc2VolTissue', 'Ratio_VolEndo2VolTissue', 'Ratio_VolCJ2VolTissue', 'Ratio_VolLumen2VolTissue'],
-                      'n_cols': 4, 'yticks_lab':'d.'}}
+                      'n_cols': 4, 'yticks_lab':'d.', 'ylim' : ''}}
     
     return pl_groups
 
@@ -604,14 +657,14 @@ def def_legends(df_input, df_type = 'meas'):
                       'hapln1a:wt/spaw:wt', 'hapln1a:wt/spaw:ht', 'hapln1a:wt/spaw:mt', 
                       'hapln1a:ht/spaw:wt', 'hapln1a:ht/spaw:ht', 'hapln1a:ht/spaw:mt',
                       'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:ht', 'hapln1a:mt/spaw:mt',
-                      'hapln1a_OE:gu', 'hapln1a_OE:g', 'hapln1a_OE:u', 'hapln1a_OE:wt',
+                      'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'galff:-/uas:-',
                       'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
         
         leg_genots = ['$hapln1a^{+/+}$', '$hapln1a^{+/-}$', '$hapln1a^{-/-}$', 
                       '$hapln1a^{+/+}/spaw^{+/+}$', '$hapln1a^{+/+}/spaw^{+/-}$', '$hapln1a^{+/+}/spaw^{-/-}$', 
                       '$hapln1a^{+/-}/spaw^{+/+}$', '$hapln1a^{+/-}/spaw^{+/-}$', '$hapln1a^{+/-}/spaw^{-/-}$',
                       '$hapln1a^{-/-}/spaw^{+/+}$', '$hapln1a^{-/-}/spaw^{+/-}$', '$hapln1a^{-/-}/spaw^{-/-}$',
-                      'hapln1a_OE:gu', 'hapln1a_OE:g', 'hapln1a_OE:u', 'hapln1a_OE:wt',
+                      'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'hapln1a_OE:wt',
                       '$vcana^{+/+}$', '$vcana^{+/-}$', '$vcana^{-/-}$', 'wt']
         
         for gen in genots:
@@ -629,12 +682,14 @@ def def_legends(df_input, df_type = 'meas'):
         all_strains = ['hapln1a prom187/+ (F2s) InX','hapln1a prom187/+ (F3s) InX', 
                        'hapln1a prom241/+ (F2s) InX', 'hapln1a prom241/+ (F3s) InX',
                        'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ (F2s) InX',
-                       'myl7lckGFP_kdrlRasCherry']
+                       'myl7lckGFP_kdrlRasCherry',
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
         
         leg_strains = ["$hapln1a^{\Delta 187} (F2s)$", "$hapln1a^{\Delta 187} (F3s)$", 
                        "$hapln1a^{\Delta 241} (F2s)$", "$hapln1a^{\Delta 241} (F3s)$",
                        "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$",
-                       'myl7:lck-GFP; kdrl:rasCherry']
+                       'myl7:lck-GFP; kdrl:rasCherry',
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
     
         for strain in strains:
             out_strains.append(leg_strains[all_strains.index(strain)])
@@ -650,11 +705,13 @@ def def_legends(df_input, df_type = 'meas'):
     if bool_strains_o: 
         all_strains_o = ['hapln1a prom187/+ InX', 'hapln1a prom241/+ InX',
                        'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ (F2s) InX',
-                       'myl7lckGFP_kdrlRasCherry']
+                       'myl7lckGFP_kdrlRasCherry',
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
         
         leg_strains_o = ["$hapln1a^{\Delta 187}$","$hapln1a^{\Delta 241}$", 
                        "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$",
-                       'myl7:lck-GFP; kdrl:rasCherry']
+                       'myl7:lck-GFP; kdrl:rasCherry',
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
         
         for strain_o in strains_o:
             out_strains_o.append(leg_strains_o[all_strains_o.index(strain_o)])
@@ -818,8 +875,9 @@ def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2loa
     min_vals_o = []; max_vals_o = []; min_vals_N = []; max_vals_N = []
     for group in groups:
         folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+        
+        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
         print(folders)
-        # print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
         if normalise: 
             [dfs_o, dfs_hmN], num, _  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
                                                        dir_data2Analyse, normalise = normalise, 
@@ -1418,7 +1476,7 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
 
 #%% func - plotInGroupsShape
 def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
-                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
                   save = True, dpi = 300, ext = 'png'):
     
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
@@ -1441,10 +1499,6 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
     
     # Set up the matplotlib figure
     h_plot, w_plot = ips
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
     
     # Genotypes and Strains being plotted 
     values = []
@@ -1458,6 +1512,12 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
     
     # - number of x_var
     n_x = len(x_values)
+    if n_x == 1:
+        h_plot = 3.5
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
     
     #  Create figure  - plt.clf()
     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
@@ -1486,9 +1546,11 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
     handle_new = legend_elem_hue+space+legend_elem_shape
     legend_new = hue_legend+['']+shape_legend
     
-    marker_size = 12
+    marker_size = 10
     dodge = True
     jitter = 0.3
+    
+    plot_no = 0
     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
         # Create list to contain info of yticks and ist highest value
         y_vals_all = []
@@ -1522,6 +1584,10 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
                 ax.get_legend().remove()
                 sns.despine()
                 
+                if ylim != '':
+                    # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+                    ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+                
                 if n == 0:
                     handles, labels = m.get_legend_handles_labels()
 
@@ -1532,7 +1598,6 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
                     vline_pos = list(range(1,n_x,1))
                     for pos in vline_pos:
                         ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
-            
             
             # Define axes based on higherst bar
             max_y_index = max_y_vals.index(max(max_y_vals))
@@ -1549,21 +1614,23 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
             elif yticks_lab == 'd.':
                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+                
+        plot_no +=1
 
     fig.suptitle(title+'\n', fontsize = 30, y=1)
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
             if info != '':
-                fig_title = dir2savef+info+"_"+title+"."+extf
+                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
             else: 
-                fig_title = dir2savef+title+"."+extf
+                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
     
 #%% func - plotInGroupsStats
 def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
-                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
                       save = True, dpi = 300, ext = 'png'):
     
     if stats_set[0]: 
@@ -1597,10 +1664,6 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     
     # Set up the matplotlib figure
     h_plot, w_plot = ips
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
     
     # Genotypes and Strains being plotted 
     values = []
@@ -1614,11 +1677,21 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     
     # - number of x_var
     n_x = len(x_values)
+    if n_x == 1:
+        h_plot = 6
+        hspace = 0.2; wspace = 1
+    else: 
+        hspace = 0.5; wspace = 0.5
+        
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
     
     #  Create figure  - plt.clf()
     gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1.2])
     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.subplots_adjust(hspace=hspace, wspace=wspace)
     
     sns.set_style("ticks")
     sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
@@ -1642,8 +1715,9 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     handle_new = legend_elem_hue+space+legend_elem_shape
     legend_new = hue_legend+['']+shape_legend
     
-    marker_size = 10
+    marker_size = 8
     dodge = True
+    plot_no = 0
     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
         
         # Create list to contain info of yticks and ist highest value
@@ -1671,8 +1745,10 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
                 
         else: 
             print(' > ',var,'\n')
-            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              palette = palettes, dodge = dodge, size = marker_size)
+            m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                              palette = palettes, dodge = dodge, size = marker_size, jitter = 0.2)
+            # m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+            #                   palette = palettes, dodge = dodge, size = marker_size)
             if stats: 
                 box_pairs = dict_stats[var]['box_pairs']
                 stat_test = False
@@ -1705,6 +1781,8 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
             ax.set_position([box.x0, box.y0, box.width*1, box.height])
             ax.get_legend().remove()
             sns.despine()
+            if ylim != '':
+                ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
             
             if n == 0:
                 handles, labels = m.get_legend_handles_labels()
@@ -1732,6 +1810,8 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
             elif yticks_lab == 'd.':
                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+            
+            plot_no +=1
 
     fig.suptitle(title+'\n', fontsize = 30, y=0.95)
     if save: 
@@ -2197,6 +2277,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
     
     col_values = sorted(df2plot[col_var].unique(), reverse = reverse)
     n_col = len(col_values)
+    print(n_col)
     for nn in range(n_col): col_values.append('')
     
     # - number of variables/ stacked bars define number of columns in legend
@@ -2205,17 +2286,21 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
         loc='center'
         bbox_to_anchor=(0.5, 0.5)
         ncols_leg = len(vars2plot)
-    else: 
+    else:
         leg_pos = n_col
         loc='center'
-        bbox_to_anchor=(1, 0.5)
         if len(vars2plot) == 3:
             ncols_leg = 3
         else: 
             ncols_leg = 2
+        if n_col == 1:
+            bbox_to_anchor=(0.5, 0.5)
+        else: 
+            bbox_to_anchor=(1, 0.5)
             
     # - number of x_var
     n_x = len(df2plot[x_var].unique())
+    
     
     # If bar plots are stacked to 100 transform data to percentages
     if stack100: 
@@ -2402,6 +2487,10 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
             ncols_leg = 3
         else: 
             ncols_leg = 2
+        # if n_col == 1:
+        #     bbox_to_anchor=(0.5, 0.5)
+        # else: 
+        #     bbox_to_anchor=(1, 0.5)
     
     #Create figure
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
@@ -2747,23 +2836,28 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse
     # print('thickness:', thickness)
     for n, file in enumerate(folders):
         # print(file)
-        name = 'unloop'+chamber+thickness
+        name = 'unloop'+chamber+'_'+thickness
         hmf_file = 'hmf_'+name
-        # print(hmf_file)
+        # print('hmf_file:',hmf_file)
         try: 
             df_load = loadDF(file[2:], hmf_file, dir2load_df)
             dfs_o.append(df_load)
             if normalise: 
-                dir_results = os.path.join(dir_data2Analyse, file, 'Results_'+file[2:])
+                dir_results = os.path.join(dir_data2Analyse, 'R_all', 'df_all', 'df_meas')
                 df_res = loadDF(file[2:], 'ResultsDF', dir_results)
                 file_num = df_res[df_res['Folder']==file[2:]+'_2A'].index.values[0]
-                
+                # print(file[2:], file_num)
+                # print(df_res.head(5))
                 if perChamber:
-                    dict_norm = {'CjTh': {'unloopAtrCjTh': df_res.loc[file_num,'Vol_Atr.CJ'], 'unloopVentCjTh': df_res.loc[file_num,'Vol_Vent.CJ']},
-                                  'myocIntBall': {'unloopAtrmyocIntBall': df_res.loc[file_num,'Vol_Atr.ExtMyoc'], 'unloopVentmyocIntBall': df_res.loc[file_num,'Vol_Vent.ExtMyoc']}}
+                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_Atr.CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_Vent.CJ']},
+                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Atr.Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Vent.Myoc']},
+                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Atr.Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Vent.Endo']},
+                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Atr.ExtMyoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Vent.ExtMyoc']}}
                 else: 
-                    dict_norm = {'CjTh': {'unloopAtrCjTh': df_res.loc[file_num,'Vol_CJ'], 'unloopVentCjTh': df_res.loc[file_num,'Vol_CJ']},
-                                  'myocIntBall': {'unloopAtrmyocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc'], 'unloopVentmyocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc']}}
+                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_CJ']},
+                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Myoc']},
+                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Endo']},
+                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc']}}
                 # print(dict_norm)
                 if opt_norm == 'opt_div':
                     norm_val = 1000000/dict_norm[thickness][name]
@@ -2772,7 +2866,7 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse
                 norm_vals.append(norm_val)
                 df_load = df_load*norm_val
                 dfs_hmf.append(df_load)
-                num += 1
+            num += 1
         
         except: 
             print('-No hmf heatmap dataframe found for '+thickness+' within '+file+' results folder!')
@@ -2792,6 +2886,10 @@ def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, 
         title = 'Cardiac jelly thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     elif thickness == 'myocIntBall': 
         title = 'Myocardium ballooning [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    elif thickness == 'MyocTh':
+        title = 'Myocardial thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    elif thickness == 'EndoTh':
+        title = 'Endocardial thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     
     # Make figure 
     df_max = format(df.max().max(), '.2f')

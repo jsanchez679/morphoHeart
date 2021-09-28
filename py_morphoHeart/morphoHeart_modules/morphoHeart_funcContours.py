@@ -3820,26 +3820,28 @@ def selectContours (myIm, slcNum, chNum, cont_sort, num_contours, numContours_pa
        sureBoth = False
 
        while not sureBoth:
-           # Internal
-           #print('- \n[Ch'+str(chNum)+'/Slc'+str(slcNum)+']')
-           print('- Enter the contour numbers for slice '+str(slcNum)+':')
-           selecContInt = str(input("\t> INTERNAL contours (separated by SPACES)/'esc': ")).lower()
-           if selecContInt == 'esc':
-               exit_txt = True
-               break
-           # External
-           selecContExt = str(input("\t> EXTERNAL contours (separated by SPACES)/'esc': ")).lower()
-           if selecContExt == 'esc':
-               exit_txt = True
-               break
-           q_sureBoth = str(input("> Are you sure?  - INTERNAL: "+ selecContInt + " / EXTERNAL: "+selecContExt+" - >>> [y]:yes/[n]:no/[esc]:exit: ")).lower()
-           if q_sureBoth == "y":
-               sureBoth = True
-               print('\n')
-               break
-           elif q_sureBoth == 'esc':
-               exit_txt = True
-               break
+           
+           # def selectCont_ps(slcNum):
+            # Internal
+            #print('- \n[Ch'+str(chNum)+'/Slc'+str(slcNum)+']')
+            print('- Enter the contour numbers for slice '+str(slcNum)+':')
+            selecContInt = str(input("\t> INTERNAL contours (separated by SPACES)/'esc': ")).lower()
+            if selecContInt == 'esc':
+                exit_txt = True
+                break
+            # External
+            selecContExt = str(input("\t> EXTERNAL contours (separated by SPACES)/'esc': ")).lower()
+            if selecContExt == 'esc':
+                exit_txt = True
+                break
+            q_sureBoth = str(input("> Are you sure?  - INTERNAL: "+ selecContInt + " / EXTERNAL: "+selecContExt+" - >>> [y]:yes/[n]:no/[esc]:exit: ")).lower()
+            if q_sureBoth == "y":
+                sureBoth = True
+                print('\n')
+                break
+            elif q_sureBoth == 'esc':
+                exit_txt = True
+                break
 
        if exit_txt:
            print("- Exiting!")

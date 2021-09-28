@@ -87,24 +87,16 @@ if init:
     #   ================================================================================================================
 
     # Get existing cl_dictionaries
-    _, mesh_name = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
-                                                dir_cl = directories[3], printshow = False)
-    # Import dictionaries
-    dicts = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj']+[txt+'_npcl' for txt in mesh_name],
-                                                                    directories = [directories[0]]+ [directories[3]]*len([txt+'_npcl' for txt in mesh_name]))
-    dict_obj = fcMeshes.splitDicts(dicts[0])
-    if len(dict_obj) == 4:
-        [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
-    else:
-        [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
+    [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts_cl] = fcBasics.import_dicts('mH_D', filename, directories)
     
     # Select analysis to run
     tissue_analysis, tissue_opt, m_myoc, dict_unloop = fcMeshes.load_tissues2unloop(filename, directories, dir_results, dict_colour)
     
     # Create centreline
-    kspl_CL, linLines, ksplSph_o, dict_kspl = fcMeshes.createCLs(dict_cl = dicts[1:], dict_pts = dict_pts, 
+    kspl_CL, linLines, ksplSph_o, dict_kspl = fcMeshes.createCLs(filename = filename, dict_cl = dicts_cl, dict_pts = dict_pts, 
                                                                  dict_kspl = dict_kspl, dict_planes = dict_planes, 
-                                                                 colors = ['deepskyblue', 'tomato'], myoc = m_myoc)
+                                                                 colors = ['deepskyblue', 'tomato'], myoc = m_myoc, 
+                                                                 dir_stl = directories[3])
     
     # Get centreline ribbon
     cl_ribbonV, kspl_ext, _, _, _ = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
@@ -183,16 +175,18 @@ if init:
                                               hm_names = dict_unloop[tissue]['hm_names'],
                                               saveHM = saveHM, cmap='turbo')
         
-        if 'kspl_vSurf' not in locals() or 'return_list' not in locals():
-            kspl_vSurf = []; return_list = []
-        m_Th  = dict_unloop[tissue]['mesh']
-        m_Th.pointColors(dict_unloop[tissue]['param'], cmap="turbo", vmin=scale_th[0][0], vmax=scale_th[0][1]).addScalarBar()
-        m_Th.mapper().SetScalarRange(scale_th[0][0],scale_th[0][1])
-        settings.legendSize = .2
-        txt = Text2D(filename+"\n\n >> Plot to validate heatmaps", c="k", font= font)
-        vp = Plotter(N=2, axes = 4)
-        vp.show(m_Th.alpha(0.01), cl_ribbonV, kspl_vSurf, spheres_zeroDeg, arr_vectZeroDeg, txt, at = 0)
-        vp.show(m_Th.clone().alpha(1), at = 1, interactive = True)
+        
+        if plotshow:
+            if 'kspl_vSurf' not in locals() or 'return_list' not in locals():
+                kspl_vSurf = []; return_list = []
+            m_Th  = dict_unloop[tissue]['mesh']
+            m_Th.pointColors(dict_unloop[tissue]['param'], cmap="turbo", vmin=scale_th[0][0], vmax=scale_th[0][1]).addScalarBar()
+            m_Th.mapper().SetScalarRange(scale_th[0][0],scale_th[0][1])
+            settings.legendSize = .2
+            txt = Text2D(filename+"\n\n >> Plot to validate heatmaps", c="k", font= font)
+            vp = Plotter(N=2, axes = 4)
+            vp.show(m_Th.alpha(0.01), cl_ribbonV, kspl_vSurf, spheres_zeroDeg, arr_vectZeroDeg, txt, at = 0)
+            vp.show(m_Th.clone().alpha(1), at = 1, interactive = True)
     
     #%% GET THICKNESS REGION PLOTS (PROBALITY DENSITY ESTIMATION PLOTS)
     #   Finally, we can create distribution plots that will allow us to compare the cardiac thickness distribution between 
@@ -200,7 +194,7 @@ if init:
     #   NOTE: This code can be modified to also get the distribution plots of the thickness of the other tissue layers. 
     #   Just let me know if you want me to include it! :)
     #   ================================================================================================================
-    cjPDF = True
+    cjPDF = False
     if cjPDF: 
         try: 
             thData = fcBasics.loadDF(filename = filename, file = 'df_cjThNmyocIntBall', dir_results = os.path.join(dir_results, 'csv_all'))

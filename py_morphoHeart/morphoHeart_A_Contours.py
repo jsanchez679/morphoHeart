@@ -215,8 +215,8 @@ if others:
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
     # Enter in 'first' and 'last' any slice number within the number of slices in the stack
-    first = 50
-    last = 140
+    first = 348
+    last = 360
     fcCont.showGridContours(myStack = stack_closed, slices = (first,last+1), n_rows = n_rows, level = level)
     
     #%% Plot all the contours of the stack in a grid

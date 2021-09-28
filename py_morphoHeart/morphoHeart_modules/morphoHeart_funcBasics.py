@@ -343,6 +343,64 @@ def loadNPY(filename, names, dir_txtNnpy, print_txt = True):
 
     return npys
 
+#%% func - import_dicts
+def import_dicts(module, filename, directories):
+    if module == 'mH_B1':
+        try: 
+        # Import dictionaries
+            dicts = loadDicts(filename = filename, dicts_name = ['dict_obj'], directories = [directories[0]])
+            dict_obj = splitDicts(dicts[0])
+            if len(dict_obj) == 4:
+                [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
+                dict_shapes = dict()
+            else:
+                [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
+        except: 
+            dict_planes = dict(); dict_pts = dict(); dict_kspl = dict(); dict_colour = dict(); dict_shapes = dict()
+            
+        return [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes]
+    
+    elif module in ['mH_C', 'mH_D']:
+        # Get existing cl_dictionaries
+        _, mesh_name = code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
+                                                    dir_cl = directories[3], printshow = False)
+        # Import dictionaries
+        dicts = loadDicts(filename = filename, dicts_name = ['dict_obj']+[txt+'_npcl' for txt in mesh_name],
+                                                                        directories = [directories[0]]+ [directories[3]]*len([txt+'_npcl' for txt in mesh_name]))
+        dict_obj = splitDicts(dicts[0])
+        
+        if len(dict_obj) == 4:
+            dict_shapes = dict()
+            [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
+        else:
+            [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
+        
+        return [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts[1:]]
+
+#%% func - splitDicts
+def splitDicts(dict_obj):
+    """
+    Function that splits the dictionary of dictionaries into a list of dictionaries
+
+    Parameters
+    ----------
+    dict_obj : dictionary
+        Dictionary of dictionaries [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+
+    Returns
+    -------
+    dicts_all : list of dictionaries
+        [dict_planes, dict_pts, dict_kspl, dict_colour(, dict_shapes)].
+
+    """
+
+    dicts_all = []
+    for i, name in enumerate(list(dict_obj.keys())):
+        ext_dict = dict_obj[name]
+        dicts_all.append(ext_dict)
+
+    return dicts_all
+
 #%% func - loadDicts
 def loadDicts(filename, dicts_name, directories, print_txt = True):
     """
@@ -615,6 +673,100 @@ def new_dir(dir_base, new_folder, print_txt = True):
             print("\t-",new_folder, " was created as a directory!")
     return dir2create
             
+#%% func - selectLayer2process
+def selectLayer2process(module, filename, directories):
+    
+    #Future import the process doct rather than creating it
+    if module == 'mH_B1':
+        dict_process = dict()
+        dict_tissLayers = {'Myocardium':{
+                                's3_ext': {'name': 'ch0_ext', 'exists': False},
+                                's3_all': {'name': 'ch0_all','exists': False},
+                                's3_int': {'name': 'ch0_int', 'exists': False},
+                                's3_postA_check': False}, 
+                           'Endocardium': {
+                               's3_ext':{'name': 'ch1_ext', 'exists': False},
+                               's3_all':{'name': 'ch1_all','exists': False},
+                               's3_int':{'name': 'ch1_int','exists': False},
+                               's3_postA_check': False}, 
+                           'Cardiac Jelly': {
+                               's3_ext':{'name': 'ch0_int', 'exists': False},
+                               's3_all':{'name': 'cj','exists': False},
+                               's3_int':{'name': 'cj_int', 'exists': False},
+                               's3_postA_check': False}}
+    else: 
+        print('Import process_dict missing')
+    
+    dir_txtNnpy = directories[1]
+    q_tiss_lay = ask4input('Select the tissue layers you would like to process from this heart: \n\t[0]: Myocardium\n\t[1]: Endocardium\n\t[2]: Cardiac Jelly\n\t[all]: All of them! >> : ', str)
+    list_tissLayers = sorted(list(dict_tissLayers.keys()), reverse = True)
+    sel_tissLayers = [list_tissLayers[i] for i in getInputNumbers(q_tiss_lay, list_tissLayers)]
+    
+    tissue_layf = []
+    for tissue in sorted(sel_tissLayers, reverse = True):
+        if tissue == 'Cardiac Jelly':
+            check_myo = dict_tissLayers['Myocardium']['s3_postA_check']
+            check_endo = dict_tissLayers['Endocardium']['s3_postA_check']
+            if check_myo and check_endo:
+                tissue_layf.append(tissue)
+            else: 
+                print(">> WARNING!: \n\tTo process the cardiac jelly, both, the myocardium and endocardium of this heart have to be segmented and either one or both of them haven't been segmented yet!") 
+                print("\n\t - Myocardium: Segmented ", check_myo)
+                print("\n\t - Endocardium: Segmented ", check_endo)
+                print("\t> Cardiac jelly wasn't added to the final list of tissue layers to process!")
+        else: 
+            bool_s3 = [False, False, False]
+            for n, s3_name in enumerate(['s3_int', 's3_all', 's3_ext']):
+                if os.path.exists(os.path.join(dir_txtNnpy,filename+"_s3_"+dict_tissLayers[tissue][s3_name]['name']+".npy")):
+                    dict_tissLayers[tissue][s3_name]['exists'] = bool_s3[n] = True
+            if all(bool_s3):
+                tissue_layf.append(tissue)
+                dict_tissLayers[tissue]['s3_postA_check'] = True
+            else: 
+                print(">> WARNING!: Tissue s3 are not complete for the", tissue)
+                print("\t> ", tissue, " was not added to the final list of tissue layers to process!")
+                
+    print('\n>> Tissue layers to process:')
+    list_columns(tissue_layf, cols=1, tab=True)
+    
+    dict_process['Tissue_Layers'] = dict_tissLayers
+    dict_process['tissLay2p'] = tissue_layf
+    
+    # Create dict_processes and define processes that will be run according to selected tissue layers and module 
+    if module == 'mH_B1':
+        dict_process['Processes'] = dict_processes = dict()
+        dict_processes['B_C3DV'] = dict_B_C3DV = dict()
+        
+        if 'Myocardium' in tissue_layf and 'Endocardium' in tissue_layf or 'Cardiac Jelly' in tissue_layf:
+            dict_B_C3DV['CleanEndocardium']=True
+        else: 
+            dict_B_C3DV['CleanEndocardium']=False
+            
+        dict_B_C3DV['CutIFandOFTs']= True
+        
+        if 'Cardiac Jelly' in tissue_layf:
+            dict_B_C3DV['ExtractCJ'] = True
+        else: 
+            dict_B_C3DV['ExtractCJ'] = False
+            
+        dict_B_C3DV['MeasureSurfAreaWholeTissues']= True
+        dict_B_C3DV['CreateMeshes4CL']=True
+        
+    
+    return tissue_layf, dict_process
+
+#%% func - selectChambers2process
+def selectChambers2process():
+    
+    chambers = ['Atrium', 'Ventricle']
+    q_both_chs = ask4input('Select the chambers you would like to process: \n\t[0]: atrium\n\t[1]: ventricle\n\t[all/0,1/0-1]: both! >> : ', str)
+    chambers_f = [chambers[i] for i in getInputNumbers(q_both_chs, chambers)]
+    
+    print('\n>> Chambers to process:')
+    list_columns(chambers_f, cols=1, tab=True)
+    
+    return chambers_f
+    
 #%% func - metadataExt
 def metadataExt (filename, dir_data2Analyse):
     """
@@ -906,7 +1058,7 @@ def selectFromList (input_list, text0, text1, cols = 4):
     return obj_num
 
 #%% func - list_columns
-def list_columns(obj, cols=4, columnwise=True, gap=4):
+def list_columns(obj, cols=4, columnwise=True, gap=4, tab= False):
     """
     Print the given list in evenly-spaced columns.
 
@@ -937,8 +1089,14 @@ def list_columns(obj, cols=4, columnwise=True, gap=4):
         if not len(plist[-1]) == cols:
             plist[-1].extend(['']*(len(sobj) - len(plist[-1])))
         plist = zip(*plist)
-    printer = '\n'.join([''.join([c.ljust(max_len + gap) for c in p]) for p in plist])
-
+    if tab: 
+        joining_txt = '\n\t- '
+    else: 
+        joining_txt ='\n'
+    printer = joining_txt.join([''.join([c.ljust(max_len + gap) for c in p]) for p in plist])
+    if tab: 
+        printer ='\t- '+printer
+        
     print(printer)
     
 #%% func - changeDirName

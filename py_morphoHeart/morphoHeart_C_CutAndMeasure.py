@@ -88,16 +88,7 @@ if init:
     #   ================================================================================================================
 
     # Get existing cl_dictionaries
-    _, mesh_name = fcBasics.code4vmtkCL(filename = filename, mesh_name = ['myoc_int','endo_ext'],
-                                                dir_cl = directories[3], printshow = False)
-    # Import dictionaries
-    dicts = fcBasics.loadDicts(filename = filename, dicts_name = ['dict_obj']+[txt+'_npcl' for txt in mesh_name],
-                                                                    directories = [directories[0]]+ [directories[3]]*len([txt+'_npcl' for txt in mesh_name]))
-    dict_obj = fcMeshes.splitDicts(dicts[0])
-    if len(dict_obj) == 4:
-        [dict_planes, dict_pts, dict_kspl, dict_colour] = dict_obj
-    else:
-        [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes] = dict_obj
+    [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts_cl] = fcBasics.import_dicts('mH_C', filename, directories)
 
     # Import meshes
     [m_myoc, m_endo, m_cj, m_cjOut, m_cjIn] = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc','endo','cj','cj_out','cj_in'],
@@ -133,9 +124,11 @@ if init:
                                                                 'ksplCut4CL_outflow-Int.Myoc(Cut)', 'ksplCut4CL_inflow-Int.Myoc(Cut)'])
     sphCuts = fcMeshes.createSpheres(dict_pts, pts_list = ['sph_Cut4CL_inflow-Int.Myoc(Cut)', 'sph_Cut4CL_inflow-Ext.Endo(Cut)', 
                                                            'sph_Cut4CL_outflow-Int.Myoc(Cut)', 'sph_Cut4CL_outflow-Ext.Endo(Cut)'])
-    kspl_CL, linLines, ksplSph_o, dict_kspl = fcMeshes.createCLs(dict_cl = dicts[1:], dict_pts = dict_pts, dict_kspl = dict_kspl,
-                                                                     dict_planes = dict_planes, colors = ['deepskyblue', 'tomato'], myoc = m_myoc)
-    sph_CL, sph_CL_colour, dict_shapes = fcMeshes.createColouredCL(dict_cl= dicts[1:], dict_shapes = dict_shapes)
+    kspl_CL, linLines, ksplSph_o, dict_kspl = fcMeshes.createCLs(filename = filename, dict_cl = dicts_cl, dict_pts = dict_pts, 
+                                                                 dict_kspl = dict_kspl, dict_planes = dict_planes, 
+                                                                 colors = ['deepskyblue', 'tomato'], myoc = m_myoc, 
+                                                                 dir_stl = directories[3])
+    sph_CL, sph_CL_colour, dict_shapes = fcMeshes.createColouredCL(dict_cl= dicts_cl, dict_shapes = dict_shapes)
     
     # Save measurements and shapes
     df_res = fcMeshes.addLinearMeas2df(df_res = df_res, file_num = file_num, lines = linLines, kspl_CL = kspl_CL)
@@ -146,7 +139,7 @@ if init:
         vp.show(txt, kSplinesCuts, sphCuts, kspl_CL, ksplSph_o, linLines, m_myoc.alpha(0.01), m_endo.alpha(0.01), at=0, azimuth = azimuth, interactive=True)
 
         settings.legendSize = .20
-        if len(dicts[1:]) == 2:
+        if len(dicts_cl) == 2:
             vp = Plotter(N=4, axes=13)
             vp.show(m_myoc.alpha(0.01), sph_CL_colour[0], txt, at=0)
             vp.show(m_endo.alpha(0.01), sph_CL_colour[1], at=1)
@@ -366,6 +359,10 @@ if init:
                                           names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr', 'endoExt_atr', 
                                                     'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent', 'endoExt_vent'],
                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
+        # Append all dicts to one object dict
+        dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
+                                              names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
+       
         # dict_colour = fcMeshes.saveMeshes(filename = filename, 
         #                                   meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ, m_atrExtEndo,
         #                                             m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ, m_ventExtEndo],
@@ -404,7 +401,7 @@ if init:
                                                                     num_pt = num_pt, kspl_CL2use = kspl_CL[0], distFromCl = 50,
                                                                     myoc_meshes = [m_atrMyoc, m_ventMyoc], linLine = linLines[0],
                                                                     dict_pts = dict_pts, dict_kspl = dict_kspl, df_res = df_res)
-    elevation = df_res.loc[file_num,'ang_Heart']
+    elevation = df_res.loc[file_num,'ang_HeartS']
     orient_atr, orient_vent, orient_atrX, orient_ventX, linLineX = lines_orient
     df_res, dict_shapes = fcMeshes.getChambersEllipsoid(filename = filename, df_res = df_res, file_num = file_num, 
                                   lines_orient = lines_orient, meshes =(m_atrMyoc, m_ventMyoc), dict_shapes = dict_shapes)
@@ -535,7 +532,7 @@ if init:
         sure = fcBasics.ask4input('Are you sure about orientation for videos? >>: ', bool)
         if sure: 
             dir4videos = fcBasics.new_dir(directories[4], 'videos')
-            rotAngle =  df_res.loc[file_num,'ang_Heart']#0
+            rotAngle =  df_res.loc[file_num,'ang_HeartS']#0
             fcMeshes.saveMultVideos(filename, info = names4video, meshes4video = meshes4video, rangeThBall = rangeThBall, 
                                     rotAngle = rotAngle, dir2save = dir4videos, 
                                     dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0)
@@ -546,17 +543,32 @@ if init:
 #%% Init
 init = True
 
-# dict_colour = fcMeshes.saveMeshes(filename = filename, 
-#                                           meshes = [m_myoc, m_endo, m_cjTh],
-#                                           names = ['myoc_stl', 'endo_stl', 'cj_stl'],
-#                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
+#%% 
+recreate = False
+if recreate:
+    # Get existing cl_dictionaries
+    [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts_cl] = fcBasics.import_dicts('mH_C', filename, directories)
+    names = ['ch0_all','ch0_ext','ch1_all','ch1_int','cj']
+    # names = ['cj']
+    meshes_out = []
+    for name in names: 
+        mesh = fcMeshes.recreateCutMesh(filename, name, resolution = res, 
+                                        dir_txtNnpy = directories[1], dict_colour = dict_colour)
+        meshes_out.append(mesh)
+    
+    m_myoc, m_extMyoc, m_endo, m_intEndo, m_cj = meshes_out
+    
+    df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num,
+                                          meshes = [m_myoc, m_extMyoc, m_endo, m_intEndo, m_cj],
+                                          names = ['Myoc','Ext.Myoc','Endo','Int.Endo','CJ'])
 
-# mTh_names = ['cj_thickness','myoc_thickness','endo_thickness','myoc_intBall']
-# [m_thAll, colour_thAll] = fcMeshes.openThicknessMeshes(filename = filename, meshes_names = mTh_names, extension = 'vtk',
-#                               dir_stl = directories[2], dir_txtNnpy = directories[1])
-# m_cjTh, m_myocTh, m_endoTh, m_myocIntBall = m_thAll1
-# cj_thickness, myoc_thickness, endo_thickness, myoc_intBall = colour_thAll
-# cj_minmax = (cj_thickness.min(), cj_thickness.max())
-# myoc_minmax = (myoc_thickness.min(), myoc_thickness.max())
-# endo_minmax = (endo_thickness.min(), endo_thickness.max())
-# myocInt_minmax = (myoc_intBall.min(), myoc_intBall.max())
+    save_new = fcBasics.ask4input('Save?', bool)
+    if save_new: 
+        fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
+        dir_df_meas = fcBasics.new_dir(fcBasics.new_dir(fcBasics.new_dir(dir_data2Analyse, 'R_All'), 'df_all'), 'df_meas')
+        fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_df_meas)
+        
+        dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_myoc, m_extMyoc, m_endo, m_intEndo, m_cj],
+                                    names = ['myoc','myoc_ext','endo','endo_int','cj'], dict_colour = dict_colour,
+                                    dir_stl = directories[2], extension = 'vtk')
+

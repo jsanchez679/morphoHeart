@@ -57,12 +57,14 @@ if init:
     # Settings for plots
     pl_groups = fcAn.plot_groups()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-    groups = ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
-              'Tissue Endocardium','Tissue Cardiac Jelly','Angles','Volume Percentages','Tissue Volume Percentages'] 
+    groups = list(pl_groups.keys())
+    # ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
+    #           'Tissue Endocardium','Tissue Cardiac Jelly','Ratios Cardiac Jelly', 
+    #           'Sagittal Angles','Ventral Angles', 'Volume Percentages','Tissue Volume Percentages'] 
     # groups = ['Volume Percentages']
     
-    x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
-    # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #***
+    # x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
+    x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #***
     
     # Settings for statistical analysis
     run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
@@ -77,7 +79,8 @@ if init:
             fcAn.plotInGroupsShape(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
                                title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
                                n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
-                               yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
+                               yticks_lab = pl_groups[group]['yticks_lab'], ylim = pl_groups[group]['ylim'], 
+                               info =info, save = save, dpi = 300, ext = ext)
         else: 
             # Define all the multiple comparisons to calculate defining box_pairs 
             box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df2plot, x_var, hue_var, btw_x, btw_hue)
@@ -88,10 +91,12 @@ if init:
             if pause:
                 input()
             # Plot using the defined statistics in the dictionary
+
             test_res, box_pairs_all, x_values, x_labels  = fcAn.plotInGroupsStats(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
                                title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
                                stats_set = stats_set, n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 2, sharey = False, 
-                               yticks_lab = pl_groups[group]['yticks_lab'], info =info, save = save, dpi = 300, ext = ext)
+                               yticks_lab = pl_groups[group]['yticks_lab'], ylim = '', 
+                               info =info, save = save, dpi = 300, ext = ext)
             # if pause:
             #     input()
 
@@ -169,17 +174,17 @@ if init:
     df_dataset_hm, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_dataset, [])
     fcAn.printDFINfo(df_dataset_hm)
 
-    save, info, ext = fcAn.q_savePlot()
+    save, _, ext = fcAn.q_savePlot()
     filters = ['Stage', 'GenotypeAll']
-    groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt'), 
-              ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), 
-              ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
-    groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')] 
+    # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt'), 
+    #           ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), 
+    #           ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
+    # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')] 
     # groups = [('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')]
-    # groups = [('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
+    groups = [('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
     
-    normalise = False; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
-    for variable in ['CjTh', 'myocIntBall']:
+    normalise = True; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
+    for variable in ['CjTh', 'myocIntBall','MyocTh', 'EndoTh']:
         for chamber in ['Atr', 'Vent']:
             fcAn.meanHM(df_dataset_hm = df_dataset_hm, filters = filters, groups = groups, chamber = chamber, 
                         variable = variable, opt_norm = opt_norm,  dir2load_df = dir_R_hmf, dir2save_hmf = dir_pl_meas, 

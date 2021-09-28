@@ -25,8 +25,7 @@ c="k"
 font= 'CallingCode'
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert, ask4input, loadDF, loadDicts
-from .morphoHeart_funcMeshes import splitDicts
+from .morphoHeart_funcBasics import alert, ask4input, loadDF, loadDicts, splitDicts
 
 #%% func - createDictPaths
 def createDictPaths(names, df_files, dir_data2Analyse):
@@ -267,9 +266,14 @@ def selectMeshes4Video (names, meshes, ranges, filename = '', dir_meshes = '', d
         meshes4video.append(meshes[num])
         if 'thickness' in names[num] or 'Ball' in names[num]:
             if 'thickness' in names[num]:
-                scale_default = '0-25 um'
-                q_min = 0
-                q_max = 25
+                if 'cj' in names[num]:
+                    scale_default = '0-25 um'
+                    q_min = 0
+                    q_max = 25
+                else: 
+                    scale_default = '0-15 um'
+                    q_min = 0
+                    q_max = 15
             elif 'Ball' in names[num]:
                 scale_default = '0-100 um'
                 q_min = 0
