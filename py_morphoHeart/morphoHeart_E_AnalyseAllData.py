@@ -46,7 +46,7 @@ if init:
     #%% Add all other measurements to dataframe
     df_meas = fcAn.sortDFCols(fcAn.getVarRatios(fcAn.getMainStrain(fcAn.getGenotypeAll(df_meas))))
     fcAn.printDFINfo(df_meas)
-    # fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
+    fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     # fcBasics.saveDF('hapln1a241s_wtmt', df2plot, 'df2plot', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     
     #%% Filter dataset
@@ -57,18 +57,18 @@ if init:
     # Settings for plots
     pl_groups = fcAn.plot_groups()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-    groups = list(pl_groups.keys())
+    groups = list(pl_groups.keys())[:]
     # ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
     #           'Tissue Endocardium','Tissue Cardiac Jelly','Ratios Cardiac Jelly', 
     #           'Sagittal Angles','Ventral Angles', 'Volume Percentages','Tissue Volume Percentages'] 
-    # groups = ['Volume Percentages']
+    # groups = ['Heart Size']#,'Lumen Size', 'Heart Looping','Tissue Cardiac Jelly (AtrVent)']
     
-    # x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
-    x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #***
+    x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
+    # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY
     
     # Settings for statistical analysis
     run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
-    pause = fcBasics.ask4input('Pause after every variable? [0]:no / [1]: yes! >> : ', bool)
+    pause = False#fcBasics.ask4input('Pause after every variable? [0]:no / [1]: yes! >> : ', bool)
     filters = ['Stage', 'GenotypeAll']; alpha = 0.05
     btw_x = True; btw_hue = False
     
@@ -77,7 +77,7 @@ if init:
         vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group])
         if not run_stats: 
             fcAn.plotInGroupsShape(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
-                               title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
+                               title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (10,6), dir2save = dir_pl_meas,
                                n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
                                yticks_lab = pl_groups[group]['yticks_lab'], ylim = pl_groups[group]['ylim'], 
                                info =info, save = save, dpi = 300, ext = ext)
@@ -91,7 +91,6 @@ if init:
             if pause:
                 input()
             # Plot using the defined statistics in the dictionary
-
             test_res, box_pairs_all, x_values, x_labels  = fcAn.plotInGroupsStats(df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
                                title = pl_groups[group]['title'], labels2plot = labels2plot, ips = (6,6), dir2save = dir_pl_meas,
                                stats_set = stats_set, n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 2, sharey = False, 
@@ -174,21 +173,51 @@ if init:
     df_dataset_hm, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_dataset, [])
     fcAn.printDFINfo(df_dataset_hm)
 
-    save, _, ext = fcAn.q_savePlot()
-    filters = ['Stage', 'GenotypeAll']
+    save, info, ext = fcAn.q_savePlot()
+    filters = ['Stage', 'GenotypeAll', 'Strain_o']
     # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt'), 
-    #           ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), 
-    #           ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
+    #           ('48-50','hapln1a:wt'), ('48-50','hapln1a:mt'), ('48-50', 'vcana:mt'), ('48-50','hapln1a:wt/spaw:mt'),
+    #           ('72-74','hapln1a:wt'), ('72-74','hapln1a:mt'),('72-74','hapln1a:wt/spaw:mt')]
+    
+    # groups = [('32-34','hapln1a:wt'), 
+    #           ('48-50','hapln1a:wt'), ('48-50', 'vcana:mt'), ('48-50','hapln1a:wt/spaw:mt'),
+    #           ('72-74','hapln1a:wt'),('72-74','hapln1a:wt/spaw:mt')]
     # groups = [('32-34','hapln1a:wt'), ('32-34','hapln1a:mt')] 
-    # groups = [('48-50','hapln1a:wt'), ('48-50','hapln1a:mt')]
+    groups = [('32-34','hapln1a:wt'),('32-34','hapln1a:mt')]
+    groups = [('48-50','hapln1a:wt','hapln1a prom241'),('48-50','hapln1a:mt', 'hapln1a prom241'), 
+              ('48-50', 'vcana:mt', 'vcana prom365'),('48-50','hapln1a:mt', 'hapln1a prom187')]
     groups = [('72-74','hapln1a:wt'), ('72-74','hapln1a:mt')]
     
-    normalise = True; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
+    normalise = False; perChamber = False; norm_type = 'opt_div'; opt_norm = [normalise, perChamber, norm_type]
     for variable in ['CjTh', 'myocIntBall','MyocTh', 'EndoTh']:
         for chamber in ['Atr', 'Vent']:
             fcAn.meanHM(df_dataset_hm = df_dataset_hm, filters = filters, groups = groups, chamber = chamber, 
                         variable = variable, opt_norm = opt_norm,  dir2load_df = dir_R_hmf, dir2save_hmf = dir_pl_meas, 
-                        dir_data2Analyse = dir_data2Analyse, save = save)
+                        dir_data2Analyse = dir_data2Analyse, save = save, info = info)
+            
+    #%%
+    def label_race (row):
+        if row['Strain'] == 'hapln1a prom241/+ (F2s) InX' :
+            return 'hapln1a prom241'
+        if row['Strain'] == 'hapln1a prom241/+ (F3s) InX' :
+            return 'hapln1a prom241'
+        if row['Strain'] == 'hapln1a prom187/+ (F2s) InX' :
+            return 'hapln1a prom187'
+        if row['Strain'] == 'hapln1a prom187/+ (F3s) InX' :
+            return 'hapln1a prom187'
+        
+        if row['Strain'] == 'spaw+/-; hapln1a prom241/+ InX' :
+            return 'spaw_hapln1a prom241'
+        if row['Strain'] == 'vcana prom365/+ (F2s) InX' :
+            return 'vcana prom365'
+        if row['Strain'] == 'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP' :
+            return 'hapln1aOE'
+        if row['Strain'] == 'myl7:lifeActGFP/+; fli1a:AcTagRFP/fli1a:AcTagRFP' :
+            return 'GnR wts'
+        
+    df_dataset.apply (lambda row: label_race(row), axis=1)
+    df_dataset['Strain_o'] = df_dataset.apply (lambda row: label_race(row), axis=1)
+        
                 
     #%% Create plots for df_cjPDFs 
     print('\n=> KERNEL DENSITY ESTIMATE (KDE) PLOT ANALYSIS')

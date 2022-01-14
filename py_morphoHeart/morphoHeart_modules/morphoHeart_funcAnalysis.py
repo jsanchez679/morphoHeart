@@ -398,19 +398,17 @@ def getVarRatios(df_meas):
     
     
     df_meas['Ratio_VolMyoc2VolExtMyoc'] = df_meas['Vol_Myoc']/ df_meas['Vol_Ext.Myoc']
-    df_meas['Ratio_VolEndo2VolExtMyoc'] = df_meas['Vol_Myoc']/ df_meas['Vol_Ext.Myoc']
+    df_meas['Ratio_VolEndo2VolExtMyoc'] = df_meas['Vol_Endo']/ df_meas['Vol_Ext.Myoc']
     df_meas['Ratio_VolCJ2VolExtMyoc'] = df_meas['Vol_CJ']/ df_meas['Vol_Ext.Myoc']
     df_meas['Ratio_VolLumen2VolExtMyoc'] = df_meas['Vol_Int.Endo']/ df_meas['Vol_Ext.Myoc']
     
     df_meas['Ratio_VolMyoc2VolTissue'] = df_meas['Vol_Myoc']/ df_meas['Vol_Tissue']
-    df_meas['Ratio_VolEndo2VolTissue'] = df_meas['Vol_Myoc']/ df_meas['Vol_Tissue']
+    df_meas['Ratio_VolEndo2VolTissue'] = df_meas['Vol_Endo']/ df_meas['Vol_Tissue']
     df_meas['Ratio_VolCJ2VolTissue'] = df_meas['Vol_CJ']/ df_meas['Vol_Tissue']
     df_meas['Ratio_VolLumen2VolTissue'] = df_meas['Vol_Int.Endo']/ df_meas['Vol_Tissue']
     
     df_meas['Ratio_VolLeftCJ2VolRightCJ'] = df_meas['Vol_CJ.Left']/ df_meas['Vol_CJ.Right']
     df_meas['Ratio_VolAtrCJ2VolVentCJ'] = df_meas['Vol_Atr.CJ']/ df_meas['Vol_Vent.CJ']
-    
-    
     
     return df_meas
 
@@ -431,64 +429,64 @@ def def_variables(plot_type):
                        
                        # Ellipse measurements
                        "EllipAtr_Asphericity" : "Atrial Ellipse Asphericity",
-                       "EllipAtr_Depth" : "Atrial depth [um]",
-                       "EllipAtr_Length" : "Atrial length [um]",
-                       "EllipAtr_Width" : "Atrial width [um]",
+                       "EllipAtr_Depth" : "Atrial depth [$\mu$m]",
+                       "EllipAtr_Length" : "Atrial length [$\mu$m]",
+                       "EllipAtr_Width" : "Atrial width [$\mu$m]",
                        "EllipVent_Asphericity" : "Ventricular Ellipse Asphericity",
-                       "EllipVent_Depth" :"Ventricular depth [um]",
-                       "EllipVent_Length" : "Ventricular length [um]",
-                       "EllipVent_Width" : "Ventricular width [um]",
+                       "EllipVent_Depth" :"Ventricular depth [$\mu$m]",
+                       "EllipVent_Length" : "Ventricular length [$\mu$m]",
+                       "EllipVent_Width" : "Ventricular width [$\mu$m]",
                        
                        # Surface Areas
-                       "SurfArea_Myoc" : "Surface Area\nMyocardium [um$^2$]",
-                       "SurfArea_Int.Myoc" : "Surface Area\nInt.Myocardium [um$^2$]",
-                       "SurfArea_Ext.Myoc" : "Surface Area\nExt.Myocardium [um$^2$]",
-                       "SurfArea_Endo" : "Surface Area\nEndocardium [um$^2$]",
-                       "SurfArea_Int.Endo" : "Surface Area\nInt.Endocardium [um$^2$]",
-                       "SurfArea_Ext.Endo" : "Surface Area\nExt. Endocardium [um$^2$]",
-                       "SurfArea_CJ" : "Surface Area\nCardiac Jelly [um$^2$]",
-                       "SurfArea_Int.CJ" : "Surface Area\nInt.Cardiac Jelly [um$^2$]",
-                       "SurfArea_Ext.CJ" : "Surface Area\nExt.Cardiac Jelly [um$^2$]",
-                       "SurfArea_Atr.ExtCJ" : "Atrial Surface Area\nExternal Cardiac Jelly [um$^2$]",
-                       "SurfArea_Atr.ExtMyoc" : "Atrial Heart\nSurface Area [um$^2$]",
-                       "SurfArea_Atr.IntEndo" : "Atrial Lumen\nSurface Area [um$^2$]",
-                       "SurfArea_Vent.ExtCJ" : "Ventricular Surface Area\nExternal Cardiac Jelly [um$^2$]",
-                       "SurfArea_Vent.ExtMyoc" : "Ventricular Heart\nSurface Area [um$^2$]",
-                       "SurfArea_Vent.IntEndo" : "Ventricular Lumen\nSurface Area [um$^2$]",
+                       "SurfArea_Myoc" : "Surface Area\nMyocardium [$\mu$m$^2$]",
+                       "SurfArea_Int.Myoc" : "Surface Area\nInt.Myocardium [$\mu$m$^2$]",
+                       "SurfArea_Ext.Myoc" : "Surface Area\nExt.Myocardium [$\mu$m$^2$]",
+                       "SurfArea_Endo" : "Surface Area\nEndocardium [$\mu$m$^2$]",
+                       "SurfArea_Int.Endo" : "Surface Area\nInt.Endocardium [$\mu$m$^2$]",
+                       "SurfArea_Ext.Endo" : "Surface Area\nExt. Endocardium [$\mu$m$^2$]",
+                       "SurfArea_CJ" : "Surface Area\nCardiac Jelly [$\mu$m$^2$]",
+                       "SurfArea_Int.CJ" : "Surface Area\nInt.Cardiac Jelly [$\mu$m$^2$]",
+                       "SurfArea_Ext.CJ" : "Surface Area\nExt.Cardiac Jelly [$\mu$m$^2$]",
+                       "SurfArea_Atr.ExtCJ" : "Atrial Surface Area\nExternal Cardiac Jelly [$\mu$m$^2$]",
+                       "SurfArea_Atr.ExtMyoc" : "Atrial Heart\nSurface Area [$\mu$m$^2$]",
+                       "SurfArea_Atr.IntEndo" : "Atrial Lumen\nSurface Area [$\mu$m$^2$]",
+                       "SurfArea_Vent.ExtCJ" : "Ventricular Surface Area\nExternal Cardiac Jelly [$\mu$m$^2$]",
+                       "SurfArea_Vent.ExtMyoc" : "Ventricular Heart\nSurface Area [$\mu$m$^2$]",
+                       "SurfArea_Vent.IntEndo" : "Ventricular Lumen\nSurface Area [$\mu$m$^2$]",
                         
                        # Looping ratio
-                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length\n(Int.Myoc) [um]",
-                       "linLine_Ext.Endo(Cut)" : "Linear Heart Length\n(Ext.Endo) [um]",
-                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length\n(Int.Myoc) [um]",
-                       "Length_CL_Ext.Endo(Cut)" : "Looped Heart Length\n(Ext.Endo) [um]",
+                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length\n(Int.Myoc) [$\mu$m]",
+                       "linLine_Ext.Endo(Cut)" : "Linear Heart Length\n(Ext.Endo) [$\mu$m]",
+                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length\n(Int.Myoc) [$\mu$m]",
+                       "Length_CL_Ext.Endo(Cut)" : "Looped Heart Length\n(Ext.Endo) [$\mu$m]",
                        'Looping_Ratio_Myoc' : 'Looping Ratio (Int.Myoc)',
                        'Looping_Ratio_Endo' : 'Looping Ratio (Ext.Endo)',
                         
                        # Volumes
-                       "Vol_Int.Myoc" : "Volume Int.Myocardium [um$^3$]",
-                       "Vol_Ext.Myoc" : "Heart Volume [um$^3$]",
-                       "Vol_Int.Endo" : "Heart Lumen Volume [um$^3$]",
-                       "Vol_Ext.Endo" : "Volume Ext.Endocardium [um$^3$]",
-                       "Vol_Myoc" : "Volume Myocardium [um$^3$]",
-                       "Vol_Atr.Myoc" : "Atrial Volume\nMyocardium [um$^3$]",
-                       "Vol_Vent.Myoc" : "Ventricular Volume\nMyocardium [um$^3$]",
-                       "Vol_Endo" : "Volume Endocardium [um$^3$]",
-                       "Vol_Atr.Endo" : "Atrial Volume\nEndocardium [um$^3$]",
-                       "Vol_Vent.Endo" : "Ventricular Volume\nEndocardium [um$^3$]",
-                       "Vol_CJ" : "Volume Cardiac Jelly [um$^3$]",
-                       "Vol_Atr.CJ" : "Atrial Volume\nCardiac Jelly [um$^3$]",
-                       "Vol_Vent.CJ" : "Ventricular Volume\nCardiac Jelly [um$^3$]",
-                       'Vol_Atr.ExtMyoc' : 'Atrial Volume [um$^3$]',
-                       'Vol_Vent.ExtMyoc' : 'Ventricular Volume [um$^3$]',
-                       'Vol_Atr.IntEndo' : 'Atrial Lumen Volume [um$^3$]',
-                       'Vol_Vent.IntEndo' : 'Ventricular Lumen Volume [um$^3$]',
+                       "Vol_Int.Myoc" : "Volume Int.Myocardium [$\mu$m$^3$]",
+                       "Vol_Ext.Myoc" : "Heart Volume [$\mu$m$^3$]",
+                       "Vol_Int.Endo" : "Heart Lumen Volume [$\mu$m$^3$]",
+                       "Vol_Ext.Endo" : "Volume Ext.Endocardium [$\mu$m$^3$]",
+                       "Vol_Myoc" : "Volume Myocardium [$\mu$m$^3$]",
+                       "Vol_Atr.Myoc" : "Atrial Volume\nMyocardium [$\mu$m$^3$]",
+                       "Vol_Vent.Myoc" : "Ventricular Volume\nMyocardium [$\mu$m$^3$]",
+                       "Vol_Endo" : "Volume Endocardium [$\mu$m$^3$]",
+                       "Vol_Atr.Endo" : "Atrial Volume\nEndocardium [$\mu$m$^3$]",
+                       "Vol_Vent.Endo" : "Ventricular Volume\nEndocardium [$\mu$m$^3$]",
+                       "Vol_CJ" : "Volume Cardiac Jelly [$\mu$m$^3$]",
+                       "Vol_Atr.CJ" : "Atrial Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       "Vol_Vent.CJ" : "Ventricular Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       'Vol_Atr.ExtMyoc' : 'Atrial Volume [$\mu$m$^3$]',
+                       'Vol_Vent.ExtMyoc' : 'Ventricular Volume [$\mu$m$^3$]',
+                       'Vol_Atr.IntEndo' : 'Atrial Lumen Volume [$\mu$m$^3$]',
+                       'Vol_Vent.IntEndo' : 'Ventricular Lumen Volume [$\mu$m$^3$]',
                        
-                       'Vol_CJ.Left' : "Left Volume\nCardiac Jelly [um$^3$]",
-                       'Vol_CJ.Right' : "Right Volume\nCardiac Jelly [um$^3$]",
+                       'Vol_CJ.Left' : "Left Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       'Vol_CJ.Right' : "Right Volume\nCardiac Jelly [$\mu$m$^3$]",
                        
-                       'Vol_Tissue' : 'Tissue Volume [um$^3$]',
-                       'Vol_Atr.Tissue' : 'Atrial Tissue Volume [um$^3$]', 
-                       'Vol_Vent.Tissue' : 'Ventricular Tissue Volume [um$^3$]',
+                       'Vol_Tissue' : 'Tissue Volume [$\mu$m$^3$]',
+                       'Vol_Atr.Tissue' : 'Atrial Tissue Volume [$\mu$m$^3$]', 
+                       'Vol_Vent.Tissue' : 'Ventricular Tissue Volume [$\mu$m$^3$]',
                        
                        # Volume Ratios 
                        'Ratio_VolMyoc2VolExtMyoc' : 'Myocardial Volume / \nHeart Volume', 
@@ -507,10 +505,10 @@ def def_variables(plot_type):
     
     elif plot_type == 'bar_plots':
         
-        vars_dict = {"Vol_Int.Myoc" : "Volume Int.Myocardium [um$^3$]",
+        vars_dict = {"Vol_Int.Myoc" : "Volume Int.Myocardium [$\mu$m$^3$]",
                        "Vol_Ext.Myoc" : "Heart\nVolume ",
                        "Vol_Int.Endo" : "Heart\nLumen",
-                       "Vol_Ext.Endo" : "Volume Ext.Endocardium [um$^3$]",
+                       "Vol_Ext.Endo" : "Volume Ext.Endocardium [$\mu$m$^3$]",
                        "Vol_Myoc" : "Myocardium",
                        "Vol_Atr.Myoc" : "Atrial\nMyocardium",
                        "Vol_Vent.Myoc" : "Ventricular\nMyocardium",
@@ -683,13 +681,14 @@ def def_legends(df_input, df_type = 'meas'):
                        'hapln1a prom241/+ (F2s) InX', 'hapln1a prom241/+ (F3s) InX',
                        'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ (F2s) InX',
                        'myl7lckGFP_kdrlRasCherry',
-                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP', 
+                       'myl7:lifeActGFP/+; fli1a:AcTagRFP/fli1a:AcTagRFP']
         
         leg_strains = ["$hapln1a^{\Delta 187} (F2s)$", "$hapln1a^{\Delta 187} (F3s)$", 
                        "$hapln1a^{\Delta 241} (F2s)$", "$hapln1a^{\Delta 241} (F3s)$",
                        "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$",
                        'myl7:lck-GFP; kdrl:rasCherry',
-                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
+                       "$hapln1a^{OE}$", "wt (G&R)"]
     
         for strain in strains:
             out_strains.append(leg_strains[all_strains.index(strain)])
@@ -704,14 +703,15 @@ def def_legends(df_input, df_type = 'meas'):
     out_strains_o = []
     if bool_strains_o: 
         all_strains_o = ['hapln1a prom187/+ InX', 'hapln1a prom241/+ InX',
-                       'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ (F2s) InX',
+                       'spaw+/-; hapln1a prom241/+ InX', 'vcana prom365/+ InX',
                        'myl7lckGFP_kdrlRasCherry',
-                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
+                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP',
+                       'myl7:lifeActGFP/+; fli1a:AcTagRFP/fli1a:AcTagRFP']
         
         leg_strains_o = ["$hapln1a^{\Delta 187}$","$hapln1a^{\Delta 241}$", 
                        "$spaw^{+/-}; hapln1a^{\Delta 241}$", "$vcana^{\Delta 365}$",
                        'myl7:lck-GFP; kdrl:rasCherry',
-                       'myl7:galFF; UAS:TFP x UAS:hapln1a, cryaa:CFP']
+                       "$hapln1a^{OE}$", "wt (G&R)"]
         
         for strain_o in strains_o:
             out_strains_o.append(leg_strains_o[all_strains_o.index(strain_o)])
@@ -867,7 +867,7 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
     return df_pct_change, df4plot_pct_change
 
 #%% func - meanHM
-def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save):
+def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save, info):
     
     # Get minimum and max values for each group of heatmaps 
     # (_o: originals, _W: normalised using whole heart, _C: normalised per chamber)
@@ -896,7 +896,7 @@ def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2loa
         max_vals_o.append(df_of.max().max())
         
     min_o = math.floor(min(min_vals_o))
-    max_o = math.ceil(max(max_vals_o))
+    max_o = 0.7*math.ceil(max(max_vals_o))
     if normalise: 
         max_N = math.ceil(max(max_vals_N))
 
@@ -929,16 +929,16 @@ def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2loa
             ind_gen[1] -= 1
         [gen_info.pop(ind) for ind in ind_gen]
         gen_info  = ''.join(gen_info)
-        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
-                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, cmap = 'turbo')
+        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
+                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, info = info, cmap = 'turbo')
         if normalise:
             if perChamber:
                 txt_title = 'normCh-'+norm_type
             else: 
                 txt_title = 'normWh-'+norm_type
-            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], thickness= variable, 
+            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
                       vmin=0, vmax=max_N, n_val = num, normalise = txt_title,  dir2save = dir2save_hmf, 
-                      save = save, cmap = 'inferno')
+                      save = save, info = info, cmap = 'inferno')
 
 #%% func - concatHeatmaps
 def concatHeatmaps(df2concat, operation = 'mean'):
@@ -1082,8 +1082,9 @@ def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, va
             dict_spStatisticalRes_in = dict()
             print('\n > Group: ', inter)
             
-            pvalues_norm, txt_normtest, all_data_normal, data_groups = normalityTests (alpha, factor, fact_levels, var, data_out, norm_test)
-            test2use, multcomp_txt, txt_testSelected = selectStatisticalTest (fact_levels, all_data_normal, var)
+            pvalues_norm, txt_normtest, all_data_normal, data_groups = normalityTests(alpha, factor, fact_levels, var, data_out, norm_test)
+            print(var)
+            test2use, multcomp_txt, txt_testSelected = selectStatisticalTest(fact_levels, all_data_normal, var)
             
             dict_spStatisticalRes_in['pvalues_norm'] = pvalues_norm
             dict_spStatisticalRes_in['txt_normtest'] = txt_normtest
@@ -1092,7 +1093,7 @@ def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, va
             dict_spStatisticalRes_in['multcomp_txt'] = multcomp_txt
             
             if test2use == 'One-way-ANOVA':
-                pval_spTest, pval_mcTest, pval_multComp = stTest_OWANOVA (factor, var, indiv_pairs, data_out, data_groups)
+                pval_spTest, pval_mcTest, pval_multComp = stTest_OWANOVA(factor, var, indiv_pairs, data_out, data_groups)
                 dict_spStatisticalRes_in['pval_test'] = pval_spTest
                 dict_spStatisticalRes_in['pval_multComp_o'] = pval_mcTest
                 dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
@@ -1101,7 +1102,7 @@ def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, va
                 txt_testSelected = txt_testSelected+" (ANOVA's p-val: "+str(format(pval_spTest,'.3f'))+'), \n'+multcomp_txt
                 
             elif test2use == 'Kruskal':
-                pval_spTest, pval_mcTest, pval_multComp = stTest_Kruskal (factor, var, indiv_pairs, data_out, data_groups)
+                pval_spTest, pval_mcTest, pval_multComp = stTest_Kruskal(factor, var, indiv_pairs, data_out, data_groups)
                 dict_spStatisticalRes_in['pval_test'] = pval_spTest
                 dict_spStatisticalRes_in['pval_multComp_o'] = pval_mcTest
                 dict_spStatisticalRes_in['pval_multComp'] = pval_multComp
@@ -1328,9 +1329,9 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
     return txt_multcomp
 
 #%% - CREATE PLOTS
-styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] 
+styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>']*20
 # styles = ['o', 'o', 's', 's', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
-palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']
+palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']*20
 # def plotInGroups(plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
 #                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
 
@@ -1636,7 +1637,7 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     if stats_set[0]: 
         tests_res = []
         box_pairs_all = []
-        stats = True
+        statist = True
         dict_stats = stats_set[1]
         alpha = stats_set[2]
         txt_multcomp_all = []
@@ -1749,7 +1750,7 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
                               palette = palettes, dodge = dodge, size = marker_size, jitter = 0.2)
             # m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
             #                   palette = palettes, dodge = dodge, size = marker_size)
-            if stats: 
+            if statist: 
                 box_pairs = dict_stats[var]['box_pairs']
                 stat_test = False
                 test = None
@@ -1824,7 +1825,7 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
     
-    if stats: 
+    if statist: 
         return tests_res, box_pairs_all, x_values, dict_legends[x_var]
     
 #%% func - plotInGroupsStatsBU
@@ -1834,7 +1835,7 @@ def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, la
     
     if stats_set[0]: 
         tests_res = []
-        stats = True
+        statist = True
         dict_stats = stats_set[1]
         
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
@@ -1925,7 +1926,7 @@ def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, la
             print(' > ',var,'\n')
             m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
                               palette = palettes, dodge = dodge, size = marker_size)
-            if stats: 
+            if statist: 
                 box_pairs = dict_stats[var]['box_pairs']
                 stat_test = False
                 test = None
@@ -1992,7 +1993,7 @@ def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, la
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
     
-    if stats: 
+    if statist: 
         return tests_res
 
 #%% func - relPlotInGroups
@@ -2625,7 +2626,7 @@ def plotKDEs(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 300)
                 ax.set_xlim(0, xgrid_max)
                 ax.set_ylim(0, 1)        
                 ax.get_legend().remove()
-                ax.set(xlabel='Cardiac jelly thickness [um]', ylabel='\nThickness distribution\n'+ cl_lab + '\n')
+                ax.set(xlabel='Cardiac jelly thickness [$\mu$m]', ylabel='\nThickness distribution\n'+ cl_lab + '\n')
                 ax.title.set_text("Stage: "+stg+'hpf\n')
                 sns.despine()
                 if n == 0:
@@ -2686,12 +2687,12 @@ def kdeThPlots(filename, df_file, file_num, variable, thData, dir2save, save = T
 
     """
     if variable == 'cj_thickness':
-        title = filename + ' - Cardiac Jelly Thickness [um]'
-        xlabel = 'Cardiac Jelly Thickness [um]'
+        title = filename + ' - Cardiac Jelly Thickness [$\mu$m]'
+        xlabel = 'Cardiac Jelly Thickness [$\mu$m]'
         step = 0.05
     elif variable == 'myoc_intBall' :
-        title = filename + ' - Myoc.Int Ballooning [um]'
-        xlabel = 'Myoc.Int Ballooning [um]'
+        title = filename + ' - Myoc.Int Ballooning [$\mu$m]'
+        xlabel = 'Myoc.Int Ballooning [$\mu$m]'
         step = 0.25
     
     regions_div = [['AtrVent','atrium', 'ventricle'], ['LeftRight','left','right'],['DorsVent','dorsal','ventral']]
@@ -2807,7 +2808,7 @@ def plotKDEIndiv(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 
                 ax.set_xlim(0, xgrid_max)
                 ax.set_ylim(0, 1)        
                 ax.get_legend().remove()
-                ax.set(xlabel='Cardiac jelly thickness [um]', ylabel='\nThickness distribution\n'+ cl_lab + '\n')
+                ax.set(xlabel='Cardiac jelly thickness [$\mu$m]', ylabel='\nThickness distribution\n'+ cl_lab + '\n')
                 ax.title.set_text("Stage: "+stg+'hpf\n')
                 sns.despine()
                 handles, labels = m.get_legend_handles_labels()
@@ -2878,18 +2879,18 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse
         return [dfs_o], num
     
 #%% func - unifyHeatmap
-def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, n_val, normalise, dir2save, save, cmap = 'turbo'):
+def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin, vmax, n_val, normalise, dir2save, save, info, cmap = 'turbo'):
     
     sns.set_context('notebook', font_scale=1.25)
     stage = stage+'hpf'
     if thickness == 'CjTh':
-        title = 'Cardiac jelly thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+        title = 'Cardiac jelly thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     elif thickness == 'myocIntBall': 
-        title = 'Myocardium ballooning [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+        title = 'Myocardium ballooning [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     elif thickness == 'MyocTh':
-        title = 'Myocardial thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+        title = 'Myocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     elif thickness == 'EndoTh':
-        title = 'Endocardial thickness [um] - ('+chamber+', '+stage+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+        title = 'Endocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
     
     # Make figure 
     df_max = format(df.max().max(), '.2f')
@@ -2927,7 +2928,7 @@ def unifyHeatmap(df, chamber, stage, genotype, gen_info, thickness, vmin, vmax, 
     plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=15)
     plt.title(title, fontsize = 15)
     
-    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+normalise+'.png')
+    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+info+'-'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+strain+'_'+normalise+'.png')
     # print(dir4heatmap)
     if save: 
         plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)

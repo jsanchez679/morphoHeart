@@ -24,7 +24,7 @@ leave Spyder open and drop me a message so that I can help you solving it! :)
 Happy contour closing and selecting!
 
 @author: Juliana Sanchez-Posada
-Version: 13th April, 2021
+Version: 09th November, 2021
 """
 
 #%% Importing python packages
@@ -98,8 +98,9 @@ if init:
     #   ================================================================================================================
 
     q_ABC = fcBasics.ask4input('Do you want to run any of these processes: \n\t- Automatically close contours \n\t- Manually close contours or \n\t- Close inflow/outflow tracts of this stack? \n\t >[0]:no/[1]:yes: ',bool)
+    ticABC = perf_counter()
+    ticD = perf_counter()
     if q_ABC:
-        ticABC = perf_counter()
         # >> Automatically close contours
         stack_closed, processDict, done_autom = fcCont.main_automCloseCont(filename, channel, directories, stack_closed, 
                                                                            plotEvery = 100, n_rows = n_rows, 
@@ -125,11 +126,11 @@ if init:
                 last = processDict[channel]['G-Slc_tissueLayerLast']
                 print('\n- Plotting all closed slices ... (Plots tab)')
                 fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows, level = level)
-                tocABC = perf_counter()
-                fcBasics.printTime(ticABC, tocABC, 'close contours')
     else:
         q_ABC_done = fcBasics.ask4input('Checking: Are you done closing the contours and inflow/outflow tracts? [0]:no/[1]:yes!:', bool)
-
+    tocABC = perf_counter()
+    fcBasics.printTime(ticABC, tocABC, 'close contours')
+    
     #%% iii. SELECT CONTOURS
     #   This section allows the user to select the internal and external contours of the heart layer being processed. 
     #   Before starting the user should scan through the plotted closed slices and write down a list with:
@@ -194,7 +195,12 @@ if init:
                     fcBasics.printTime(ticD, tocD, 'select contours')
     else:
         print('- You need to have closed all the contours and inflow/outflow tracts of the stack to continue with the selection-of-contours process')
-
+    tocD = perf_counter()
+        
+    print('\n> FINAL TIMINGS!')
+    fcBasics.printTime(ticABC, tocABC, 'close contours')
+    fcBasics.printTime(ticD, tocD, 'select contours')
+    
 #%% OTHER FUNCTIONS
 #   This section allows the user to re-run individual functions in case they are needed. Otherwise ignore. 
 #   ====================================================================================================================
@@ -215,8 +221,8 @@ if others:
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
     # Enter in 'first' and 'last' any slice number within the number of slices in the stack
-    first = 348
-    last = 360
+    first = 168
+    last = 195
     fcCont.showGridContours(myStack = stack_closed, slices = (first,last+1), n_rows = n_rows, level = level)
     
     #%% Plot all the contours of the stack in a grid

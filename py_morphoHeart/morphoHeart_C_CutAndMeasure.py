@@ -14,7 +14,7 @@ videos of all these meshes rotating, so that you can include them in your presen
 Happy sectioning and heatmapping! 
 
 @author: Juliana Sanchez-Posada
-Version: 13th April, 2021
+Version: 15th November, 2021
 """
 
 #%% Importing python packages
@@ -363,12 +363,12 @@ if init:
         dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
                                               names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
        
-        # dict_colour = fcMeshes.saveMeshes(filename = filename, 
-        #                                   meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ, m_atrExtEndo,
-        #                                             m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ, m_ventExtEndo],
-        #                                   names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr', 'endoExt_atr',
-        #                                             'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent', 'endoExt_vent'],
-        #                                   dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
+        dict_colour = fcMeshes.saveMeshes(filename = filename, 
+                                          meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ, m_atrExtEndo,
+                                                    m_ventMyoc, m_ventEndo, m_ventCJ, m_ventExtMyo, m_ventIntEnd, m_ventExtCJ, m_ventExtEndo],
+                                          names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr', 'endoExt_atr',
+                                                    'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent', 'endoExt_vent'],
+                                          dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
     
     # # Calculating Ext.Endo chambers
     # num_pt = dict_pts['numPt_CLChamberCut']; atr_meshes = []; vent_meshes = []
@@ -385,7 +385,23 @@ if init:
     #                                   names = [ 'endoExt_atr', 'endoExt_vent'],
     #                                   dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
     # dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
-    #                                          names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
+    #                                           names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
+    
+    # num_pt = dict_pts['numPt_CLChamberCut']; atr_meshes = []; vent_meshes = []
+    # atr_meshes, vent_meshes, dict_shapes, s3_cyl  = fcMeshes.getChamberMeshes(filename = filename,
+    #                                 end_name = ['ch0_cut_int'], names2cut = ['Ext.CJ'],
+    #                                 kspl_CL = kspl_CL[0], num_pt = num_pt, atr_meshes = atr_meshes, vent_meshes = vent_meshes,
+    #                                 dir_txtNnpy = directories[1], dict_shapes = dict_shapes, dict_pts = dict_pts, 
+    #                                 resolution = res, s3_cyl = [], plotshow = True, mesh2cut = m_cjOut)
+    # m_atrExtCJ = atr_meshes[0]; m_ventExtCJ = vent_meshes[0]
+    # settings.legendSize = .20
+    # vp = Plotter(N=1, axes = 10)
+    # vp.show(m_atrExtCJ.color('gold'), m_ventExtCJ.color('orange'), at = 0,  zoom = 2.2, azimuth = azimuth, interactive=True)
+    # dict_colour = fcMeshes.saveMeshes(filename = filename, meshes = [m_atrExtCJ, m_ventExtCJ],
+    #                                   names = [ 'cjExt_atr', 'cjExt_vent'],
+    #                                   dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
+    # dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
+    #                                           names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
      
     #%% GET CHAMBERS ORIENTATION AND ELLIPSOIDS
     #   This section of the code will measure the chambers and heart orientations and save them in the dataframe with
@@ -514,28 +530,30 @@ if init:
         dir_df_meas = fcBasics.new_dir(fcBasics.new_dir(fcBasics.new_dir(dir_data2Analyse, 'R_All'), 'df_all'), 'df_meas')
         fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_df_meas)#, name = 'ResultsDFf')
         
-        # Save rotating videos
-        if q_selectMeshes == 0:
-            names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_endo']
-            meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
-            range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocInt_minmax, '']
-        elif q_selectMeshes == 1:
-            names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_extBall','myoc_endo']
-            meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocExtBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
-            range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocExt_minmax,'']
-        elif q_selectMeshes == 2:
-            names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall', 'myoc_extBall','myoc_endo']
-            meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1), m_myocExtBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
-            range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocInt_minmax, myocExt_minmax,'']
-            
-        names4video, meshes4video, rangeThBall = fcPlot.selectMeshes4Video(names = names4video, meshes = meshes4video, ranges = range4video)
-        sure = fcBasics.ask4input('Are you sure about orientation for videos? >>: ', bool)
-        if sure: 
-            dir4videos = fcBasics.new_dir(directories[4], 'videos')
-            rotAngle =  df_res.loc[file_num,'ang_HeartS']#0
-            fcMeshes.saveMultVideos(filename, info = names4video, meshes4video = meshes4video, rangeThBall = rangeThBall, 
-                                    rotAngle = rotAngle, dir2save = dir4videos, 
-                                    dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0)
+        q_saveRotVideos = fcBasics.ask4input('Do you want to save rotating videos of some/all of the meshes?\n\t[0]: no, thank you! \n\t[1]: yes, please! >> : ', bool)
+        if q_saveRotVideos: 
+            # Save rotating videos
+            if q_selectMeshes == 0:
+                names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall','myoc_endo']
+                meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
+                range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocInt_minmax, '']
+            elif q_selectMeshes == 1:
+                names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_extBall','myoc_endo']
+                meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocExtBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
+                range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocExt_minmax,'']
+            elif q_selectMeshes == 2:
+                names4video = ['myoc','endo','cj', 'cj_thickness','myoc_thickness','endo_thickness','myoc_intBall', 'myoc_extBall','myoc_endo']
+                meshes4video = [m_myoc,m_endo,m_cj,m_cjTh,m_myocTh,m_endoTh, m_myocIntBall.alpha(1), m_myocExtBall.alpha(1),[m_myoc.alpha(0.01), m_endo.alpha(0.01), kspl_CL[0]]]
+                range4video = ['-', '-', '-', cj_minmax, myoc_minmax, endo_minmax, myocInt_minmax, myocExt_minmax,'']
+                
+            names4video, meshes4video, rangeThBall = fcPlot.selectMeshes4Video(names = names4video, meshes = meshes4video, ranges = range4video)
+            sure = fcBasics.ask4input('Are you sure about orientation for videos? [0]:no/[1]:yes! >>: ', bool)
+            if sure: 
+                dir4videos = fcBasics.new_dir(directories[4], 'videos')
+                rotAngle =  df_res.loc[file_num,'ang_HeartS']#0
+                fcMeshes.saveMultVideos(filename, info = names4video, meshes4video = meshes4video, rangeThBall = rangeThBall, 
+                                        rotAngle = rotAngle, dir2save = dir4videos, 
+                                        dir_txtNnpy = directories[1], plotshow = False, alpha_cube = 0)
         
         toc = perf_counter()
         fcBasics.printTime(tic, toc, 'Cut and Measure')

@@ -10,7 +10,7 @@ dictionary(ies) with numpy arrays, so that we can use them in future scripts.
 Happy centreline extraction!
 
 @author: Juliana Sanchez-Posada
-Version: 13th April, 2021
+Version: 15th November, 2021
 """
 #%% Importing python packages
 import os

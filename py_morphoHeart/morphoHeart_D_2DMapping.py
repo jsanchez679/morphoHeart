@@ -4,7 +4,7 @@ morphoHeart - D. TRANSFORM ALL THICKNESS DATA INTO 2D
 Welcome to the fifth code of morphoHeart!
 If you are running this code you must have already divided the heart tissue layers into atrium and ventricle and created
 heatmap visualisation of the layers' thickness and heart ballooning. The objective of this code is to transform all the 
-thickness and balooning data  you got in the last one into a 2D representation, so that then you can compare it easier 
+thickness and balooning data you got in the last one into a 2D representation, so that then you can compare it easier 
 to other hearts with different genotypes or manipulations. In the end, you can also create distribution plots to compare
 the cardiac jelly distribution between different regions of the heart. All the plots created in this script will be saved 
 in the 'imgs_videos' folder of each heart, and the numerical data in a csv file within the Results folder. 
@@ -13,7 +13,7 @@ When you are done with this code celebrate as this is the last script you need t
 Happy 2D mapping!
 
 @author: Juliana Sanchez-Posada
-Version: 15th April, 2021
+Version: 15th November, 2021
 """
 #%% Importing python packages
 import os
@@ -166,7 +166,8 @@ if init:
                                                          dir_results = dir_results, dirImgs = directories[4], 
                                                          save_names= dict_unloop[tissue]['save_names'],
                                                          hm_names = dict_unloop[tissue]['hm_names'],
-                                                         saveHM = saveHM, savePlot = savePlot, cmap = 'turbo')
+                                                         saveHM = saveHM, savePlot = savePlot, 
+                                                         default = True, cmap = 'turbo')
         del heatmaps_th
     
         _ = fcMeshes.filterUnloopedDF(filename = filename, val2unloop = dict_unloop[tissue]['param_name'], 

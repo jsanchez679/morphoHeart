@@ -3260,7 +3260,7 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
         #Select the CL to use
         # First look if one has already been selected 
         try: 
-            q_select = dict_kspl['kspl_opt_sel2']
+            q_select = dict_kspl['kspl_opt_sel']
         # If not, plot all three options and ask for selection
         except: 
             settings.legendSize = .20
@@ -3283,26 +3283,29 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
         # If selection is 3
         else: 
             # See first if the process of cutting the mesh has already been done
-            # try: 
-            #     # - Option 4 (add point obtained when creating mesh for centreline - vmtk)
-            #     pt2add_inf4 = dict_kspl['linLine_'+layerNames[i]]['kspl_pts'][0]
-            #     pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf4), axis=0)
-            #     sph_centroid = Sphere(pos=pt2add_inf4, r=2, c='deeppink').legend('new_pt')
+            try: 
+                # - Option 4 (add point obtained when creating mesh for centreline - vmtk)
+                pt2add_inf4 = dict_kspl['linLine_'+layerNames[i]]['kspl_pts'][0]
+                pt2add_inf5 = pts_withOutf[-1]+unit_vector(pt2add_inf4-pts_withOutf[-1])*(findDist(pt2add_inf4,pts_withOutf[-1])/2)
+                sph_inf5 = Sphere(pos=pt2add_inf5, r=2, c='lightcoral').legend('new_interm_pt')
+                sph_centroid = Sphere(pos=pt2add_inf4, r=2, c='deeppink').legend('new_pt')
+                pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf5), axis=0)
+                pts_all_opt5 = np.insert(pts_all_opt4, len(pts_all_opt4), np.transpose(pt2add_inf4), axis=0)
                 
-            #     # Interpolate points
-            #     pts_int_opt4 = getInterpolatedPts(points=pts_all_opt4, nPoints = 300)
-            #     # Create kspline with points
-            #     kspl_opt4 = KSpline(pts_int_opt4, res = 300)
-            #     kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+                # Interpolate points
+                pts_int_opt5 = getInterpolatedPts(points=pts_all_opt5, nPoints = 300)
+                # Create kspline with points
+                kspl_opt4 = KSpline(pts_int_opt5, res = 300)
+                kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
                 
-            #     vp = Plotter(N=1)
-            #     text = "- Selected Centreline"
-            #     txt = Text2D(text, c=c, font=font)
-            #     vp.show(myoc, kspl_opt4, sph_centroid, txt, at=0, viewup="y", interactive=True)
+                vp = Plotter(N=1)
+                text = "- Selected Centreline"
+                txt = Text2D(text, c=c, font=font)
+                vp.show(myoc, kspl_opt4, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
                 
-            # # If not, then cut the mesh and define final point for centreline
-            # except: 
-            if True: 
+            # If not, then cut the mesh and define final point for centreline
+            except: 
+            # if True: 
                 pt_happy = False
                 
                 mesh_title = filename+'_myoc_int_cut4cl.stl'
@@ -3329,18 +3332,22 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
                     
                       # - Option 4 (add point obtained when re-cutting exported mesh4cl)
                     pt2add_inf4 = pt_centroid
-                    pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf4), axis=0)
+                    pt2add_inf5 = pts_withOutf[-1]+unit_vector(pt_centroid-pts_withOutf[-1])*(findDist(pt_centroid,pts_withOutf[-1])/2)
+                    # print(pts_withOutf[-1], pt2add_inf5, pt2add_inf4)
+                    sph_inf5 = Sphere(pos=pt2add_inf5, r=2, c='lightcoral').legend('new_interm_pt')
+                    pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf5), axis=0)
+                    pts_all_opt5 = np.insert(pts_all_opt4, len(pts_all_opt4), np.transpose(pt2add_inf4), axis=0)
             
                     # Interpolate points
-                    pts_int_opt4 = getInterpolatedPts(points=pts_all_opt4, nPoints = 300)
+                    pts_int_opt5 = getInterpolatedPts(points=pts_all_opt5, nPoints = 300)
                     # Create kspline with points
-                    kspl_opt4 = KSpline(pts_int_opt4, res = 300)
+                    kspl_opt4 = KSpline(pts_int_opt5, res = 300)
                     kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
                     
                     vp = Plotter(N=1)
                     text = "- Resulting mesh after cutting"
                     txt = Text2D(text, c=c, font=font)
-                    vp.show(meshCL_cut, kspl, kspl_opt4, sph_centroid, txt, at=0, viewup="y", interactive=True)
+                    vp.show(meshCL_cut, kspl, kspl_opt4, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
                     
                     pt_happy = ask4input('Are you happy with the new defined centreline? \n\t-[0]:no, I want to define a new cuting plane to redefine final point\n\t-[1]:yes! >>:', bool)
                     
@@ -3778,7 +3785,7 @@ def getChambersEllipsoid(filename, df_res, file_num, lines_orient, meshes, dict_
                 depth_ch = xa_max-xa_min
                 fill_df = True
                 
-                txt_ch = Text2D(text+chamber+' - angF: {:.1f}'.format(ang_chF), c="k", font= font)
+                txt_ch = Text2D(text+chamber+' -0 angF: {:.1f}'.format(ang_chF), c="k", font= font)
                 txt_ch2 = Text2D(chamber+': \n\t Width: {:.1f} um, Length: {:.1f} um, Depth: {:.1f} um'.format(width_ch, length_ch, depth_ch), c="k", font= font)
                 
                 vp = Plotter(N=2, axes = 1)
@@ -3787,19 +3794,19 @@ def getChambersEllipsoid(filename, df_res, file_num, lines_orient, meshes, dict_
                 
         elif dORv == 'V':# or spaw_analysis == False: 
             print('\t-> Ventral')
-            if not spaw_analysis:
-                if chamber == 'Atrium':
-                    rotX = rotAngle-atrAngle
-                elif chamber == 'Ventricle':
-                    rotX = rotAngle+(180-ventAngle)
-                # print(' \t- rotX:', rotX)
-            else: 
-                pts_o = orient_ch.clone().points()
-                # print(pts_o,'\n\n', orient_ch.points())
-                pts_o[0,0] = 0; pts_o[1,0] = 0
-                ang_test = findAngleBtwVectorsZ(pts_o, np.array([[0,0,0],[0,1,0]]))
-                rotX = ang_test  
-                print('\t- Note: in V if spaw')
+            # if not spaw_analysis:
+            if chamber == 'Atrium':
+                rotX = rotAngle-atrAngle
+            elif chamber == 'Ventricle':
+                rotX = rotAngle+(180-ventAngle)
+                print(' \t- rotX:', rotX)
+            # else: 
+            #     pts_o = orient_ch.clone().points()
+            #     # print(pts_o,'\n\n', orient_ch.points())
+            #     pts_o[0,0] = 0; pts_o[1,0] = 0
+            #     ang_test = findAngleBtwVectorsZ(pts_o, np.array([[0,0,0],[0,1,0]]))
+            #     rotX = ang_test  
+            #     print('\t- Note: in V if spaw')
                 # print('\t- rotX:', ang_test)
                 
             print('\t- V rotX:', rotX, '-', chamber)
