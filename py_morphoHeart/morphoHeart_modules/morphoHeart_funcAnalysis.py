@@ -1335,6 +1335,12 @@ palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange'
 # def plotInGroups(plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
 #                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
 
+boxprops = dict(linestyle = '-', linewidth = 1, color='#00145A')
+flierprops = dict(marker='o', markersize=1, linestyle = 'none')
+whiskerprops = dict(color='#00145A')
+capprops = dict(color='#00145A')
+medianprops = dict(linewidth=1.5, linestyle = '-', color = '#01FBEE')
+
 #%% func - plotInGroups
 def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
@@ -1476,7 +1482,178 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
 
 #%% func - plotInGroupsShape
+# https://towardsdatascience.com/matplotlib-vs-ggplot2-c86dd35a9378
+# https://www.r-graph-gallery.com/boxplot.html
+# https://medium.com/analytics-vidhya/r-style-visualizations-in-python-560c6bbfb14a
+# https://matplotlib.org/2.0.2/examples/pylab_examples/spine_placement_demo.html
+# https://datascienceplus.com/seaborn-categorical-plots-in-python/
+# https://towardsdatascience.com/scattered-boxplots-graphing-experimental-results-with-matplotlib-seaborn-and-pandas-81f9fa8a1801
+# https://github.com/cfcooney/medium_posts/blob/master/scattered_boxplots.ipynb
+# https://htmlcolorcodes.com/
+
 def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
+                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
+                  save = True, dpi = 300, ext = 'png'):
+    
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    sns.set_context('poster') # notebook, talk, poster, paper
+    # Get legends
+    dict_legends = def_legends(df2plot)
+    
+    # Set up the matplotlib figure
+    num_vars = len(vars2plot)
+    n_rows = math.ceil(num_vars/n_cols)
+    # print('n_rows:' , n_rows)
+    
+    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+
+    for index in index_no_plot:
+        vars2plot.insert(index, '')
+        labels2plot.insert(index, '')
+    
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    
+    # Genotypes and Strains being plotted 
+    values = []
+    for var in [x_var, hue_var, shape_var]:
+        if var =='GenotypeAll':
+            reverse = True
+        else: 
+            reverse = False
+        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    x_values, hue_values, shape_values = values
+    
+    # - number of x_var
+    n_x = len(x_values)
+    if n_x == 1:
+        h_plot = 3.5
+    if num_vars == 1:
+        h_add = 0; w_add = 0
+    size_col = (n_cols+1)*h_plot+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    #  Create figure  - plt.clf()
+    gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    sns.set_style("ticks")
+    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
+                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+    # Define legends for shape and hue
+    hue_legend = dict_legends[hue_var]
+    legend_elem_hue = []
+    for aa, hue_val in enumerate(hue_legend):
+        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+                                markerfacecolor=palettes[aa], markersize=20))
+    space = [Line2D([0], [0], marker='o', color='w', label='',
+                                markerfacecolor='w', markersize=20)]
+    shape_legend = dict_legends[shape_var]
+    legend_elem_shape = []
+    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+                                markerfacecolor='k', markersize=15))
+        
+    handle_new = legend_elem_hue+space+legend_elem_shape
+    legend_new = hue_legend+['']+shape_legend
+    
+    marker_size = 10
+    dodge = True
+    jitter = 0.3
+    
+    plot_no = 0
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        # Create list to contain info of yticks and ist highest value
+        y_vals_all = []
+        max_y_vals = []
+    
+        if n == 0: 
+            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+                print('\t- '+svar+': ', value)
+                
+        if n in index_no_plot:
+            if n == n_cols:
+                ax.set_axis_off()
+                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+            else: 
+                ax.remove()
+        else: 
+            for j, val, style in zip(count(), shape_values, styles):
+                df_plot = df2plot[df2plot[shape_var] == val]
+                # print(x_var, var, hue_var, hue_values, x_values, style, palettes)
+                
+                m = sns.boxplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                                  dodge = dodge, width=1, boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops,
+                                  flierprops = flierprops, medianprops = medianprops, showmeans = False)
+                m = sns.stripplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                                  marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+                for pp,boxs in enumerate(m.artists):
+                #     box.set_edgecolor('black')
+                    boxs.set_facecolor('white')
+
+                box = ax.get_position()
+                if yticks_lab == '1e6 - d.':
+                    ylabel = ylabel +' x 10$^6$'
+                elif yticks_lab == '1e3 - d.':
+                    ylabel = ylabel +' x 10$^3$'
+                ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+                # ax.set_xticks(ax.get_xticks())
+                ax.set_xticklabels(dict_legends[x_var], rotation=0)
+                ax.set_position([box.x0, box.y0, box.width*1, box.height])
+                ax.get_legend().remove()
+                sns.despine()
+                
+                if ylim != '':
+                    # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+                    ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+                
+                if n == 0:
+                    handles, labels = m.get_legend_handles_labels()
+
+                y_vals = ax.get_yticks()
+                y_vals_all.append(y_vals)
+                max_y_vals.append(y_vals[-1])
+                if n_x > 1: 
+                    vline_pos = list(range(1,n_x,1))
+                    for pos in vline_pos:
+                        ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+            # Define axes based on higherst bar
+            max_y_index = max_y_vals.index(max(max_y_vals))
+            ax.set_yticks(y_vals_all[max_y_index])
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+                
+        plot_no +=1
+
+    fig.suptitle(title+'\n', fontsize = 30, y=1)
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            else: 
+                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+#%% func - plotInGroupsShapeBU
+def plotInGroupsShapeBU (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
                   save = True, dpi = 300, ext = 'png'):
     
@@ -1628,7 +1805,6 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
-    
 #%% func - plotInGroupsStats
 def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
                       n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 

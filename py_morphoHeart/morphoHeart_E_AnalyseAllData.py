@@ -39,6 +39,7 @@ if init:
     dir_R_hmf = os.path.join(dir_data2Analyse,'R_All','df_all','df_hmf')
     df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R', out_type = 'xlsx')
     all_CSVs = glob.glob(dir_R_meas + "/*.csv")
+    #% df_meas - df containing all .csv files in the R_all folder within im_morphoHeart
     df_meas = pd.concat((pd.read_csv(f) for f in all_CSVs))
     df_meas = df_meas.loc[:, ~df_meas.columns.str.contains('^Unnamed')]
     df2plot = []; df_cjPDF2plot = []
@@ -46,7 +47,7 @@ if init:
     #%% Add all other measurements to dataframe
     df_meas = fcAn.sortDFCols(fcAn.getVarRatios(fcAn.getMainStrain(fcAn.getGenotypeAll(df_meas))))
     fcAn.printDFINfo(df_meas)
-    fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
+    # fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     # fcBasics.saveDF('hapln1a241s_wtmt', df2plot, 'df2plot', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     
     #%% Filter dataset
@@ -57,11 +58,11 @@ if init:
     # Settings for plots
     pl_groups = fcAn.plot_groups()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-    groups = list(pl_groups.keys())[:]
+    # groups = list(pl_groups.keys())[:]
     # ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
     #           'Tissue Endocardium','Tissue Cardiac Jelly','Ratios Cardiac Jelly', 
     #           'Sagittal Angles','Ventral Angles', 'Volume Percentages','Tissue Volume Percentages'] 
-    # groups = ['Heart Size']#,'Lumen Size', 'Heart Looping','Tissue Cardiac Jelly (AtrVent)']
+    groups = ['Heart Size']#,'Lumen Size', 'Heart Looping','Tissue Cardiac Jelly (AtrVent)']
     
     x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
     # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY
