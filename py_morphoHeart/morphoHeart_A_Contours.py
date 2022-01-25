@@ -30,7 +30,8 @@ Version: 09th November, 2021
 #%% Importing python packages
 import os
 from time import perf_counter
-from vedo import Plotter
+from vedo import Plotter, embedWindow, settings
+embedWindow(False)
 
 # Verify working dir
 def setWorkingDir (root_path, init = False):
@@ -52,7 +53,7 @@ if init:
     # Importing morphoHeart packages
     from morphoHeart_modules import morphoHeart_funcBasics as fcBasics
     from morphoHeart_modules import morphoHeart_funcContours as fcCont
-    from morphoHeart_modules.morphoHeart_funcMeshes import createLayerMesh
+    from morphoHeart_modules.morphoHeart_funcMeshes import createAll3LayerMeshes
 
     # Creating global variables
     global heartLayer, stack_closed, processDict
@@ -152,10 +153,11 @@ if init:
     if q_ABC_done:
         exit_txt = False
         q_D = fcBasics.ask4input('Do you want to select the layer contours or modify the selected contours for '+channel+'? [0]:no/[1]:yes: ',bool)
+        ticD = perf_counter()
         if q_D:
             while not q_fullDict:
                 if initial_runD:
-                    ticD = perf_counter()
+
                     # Define number of contours per slice
                     slcCont_o, numCont_o = fcCont.getSlicesContNum(stack_closed)
                     # Show tuples according to slcContours
@@ -183,11 +185,12 @@ if init:
                         #% Create dictionary to save and save it
                         heartLayer2S = fcCont.smallDict2Save(heartLayer)
                         fcBasics.saveDict(filename, heartLayer2S , "heartlayer2S_"+channel, directories[0])
-                        _, _, s3_all = fcCont.save_s3s_fromDict(filename = filename, chStr = channel, stack_shape = stack_shape,
+                        s3_int, s3_ext, s3_all = fcCont.save_s3s_fromDict(filename = filename, chStr = channel, stack_shape = stack_shape,
                                                           heartLayer = heartLayer, dir_txtNnpy = directories[1], save = True)
                         #Find surfaces in 3D for channel analysed
-                        mesh = createLayerMesh(filename = filename, s3 = s3_all, resolution = res, layer = 'Channel '+str(channel),
-                                                    name = 'Channel '+str(channel), colour = 'cornflowerblue', alpha = 1, plotshow=True)
+                        mesh_all, mesh_in, mesh_out = createAll3LayerMeshes(filename = filename, s3_all = s3_all, 
+                                                                            s3_in = s3_int, s3_out = s3_ext, 
+                                                                            resolution = res, layer = channel)
                         q_happy = fcBasics.ask4input('Are you happy with the segmented mesh? \n\t[0]: no, I would like to clean some slices and/or make some changes to the dictionary \n\t[1]: yes, this channel is finished! >>: ', bool)
                     if q_fullDict and not q_happy:
                         q_fullDict = False
@@ -234,8 +237,11 @@ if others:
     fcCont.plotSelectedContours(imageEvery = 1, stack = stack_closed, heartLayer = heartLayer)
 
     #%% Plot again resulting mesh
-    vp = Plotter(N=1, axes =13)
-    vp.show(mesh, at=0,interactive = True)
+    settings.legendSize = .3
+    vp = Plotter(N=3, axes=13)
+    vp.show(mesh_in, at=0, zoom=1.2)
+    vp.show(mesh_out, at=1, zoom=1.2)
+    vp.show(mesh_all, at=2, zoom=1.2, interactive=True)
 
 #%% Init
 init = True

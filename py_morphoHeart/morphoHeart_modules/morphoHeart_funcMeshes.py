@@ -1390,17 +1390,25 @@ def createAll3LayerMeshes(filename, s3_all, s3_in, s3_out, resolution, layer):
         mesh_in.color("gold").alpha(0.05).wireframe().legend('Int.'+layer)
         mesh_out.color("limegreen").alpha(1).wireframe().legend('Ext.'+layer)
     else:  #Endocardium
-        mesh_all.color("indigo").alpha(0.05).wireframe().legend(layer)
-        mesh_in.color("indigo").alpha(0.05).wireframe().legend('Int.'+layer)
-        mesh_out.color("indigo").alpha(1).wireframe().legend('Ext.'+layer)
+        # print('AJA')
+        mesh_all.color("cornflowerblue").alpha(1).wireframe().legend(layer)
+        mesh_in.color("indigo").alpha(1).wireframe().legend('Int.'+layer)
+        mesh_out.color("turquoise").alpha(1).wireframe().legend('Ext.'+layer)
 
     text = filename+"\n\n >> "+layer
     txt = Text2D(text, c=c, font=font)
     settings.legendSize = .3
-    vp = Plotter(N=3, axes=13)
-    vp.show(mesh_all, txt, at=0, zoom=1.2)
-    vp.show(mesh_all, mesh_out, at=1, zoom=1.2)
-    vp.show(mesh_all, mesh_in, at=2, zoom=1.2, azimuth = azimuth, interactive=True)
+    if layer in ['CJ', 'Myoc', 'Endo']:
+        vp = Plotter(N=3, axes=13)
+        vp.show(mesh_all, txt, at=0, zoom=1.2)
+        vp.show(mesh_all, mesh_out, at=1, zoom=1.2)
+        vp.show(mesh_all, mesh_in, at=2, zoom=1.2, azimuth = azimuth, interactive=True)
+    else: 
+        # print('AJA')
+        vp = Plotter(N=3, axes=13)
+        vp.show(mesh_in, txt, at=0, zoom=1.2)
+        vp.show(mesh_out, at=1, zoom=1.2)
+        vp.show(mesh_all, at=2, zoom=1.2, azimuth = azimuth, interactive=True)
 
     return mesh_all, mesh_in, mesh_out
 

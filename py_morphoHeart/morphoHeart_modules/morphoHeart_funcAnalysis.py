@@ -29,13 +29,18 @@ import scikit_posthocs as sp
 from statannot import add_stat_annotation
 
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
-font = {'family':'sans-serif', 'color':'gray', 'weight':'light', 'size':10, 'horizontalalignment':'center'}
 
 #%% Importing morphoHeart packages
 from .morphoHeart_funcBasics import alert, ask4input, getInputNumbers, loadDF
 
-# import matplotlib.font_manager
-# matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
+#%% Interesting links
+# Colors for graphs
+# https://chartio.com/learn/charts/how-to-choose-colors-data-visualization/
+# https://projects.susielu.com/viz-palette?colors=[%22#dc133b%22,%22#ffa500%22,%22#6495ed%22,%22#ade64f%22,%22#c36bea%22,%22#214d4e%22,%22#36cbd3%22,%22#a23e27%22,%22#839292%22,%22#8b008b%22,%22#3ff44c%22,%22#000080%22]&backgroundColor=%22white%22&fontColor=%22black%22&mode=%22normal%22
+# http://vrl.cs.brown.edu/color
+# https://www.rapidtables.com/web/color/RGB_Color.html#color-table
+#
+
 #%% - GENERAL LOAD/SAVE
 #%% func - q_savePlot
 def q_savePlot():
@@ -56,19 +61,61 @@ def q_savePlot():
         
 #%% func - getGenotypeAll
 def getGenotypeAll(df_input):
-    df_input['GenotA'] = df_input['Gene_A']+':'+df_input['Genotype_A']
+    
+    # Add hapln1a multiple mutations to gene and genotype
+    genotA = []
+    for aa, geneA, genotypeA, strain in zip(count(), df_input['Gene_A'], df_input['Genotype_A'], df_input['Strain']):
+        if 'prom187' in strain:
+            genotA.append(geneA+'187:'+genotypeA)
+        elif 'prom241' in strain:
+            genotA.append(geneA+'241:'+genotypeA)
+        elif '3bp' in strain:
+            genotA.append(geneA+'3bp:'+genotypeA)
+        elif 'STOP' in strain:
+            genotA.append(geneA+'STOP:'+genotypeA)
+        elif 'prom365' in strain:
+            genotA.append(geneA+'365:'+genotypeA)
+        else: 
+            genotA.append(geneA+':'+genotypeA)
+    df_input['GenotA'] = genotA
+    
+    
+    # Merge genotypes
     df_input['GenotB'] = df_input['Gene_B']+':'+df_input['Genotype_B']
     df_input['GenotypeAll'] = df_input['GenotA']+'/'+df_input['GenotB']
-    df_input['Ref'] = df_input['LS_Session']+'_'+df_input['Fish_ref']
     
-    # Create new column with complete genotype
+    # Create new column with complete genotype and another to merge all wild-types indistinctive of strain
     genotypeAll = [] 
+    genotypeF = []
     for i, genotA, genotB in zip(count(), df_input["GenotA"], df_input["GenotB"]): 
-        if genotB == "-:-": 
+        if ':wt' in genotA:
+            if ':wt' in genotB:
+                genotypeAll.append(genotA+'/'+genotB) 
+                genotypeF.append('wt:wt')
+            elif '-:-' in genotB:
+                genotypeAll.append(genotA) 
+                genotypeF.append('wt:wt')
+            else:
+                genotypeAll.append(genotA+'/'+genotB) 
+                genotypeF.append(genotA+'/'+genotB) 
+                
+        elif '-:-' in genotB:
             genotypeAll.append(genotA) 
+            genotypeF.append(genotA) 
+            
         else: 
             genotypeAll.append(genotA+'/'+genotB) 
+            genotypeF.append(genotA+'/'+genotB) 
+        # if genotB == "-:-": 
+        #     genotypeAll.append(genotA) 
+        # else: 
+        #     genotypeAll.append(genotA+'/'+genotB) 
+        
     df_input["GenotypeAll"] = genotypeAll 
+    df_input["GenotypeF"] = genotypeF
+    
+    # Add ref for Session and Fish/Embryo
+    df_input['Ref'] = df_input['LS_Session']+'_'+df_input['Fish_ref']
     
     return df_input
 
@@ -206,9 +253,12 @@ def selectVariables (vars_dict):
     return vars2loop, labels2loop
 
 #%% func - selectVariables_auto
-def selectVariables_auto (vars_dict, group):
+def selectVariables_auto (vars_dict, group, plot_type):
 
-    pl_groups = plot_groups()
+    if plot_type == 'group':
+        pl_groups = plot_groups()
+    elif plot_type == 'indiv':
+        pl_groups = plot_indiv()
     variables = list(vars_dict.keys())
     
     var_num = []
@@ -230,7 +280,7 @@ def selectVariables_auto (vars_dict, group):
 def sortDFCols(df_meas):
     
     first_cols = ['Folder', 'LS_Session', 'Fish_ref', 'Ref', 'Strain', 'Strain_o', 'Stage', 'Manip',
-       'Gene_A', 'Genotype_A','GenotA', 'Gene_B', 'Genotype_B', 'GenotB', 'GenotypeAll']
+       'Gene_A', 'Genotype_A','GenotA', 'Gene_B', 'Genotype_B', 'GenotB', 'GenotypeAll', 'GenotypeF']
 
     other_cols = []
     for col in df_meas.columns:
@@ -606,10 +656,30 @@ def plot_groups():
                  'Tissue Volume Percentages' : 
                      {'title': 'Tissue Volume Composition', 
                       'vars' : ['Ratio_VolMyoc2VolTissue', 'Ratio_VolEndo2VolTissue', 'Ratio_VolCJ2VolTissue', 'Ratio_VolLumen2VolTissue'],
-                      'n_cols': 4, 'yticks_lab':'d.', 'ylim' : ''}}
+                      'n_cols': 4, 'yticks_lab':'d.', 'ylim' : ''}
+                     }
     
     return pl_groups
 
+#%% func - plot_indiv
+def plot_indiv():
+    pl_indiv = {
+                'Vol_Ext.Myoc': 
+                    {'title': 'Heart Size', 
+                     'vars' : ['Vol_Ext.Myoc'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''},
+                'Vol_Atr.ExtMyoc': 
+                    {'title': 'Atrial Size', 
+                     'vars' : ['Vol_Atr.ExtMyoc'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''},
+                'Vol_Vent.ExtMyoc': 
+                    {'title': 'Ventricular Size', 
+                     'vars' : ['Vol_Vent.ExtMyoc'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''}#,
+                     
+                 }
+    return pl_indiv
+        
 #%% func - def_legends
 def def_legends(df_input, df_type = 'meas'):
     """
@@ -639,34 +709,58 @@ def def_legends(df_input, df_type = 'meas'):
     if df_type != 'kde':
         try: 
             genots = sorted(df_input.GenotypeAll.unique(), reverse = True)
+            genotsF = sorted(df_input.GenotypeF.unique(), reverse = True)
             bool_genots = True
         except: 
             bool_genots = False
     else: 
         try: 
             genots = sorted(df_input.Genotype.unique(), reverse = True)
+            genotsF = sorted(df_input.GenotypeF.unique(), reverse = True)
             bool_genots = True
         except: 
             bool_genots = False
     
-    out_genots = []
+    out_genots = dict()
+    out_genotsF = dict()
     if bool_genots: 
-        all_genots = ['hapln1a:wt', 'hapln1a:ht', 'hapln1a:mt', 
-                      'hapln1a:wt/spaw:wt', 'hapln1a:wt/spaw:ht', 'hapln1a:wt/spaw:mt', 
-                      'hapln1a:ht/spaw:wt', 'hapln1a:ht/spaw:ht', 'hapln1a:ht/spaw:mt',
-                      'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:ht', 'hapln1a:mt/spaw:mt',
-                      'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'galff:-/uas:-',
-                      'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
+        # all_genots = ['hapln1a:wt', 'hapln1a:ht', 'hapln1a:mt', 
+        #               'hapln1a:wt/spaw:wt', 'hapln1a:wt/spaw:mt', 'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:mt',
+        #               'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'galff:-/uas:-',
+        #               'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
         
-        leg_genots = ['$hapln1a^{+/+}$', '$hapln1a^{+/-}$', '$hapln1a^{-/-}$', 
-                      '$hapln1a^{+/+}/spaw^{+/+}$', '$hapln1a^{+/+}/spaw^{+/-}$', '$hapln1a^{+/+}/spaw^{-/-}$', 
-                      '$hapln1a^{+/-}/spaw^{+/+}$', '$hapln1a^{+/-}/spaw^{+/-}$', '$hapln1a^{+/-}/spaw^{-/-}$',
-                      '$hapln1a^{-/-}/spaw^{+/+}$', '$hapln1a^{-/-}/spaw^{+/-}$', '$hapln1a^{-/-}/spaw^{-/-}$',
-                      'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'hapln1a_OE:wt',
-                      '$vcana^{+/+}$', '$vcana^{+/-}$', '$vcana^{-/-}$', 'wt']
-        
+        leg_genots = {'hapln1a187:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+                      'hapln1a241:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+                      'hapln1a3bp:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'},  
+                      'hapln1aSTOP:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+                    
+                      'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
+                      'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241$', 'color': '#839292'}, 
+                      
+                      'hapln1a187:mt': {'legend': '$hapln1a^{-/-}_{\Delta187}$', 'color': '#8B008B'}, 
+                      'hapln1a241:mt': {'legend': '$hapln1a^{-/-}_{\Delta241}$', 'color': '#dc133b'}, 
+                      'hapln1a3bp:mt': {'legend': '$hapln1a^{-/-}_{\Delta3bp}$', 'color': '#c36bea'}, 
+                      'hapln1aSTOP:mt': {'legend': '$hapln1a^{-/-}_{STOP}$', 'color': '#72e5ef'}, 
+                      
+                      'hapln1a241:wt/spaw:wt': {'legend': '$wild$-$type_{sh}$', 'color': '#000080'}, 
+                      'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
+                      'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{-/-}_{\Delta241sh}$', 'color': '#dc133b'}, 
+                      'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{-/-}_{\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
+                      
+                      'galff:+/uas:+': {'legend': '$galff^+;uas^+$', 'color': '#ade64f'}, 
+                      'galff:+/uas:-': {'legend': '$galff^+;uas^-$', 'color': '#6495ed'}, 
+                      'galff:-/uas:+': {'legend': '$galff^-;uas^+$', 'color': '#214d4e'}, 
+                      'galff:-/uas:-': {'legend': '$wild$-$type_{OE}$', 'color': '#000080'},
+                      
+                      'vcana365:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+                      'vcana365:ht': {'legend': '$vcana^{+/-}_{\Delta365}$', 'color': '#a23e27'}, 
+                      'vcana365:mt': {'legend': '$vcana^{-/-}_{\Delta365}$', 'color': '#ffa500'}, 
+                      'wt:wt': {'legend': '$wild$-$type$','color': '#000080'}}
+            
         for gen in genots:
-            out_genots.append(leg_genots[all_genots.index(gen)])
+            out_genots[gen] = leg_genots[gen]
+        for genf in genotsF:
+            out_genotsF[genf] = leg_genots[genf]
     
     # STRAINS
     try: 
@@ -723,20 +817,28 @@ def def_legends(df_input, df_type = 'meas'):
     except: 
         bool_stages = False
     
-    out_stages = []
+    out_stages = dict()
     if bool_stages:
-        if df_type != 'changes':
-            all_stages = ['32-34', '48-50', '58-60', '72-74']
-            leg_stages = ['32-34hpf', '48-50hpf', '58-60hpf', '72-74hpf']
-        else: 
-            all_stages = ['32->48', '48->74']
-            leg_stages = ["32$\Rightarrow$48hpf", "48$\Rightarrow$74hpf"]
+        leg_stages = {'32-34': {'legend': '32-34hpf', 'color': '#72e5ef'}, 
+                      '48-50': {'legend': '48-50hpf', 'color': '#af437c'},
+                      '58-60': {'legend': '58-60hpf', 'color': '#94d86f'},
+                      '72-74': {'legend': '72-74hpf', 'color': '#5f4ac2'},
+                      '32->48': {'legend': '32$\Rightarrow$48hpf', 'color': '#FF6347'},
+                      '48->74': {'legend': '48$\Rightarrow$74hpf', 'color': '#FFFF00'}}
+        
+        # if df_type != 'changes':
+        #     all_stages = ['32-34', '48-50', '58-60', '72-74']
+        #     leg_stages = ['32-34hpf', '48-50hpf', '58-60hpf', '72-74hpf']
+        # else: 
+        #     all_stages = ['32->48', '48->74']
+        #     leg_stages = ["32$\Rightarrow$48hpf", "48$\Rightarrow$74hpf"]
         
         for stg in stages:
-            try: 
-                out_stages.append(leg_stages[all_stages.index(stg)])
-            except :
-                out_stages.append('')
+            out_stages[stg] = leg_stages[stg]
+            # try: 
+            #     out_stages.append(leg_stages[all_stages.index(stg)])
+            # except :
+            #     out_stages.append('')
     
     # TIME-POINTS
     try: 
@@ -761,15 +863,78 @@ def def_legends(df_input, df_type = 'meas'):
             #     out_tp.append('')
     
     
-    x_labels = {'GenotypeAll': 'Genotype', 'Genotype': 'Genotype',
+    x_labels = {'GenotypeAll': 'Genotype', 'GenotypeF': 'Genotype_f',
                     'Strain' : 'Strain', 'Strain_o' : 'Strain_o',
                     'Stage': 'Stage [hpf]', 'time_point': 'Heart phase contraction'}
                 
-    dict_legends = {'GenotypeAll': out_genots, 'Genotype': out_genots,
+    dict_legends = {'GenotypeAll': out_genots, 'Genotype': out_genotsF,
                     'Strain' : out_strains, 'Strain_o' : out_strains_o,
                     'Stage': out_stages, 'time_point' : out_tp, 'xlabels': x_labels}
 
     return dict_legends 
+
+#%% func - genot_order
+def genot_order(values, mix_wts = False):
+    #['hapln1a:wt', 'hapln1a:ht', 'hapln1a:mt', 
+        #               'hapln1a:wt/spaw:wt', 'hapln1a:wt/spaw:mt', 'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:mt',
+        #               'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'galff:-/uas:-',
+        #               'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
+        
+    # print('-> Genot Values: ', values )
+    if not mix_wts:
+        poss_combinations = [['hapln1a241:wt','hapln1a241:mt'],
+                             ['hapln1a241:wt','hapln1a241:ht','hapln1a241:mt'],
+                             ['hapln1a187:wt','hapln1a187:mt'],
+                             ['hapln1a187:wt','hapln1a187:ht','hapln1a187:mt'],
+                             ['hapln1a241:wt','hapln1a241:mt','hapln1a187:wt','hapln1a187:mt'],
+                             ['hapln1a241:wt','hapln1a241:mt','hapln1a187:mt'],
+                             
+                             ['hapln1a241:wt/spaw:wt','hapln1a241:wt/spaw:mt'],
+                             ['hapln1a241:wt/spaw:wt','hapln1a241:wt/spaw:mt','hapln1a241:mt/spaw:wt','hapln1a241:mt/spaw:mt'],
+                             ['hapln1a241:wt/spaw:wt','hapln1a241:mt','hapln1a241:wt/spaw:mt','hapln1a241:mt/spaw:mt'],
+                             ['hapln1a241:wt','hapln1a241:mt','hapln1a241:wt/spaw:mt','hapln1a241:mt/spaw:mt'],
+                             ['hapln1a241:wt','hapln1a241:mt','hapln1a241:wt/spaw:mt'],
+                             
+                             ['galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+','galff:+/uas:+'],
+                             ['galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+','galff:+/uas:+','hapln1a241:mt'],
+                             ['galff:+/uas:-', 'galff:-/uas:+','galff:+/uas:+'],
+                             ['galff:+/uas:-', 'galff:-/uas:+','galff:+/uas:+','hapln1a241:mt'],
+                             ['vcana365:wt', 'vcana365:ht', 'vcana365:mt'],
+                             ['vcana365:wt', 'vcana365:mt'],
+                             ['wt:wt','hapln1a241:wt','hapln1a241:ht','hapln1a241:mt', 
+                              'hapln1a187:wt','hapln1a187:ht','hapln1a187:mt',
+                              'hapln1a3bp:wt','hapln1a3bp:ht','hapln1a3bp:mt',
+                              'hapln1aSTOP:wt','hapln1aSTOP:ht','hapln1aSTOP:mt',
+                              'hapln1a241:wt/spaw:wt', 'hapln1a241:mt/spaw:wt','hapln1a241:wt/spaw:mt', 'hapln1a241:mt/spaw:mt',
+                              'galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+', 'galff:+/uas:+',
+                              'vcana365:wt', 'vcana365:ht','vcana365:mt']]
+        
+        for poss in poss_combinations:
+            if set(values) == set(poss):
+                res_order = poss
+                # print('-> Resulting Order for Values: ', res_order)
+            else: 
+                res_order = []
+                for val in poss_combinations[-1]:
+                    if val in values:
+                        res_order.append(val)
+                # print('ERROR: No match with possible comination! Update combination list!')
+            
+    return res_order
+    
+#%% func - props_ordered
+def props_ordered(df2plot, x_var, hue_var, shape_var):
+    values = []
+    for var in [x_var, hue_var, shape_var]:
+        if var =='GenotypeAll':
+            vals2app = genot_order(df2plot[var].unique(), mix_wts = False)
+            values.append(vals2app)
+        else: 
+            reverse = False
+            values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    x_values, hue_values, shape_values = values
+    
+    return x_values, hue_values, shape_values
 
 #%% func - def_var_names 
 def def_var_names(plot_type, labels):
@@ -1083,7 +1248,7 @@ def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, va
             print('\n > Group: ', inter)
             
             pvalues_norm, txt_normtest, all_data_normal, data_groups = normalityTests(alpha, factor, fact_levels, var, data_out, norm_test)
-            print(var)
+            # print(var)
             test2use, multcomp_txt, txt_testSelected = selectStatisticalTest(fact_levels, all_data_normal, var)
             
             dict_spStatisticalRes_in['pvalues_norm'] = pvalues_norm
@@ -1291,16 +1456,24 @@ def get_indiv_pairs(pair_f, inter):
     return indiv_pairs
     
 #%% func - txtMultComp
-def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, alpha):
+def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, alpha, indiv = False):
     txt_multcomp = '\n - - - - - - - - - - \n'
-    num = int(len(box_pairs)/len(x_values))
-    chunks = [box_pairs[x:x+num] for x in range(0, len(box_pairs), num)]
+    
+    if indiv:
+        chunks = [box_pairs]
+        x_values = [x_values]
+        x_labels = [x_labels]
+    else:
+        num = int(len(box_pairs)/len(x_values))
+        chunks = [box_pairs[x:x+num] for x in range(0, len(box_pairs), num)]
     
     n = 0
     for j, chunk, x_val, x_lab, test, norm in zip(count(), chunks, x_values, x_labels, test_selected, test_norm):
         txt_multcomp = txt_multcomp + x_lab + ': '+ norm +'\n'+ test + '\n - p-val: '
         for i, pair in enumerate(chunk):
+            # print(pair, n, i)
             a_pair = list(pair[0]); b_pair = list(pair[1])
+            # print(x_val,'-',a_pair, '-',b_pair)
             a_pair.remove(x_val);b_pair.remove(x_val)
             pval_txt = str(format(pval[n],'.3f'))
             if pval[n] <= alpha:
@@ -1311,45 +1484,304 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
                 txt_multcomp = txt_multcomp + pairtxt + ' \n '
             else: 
                 txt_multcomp = txt_multcomp +  pairtxt + ' - '
-        
-        # print(j, len(x_values))
-        # if j < len(x_values)-1:
+
         txt_multcomp = txt_multcomp+'\n - - - - - - - - - - \n'
-            
-    # print(txt_multcomp)
-    
-    # for i, pair in enumerate(box_pairs):
-    #     pairtxt = str(pair[0])+ ' vs. '+ str(pair[1]) +': '+str(format(pval[i],'.3f'))
-    #     if i < len(box_pairs)-1:
-    #         txt_multcomp = txt_multcomp + pairtxt + ' \n '
-    #     else: 
-    #         txt_multcomp = txt_multcomp +  pairtxt + ' - '
-    # print(txt_multcomp)
         
     return txt_multcomp
 
 #%% - CREATE PLOTS
-styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>']*20
-# styles = ['o', 'o', 's', 's', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
+# from matplotlib import rcParams
+# rcParams['font.family'] = 'sans-serif'
+# rcParams['font.sans-serif'] = ['Tahoma', 'Verdana', 'DejaVu Sans',
+#                                'Lucida Grande']
+# To print context parameters
+# print(sns.plotting_context())
+# https://matplotlib.org/devdocs/tutorials/introductory/customizing.html
+
+# Set context for all figures
+contxt = 'poster'
+font_scale = 1
+rc_dict = {'font.size': 20, 
+           # 'lines.linewidth': 3.0,
+           'axes.linewidth': 1.5, 
+           'axes.labelsize': 16.0, #size fo the axis labels (names)
+           'axes.titlesize': 10, #'axes.titleweight': 200,
+           'xtick.bottom' : True, 'ytick.left' : True,
+           'xtick.major.size': 10, 'ytick.major.size': 8,
+           'xtick.major.width': 1, 'ytick.major.width': 1,
+           'xtick.labelsize': 14, 'ytick.labelsize': 14, # size of the labels of each tick
+           'legend.fontsize': 16, 'legend.title_fontsize': 16,
+           'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
+
+boxprops = dict(linestyle = '-', linewidth = 1.2, alpha = 0.3)
+flierprops = dict(marker='*', markersize=8, markerfacecolor='#FFD700', markeredgecolor = '#000000',markeredgewidth = 0.8)#linestyle = 'none')
+whiskerprops = dict(linewidth = 1, color='#A9A9A9')
+capprops = dict(color='#A9A9A9')
+medianprops = dict(linewidth=1, linestyle = '-', color = '#696969')
+meanprops = dict(linewidth=1.5, linestyle = '-.', color = '#696969')
+
+# Setting font!
+# https://jonathansoma.com/lede/data-studio/matplotlib/changing-fonts-in-matplotlib/
+# https://jonathansoma.com/lede/data-studio/matplotlib/list-all-fonts-available-in-matplotlib-plus-samples/
+# https://bastibe.de/2016-05-30-matplotlib-font-cache.html
+# import matplotlib.font_manager
+# matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
+# matplotlib.font_manager._rebuild()
+
+fontname = 'Myriad Pro' #'Comic Sans MS'
+
+# Palette stuff
+# Save a palette to a variable:
+# palette = sns.color_palette("husl", 8*n_gen*n_strain)
+# sns.palplot(palette)
+# for gen in range(n_gen):
+#     palettes.append(palette[gen*len(palette)//n_gen+2])
+    
+# eight_pallette = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#8b6fed", "#859947", "#994440", "#36cbd3"]
+# twelve_pallete = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#c36bea", "#214d4e", "#36cbd3", "#a23e27", "#839292", "#8b008b", "#3ff44c", "#000080"]
+
+# twelve pallete with metadata
+# [{"color":"#dc133b", "name":"dark red","textColor":"white"},
+# {"color":"#ffa500","name":"orange","textColor":"black"},
+# {"color":"#6495ed","name":"blue","textColor":"black"},
+# {"color":"#ade64f","name":"yellow green","textColor":"black"},
+# {"color":"#c36bea","name":"pink","textColor":"black"},
+# {"color":"#214d4e","name":"teal", "textColor":"white"},
+# {"color":"#36cbd3", "name":"turquoise", "textColor":"black"},
+# {"color":"#a23e27", "name":"brown", "textColor":"white"},
+# {"color":"#839292", "name":"grey", "textColor":"black"},
+# {"color":"#8b008b", "name":"magenta", "textColor":"white"},
+# {"color":"#3ff44c", "name":"green","textColor":"black"},
+# {"color":"#000080","name":"indigo","textColor":"white"}]
+
+styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>']*20 # https://matplotlib.org/stable/api/markers_api.html
 palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange','limegreen', 'gold']*20
-# def plotInGroups(plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-#                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
 
-boxprops = dict(linestyle = '-', linewidth = 1, color='#00145A')
-flierprops = dict(marker='o', markersize=1, linestyle = 'none')
-whiskerprops = dict(color='#00145A')
-capprops = dict(color='#00145A')
-medianprops = dict(linewidth=1.5, linestyle = '-', color = '#01FBEE')
+# Other links
+# https://towardsdatascience.com/matplotlib-vs-ggplot2-c86dd35a9378
+# https://www.r-graph-gallery.com/boxplot.html
+# https://medium.com/analytics-vidhya/r-style-visualizations-in-python-560c6bbfb14a
+# https://matplotlib.org/2.0.2/examples/pylab_examples/spine_placement_demo.html
+# https://datascienceplus.com/seaborn-categorical-plots-in-python/
+# https://towardsdatascience.com/scattered-boxplots-graphing-experimental-results-with-matplotlib-seaborn-and-pandas-81f9fa8a1801
+# https://github.com/cfcooney/medium_posts/blob/master/scattered_boxplots.ipynb
+# https://htmlcolorcodes.com/
 
-#%% func - plotInGroups
-def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
-                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
-                  save = True, dpi = 300, ext = 'png'):
+# Padding 
+# https://dfrieds.com/data-visualizations/style-plots-python-matplotlib.html
+# https://matplotlib.org/stable/tutorials/introductory/customizing.html
+
+#%% ->No statistics
+#%% func - plotIndivperX
+def plotIndivperX (# General Plot Settings
+                    df2plot, vars2plot, x_var, hue_var, shape_var, 
+                    # Size, title, labels and legends
+                    title, labels2plot, dict_legends, ips, 
+                    # Other plot settings
+                    suptitle = True, right_legend = False,
+                    yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+                    # Saving settings
+                    save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
     
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
-    sns.set_context('poster') # notebook, talk, poster, paper
-    # Get legends
-    dict_legends = def_legends(df2plot)
+    
+    # Genotypes and Strains being plotted 
+    values = props_ordered(df2plot, x_var, hue_var, shape_var)
+    x_values, hue_values, shape_values = values
+    
+    # Set up the matplotlib figure 
+    n_rows = 1
+    n_cols = len(hue_values)
+
+    for index in range(n_cols):
+        if index == 0 and len(vars2plot) == 1:
+            addVars = True
+            var2copy = vars2plot[0]
+            label2copy = labels2plot[0]
+        
+        if addVars and index != 0:
+            vars2plot.insert(index, var2copy)
+            labels2plot.insert(index, label2copy)
+    
+    # As a right legend wants to be added, we need to add '' to all labels 
+    if right_legend: 
+        index_no_plot = [n_cols]
+        for index in index_no_plot:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+        width_ratios = [1]*n_cols+[0.2]
+        n_cols = n_cols+1
+    else: 
+        width_ratios = [1]*n_cols
+        index_no_plot = [1000]
+        
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    h_add = 1; w_add = 1
+
+    if len(x_values) > 3:
+        h_add = 0
+        wspace = 0.05
+        box_width = 0.8
+        bbox_lf = -0.5
+    else:
+        h_plot = 0.8
+        wspace = 0.15
+        box_width = 0.6
+        bbox_lf = -1.8
+    
+    size_col = (n_cols)*(h_plot*len(x_values))+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    # Define legends for x and hue
+    v_legend = []; v_color = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            color = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+                color.append(dict_legends[v_var][v_dict]['color'])
+        else: 
+            legend = dict_legends[v_var]
+            color = ''
+        v_legend.append(legend)
+        v_color.append(color)
+    x_legend, hue_legend = v_legend
+    x_color, _ = v_color
+        
+    if right_legend:
+        # Define legends for x
+        legend_elem = []
+        for aa, xval, xcol in zip(count(), x_legend, x_color):
+            legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
+                                    markerfacecolor=xcol, markersize=12))
+        handle_new = legend_elem
+        
+        for index in index_no_plot:
+            hue_legend.insert(index, '')
+            hue_values.insert(index, '')
+            
+    marker_size = 8; dodge = True; jitter = 0.3
+    
+    for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+        print('\t- '+svar+': ', value)
+        
+    ##  CREATE FIGURE 
+    gridkw = dict(width_ratios=width_ratios)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=1, wspace=wspace)
+    
+    sns.set_style("ticks")
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+    # Create list to contain info of yticks and its highest value
+    y_vals_all = []; max_y_vals = []
+    for n, ax, var, ylabel, hue_value in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values):
+        if n in index_no_plot and right_legend:
+                if n == n_cols-1:
+                    ax.set_axis_off()
+                    ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+                else: 
+                    ax.remove()
+        else: 
+            # print(' > Plotting ',hue_value,'\n')
+            df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+            m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+                              marker = 'o', palette = x_color, size = marker_size, 
+                              linewidth=0.5, jitter = jitter)
+            if box_plot: 
+                m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+                                   dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+                                   boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+                                   flierprops = flierprops, medianprops = medianprops, 
+                                   meanline = True, meanprops = meanprops, showmeans = True)
+    
+            box = ax.get_position()
+    
+            if n == 0:
+                if yticks_lab == '1e6 - d.':
+                    ylabel = ylabel +' x 10$^6$'
+                elif yticks_lab == '1e3 - d.':
+                    ylabel = ylabel +' x 10$^3$'
+                ax.set_xlabel(hue_legend[n], fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname)
+            else:
+                ax.set_xlabel(hue_legend[n], fontname = fontname)
+                ax.set_ylabel('', fontname = fontname)
+    
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            xticks = ax.get_xticks()
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+            sns.despine()
+            
+            if ylim != '':
+                print('ylim:', ylim[n][0],'-', ylim[n][1])
+                ax.set_ylim(ylim[n][0], ylim[n][1])
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+            else:
+                ax.spines['left'].set_linestyle('-.')
+                ax.spines['left'].set_color('#696969')
+                ax.spines['left'].set_linewidth(0.8)
+                ax.tick_params(left = False)
+    
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
+                
+            # Define axes based on higherst bar
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+            
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+                # print(r' -> YAY')
+            except:
+                print(r' -> Nop')
+
+    if suptitle:
+        fig.suptitle(title+'\n', y=1, fontname = fontname)
+    # fig.tight_layout()
+    
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            else: 
+                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+#%% func - plotInGroups
+def plotInGroups(# General Plot Settings
+                 df2plot, vars2plot, x_var, hue_var, shape_var, 
+                 # Size, title, labels and legends
+                 title, labels2plot, dict_legends, ips, 
+                 # Other plot settings
+                 n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
+                 # Saving settings
+                 save = True, dpi = 300, ext = 'png', info ='',dir2save = ''):
+    
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
     # Set up the matplotlib figure
     num_vars = len(vars2plot)
@@ -1366,58 +1798,63 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
     
     # Set up the matplotlib figure
     h_plot, w_plot = ips
+    
+    # Genotypes and Strains being plotted 
+    values = props_ordered(df2plot, x_var, hue_var, shape_var)
+    x_values, hue_values, shape_values = values
+    
+    # - number of x_var
+    n_x = len(x_values)
+    if n_x == 1:
+        h_plot = 3.5
+        
     if num_vars == 1:
         h_add = 0; w_add = 0
     size_col = (n_cols+1)*h_plot+h_add
     size_row = n_rows*w_plot+w_add
     
-    # Genotypes and Strains being plotted 
-    values = []
-    for var in [x_var, hue_var, shape_var]:
-        if var =='GenotypeAll':
-            reverse = True
+    # Define legends for x and hue
+    v_legend = []; v_color = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            color = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+                color.append(dict_legends[v_var][v_dict]['color'])
         else: 
-            reverse = False
-        values.append(sorted(df2plot[var].unique(), reverse=reverse))
-    x_values, hue_values, shape_values = values
+            legend = dict_legends[v_var]
+            color = ''
+        v_legend.append(legend)
+        v_color.append(color)
+    x_legend, hue_legend = v_legend
+    x_color, hue_color = v_color
+
+    legend_elem_hue = []
+    for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
+        legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
+                                markerfacecolor=hue_col, markersize=20))
+        
+    handle_new = legend_elem_hue
+    legend_new = hue_legend
     
-    # - number of x_var
-    n_x = len(x_values)
+    marker_size = 10; dodge = True; jitter = 0.3
+    plot_no = 0
     
-    #  Create figure  - plt.clf()
+    #  CREATE FIGURE
     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.subplots_adjust(hspace=0.5, wspace=0.2)
     
     sns.set_style("ticks")
-    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
-                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    # Define legends for shape and hue
-    hue_legend = dict_legends[hue_var]
-    legend_elem_hue = []
-    for aa, hue_val in enumerate(hue_legend):
-        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
-                                markerfacecolor=palettes[aa], markersize=20))
-    space = [Line2D([0], [0], marker='o', color='w', label='',
-                                markerfacecolor='w', markersize=20)]
-    shape_legend = dict_legends[shape_var]
-    legend_elem_shape = []
-    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
-        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
-                                markerfacecolor='k', markersize=15))
-        
-    handle_new = legend_elem_hue+space+legend_elem_shape
-    legend_new = hue_legend+['']+shape_legend
-    
-    marker_size = 12
-    dodge = True
     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        
         # Create list to contain info of yticks and ist highest value
         y_vals_all = []
         max_y_vals = []
-    
+        
         if n == 0: 
             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
                 print('\t- '+svar+': ', value)
@@ -1425,23 +1862,37 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
         if n in index_no_plot:
             if n == n_cols:
                 ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-0.5, 1), frameon = False)
             else: 
                 ax.remove()
         else: 
-            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              palette = palettes, dodge = dodge, size = marker_size)
+            print(' > ',var,'\n')
+            m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                            dodge = dodge, width= 0.8, showfliers = True, palette = hue_color,
+                            boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+                            flierprops = flierprops, medianprops = medianprops, 
+                            meanline = True, meanprops = meanprops, showmeans = True)
+
+            m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                              marker = 'o', palette = hue_color, dodge = dodge, size = marker_size, 
+                              linewidth=1, jitter = jitter)
+
             box = ax.get_position()
             if yticks_lab == '1e6 - d.':
                 ylabel = ylabel +' x 10$^6$'
             elif yticks_lab == '1e3 - d.':
                 ylabel = ylabel +' x 10$^3$'
-            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
-            # ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(dict_legends[x_var], rotation=0)
+                
+            ax.set_xlabel(hue_legend, fontname = fontname)
+            ax.set_ylabel(ylabel, fontname = fontname)
+            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
             ax.set_position([box.x0, box.y0, box.width*1, box.height])
             ax.get_legend().remove()
             sns.despine()
+            
+            if ylim != '':
+                # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+                ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
             
             if n == 0:
                 handles, labels = m.get_legend_handles_labels()
@@ -1469,179 +1920,19 @@ def plotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2p
                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
             elif yticks_lab == 'd.':
                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
-
-    fig.suptitle(title+'\n', fontsize = 30, y=1)
-    if save: 
-        for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"."+extf
-            else: 
-                fig_title = dir2savef+title+"."+extf
-
-            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
-
-#%% func - plotInGroupsShape
-# https://towardsdatascience.com/matplotlib-vs-ggplot2-c86dd35a9378
-# https://www.r-graph-gallery.com/boxplot.html
-# https://medium.com/analytics-vidhya/r-style-visualizations-in-python-560c6bbfb14a
-# https://matplotlib.org/2.0.2/examples/pylab_examples/spine_placement_demo.html
-# https://datascienceplus.com/seaborn-categorical-plots-in-python/
-# https://towardsdatascience.com/scattered-boxplots-graphing-experimental-results-with-matplotlib-seaborn-and-pandas-81f9fa8a1801
-# https://github.com/cfcooney/medium_posts/blob/master/scattered_boxplots.ipynb
-# https://htmlcolorcodes.com/
-
-def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
-                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
-                  save = True, dpi = 300, ext = 'png'):
-    
-    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
-    sns.set_context('poster') # notebook, talk, poster, paper
-    # Get legends
-    dict_legends = def_legends(df2plot)
-    
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    n_rows = math.ceil(num_vars/n_cols)
-    # print('n_rows:' , n_rows)
-    
-    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
-    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
-    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
-
-    for index in index_no_plot:
-        vars2plot.insert(index, '')
-        labels2plot.insert(index, '')
-    
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
-    
-    # Genotypes and Strains being plotted 
-    values = []
-    for var in [x_var, hue_var, shape_var]:
-        if var =='GenotypeAll':
-            reverse = True
-        else: 
-            reverse = False
-        values.append(sorted(df2plot[var].unique(), reverse=reverse))
-    x_values, hue_values, shape_values = values
-    
-    # - number of x_var
-    n_x = len(x_values)
-    if n_x == 1:
-        h_plot = 3.5
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
-    
-    #  Create figure  - plt.clf()
-    gridkw = dict(width_ratios=[1]*n_cols+[0.2])
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    
-    sns.set_style("ticks")
-    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
-                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
-    
-    # Define legends for shape and hue
-    hue_legend = dict_legends[hue_var]
-    legend_elem_hue = []
-    for aa, hue_val in enumerate(hue_legend):
-        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
-                                markerfacecolor=palettes[aa], markersize=20))
-    space = [Line2D([0], [0], marker='o', color='w', label='',
-                                markerfacecolor='w', markersize=20)]
-    shape_legend = dict_legends[shape_var]
-    legend_elem_shape = []
-    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
-        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
-                                markerfacecolor='k', markersize=15))
-        
-    handle_new = legend_elem_hue+space+legend_elem_shape
-    legend_new = hue_legend+['']+shape_legend
-    
-    marker_size = 10
-    dodge = True
-    jitter = 0.3
-    
-    plot_no = 0
-    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
-        # Create list to contain info of yticks and ist highest value
-        y_vals_all = []
-        max_y_vals = []
-    
-        if n == 0: 
-            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
-                print('\t- '+svar+': ', value)
                 
-        if n in index_no_plot:
-            if n == n_cols:
-                ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
-            else: 
-                ax.remove()
-        else: 
-            for j, val, style in zip(count(), shape_values, styles):
-                df_plot = df2plot[df2plot[shape_var] == val]
-                # print(x_var, var, hue_var, hue_values, x_values, style, palettes)
-                
-                m = sns.boxplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                                  dodge = dodge, width=1, boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops,
-                                  flierprops = flierprops, medianprops = medianprops, showmeans = False)
-                m = sns.stripplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                                  marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
-                for pp,boxs in enumerate(m.artists):
-                #     box.set_edgecolor('black')
-                    boxs.set_facecolor('white')
-
-                box = ax.get_position()
-                if yticks_lab == '1e6 - d.':
-                    ylabel = ylabel +' x 10$^6$'
-                elif yticks_lab == '1e3 - d.':
-                    ylabel = ylabel +' x 10$^3$'
-                ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
-                # ax.set_xticks(ax.get_xticks())
-                ax.set_xticklabels(dict_legends[x_var], rotation=0)
-                ax.set_position([box.x0, box.y0, box.width*1, box.height])
-                ax.get_legend().remove()
-                sns.despine()
-                
-                if ylim != '':
-                    # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
-                    ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
-                
-                if n == 0:
-                    handles, labels = m.get_legend_handles_labels()
-
-                y_vals = ax.get_yticks()
-                y_vals_all.append(y_vals)
-                max_y_vals.append(y_vals[-1])
-                if n_x > 1: 
-                    vline_pos = list(range(1,n_x,1))
-                    for pos in vline_pos:
-                        ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
-            
-            # Define axes based on higherst bar
-            max_y_index = max_y_vals.index(max(max_y_vals))
-            ax.set_yticks(y_vals_all[max_y_index])
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+            except:
+                print(r' -> Nop')
                 
         plot_no +=1
 
-    fig.suptitle(title+'\n', fontsize = 30, y=1)
+    fig.suptitle(title+'\n', y=1, fontname = fontname)
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
@@ -1652,150 +1943,254 @@ def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, lab
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
 
-#%% func - plotInGroupsShapeBU
-def plotInGroupsShapeBU (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
-                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
-                  save = True, dpi = 300, ext = 'png'):
-    
-    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
-    sns.set_context('poster') # notebook, talk, poster, paper
-    # Get legends
-    dict_legends = def_legends(df2plot)
-    
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    n_rows = math.ceil(num_vars/n_cols)
-    # print('n_rows:' , n_rows)
-    
-    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
-    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
-    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+#%% ->With statistics        
+#%% func - plotIndivStatsperX
+def plotIndivStatsperX (# General Plot Settings
+                    df2plot, vars2plot, x_var, hue_var, shape_var, 
+                    # Size, title, labels and legends
+                    title, labels2plot, dict_legends, ips, 
+                    # Statistic Settings
+                    stats_set, statsTxt = True, 
+                    # Other plot settings
+                    suptitle = True, right_legend = False,
+                    yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+                    # Saving settings
+                    save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
 
-    for index in index_no_plot:
-        vars2plot.insert(index, '')
-        labels2plot.insert(index, '')
-    
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
+    if stats_set[0]: 
+        tests_res = []
+        box_pairs_all = []
+        statist = True
+        dicts_stats = stats_set[1]
+        alpha = stats_set[2]
+        txt_multcomp_all = []
+        
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
     # Genotypes and Strains being plotted 
-    values = []
-    for var in [x_var, hue_var, shape_var]:
-        if var =='GenotypeAll':
-            reverse = True
-        else: 
-            reverse = False
-        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
     
-    # - number of x_var
-    n_x = len(x_values)
-    if n_x == 1:
-        h_plot = 3.5
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
+    # Set up the matplotlib figure 
+    if statsTxt:
+        n_rows = 2
+        height_ratios = [1,1]
+    else: 
+        n_rows = 1
+        height_ratios = [1]
+    n_cols = len(hue_values)
+
+    for index in range(n_cols):
+        if index == 0 and len(vars2plot) == 1:
+            addVars = True
+            var2copy = vars2plot[0]
+            label2copy = labels2plot[0]
+        
+        if addVars and index != 0:
+            vars2plot.insert(index, var2copy)
+            labels2plot.insert(index, label2copy)
+    
+    # As a right legend wants to be added, we need to add '' to all labels 
+    if right_legend: 
+        index_no_plot = [n_cols]
+        for index in index_no_plot:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+        width_ratios = [1]*n_cols+[0.2]
+        n_cols = n_cols+1
+    else: 
+        width_ratios = [1]*n_cols
+        index_no_plot = [1000]
+
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    h_add = 1; w_add = 1
+
+    if len(x_values) > 3:
+        h_add = 0
+        wspace = 0.05
+        box_width = 0.8
+        bbox_lf = -0.5
+    else:
+        h_plot = 0.8
+        wspace = 0.15
+        box_width = 0.6
+        bbox_lf = -1.8
+    
+    size_col = (n_cols)*(h_plot*len(x_values))+h_add
     size_row = n_rows*w_plot+w_add
     
-    #  Create figure  - plt.clf()
-    gridkw = dict(width_ratios=[1]*n_cols+[0.2])
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    # Define legends for x and hue
+    v_legend = []; v_color = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            color = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+                color.append(dict_legends[v_var][v_dict]['color'])
+        else: 
+            legend = dict_legends[v_var]
+            color = ''
+        v_legend.append(legend)
+        v_color.append(color)
+    x_legend, hue_legend = v_legend
+    x_color, _ = v_color
+        
+    if right_legend:
+        # Define legends for x
+        legend_elem = []
+        for aa, xval, xcol in zip(count(), x_legend, x_color):
+            legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
+                                    markerfacecolor=xcol, markersize=12))
+        handle_new = legend_elem
+        
+        for index in index_no_plot:
+            hue_legend.insert(index, '')
+            hue_values.insert(index, '')
+            dicts_stats.insert(index,'')
+            
+    marker_size = 8; dodge = True; jitter = 0.3
+    
+    for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+        print('\t- '+svar+': ', value)
+        
+    ##  CREATE FIGURE 
+    gridkw = dict(width_ratios=width_ratios, height_ratios=height_ratios)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=0.25, wspace=wspace)
     
     sns.set_style("ticks")
-    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
-                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    # Define legends for shape and hue
-    hue_legend = dict_legends[hue_var]
-    legend_elem_hue = []
-    for aa, hue_val in enumerate(hue_legend):
-        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
-                                markerfacecolor=palettes[aa], markersize=20))
-    space = [Line2D([0], [0], marker='o', color='w', label='',
-                                markerfacecolor='w', markersize=20)]
-    shape_legend = dict_legends[shape_var]
-    legend_elem_shape = []
-    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
-        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
-                                markerfacecolor='k', markersize=15))
-        
-    handle_new = legend_elem_hue+space+legend_elem_shape
-    legend_new = hue_legend+['']+shape_legend
-    
-    marker_size = 10
-    dodge = True
-    jitter = 0.3
-    
-    plot_no = 0
-    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
-        # Create list to contain info of yticks and ist highest value
-        y_vals_all = []
-        max_y_vals = []
-    
-        if n == 0: 
-            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
-                print('\t- '+svar+': ', value)
-                
-        if n in index_no_plot:
-            if n == n_cols:
-                ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
-            else: 
-                ax.remove()
+    # Create list to contain info of yticks and its highest value
+    y_vals_all = []; max_y_vals = []
+    for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values, dicts_stats):
+        if n in index_no_plot and right_legend:
+                if n == n_cols-1:
+                    ax.set_axis_off()
+                    ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+                else: 
+                    ax.remove()
         else: 
-            for j, val, style in zip(count(), shape_values, styles):
-                df_plot = df2plot[df2plot[shape_var] == val]
-                # print(x_var, var, hue_var, hue_values, x_values, style, palettes)
-                m = sns.stripplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                                  marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
-                box = ax.get_position()
+            df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+            m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+                              marker = 'o', palette = x_color, size = marker_size, 
+                              linewidth=0.5, jitter = jitter)
+            if box_plot: 
+                m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+                                   dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+                                   boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+                                   flierprops = flierprops, medianprops = medianprops, 
+                                   meanline = True, meanprops = meanprops, showmeans = True)
+    
+            box = ax.get_position()
+            
+            if statist: 
+                box_pairs = dict_stats[var]['box_pairs']
+                stat_test = False
+                test = None
+                p_val = dict_stats[var]['pval_multComp_all']
+                txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+                txt_normtest_all = dict_stats[var]['txt_normtest_all']
+                
+                # Added fontname as an imput to add_stat_annotation function in statannot
+                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+                                                       hue_order = hue_values, order = x_values,
+                                                       box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+                                                       pvalues=p_val, comparisons_correction=None, #'bonferroni',
+                                                       line_offset_to_box=0.4, line_offset=0.1,
+                                                       line_height=0.015, text_offset=5,
+                                                       text_format='star', loc='inside', fontsize='small', verbose=0,
+                                                       fontname = fontname)
+                tests_res.append(p_val)
+                box_pairs_all.append(box_pairs)
+                txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
+                                            txt_normtest_all, alpha, indiv = True)
+                txt_multcomp_all.append(txt_multcomp)
+                
+            if n == 0:
                 if yticks_lab == '1e6 - d.':
                     ylabel = ylabel +' x 10$^6$'
                 elif yticks_lab == '1e3 - d.':
                     ylabel = ylabel +' x 10$^3$'
-                ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
-                # ax.set_xticks(ax.get_xticks())
-                ax.set_xticklabels(dict_legends[x_var], rotation=0)
-                ax.set_position([box.x0, box.y0, box.width*1, box.height])
-                ax.get_legend().remove()
-                sns.despine()
-                
-                if ylim != '':
-                    # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
-                    ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
-                
-                if n == 0:
-                    handles, labels = m.get_legend_handles_labels()
-
-                y_vals = ax.get_yticks()
-                y_vals_all.append(y_vals)
-                max_y_vals.append(y_vals[-1])
-                if n_x > 1: 
-                    vline_pos = list(range(1,n_x,1))
-                    for pos in vline_pos:
-                        ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+                ax.set_xlabel(hue_legend[n], fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname)
+            else:
+                ax.set_xlabel(hue_legend[n], fontname = fontname)
+                ax.set_ylabel('', fontname = fontname)
+    
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            xticks = ax.get_xticks()
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+            sns.despine()
             
-            # Define axes based on higherst bar
-            max_y_index = max_y_vals.index(max(max_y_vals))
-            ax.set_yticks(y_vals_all[max_y_index])
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+            if ylim != '':
+                print('ylim:', ylim[n][0],'-', ylim[n][1])
+                ax.set_ylim(ylim[n][0], ylim[n][1])
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+            else:
+                ax.spines['left'].set_linestyle('-.')
+                ax.spines['left'].set_color('#696969')
+                ax.spines['left'].set_linewidth(0.8)
+                ax.tick_params(left = False)
+    
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
                 
-        plot_no +=1
-
-    fig.suptitle(title+'\n', fontsize = 30, y=1)
+            # Define axes based on higherst bar
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+            
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+                # print(r' -> YAY')
+            except:
+                print(r' -> Nop')
+    
+    if statsTxt:
+        gs = axes[1,0].get_gridspec()
+        for axis in axes[1,:]:
+            axis.remove()
+        axbig = fig.add_subplot(gs[1,:])
+        
+        print(txt_multcomp_all)
+        txt_multcomp_allf = []
+        for aa, txt in enumerate(txt_multcomp_all):
+            new_txt = txt.replace('\n - - - - - - - - - - \n','\n')
+            new_txt2 = new_txt.replace('$\\alpha$','$alpha$')
+            txt_multcomp_allf.append(new_txt2)
+           
+        txt_multcomp_allf = '- - - - - - - - - - \n STATISTICS: \n'+''.join(txt_multcomp_allf)
+        print(txt_multcomp_allf)
+            
+        axbig.annotate(txt_multcomp_allf, (0.5, 0.225),
+                   xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
+                   horizontalalignment = 'center')
+        axbig.axis('off')
+    
+    if suptitle:
+        fig.suptitle(title+'\n', y=1, fontname = fontname)
+    # fig.tight_layout()
+    
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
@@ -1805,10 +2200,21 @@ def plotInGroupsShapeBU (df2plot, vars2plot, x_var, hue_var, shape_var, title, l
                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+    if statist: 
+        return tests_res, box_pairs_all
+
 #%% func - plotInGroupsStats
-def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
-                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
-                      save = True, dpi = 300, ext = 'png'):
+def plotInGroupsStats(# General Plot Settings
+                      df2plot, vars2plot, x_var, hue_var, shape_var, 
+                      # Size, title, labels and legends
+                      title, labels2plot, dict_legends, ips, 
+                      # Statistic Settings
+                      stats_set,
+                      # Other plot settings
+                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
+                      # Saving settings
+                      save = True, dpi = 300, ext = 'png', info ='', dir2save=''):
     
     if stats_set[0]: 
         tests_res = []
@@ -1819,21 +2225,15 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
         txt_multcomp_all = []
         
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
-    sns.set_context('poster') # notebook, talk, poster, paper
-    # Get legends
-    dict_legends = def_legends(df2plot)
     
     # Set up the matplotlib figure
     num_vars = len(vars2plot)
     n_rows = math.ceil(num_vars/n_cols)+1
-    # print('n_rows:' , n_rows)
-    # print('n_cols:' , n_cols)
     
     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,n_cols+1))
     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
     index_stats = sorted(list(set(index_no_graph).difference(set(index_right_col))))
-    # print(index_stats)
 
     for index in index_no_plot:
         vars2plot.insert(index, '')
@@ -1843,13 +2243,7 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     h_plot, w_plot = ips
     
     # Genotypes and Strains being plotted 
-    values = []
-    for var in [x_var, hue_var, shape_var]:
-        if var =='GenotypeAll':
-            reverse = True
-        else: 
-            reverse = False
-        values.append(sorted(df2plot[var].unique(), reverse=reverse))
+    values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
     
     # - number of x_var
@@ -1865,38 +2259,42 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
     size_col = (n_cols+1)*h_plot+h_add
     size_row = n_rows*w_plot+w_add
     
-    #  Create figure  - plt.clf()
+    # Define legends for x and hue
+    v_legend = []; v_color = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            color = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+                color.append(dict_legends[v_var][v_dict]['color'])
+        else: 
+            legend = dict_legends[v_var]
+            color = ''
+        v_legend.append(legend)
+        v_color.append(color)
+    x_legend, hue_legend = v_legend
+    x_color, hue_color = v_color
+
+    legend_elem_hue = []
+    for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
+        legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
+                                markerfacecolor=hue_col, markersize=20))
+        
+    handle_new = legend_elem_hue
+    legend_new = hue_legend
+
+    marker_size = 8; dodge = True; plot_no = 0
+    
+    #  CREATE FIGURE
     gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1.2])
     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
     fig.subplots_adjust(hspace=hspace, wspace=wspace)
     
     sns.set_style("ticks")
-    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
-                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    # Define legends for shape and hue
-    hue_legend = dict_legends[hue_var]
-    legend_elem_hue = []
-    for aa, hue_val in enumerate(hue_legend):
-        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
-                                markerfacecolor=palettes[aa], markersize=20))
-    space = [Line2D([0], [0], marker='o', color='w', label='',
-                                markerfacecolor='w', markersize=20)]
-    shape_legend = dict_legends[shape_var]
-    legend_elem_shape = []
-    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
-        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
-                                markerfacecolor='k', markersize=15))
-        
-    handle_new = legend_elem_hue+space+legend_elem_shape
-    legend_new = hue_legend+['']+shape_legend
-    
-    marker_size = 8
-    dodge = True
-    plot_no = 0
     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
-        
         # Create list to contain info of yticks and ist highest value
         y_vals_all = []
         max_y_vals = []
@@ -1911,21 +2309,23 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
             else: 
                 if n in index_stats:
-                    text2add = txt_multcomp_all[n-n_cols-1]
-                    ax.text(0.5, 0.5, text2add, size=20, ha='center', va='center')
-                    # ax.remove()
+                    text2add = '- - - - - - - - - - \n STATISTICS: \n'+txt_multcomp_all[n-n_cols-1]
+                    ax.text(0.5, 0.5, text2add, size=16, ha='center', va='center', fontname = fontname)
                     ax.set_axis_off()
-                    # ax.get_xaxis().set_visible(False)
-                    # ax.get_yaxis().set_visible(False)
                 else: 
                     ax.remove()
                 
         else: 
             print(' > ',var,'\n')
+            m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+                            dodge = dodge, width =0.8, showfliers = True, palette = hue_color,
+                            boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+                            flierprops = flierprops, medianprops = medianprops, 
+                            meanline = True, meanprops = meanprops, showmeans = True)
+                                  
             m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              palette = palettes, dodge = dodge, size = marker_size, jitter = 0.2)
-            # m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-            #                   palette = palettes, dodge = dodge, size = marker_size)
+                              palette = hue_color, dodge = dodge, size = marker_size, jitter = 0.3)
+            
             if statist: 
                 box_pairs = dict_stats[var]['box_pairs']
                 stat_test = False
@@ -1940,21 +2340,23 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
                                                         pvalues=p_val, comparisons_correction=None, #'bonferroni',
                                                         line_offset_to_box=0.4, line_offset=0.1,
                                                         line_height=0.015, text_offset=5,
-                                                        text_format='star', loc='inside', fontsize='small', verbose=0);
+                                                        text_format='star', loc='inside', fontsize='small', verbose=0,
+                                                        fontname = fontname);
                 tests_res.append(p_val)
                 box_pairs_all.append(box_pairs)
-                txt_multcomp = txtMultComp (box_pairs, p_val, x_values, dict_legends[x_var], txt_testSelected_all, txt_normtest_all, alpha)
+                txt_multcomp = txtMultComp (box_pairs, p_val, x_values, x_legend, txt_testSelected_all, txt_normtest_all, alpha)
                 txt_multcomp_all.append(txt_multcomp)
-                # print('txt_multcomp:', txt_multcomp)
+                print('txt_multcomp:', txt_multcomp)
                 
             box = ax.get_position()
             if yticks_lab == '1e6 - d.':
                 ylabel = ylabel +' x 10$^6$'
             elif yticks_lab == '1e3 - d.':
                 ylabel = ylabel +' x 10$^3$'
-            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
-            # ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(dict_legends[x_var], rotation=0)
+            
+            ax.set_xlabel(dict_legends['xlabels'][x_var], fontname = fontname)
+            ax.set_ylabel(ylabel, fontname = fontname)
+            ax.set_xticklabels(dict_legends[x_var], rotation=0, fontname = fontname)
             ax.set_position([box.x0, box.y0, box.width*1, box.height])
             ax.get_legend().remove()
             sns.despine()
@@ -1988,9 +2390,18 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
             elif yticks_lab == 'd.':
                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
             
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+            except:
+                print(r' -> Nop')
+                
             plot_no +=1
 
-    fig.suptitle(title+'\n', fontsize = 30, y=0.95)
+    fig.suptitle(title+'\n', fontsize = 30, y=0.95, fontname = fontname)
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'pl_stats', 'R_')
@@ -2002,177 +2413,9 @@ def plotInGroupsStats(df2plot, vars2plot, x_var, hue_var, shape_var, title, labe
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
     
     if statist: 
-        return tests_res, box_pairs_all, x_values, dict_legends[x_var]
-    
-#%% func - plotInGroupsStatsBU
-def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
-                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
-                      save = True, dpi = 300, ext = 'png'):
-    
-    if stats_set[0]: 
-        tests_res = []
-        statist = True
-        dict_stats = stats_set[1]
-        
-    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
-    sns.set_context('poster') # notebook, talk, poster, paper
-    # Get legends
-    dict_legends = def_legends(df2plot)
-    
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    n_rows = math.ceil(num_vars/n_cols)+1
-    print('n_rows:' , n_rows)
-    
-    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
-    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
-    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
-    print(index_no_plot)
+        return tests_res, box_pairs_all
 
-    for index in index_no_plot:
-        vars2plot.insert(index, '')
-        labels2plot.insert(index, '')
-    
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
-    
-    # Genotypes and Strains being plotted 
-    values = []
-    for var in [x_var, hue_var, shape_var]:
-        if var =='GenotypeAll':
-            reverse = True
-        else: 
-            reverse = False
-        values.append(sorted(df2plot[var].unique(), reverse=reverse))
-    x_values, hue_values, shape_values = values
-    
-    # - number of x_var
-    n_x = len(x_values)
-    
-    #  Create figure  - plt.clf()
-    gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1])
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    
-    sns.set_style("ticks")
-    sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                    "ytick.labelsize":8, "lines.linewidth": 2.5,
-                                                    "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
-    
-    # Define legends for shape and hue
-    hue_legend = dict_legends[hue_var]
-    legend_elem_hue = []
-    for aa, hue_val in enumerate(hue_legend):
-        legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
-                                markerfacecolor=palettes[aa], markersize=20))
-    space = [Line2D([0], [0], marker='o', color='w', label='',
-                                markerfacecolor='w', markersize=20)]
-    shape_legend = dict_legends[shape_var]
-    legend_elem_shape = []
-    for n_str, shape_val, mark in zip(count(), shape_legend, styles):
-        legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
-                                markerfacecolor='k', markersize=15))
-        
-    handle_new = legend_elem_hue+space+legend_elem_shape
-    legend_new = hue_legend+['']+shape_legend
-    
-    marker_size = 10
-    dodge = True
-    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
-        
-        # Create list to contain info of yticks and ist highest value
-        y_vals_all = []
-        max_y_vals = []
-    
-        if n == 0: 
-            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
-                print('\t- '+svar+': ', value)
-        
-        if n in index_no_plot:
-            if n == n_cols:
-                ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
-            else: 
-                ax.remove()
-        else: 
-            print(' > ',var,'\n')
-            m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              palette = palettes, dodge = dodge, size = marker_size)
-            if statist: 
-                box_pairs = dict_stats[var]['box_pairs']
-                stat_test = False
-                test = None
-                p_val = dict_stats[var]['pval_multComp_all']
-                
-                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
-                                                       hue_order = hue_values, order = x_values,
-                                                        box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
-                                                        pvalues=p_val, comparisons_correction=None, #'bonferroni',
-                                                        line_offset_to_box=0.4, line_offset=0.1,
-                                                        line_height=0.015, text_offset=5,
-                                                        text_format='star', loc='inside', verbose=0);
-                tests_res.append(test_results)
-                # txt_multcomp = txtMultComp(box_pairs, test_results)
-                # print('txt_multcomp:', txt_multcomp)
-                
-            box = ax.get_position()
-            if yticks_lab == '1e6 - d.':
-                ylabel = ylabel +' x 10$^6$'
-            elif yticks_lab == '1e3 - d.':
-                ylabel = ylabel +' x 10$^3$'
-            ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
-            # ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(dict_legends[x_var], rotation=0)
-            ax.set_position([box.x0, box.y0, box.width*1, box.height])
-            ax.get_legend().remove()
-            sns.despine()
-            
-            if n == 0:
-                handles, labels = m.get_legend_handles_labels()
-
-            y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
-            max_y_vals.append(y_vals[-1])
-            if n_x > 1: 
-                vline_pos = list(range(1,n_x,1))
-                for pos in vline_pos:
-                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
-            
-            # Define axes based on higherst bar
-            max_y_index = max_y_vals.index(max(max_y_vals))
-            ax.set_yticks(y_vals_all[max_y_index])
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
-
-    fig.suptitle(title+'\n', fontsize = 30, y=1)
-    if save: 
-        for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"."+extf
-            else: 
-                fig_title = dir2savef+title+"."+extf
-
-            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
-    
-    if statist: 
-        return tests_res
-
-#%% func - relPlotInGroups
+#%% func - relPlotInGroups (test if working!)
 def relPlotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th.', info ='', 
                      save = True, dpi = 300, ext = 'png'):
@@ -2305,121 +2548,9 @@ def relPlotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, label
                 fig_title = dir2savef+title+"."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
-
-#%% func - plotPerVariableLabels
-def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
-                     h_plot, w_plot, save, dir2save, info, dpi = 300, h_add = 5, w_add = 1):
-    
-    styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
-    variables, ylabels = def_variables(script)
-    
-    for i, input_var, title in zip(count(), input_vars, titles):
-        vars2plot, labels2plot = selectVariables_auto(variables, ylabels, input_var)
-        
-        # Set up the matplotlib figure
-        stages = sorted(df2plot.Stage.unique())
-        plots_per_col = len(stages)
-        plots_per_row = 1
-        stages.append('')
-        
-        # Set up the matplotlib figure
-        size_col = (plots_per_col+1)*h_plot-12
-        size_row = plots_per_row*w_plot+w_add
-        
-        # Genotypes and Strains being plotted 
-        genots = sorted(df2plot.GenotypeAll.unique(), reverse=True)
-        strains = sorted(df2plot.Strain.unique())
-
-        index_no_plot = list(range(3,(plots_per_col+1)*plots_per_row,4))
-
-        if i == 0: 
-            print('- Genotypes: ', genots)
-            print('- Strains: ', strains)
-            print('- Stages: ', stages)
-        
-        palettes = ['mediumturquoise', 'darkmagenta']
-        
-        for nn, var, ylabel in zip(count(), vars2plot, labels2plot):
-            #  Create figure  - plt.clf()
-            gridkw = dict(width_ratios=[1,1,1,0.2])
-            fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col+1, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
-            fig.subplots_adjust(hspace=1.5, wspace=0.05)
             
-            sns.set_style("ticks")
-            sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
-                                                            "ytick.labelsize":'small', "lines.linewidth": 2.5,
-                                                            "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
-            # Define legends for strain and genotype
-            legend_elem_gen = []
-            for gen, gen_lab in enumerate(gen_legend):
-                legend_elem_gen.append(Line2D([0], [0], marker='h', color='w', label=gen_lab,
-                                        markerfacecolor=palettes[gen], markersize=10))
-            handle_new = legend_elem_gen
-            legend_new = gen_legend
-            
-            marker_size = 10
-            dodge = False
-            jitter = 0.2
-            for n, ax, stg in zip(count(), axes.flatten(), stages):
-                # print(n)
-                if n in index_no_plot:
-                    if n == 3:
-                        ax.set_axis_off()
-                        ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(0, 1), frameon = False)
-                    else: 
-                        ax.remove()
-                else: 
-                    df_plot = df2plot[df2plot['Stage'] == stg]
-                    m = sns.stripplot(x="Strain", y=var, hue="GenotypeAll", hue_order = genots, data=df_plot, ax = ax, order=strains,
-                                  marker = styles[0], palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
-                    box = ax.get_position()
-                    m.set_xticklabels(strain_legend, rotation=50)
-                    ax.set(xlabel="\nStage: "+stg+'hpf')
-                    ymin, ymax = ax.get_ylim()
-                    up = (ymax-ymin)//20
-                    # print(up)
-                    df_plot = df_plot.sort_values(by=['Stage','Strain', var])
-                    fish_refs = df_plot.Ref.unique()
-                    ha = ['right', 'left', 'center']*50
-                    for j, ref in enumerate(fish_refs):
-                        strain_pos =strains.index(df_plot['Strain'].values[j])
-                        gen_pos = genots.index(df_plot['GenotypeAll'].values[j])
-                        # print(ref, ha[j])
-                        # rand_x = random.uniform(0.95, 1.05)
-                        # rand_y = random.uniform(0.95, 1.05)
-                        # ax.text(x=strain_pos*rand_x, y=df_plot[var].values[j]*rand_y, s=ref, horizontalalignment=ha[j], size=10, color=palettes[gen_pos])
-                        ax.text(x=strain_pos, y=df_plot[var].values[j]+up, s=ref, horizontalalignment=ha[j], size=10, color=palettes[gen_pos])
-    
-                    if n == 0:
-                        ax.set(ylabel='\n'+ylabel+'\n')
-                    else: 
-                        ax.set(ylabel = '')
-                        ax.tick_params(axis = 'y', labelcolor='w', width=0.1)
-                        ax.spines['left'].set_color('gray')
-                        ax.spines['left'].set_linestyle((0,(4,4)))#"dashed")
-                    ax.set_position([box.x0, box.y0, box.width*1, box.height])
-                    ax.get_legend().remove()
-                    
-                    # ax.legend(handles0[:],labels0[:],loc='center left', bbox_to_anchor=(1, 0.5))
-                    sns.despine()
-                    
-                    if n == 0:
-                        handles, labels = m.get_legend_handles_labels()
-                        # print(handles)
-                        print(var, '- Genotypes: ',labels)
-    
-            fig.suptitle(title, fontsize = 30, y=1)
-            dir2savef = os.path.join(dir2save, 'pl_labels', 'R_')
-            if info != '':
-                fig_title = dir2savef+"Lab_"+info+"_"+var+".png"
-            else: 
-                fig_title = dir2savef+"Lab_"+var+".png"
-            
-            if save: 
-                plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
-
-#%% func - barPlots
-def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt_title, ylabel, 
+#%% func - barPlots (test if working!)
+def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, dict_legends, title, txt_title, ylabel, 
              dir2save, yticks_lab, info='', stack100 = True, sub_bar_lab = True, save = True, ext = ['png']): 
     
     mpl.rcParams.update(mpl.rcParamsDefault)
@@ -2432,27 +2563,38 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
     # Filter dataframe 
     df4plot = df2plot.groupby(group_vars)[vars2plot].mean()
     df4plot_count = df2plot.groupby(group_vars)[vars2plot].count()
-    dict_legend = def_legends(df2plot.reset_index())
+    # dict_legend = def_legends(df2plot.reset_index())
+    
+    # Genotypes and Strains being plotted 
+    values = props_ordered(df2plot, x_var, col_var, 'Strain_o')
+    x_values, col_values, shape_values = values
     
     # Count and define figure settings accordingly
     # - number of columns define legend position 
     # Define legends for columns 
-    reverse = False
+    v_legend = []
+    for zz, v_var, v_values in zip(count(), [x_var, col_var], [x_values, col_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+        else: 
+            legend = dict_legends[v_var]
+        v_legend.append(legend)
+    x_legend, col_legend = v_legend
+    
+    # reverse = False
     ascending = False
     if col_var == 'GenotypeAll':
-        reverse = True
         ascending = True
-        col_legend = dict_legend[col_var]#gen_legend
     elif col_var == 'Stage':
         ascending = False
-        stage_legend = dict_legend[col_var]
-        col_legend = ['Stage: ' + s for s in stage_legend]#'Stage:'+stage_legend
+        col_legend = ['Stage: ' + s for s in col_legend]
     else: 
-        reverse = False
         ascending = False
         print('HELP A')
+        
     
-    col_values = sorted(df2plot[col_var].unique(), reverse = reverse)
     n_col = len(col_values)
     print(n_col)
     for nn in range(n_col): col_values.append('')
@@ -2473,7 +2615,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
         if n_col == 1:
             bbox_to_anchor=(0.5, 0.5)
         else: 
-            bbox_to_anchor=(1, 0.5)
+            bbox_to_anchor=(1, 0.25)
             
     # - number of x_var
     n_x = len(df2plot[x_var].unique())
@@ -2490,7 +2632,6 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
     fig_size = (math.ceil(2.5*(n_x/2)*(n_col)),7)
     fig, axes = plt.subplots(ncols=n_col,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
-    #print('Figure size: ', fig_size)
     for n, ax, col_val in zip(count(), axes.flatten(), col_values):
         # First row will contain the graphs
         if n < n_col:
@@ -2517,7 +2658,10 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                 ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
-                ax.set_xticklabels(df2plot_titles, rotation=30)
+                ax.set_xticklabels(df2plot_titles, rotation=30, horizontalalignment='center', fontname = fontname)
+            
+            if x_var == 'Stage':
+                ax.set_xlabel('Stage [hpf]', fontname = fontname)
             y_vals = ax.get_yticks()
             y_vals_all.append(y_vals)
             max_y_vals.append(y_vals[-1])
@@ -2526,7 +2670,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                 handles, labels = ax.get_legend_handles_labels()
                 if not stack100 and yticks_lab == '1e3 - d.':
                     ylabel = ylabel +' x 10$^3$'
-                ax.set(ylabel=ylabel)
+                ax.set_ylabel(ylabel, fontname = fontname)
                 
             # Sum up the rows of our data to get the total value of each bar.
             totals = df_col.sum(axis=1)
@@ -2538,17 +2682,17 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                     if total < 100:
                           ax.text(i, total + y_offset, 
                                   ['{:.1f}'.format(w) for w in total], 
-                                  ha='center', weight='bold', size =10)
+                                  ha='center', weight='bold', size =10, fontname = fontname)
                     else: 
                           # ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center', weight='bold', size =9)
                           if yticks_lab == '1e3 - d.':
                               ax.text(i, total + y_offset ,
                                       '{:.1f}'.format(total/1e3),
-                                      ha='center', weight='bold', size =9)
+                                      ha='center', weight='bold', size =9, fontname = fontname)
                           elif yticks_lab == 'th,':
                               ax.text(i, total + y_offset ,
                                       locale.format("%d", total, grouping=True),
-                                      ha='center', weight='bold', size =9)
+                                      ha='center', weight='bold', size =9, fontname = fontname)
                               
             # Let's put the annotations inside the bars themselves by using a
             # negative offset.
@@ -2576,7 +2720,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                           # This is actual value we'll show. original: round(bar.get_height())
                           bar_height,
                           # Center the labels and style them a bit.
-                          ha='center', color='w', weight='bold', size=9)
+                          ha='center', color='w', weight='bold', size=9,fontname = fontname)
                   
             ax.set_title(col_legend[n])
             ax.spines['right'].set_visible(False)
@@ -2602,7 +2746,17 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
             ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
         # ax.ticklabel_format(axis='y', style='plain')
 
-    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(fontname)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(fontname)
+    try:
+        ax.yaxis.get_offset_text().set_fontname(fontname)
+        # print(r' -> YAY')
+    except:
+        print(r' -> Nop')
+        
+    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01, fontname = fontname)
     
     if save: 
         for extf in ext: 
@@ -2618,7 +2772,7 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt
                 fig_title = dir2savef+title2save+"."+extf
             plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
 
-#%% func - pctChange_barPlots
+#%% func - pctChange_barPlots (test if working!)
 def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt_title, ylabel, 
                        dir2save, info='', sub_bar_lab = True, save = True, ext = ['png']): 
     
@@ -2774,6 +2928,308 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
             # print(fig_title)
             plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
 
+#%% func - barPlots_oneGenot - remove?
+def barPlots_oneGenot(df2plot, vars2plot, group_vars, colours, title, txt_title, ylabel, strain, dir2save, info='', stack100 = True, 
+                        sub_bar_lab = True, save = True, ext = ['png']): 
+    
+    print('\n>>> '+title)
+    # Create list to contain info of bars and ist highest value
+    y_vals_all = []
+    max_y_vals = []
+    
+    # Filter dataframe 
+    df4plot = df2plot.groupby(group_vars)[vars2plot].mean()
+    df4plot_count = df2plot.groupby(group_vars)[vars2plot].count()
+    
+    # Count and define figure settings accordingly
+    # - number of stages define legend position 
+    stages = sorted(df2plot['Stage'].unique())
+    n_stages_o = len(stages)
+    for nn in range(n_stages_o): stages.append('')
+    if n_stages_o >= 3:
+        leg_pos = 4
+        loc='center'
+    else: 
+        leg_pos = n_stages_o
+        loc='center left'
+    
+    # - number of strains define subplots width
+    if strain != '': 
+        n_strain = len(df2plot[strain].unique())
+    else:
+        n_strain = 1.5
+        
+    # - number of variables/ stacked bars define number of columns in legend
+    if len(vars2plot) == 3:
+        ncols_leg = 3
+    else: 
+        ncols_leg = 2
+        
+    # If bar plots are stacked to 100 transform data to percentages
+    if stack100: 
+        df4plot = df4plot.apply(lambda x: x*100/sum(x), axis=1)
+    
+    # Find minimum bar height to later define offset  
+    min_val = df4plot.min().min()
+
+    # Create figure
+    gridkw = dict(width_ratios=[1,1,1], height_ratios=[1,0.3])
+    fig_size = (math.ceil(2.5*(n_strain/2)*(n_stages_o)),8)
+    fig, axes = plt.subplots(ncols=n_stages_o,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
+    #print('Figure size: ', fig_size)
+    for n, ax, stg in zip(count(), axes.flatten(), stages):
+        # First row will contain the graphs
+        if n < n_stages_o:
+            df_stage = df4plot.iloc[df4plot.index.get_level_values('Stage') == stg]
+            df_stage_count = df4plot_count.iloc[df4plot.index.get_level_values('Stage') == stg]
+            if df_stage.index.nlevels > 1:
+                df_stage = df_stage.droplevel('Stage', axis="index").sort_index(key=lambda x: x.str.lower(), ascending=False)
+                df_stage_count = df_stage_count.mean(axis=1).droplevel('Stage', axis="index").sort_index(key=lambda x: x.str.lower(), ascending=False)
+                if df_stage.index.nlevels > 1:
+                    joined_titles = df_stage.index.map(('\n'.join))
+                    df2plot_titles = [jt+'\nn='+str(int(num)) for i, jt, num in zip(count(), joined_titles, df_stage_count)]
+                else: 
+                    df2plot_titles = df_stage.index
+            else: 
+                df_stage_copy = df_stage.copy()
+                _, _, strains_o_legend, _ = def_legends(df_stage_copy.reset_index())
+                df_stage_count = df_stage_count.mean(axis=1)
+                if strains_o_legend == []:
+                    df2plot_titles = [strain+'\nn='+str(int(num)) for i, strain, num in zip(count(), [info], df_stage_count)] 
+                else: 
+                    df2plot_titles = [strain+'\nn='+str(int(num)) for i, strain, num in zip(count(), strains_o_legend, df_stage_count)]
+                    
+            # Initialize the bottom at zero for the first set of bars.
+            bottom = np.zeros(len(df_stage))
+            
+            # Plot each layer of the bar, adding each bar to the "bottom" so
+            # the next bar starts higher.
+            for i, col in enumerate(df_stage.columns):
+              ax.bar(df2plot_titles, df_stage[col], bottom=bottom, label=col, color=colours[i])
+              bottom += np.array(df_stage[col])
+              ax.set_xticks(df2plot_titles)
+              ax.set_xticklabels(df2plot_titles, rotation=30)
+            y_vals = ax.get_yticks()
+            y_vals_all.append(y_vals)
+            max_y_vals.append(y_vals[-1])
+            
+            if n == 0:
+                handles, labels = ax.get_legend_handles_labels()
+                ax.set(ylabel=ylabel)
+            # Sum up the rows of our data to get the total value of each bar.
+            totals = df_stage.sum(axis=1)
+            if not stack100:
+                # Set an offset that is used to bump the label up a bit above the bar.
+                if stack100:
+                    y_offset = 2
+                else: 
+                    y_offset = round(0.2*min_val)
+                # Add labels to each bar.
+                for i, total in enumerate(totals):
+                    if total < 100:
+                          ax.text(i, total + y_offset, total, ha='center', weight='bold', size =10)
+                    else: 
+                          ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center',
+                                  weight='bold', size =10)
+              
+            # Let's put the annotations inside the bars themselves by using a
+            # negative offset.
+            if sub_bar_lab: 
+                if stack100:
+                    y_offset = -0.5
+                else: 
+                    y_offset = round(-0.4*min_val)
+                # print(y_offset, min_val)
+                # For each patch (basically each rectangle within the bar), add a label.
+                for bar in ax.patches:
+                    if bar.get_height() < 100:
+                        bar_height = "{0:.1f}".format(bar.get_height())
+                    else: 
+                        bar_height = locale.format("%d",  bar.get_height(), grouping=True)
+                    ax.text(
+                          # Put the text in the middle of each bar. get_x returns the start
+                          # so we add half the width to get to the middle.
+                          bar.get_x() + bar.get_width() / 2,
+                          # Vertically, add the height of the bar to the start of the bar,
+                          # along with the offset.
+                          bar.get_height()//2 + bar.get_y()+ y_offset,
+                          # This is actual value we'll show. original: round(bar.get_height())
+                          bar_height,
+                          # Center the labels and style them a bit.
+                          ha='center', color='w', weight='bold', size=10)
+                  
+            ax.set_title('Stage: '+stg+'hpf')
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+        
+        # Second row will contain the legend
+        if n >= n_stages_o:
+            ax.set_axis_off()
+            ax.set_title('')
+            if n== leg_pos:
+                legends = def_var_names('bar_plots', labels)
+                ax.legend(handles, legends, loc=loc, frameon = True, fontsize=10, ncol = ncols_leg)
+    
+    # Define axes based on higherst bar
+    if not stack100:
+        max_y_index = max_y_vals.index(max(max_y_vals))
+        ax.set_yticks(y_vals_all[max_y_index])
+        ax.set_yticklabels([locale.format("%d", x, grouping=True) for x in y_vals_all[max_y_index]])
+        # ax.ticklabel_format(axis='y', style='plain')
+
+    fig.suptitle(title+txt_title+'\n', fontsize = 12, y=1.01)
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'meas_all', 'R_')
+            title2save = title.replace(' per Stage','')
+            title2save = title2save.replace(' ','_')
+            if stack100: 
+                title2save = 'Perc'+title2save
+            if info != '':
+                fig_title = dir2savef+title2save+"_"+info+"."+extf
+            else: 
+                fig_title = dir2savef+title2save+"."+extf
+            # print(fig_title)
+            plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
+            
+#%% func - strainORstrain_o - remove?
+# def strainORstrain_o(df2plot):
+    
+#     vars_opt = ['Stage','GenotypeAll']#,'Manip']
+#     strain = ''
+#     include_strain = ask4input('Include strain division? >>:', bool)
+#     if include_strain:
+#         strain_o = ask4input('Strain_o? >>:', bool)
+#         if strain_o: 
+#             vars_opt.append('Strain_o')
+#             strain = 'Strain_o'
+#         else: 
+#             vars_opt.append('Strain')
+#             strain = 'Strain'
+    
+#     group_vars = []
+#     txt_title = '\n'
+#     for var in vars_opt:
+#         if len(df2plot[var].unique()) > 1:
+#             group_vars.append(var)
+#         else: 
+#             txt_title = txt_title +'['+ var + ':'+df2plot[var].unique()[0]+'] '
+    
+#     return group_vars, txt_title, strain
+
+#%% HEATMAPS!
+#%% func - getHeatmaps2Unify
+def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse, normalise = False, 
+                      opt_norm = 'opt_div', perChamber = False):
+    
+    # List for original dataframes
+    dfs_o = []
+    # List for normalised dataframes
+    if normalise:
+        dfs_hmf = []
+        norm_vals = []
+    
+    num = 0
+    # print('thickness:', thickness)
+    for n, file in enumerate(folders):
+        # print(file)
+        name = 'unloop'+chamber+'_'+thickness
+        hmf_file = 'hmf_'+name
+        # print('hmf_file:',hmf_file)
+        try: 
+            df_load = loadDF(file[2:], hmf_file, dir2load_df)
+            dfs_o.append(df_load)
+            if normalise: 
+                dir_results = os.path.join(dir_data2Analyse, 'R_all', 'df_all', 'df_meas')
+                df_res = loadDF(file[2:], 'ResultsDF', dir_results)
+                file_num = df_res[df_res['Folder']==file[2:]+'_2A'].index.values[0]
+                # print(file[2:], file_num)
+                # print(df_res.head(5))
+                if perChamber:
+                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_Atr.CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_Vent.CJ']},
+                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Atr.Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Vent.Myoc']},
+                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Atr.Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Vent.Endo']},
+                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Atr.ExtMyoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Vent.ExtMyoc']}}
+                else: 
+                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_CJ']},
+                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Myoc']},
+                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Endo']},
+                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc']}}
+                # print(dict_norm)
+                if opt_norm == 'opt_div':
+                    norm_val = 1000000/dict_norm[thickness][name]
+                elif opt_norm == 'opt_mult':
+                    norm_val = dict_norm[thickness][name]/1000000
+                norm_vals.append(norm_val)
+                df_load = df_load*norm_val
+                dfs_hmf.append(df_load)
+            num += 1
+        
+        except: 
+            print('-No hmf heatmap dataframe found for '+thickness+' within '+file+' results folder!')
+            continue
+        
+    if normalise: 
+        return [dfs_o, dfs_hmf], num, norm_vals
+    else: 
+        return [dfs_o], num
+    
+#%% func - unifyHeatmap
+def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin, vmax, n_val, normalise, dir2save, save, info, cmap = 'turbo'):
+    
+    sns.set_context('notebook', font_scale=1.25)
+    stage = stage+'hpf'
+    if thickness == 'CjTh':
+        title = 'Cardiac jelly thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    elif thickness == 'myocIntBall': 
+        title = 'Myocardium ballooning [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    elif thickness == 'MyocTh':
+        title = 'Myocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    elif thickness == 'EndoTh':
+        title = 'Endocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
+    
+    # Make figure 
+    df_max = format(df.max().max(), '.2f')
+    fig, ax = plt.subplots(figsize=(16, 10))
+    if 'std' in gen_info:
+        title = '(STD - max:'+df_max+'um) '+ title 
+    elif 'sem' in gen_info:
+        title = '(SEM - max:'+df_max+'um) '+ title 
+    ax = sns.heatmap(df, cmap=cmap, vmin = vmin, vmax = vmax)
+    
+    max_val = df.index.max()
+    if max_val > 1.1: 
+        y_labels = [1,2]
+        y_text = '[Inflow tract >> Valve]'
+    else: # Ventricle
+        y_labels = [0,1]
+        y_text = '[Valve >> Outflow tract]'
+        
+    x_pos = ax.get_xticks()
+    # x_lab = ax.get_xticklabels()
+    x_pos_new = np.linspace(x_pos[0], x_pos[-1], 19)
+    x_lab_new = np.arange(-180,200,20)
+    ax.set_xticks(x_pos_new) 
+    ax.set_xticklabels(x_lab_new, rotation=30)
+    
+    y_pos = ax.get_yticks()
+    # y_lab = ax.get_yticklabels()
+    y_pos_new = np.linspace(y_pos[0], y_pos[-1], 11)
+    y_lab_new = np.linspace(y_labels[0],y_labels[1],11)
+    y_lab_new = [format(y,'.2f') for y in y_lab_new]
+    ax.set_yticks(y_pos_new) 
+    ax.set_yticklabels(y_lab_new, rotation=0)
+    
+    plt.ylabel('Centreline position '+y_text+'\n', fontsize=15)
+    plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=15)
+    plt.title(title, fontsize = 15)
+    
+    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+info+'-'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+strain+'_'+normalise+'.png')
+    # print(dir4heatmap)
+    if save: 
+        plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
+
+#%% KDE PLOTS
 #%% func - plotKDEs
 def plotKDEs(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 300):
     
@@ -2998,130 +3454,421 @@ def plotKDEIndiv(classif, classif_lab, df_PDF, save, dir2save, info, ext, dpi = 
             for extf in ext:  
                 plt.savefig(dir2savef+info+"kdeIndivAll_"+cl+"."+extf, dpi=300, bbox_inches='tight', transparent=True)
 
-#%% func - getHeatmaps2Unify
-def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse, normalise = False, 
-                      opt_norm = 'opt_div', perChamber = False):
-    
-    # List for original dataframes
-    dfs_o = []
-    # List for normalised dataframes
-    if normalise:
-        dfs_hmf = []
-        norm_vals = []
-    
-    num = 0
-    # print('thickness:', thickness)
-    for n, file in enumerate(folders):
-        # print(file)
-        name = 'unloop'+chamber+'_'+thickness
-        hmf_file = 'hmf_'+name
-        # print('hmf_file:',hmf_file)
-        try: 
-            df_load = loadDF(file[2:], hmf_file, dir2load_df)
-            dfs_o.append(df_load)
-            if normalise: 
-                dir_results = os.path.join(dir_data2Analyse, 'R_all', 'df_all', 'df_meas')
-                df_res = loadDF(file[2:], 'ResultsDF', dir_results)
-                file_num = df_res[df_res['Folder']==file[2:]+'_2A'].index.values[0]
-                # print(file[2:], file_num)
-                # print(df_res.head(5))
-                if perChamber:
-                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_Atr.CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_Vent.CJ']},
-                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Atr.Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Vent.Myoc']},
-                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Atr.Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Vent.Endo']},
-                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Atr.ExtMyoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Vent.ExtMyoc']}}
-                else: 
-                    dict_norm = {'CjTh': {'unloopAtr_CjTh': df_res.loc[file_num,'Vol_CJ'], 'unloopVent_CjTh': df_res.loc[file_num,'Vol_CJ']},
-                                  'MyocTh': {'unloopAtr_MyocTh': df_res.loc[file_num,'Vol_Myoc'], 'unloopVent_MyocTh': df_res.loc[file_num,'Vol_Myoc']},
-                                  'EndoTh': {'unloopAtr_EndoTh': df_res.loc[file_num,'Vol_Endo'], 'unloopVent_EndoTh': df_res.loc[file_num,'Vol_Endo']},
-                                  'myocIntBall': {'unloopAtr_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc'], 'unloopVent_myocIntBall': df_res.loc[file_num,'Vol_Ext.Myoc']}}
-                # print(dict_norm)
-                if opt_norm == 'opt_div':
-                    norm_val = 1000000/dict_norm[thickness][name]
-                elif opt_norm == 'opt_mult':
-                    norm_val = dict_norm[thickness][name]/1000000
-                norm_vals.append(norm_val)
-                df_load = df_load*norm_val
-                dfs_hmf.append(df_load)
-            num += 1
-        
-        except: 
-            print('-No hmf heatmap dataframe found for '+thickness+' within '+file+' results folder!')
-            continue
-        
-    if normalise: 
-        return [dfs_o, dfs_hmf], num, norm_vals
-    else: 
-        return [dfs_o], num
-    
-#%% func - unifyHeatmap
-def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin, vmax, n_val, normalise, dir2save, save, info, cmap = 'turbo'):
-    
-    sns.set_context('notebook', font_scale=1.25)
-    stage = stage+'hpf'
-    if thickness == 'CjTh':
-        title = 'Cardiac jelly thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
-    elif thickness == 'myocIntBall': 
-        title = 'Myocardium ballooning [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
-    elif thickness == 'MyocTh':
-        title = 'Myocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
-    elif thickness == 'EndoTh':
-        title = 'Endocardial thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
-    
-    # Make figure 
-    df_max = format(df.max().max(), '.2f')
-    fig, ax = plt.subplots(figsize=(16, 10))
-    if 'std' in gen_info:
-        title = '(STD - max:'+df_max+'um) '+ title 
-    elif 'sem' in gen_info:
-        title = '(SEM - max:'+df_max+'um) '+ title 
-    ax = sns.heatmap(df, cmap=cmap, vmin = vmin, vmax = vmax)
-    
-    max_val = df.index.max()
-    if max_val > 1.1: 
-        y_labels = [1,2]
-        y_text = '[Inflow tract >> Valve]'
-    else: # Ventricle
-        y_labels = [0,1]
-        y_text = '[Valve >> Outflow tract]'
-        
-    x_pos = ax.get_xticks()
-    # x_lab = ax.get_xticklabels()
-    x_pos_new = np.linspace(x_pos[0], x_pos[-1], 19)
-    x_lab_new = np.arange(-180,200,20)
-    ax.set_xticks(x_pos_new) 
-    ax.set_xticklabels(x_lab_new, rotation=30)
-    
-    y_pos = ax.get_yticks()
-    # y_lab = ax.get_yticklabels()
-    y_pos_new = np.linspace(y_pos[0], y_pos[-1], 11)
-    y_lab_new = np.linspace(y_labels[0],y_labels[1],11)
-    y_lab_new = [format(y,'.2f') for y in y_lab_new]
-    ax.set_yticks(y_pos_new) 
-    ax.set_yticklabels(y_lab_new, rotation=0)
-    
-    plt.ylabel('Centreline position '+y_text+'\n', fontsize=15)
-    plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=15)
-    plt.title(title, fontsize = 15)
-    
-    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+info+'-'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+strain+'_'+normalise+'.png')
-    # print(dir4heatmap)
-    if save: 
-        plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
 
-#%% Palette stuff
-    # Save a palette to a variable:
-    # palette = sns.color_palette("husl", 8*n_gen*n_strain)
-    # sns.palplot(palette)
-    # for gen in range(n_gen):
-    #     palettes.append(palette[gen*len(palette)//n_gen+2])
+#%% ------
+#%% OLD - But Working!
+# #%% func - plotStatsperXBU (working, text of tests not included)
+# def plotStatsperXBU (# General Plot Settings
+#                     df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                     # Size, title, labels and legends
+#                     title, labels2plot, dict_legends, ips, 
+#                     # Statistic Settings
+#                     stats_set,
+#                     # Other settings
+#                     suptitle = True, right_legend = False,
+#                     yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+#                     # Saving settings
+#                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+#     if stats_set[0]: 
+#         tests_res = []
+#         box_pairs_all = []
+#         statist = True
+#         dicts_stats = stats_set[1]
+#         alpha = stats_set[2]
+#         txt_multcomp_all = []
+        
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
+    
+#     # Set up the matplotlib figure 
+#     n_rows = 1
+#     n_cols = len(hue_values)
+
+#     for index in range(n_cols):
+#         if index == 0 and len(vars2plot) == 1:
+#             addVars = True
+#             var2copy = vars2plot[0]
+#             label2copy = labels2plot[0]
+        
+#         if addVars and index != 0:
+#             vars2plot.insert(index, var2copy)
+#             labels2plot.insert(index, label2copy)
+    
+#     # As a right legend wants to be added, we need to add '' to all labels 
+#     if right_legend: 
+#         index_no_plot = [n_cols]
+#         for index in index_no_plot:
+#             vars2plot.insert(index, '')
+#             labels2plot.insert(index, '')
+#         width_ratios = [1]*n_cols+[0.2]
+#         n_cols = n_cols+1
+#     else: 
+#         width_ratios = [1]*n_cols
+#         index_no_plot = [1000]
+        
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     h_add = 1; w_add = 1
+
+#     if len(x_values) > 3:
+#         h_add = 0
+#         wspace = 0.05
+#         box_width = 0.8
+#         bbox_lf = -0.5
+#     else:
+#         h_plot = 0.8
+#         wspace = 0.15
+#         box_width = 0.6
+#         bbox_lf = -1.8
+    
+#     size_col = (n_cols)*(h_plot*len(x_values))+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+#         v_legend.append(legend)
+#         v_color.append(color)
+#     x_legend, hue_legend = v_legend
+#     x_color, _ = v_color
+        
+#     if right_legend:
+#         # Define legends for x
+#         legend_elem = []
+#         for aa, xval, xcol in zip(count(), x_legend, x_color):
+#             legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
+#                                     markerfacecolor=xcol, markersize=12))
+#         handle_new = legend_elem
+        
+#         for index in index_no_plot:
+#             hue_legend.insert(index, '')
+#             hue_values.insert(index, '')
+            
+#     marker_size = 8; dodge = True; jitter = 0.3
+    
+#     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#         print('\t- '+svar+': ', value)
+        
+#     ##  CREATE FIGURE 
+#     gridkw = dict(width_ratios=width_ratios)
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=1, wspace=wspace)
+    
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+#     # Create list to contain info of yticks and its highest value
+#     y_vals_all = []; max_y_vals = []
+#     tests_res_all = []; box_pairs_allf = []
+#     for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values, dicts_stats):
+        
+#         if n in index_no_plot and right_legend:
+#                 if n == n_cols-1:
+#                     ax.set_axis_off()
+#                     ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+#                 else: 
+#                     ax.remove()
+#         else: 
+#             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+#             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                               marker = 'o', palette = x_color, size = marker_size, 
+#                               linewidth=0.5, jitter = jitter)
+#             if box_plot: 
+#                 m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                                    dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+#                                    boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                                    flierprops = flierprops, medianprops = medianprops, 
+#                                    meanline = True, meanprops = meanprops, showmeans = True)
+    
+#             box = ax.get_position()
+            
+#             if statist: 
+#                 box_pairs = dict_stats[var]['box_pairs']
+#                 stat_test = False
+#                 test = None
+#                 p_val = dict_stats[var]['pval_multComp_all']
+#                 txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+#                 txt_normtest_all = dict_stats[var]['txt_normtest_all']
+                
+#                 # Added fontname as an imput to add_stat_annotation function in statannot
+#                 m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+#                                                        hue_order = hue_values, order = x_values,
+#                                                        box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+#                                                        pvalues=p_val, comparisons_correction=None, #'bonferroni',
+#                                                        line_offset_to_box=0.4, line_offset=0.1,
+#                                                        line_height=0.015, text_offset=5,
+#                                                        text_format='star', loc='inside', fontsize='small', verbose=0,
+#                                                        fontname = fontname)
+#                 tests_res.append(p_val)
+#                 box_pairs_all.append(box_pairs)
+#                 txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
+#                                             txt_normtest_all, alpha, indiv = True)
+#                 txt_multcomp_all.append(txt_multcomp)
+                
+#             if n == 0:
+#                 if yticks_lab == '1e6 - d.':
+#                     ylabel = ylabel +' x 10$^6$'
+#                 elif yticks_lab == '1e3 - d.':
+#                     ylabel = ylabel +' x 10$^3$'
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel(ylabel, fontname = fontname)
+#             else:
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel('', fontname = fontname)
+    
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             xticks = ax.get_xticks()
+#             ax.set_xticks(xticks)
+#             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+#             sns.despine()
+            
+#             if ylim != '':
+#                 print('ylim:', ylim[n][0],'-', ylim[n][1])
+#                 ax.set_ylim(ylim[n][0], ylim[n][1])
+            
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
+#             else:
+#                 ax.spines['left'].set_linestyle('-.')
+#                 ax.spines['left'].set_color('#696969')
+#                 ax.spines['left'].set_linewidth(0.8)
+#                 ax.tick_params(left = False)
+    
+#             y_vals = ax.get_yticks()
+#             y_vals_all.append(y_vals)
+#             max_y_vals.append(y_vals[-1])
+                
+#             # Define axes based on higherst bar
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+            
+#             for tick in ax.get_xticklabels():
+#                 tick.set_fontname(fontname)
+#             for tick in ax.get_yticklabels():
+#                 tick.set_fontname(fontname)
+#             try:
+#                 ax.yaxis.get_offset_text().set_fontname(fontname)
+#                 # print(r' -> YAY')
+#             except:
+#                 print(r' -> Nop')
+
+#     if suptitle:
+#         fig.suptitle(title+'\n', y=1, fontname = fontname)
+#     # fig.tight_layout()
+    
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+#     if statist: 
+#         return tests_res, box_pairs_all
+            
+# #%% func - plotNoStatsperXBU (working fine, no legend included)
+# def plotNoStatsperXBU (# General Plot Settings
+#                     df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                     # Size, title, labels and legends
+#                     title, labels2plot, dict_legends, ips, suptitle = True,
+#                     # Other settings
+#                     yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+#                     # Saving settings
+#                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+    
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
+    
+#     # Set up the matplotlib figure 
+#     n_rows = 1
+#     n_cols = len(hue_values)
+
+#     for index in range(n_cols):
+#         if index == 0 and len(vars2plot) == 1:
+#             addVars = True
+#             var2copy = vars2plot[0]
+#             label2copy = labels2plot[0]
+        
+#         if addVars and index != 0:
+#             vars2plot.insert(index, var2copy)
+#             labels2plot.insert(index, label2copy)
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     h_add = 1; w_add = 1
+
+#     if len(x_values) > 3:
+#         h_add = 0
+#         wspace = 0.05
+#         box_width = 0.8
+#     else:
+#         h_plot = 0.8
+#         wspace = 0.15
+#         box_width = 0.6
+    
+#     size_col = (n_cols)*(h_plot*len(x_values))+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 print(v_var, v_dict)#dict_legends[x_var].keys():
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+            
+#         v_legend.append(legend)
+#         v_color.append(color)
+    
+#     x_legend, hue_legend = v_legend
+#     x_color, hue_color = v_color
+        
+#     # hue_legend = dict_legends[hue_var]
+    
+#     marker_size = 8; dodge = True; jitter = 0.3
+    
+#     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#         print('\t- '+svar+': ', value)
+        
+#     ##  CREATE FIGURE 
+#     gridkw = dict(width_ratios=[1]*n_cols)
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=1, wspace=wspace)
+    
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+#     # print(sns.plotting_context())
+    
+#     y_vals_all = []; max_y_vals = []
+#     for n, ax, var, ylabel, hue_value in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values):
+#         # Create list to contain info of yticks and its highest value
+#         print(' > Plotting ',hue_value,'\n')
+#         df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+#         m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                           marker = 'o', palette = x_color, size = marker_size, 
+#                           linewidth=0.5, jitter = jitter)
+#         if box_plot: 
+#             m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                                dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+#                                boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                                flierprops = flierprops, medianprops = medianprops, 
+#                                meanline = True, meanprops = meanprops, showmeans = True)
+
+#         box = ax.get_position()
+
+#         if n == 0:
+#             if yticks_lab == '1e6 - d.':
+#                 ylabel = ylabel +' x 10$^6$'
+#             elif yticks_lab == '1e3 - d.':
+#                 ylabel = ylabel +' x 10$^3$'
+#             ax.set_xlabel(hue_legend[n], fontname = fontname)
+#             ax.set_ylabel(ylabel, fontname = fontname)
+#         else:
+#             ax.set_xlabel(hue_legend[n], fontname = fontname)
+#             ax.set_ylabel('', fontname = fontname)
+
+#         ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#         xticks = ax.get_xticks()
+#         ax.set_xticks(xticks)
+#         ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)#, fontsize = 16)
+#         sns.despine()
+        
+#         if ylim != '':
+#             print('ylim:', ylim[n][0],'-', ylim[n][1])
+#             ax.set_ylim(ylim[n][0], ylim[n][1])
+        
+#         if n == 0:
+#             handles, labels = m.get_legend_handles_labels()
+#         else:
+#             ax.spines['left'].set_linestyle('-.')
+#             ax.spines['left'].set_color('#696969')
+#             ax.spines['left'].set_linewidth(0.8)
+#             ax.tick_params(left = False)
+
+#         y_vals = ax.get_yticks()
+#         y_vals_all.append(y_vals)
+#         max_y_vals.append(y_vals[-1])
+            
+#         # Define axes based on higherst bar
+#         if yticks_lab == '1e6 - d.':
+#             ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+#         elif yticks_lab == '1e3 - d.':
+#             ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+#         elif yticks_lab == 'th,':
+#             ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+#         elif yticks_lab == 'd. - 0':
+#             ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+#         elif yticks_lab == 'd. - 1':
+#             ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+#         elif yticks_lab == 'd.':
+#             ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+        
+#         for tick in ax.get_xticklabels():
+#             tick.set_fontname(fontname)
+#         for tick in ax.get_yticklabels():
+#             tick.set_fontname(fontname)
+#         try:
+#             ax.yaxis.get_offset_text().set_fontname(fontname)
+#             print(r' -> YAY')
+#         except:
+#             print(r' -> Nop')
+
+#     if suptitle:
+#         fig.suptitle(title+'\n', y=1, fontname = fontname)
+#     # fig.tight_layout()
+    
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
 #%% - ALERT WHEN IMPORTED
 print ("IMPORTED: morphoHeart_funcAnalysis")
 alert('jump',1)
 
-#%% - OTHERS TO ORGANIZE
-#%% Others -  Plots of all groups of variables x3 (stages)
+#%% - OTHERS TO ORGANIZE?
+#%% Plots variables x3 (stages)
 
     # for i, input_var, title in zip(count(), input_vars, titles):
     #     vars2plot, labels2plot = fcAn.selectVariables_auto(variables, ylabels, input_var)
@@ -3246,7 +3993,757 @@ alert('jump',1)
 # sns.lineplot(data=flights, x="year", y="passengers")
 # sns.lineplot(data=flights, x="year", y="passengers", hue="month")
 
+#%% END
 #%% TO REMOVE
+#%% func - plotInGroups2
+# def plotInGroups2 (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
+#                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+#                   save = True, dpi = 300, ext = 'png'):
+    
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     sns.set_context('poster') # notebook, talk, poster, paper
+#     # Get legends
+#     dict_legends = def_legends(df2plot)
+    
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)
+#     # print('n_rows:' , n_rows)
+    
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Genotypes and Strains being plotted 
+#     values = []
+#     for var in [x_var, hue_var, shape_var]:
+#         if var =='GenotypeAll':
+#             reverse = True
+#         else: 
+#             reverse = False
+#         values.append(sorted(df2plot[var].unique(), reverse=reverse))
+#     x_values, hue_values, shape_values = values
+    
+#     # - number of x_var
+#     n_x = len(x_values)
+    
+#     #  Create figure  - plt.clf()
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+#     sns.set_style("ticks")
+#     sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left": True,
+#                                                     "ytick.labelsize": 8, "lines.linewidth": 2.5,
+#                                                     "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize": "large"})
+    
+#     # Define legends for shape and hue
+#     hue_legend = dict_legends[hue_var]
+#     legend_elem_hue = []
+#     for aa, hue_val in enumerate(hue_legend):
+#         legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+#                                 markerfacecolor=palettes[aa], markersize=20))
+#     space = [Line2D([0], [0], marker='o', color='w', label='',
+#                                 markerfacecolor='w', markersize=20)]
+#     shape_legend = dict_legends[shape_var]
+#     legend_elem_shape = []
+#     for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+#         legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+#                                 markerfacecolor='k', markersize=15))
+        
+#     handle_new = legend_elem_hue+space+legend_elem_shape
+#     legend_new = hue_legend+['']+shape_legend
+    
+#     marker_size = 12
+#     dodge = True
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+#         # Create list to contain info of yticks and ist highest value
+#         y_vals_all = []
+#         max_y_vals = []
+    
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
+                
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+#             else: 
+#                 ax.remove()
+#         else: 
+#             m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                               palette = palettes, dodge = dodge, size = marker_size)
+#             box = ax.get_position()
+#             if yticks_lab == '1e6 - d.':
+#                 ylabel = ylabel +' x 10$^6$'
+#             elif yticks_lab == '1e3 - d.':
+#                 ylabel = ylabel +' x 10$^3$'
+#             ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+#             # ax.set_xticks(ax.get_xticks())
+#             ax.set_xticklabels(dict_legends[x_var], rotation=0)
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             ax.get_legend().remove()
+#             sns.despine()
+            
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
+
+#             y_vals = ax.get_yticks()
+#             y_vals_all.append(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             if n_x > 1: 
+#                 vline_pos = list(range(1,n_x,1))
+#                 for pos in vline_pos:
+#                     ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+
+#     fig.suptitle(title+'\n', fontsize = 30, y=1)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+
+#%% func - plotInGroupsShape
+# https://towardsdatascience.com/matplotlib-vs-ggplot2-c86dd35a9378
+# https://www.r-graph-gallery.com/boxplot.html
+# https://medium.com/analytics-vidhya/r-style-visualizations-in-python-560c6bbfb14a
+# https://matplotlib.org/2.0.2/examples/pylab_examples/spine_placement_demo.html
+# https://datascienceplus.com/seaborn-categorical-plots-in-python/
+# https://towardsdatascience.com/scattered-boxplots-graphing-experimental-results-with-matplotlib-seaborn-and-pandas-81f9fa8a1801
+# https://github.com/cfcooney/medium_posts/blob/master/scattered_boxplots.ipynb
+# https://htmlcolorcodes.com/
+
+# def plotInGroupsShape (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
+#                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
+#                   save = True, dpi = 300, ext = 'png'):
+    
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     sns.set_context('poster') # notebook, talk, poster, paper
+#     # Get legends
+#     dict_legends = def_legends(df2plot)
+    
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)
+#     # print('n_rows:' , n_rows)
+    
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+    
+#     # Genotypes and Strains being plotted 
+#     values = []
+#     for var in [x_var, hue_var, shape_var]:
+#         if var =='GenotypeAll':
+#             reverse = True
+#         else: 
+#             reverse = False
+#         values.append(sorted(df2plot[var].unique(), reverse=reverse))
+#     x_values, hue_values, shape_values = values
+    
+#     # - number of x_var
+#     n_x = len(x_values)
+#     if n_x == 1:
+#         h_plot = 3.5
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     #  Create figure  - plt.clf()
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+#     sns.set_style("ticks")
+#     sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+#                                                     "ytick.labelsize":8, "lines.linewidth": 2.5,
+#                                                     "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+#     # Define legends for shape and hue
+#     hue_legend = dict_legends[hue_var]
+#     legend_elem_hue = []
+#     for aa, hue_val in enumerate(hue_legend):
+#         legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+#                                 markerfacecolor=palettes[aa], markersize=20))
+#     space = [Line2D([0], [0], marker='o', color='w', label='',
+#                                 markerfacecolor='w', markersize=20)]
+#     shape_legend = dict_legends[shape_var]
+#     legend_elem_shape = []
+#     for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+#         legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+#                                 markerfacecolor='k', markersize=15))
+        
+#     handle_new = legend_elem_hue+space+legend_elem_shape
+#     legend_new = hue_legend+['']+shape_legend
+    
+#     marker_size = 10
+#     dodge = True
+#     jitter = True#0.3
+    
+#     plot_no = 0
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+#         # Create list to contain info of yticks and its highest value
+#         y_vals_all = []
+#         max_y_vals = []
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
+                
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+#             else: 
+#                 ax.remove()
+#         else: 
+#             for j, val, style in zip(count(), shape_values, styles):
+#                 df_plot = df2plot[df2plot[shape_var] == val]
+#                 # print(x_var, var, hue_var, hue_values, x_values, style, palettes)
+                
+#                 m = sns.boxplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                                   dodge = dodge, width=1, boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops,
+#                                   flierprops = flierprops, medianprops = medianprops, showmeans = False)
+#                 m = sns.stripplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                                   marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size, 
+#                                   linewidth=1)
+                
+#                 for pp,boxs in enumerate(m.artists):
+#                 #     box.set_edgecolor('black')
+#                     boxs.set_facecolor('white')
+
+#                 box = ax.get_position()
+#                 if j == 0:
+#                     if yticks_lab == '1e6 - d.':
+#                         ylabel = ylabel +' x 10$^6$'
+#                     elif yticks_lab == '1e3 - d.':
+#                         ylabel = ylabel +' x 10$^3$'
+#                 ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+#                 # ax.set_xticks(ax.get_xticks())
+#                 ax.set_xticklabels(dict_legends[x_var], rotation=0)
+#                 ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#                 ax.get_legend().remove()
+#                 sns.despine()
+                
+#                 if ylim != '':
+#                     # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+#                     ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+                
+#                 if n == 0:
+#                     handles, labels = m.get_legend_handles_labels()
+
+#                 y_vals = ax.get_yticks()
+#                 y_vals_all.append(y_vals)
+#                 max_y_vals.append(y_vals[-1])
+#                 if n_x > 1: 
+#                     vline_pos = list(range(1,n_x,1))
+#                     for pos in vline_pos:
+#                         ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+                
+#         plot_no +=1
+
+#     fig.suptitle(title+'\n', fontsize = 30, y=1)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+#%% func - plotInGroupsShapeBU
+# def plotInGroupsShapeBU (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
+#                   n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', info ='', 
+#                   save = True, dpi = 300, ext = 'png'):
+    
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     sns.set_context('poster') # notebook, talk, poster, paper
+#     # Get legends
+#     dict_legends = def_legends(df2plot)
+    
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)
+#     # print('n_rows:' , n_rows)
+    
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+    
+#     # Genotypes and Strains being plotted 
+#     values = []
+#     for var in [x_var, hue_var, shape_var]:
+#         if var =='GenotypeAll':
+#             reverse = True
+#         else: 
+#             reverse = False
+#         values.append(sorted(df2plot[var].unique(), reverse=reverse))
+#     x_values, hue_values, shape_values = values
+    
+#     # - number of x_var
+#     n_x = len(x_values)
+#     if n_x == 1:
+#         h_plot = 3.5
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     #  Create figure  - plt.clf()
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+#     sns.set_style("ticks")
+#     sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+#                                                     "ytick.labelsize":8, "lines.linewidth": 2.5,
+#                                                     "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+#     # Define legends for shape and hue
+#     hue_legend = dict_legends[hue_var]
+#     legend_elem_hue = []
+#     for aa, hue_val in enumerate(hue_legend):
+#         legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+#                                 markerfacecolor=palettes[aa], markersize=20))
+#     space = [Line2D([0], [0], marker='o', color='w', label='',
+#                                 markerfacecolor='w', markersize=20)]
+#     shape_legend = dict_legends[shape_var]
+#     legend_elem_shape = []
+#     for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+#         legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+#                                 markerfacecolor='k', markersize=15))
+        
+#     handle_new = legend_elem_hue+space+legend_elem_shape
+#     legend_new = hue_legend+['']+shape_legend
+    
+#     marker_size = 10
+#     dodge = True
+#     jitter = 0.3
+    
+#     plot_no = 0
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+#         # Create list to contain info of yticks and ist highest value
+#         y_vals_all = []
+#         max_y_vals = []
+    
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
+                
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+#             else: 
+#                 ax.remove()
+#         else: 
+#             for j, val, style in zip(count(), shape_values, styles):
+#                 df_plot = df2plot[df2plot[shape_var] == val]
+#                 # print(x_var, var, hue_var, hue_values, x_values, style, palettes)
+#                 m = sns.stripplot(data=df_plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                                   marker = style, palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+#                 box = ax.get_position()
+#                 if yticks_lab == '1e6 - d.':
+#                     ylabel = ylabel +' x 10$^6$'
+#                 elif yticks_lab == '1e3 - d.':
+#                     ylabel = ylabel +' x 10$^3$'
+#                 ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+#                 # ax.set_xticks(ax.get_xticks())
+#                 ax.set_xticklabels(dict_legends[x_var], rotation=0)
+#                 ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#                 ax.get_legend().remove()
+#                 sns.despine()
+                
+#                 if ylim != '':
+#                     # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+#                     ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+                
+#                 if n == 0:
+#                     handles, labels = m.get_legend_handles_labels()
+
+#                 y_vals = ax.get_yticks()
+#                 y_vals_all.append(y_vals)
+#                 max_y_vals.append(y_vals[-1])
+#                 if n_x > 1: 
+#                     vline_pos = list(range(1,n_x,1))
+#                     for pos in vline_pos:
+#                         ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+                
+#         plot_no +=1
+
+#     fig.suptitle(title+'\n', fontsize = 30, y=1)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+
+#%% func - plotInGroupsStatsBU
+# def plotInGroupsStatsBU(df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save, stats_set,
+#                       n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', info ='', 
+#                       save = True, dpi = 300, ext = 'png'):
+    
+#     if stats_set[0]: 
+#         tests_res = []
+#         statist = True
+#         dict_stats = stats_set[1]
+        
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     sns.set_context('poster') # notebook, talk, poster, paper
+#     # Get legends
+#     dict_legends = def_legends(df2plot)
+    
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)+1
+#     print('n_rows:' , n_rows)
+    
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+#     print(index_no_plot)
+
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Genotypes and Strains being plotted 
+#     values = []
+#     for var in [x_var, hue_var, shape_var]:
+#         if var =='GenotypeAll':
+#             reverse = True
+#         else: 
+#             reverse = False
+#         values.append(sorted(df2plot[var].unique(), reverse=reverse))
+#     x_values, hue_values, shape_values = values
+    
+#     # - number of x_var
+#     n_x = len(x_values)
+    
+#     #  Create figure  - plt.clf()
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+#     sns.set_style("ticks")
+#     sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+#                                                     "ytick.labelsize":8, "lines.linewidth": 2.5,
+#                                                     "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+    
+#     # Define legends for shape and hue
+#     hue_legend = dict_legends[hue_var]
+#     legend_elem_hue = []
+#     for aa, hue_val in enumerate(hue_legend):
+#         legend_elem_hue.append(Line2D([0], [0], marker='h', color='w', label=hue_val,
+#                                 markerfacecolor=palettes[aa], markersize=20))
+#     space = [Line2D([0], [0], marker='o', color='w', label='',
+#                                 markerfacecolor='w', markersize=20)]
+#     shape_legend = dict_legends[shape_var]
+#     legend_elem_shape = []
+#     for n_str, shape_val, mark in zip(count(), shape_legend, styles):
+#         legend_elem_shape.append(Line2D([0], [0], marker=mark, color='w', label=shape_val,
+#                                 markerfacecolor='k', markersize=15))
+        
+#     handle_new = legend_elem_hue+space+legend_elem_shape
+#     legend_new = hue_legend+['']+shape_legend
+    
+#     marker_size = 10
+#     dodge = True
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        
+#         # Create list to contain info of yticks and ist highest value
+#         y_vals_all = []
+#         max_y_vals = []
+    
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
+        
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+#             else: 
+#                 ax.remove()
+#         else: 
+#             print(' > ',var,'\n')
+#             m = sns.swarmplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                               palette = palettes, dodge = dodge, size = marker_size)
+#             if statist: 
+#                 box_pairs = dict_stats[var]['box_pairs']
+#                 stat_test = False
+#                 test = None
+#                 p_val = dict_stats[var]['pval_multComp_all']
+                
+#                 m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+#                                                        hue_order = hue_values, order = x_values,
+#                                                         box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+#                                                         pvalues=p_val, comparisons_correction=None, #'bonferroni',
+#                                                         line_offset_to_box=0.4, line_offset=0.1,
+#                                                         line_height=0.015, text_offset=5,
+#                                                         text_format='star', loc='inside', verbose=0);
+#                 tests_res.append(test_results)
+#                 # txt_multcomp = txtMultComp(box_pairs, test_results)
+#                 # print('txt_multcomp:', txt_multcomp)
+                
+#             box = ax.get_position()
+#             if yticks_lab == '1e6 - d.':
+#                 ylabel = ylabel +' x 10$^6$'
+#             elif yticks_lab == '1e3 - d.':
+#                 ylabel = ylabel +' x 10$^3$'
+#             ax.set(xlabel=dict_legends['xlabels'][x_var], ylabel=ylabel);
+#             # ax.set_xticks(ax.get_xticks())
+#             ax.set_xticklabels(dict_legends[x_var], rotation=0)
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             ax.get_legend().remove()
+#             sns.despine()
+            
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
+
+#             y_vals = ax.get_yticks()
+#             y_vals_all.append(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             if n_x > 1: 
+#                 vline_pos = list(range(1,n_x,1))
+#                 for pos in vline_pos:
+#                     ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+            
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+
+#     fig.suptitle(title+'\n', fontsize = 30, y=1)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+    
+#     if statist: 
+#         return tests_res
+
+#%% func - plotPerVariableLabels
+# def plotPerVariableLabels(script, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
+#                      h_plot, w_plot, save, dir2save, info, dpi = 300, h_add = 5, w_add = 1):
+    
+#     styles = ['o', '^', 's', 'v', 'D', '<', 'p', '>'] # https://matplotlib.org/stable/api/markers_api.html
+#     variables, ylabels = def_variables(script)
+    
+#     for i, input_var, title in zip(count(), input_vars, titles):
+#         vars2plot, labels2plot = selectVariables_auto(variables, ylabels, input_var)
+        
+#         # Set up the matplotlib figure
+#         stages = sorted(df2plot.Stage.unique())
+#         plots_per_col = len(stages)
+#         plots_per_row = 1
+#         stages.append('')
+        
+#         # Set up the matplotlib figure
+#         size_col = (plots_per_col+1)*h_plot-12
+#         size_row = plots_per_row*w_plot+w_add
+        
+#         # Genotypes and Strains being plotted 
+#         genots = sorted(df2plot.GenotypeAll.unique(), reverse=True)
+#         strains = sorted(df2plot.Strain.unique())
+
+#         index_no_plot = list(range(3,(plots_per_col+1)*plots_per_row,4))
+
+#         if i == 0: 
+#             print('- Genotypes: ', genots)
+#             print('- Strains: ', strains)
+#             print('- Stages: ', stages)
+        
+#         palettes = ['mediumturquoise', 'darkmagenta']
+        
+#         for nn, var, ylabel in zip(count(), vars2plot, labels2plot):
+#             #  Create figure  - plt.clf()
+#             gridkw = dict(width_ratios=[1,1,1,0.2])
+#             fig, axes = plt.subplots(nrows=plots_per_row, ncols=plots_per_col+1, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+#             fig.subplots_adjust(hspace=1.5, wspace=0.05)
+            
+#             sns.set_style("ticks")
+#             sns.set_context('poster', font_scale = 1, rc={"grid.linewidth": 0.7,"xtick.bottom" : True, "ytick.left" : True,
+#                                                             "ytick.labelsize":'small', "lines.linewidth": 2.5,
+#                                                             "xtick.major.size": 10, "ytick.major.size": 10, "figure.titlesize" :"large"})
+#             # Define legends for strain and genotype
+#             legend_elem_gen = []
+#             for gen, gen_lab in enumerate(gen_legend):
+#                 legend_elem_gen.append(Line2D([0], [0], marker='h', color='w', label=gen_lab,
+#                                         markerfacecolor=palettes[gen], markersize=10))
+#             handle_new = legend_elem_gen
+#             legend_new = gen_legend
+            
+#             marker_size = 10
+#             dodge = False
+#             jitter = 0.2
+#             for n, ax, stg in zip(count(), axes.flatten(), stages):
+#                 # print(n)
+#                 if n in index_no_plot:
+#                     if n == 3:
+#                         ax.set_axis_off()
+#                         ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(0, 1), frameon = False)
+#                     else: 
+#                         ax.remove()
+#                 else: 
+#                     df_plot = df2plot[df2plot['Stage'] == stg]
+#                     m = sns.stripplot(x="Strain", y=var, hue="GenotypeAll", hue_order = genots, data=df_plot, ax = ax, order=strains,
+#                                   marker = styles[0], palette = palettes, jitter=jitter, dodge = dodge, size = marker_size)
+#                     box = ax.get_position()
+#                     m.set_xticklabels(strain_legend, rotation=50)
+#                     ax.set(xlabel="\nStage: "+stg+'hpf')
+#                     ymin, ymax = ax.get_ylim()
+#                     up = (ymax-ymin)//20
+#                     # print(up)
+#                     df_plot = df_plot.sort_values(by=['Stage','Strain', var])
+#                     fish_refs = df_plot.Ref.unique()
+#                     ha = ['right', 'left', 'center']*50
+#                     for j, ref in enumerate(fish_refs):
+#                         strain_pos =strains.index(df_plot['Strain'].values[j])
+#                         gen_pos = genots.index(df_plot['GenotypeAll'].values[j])
+#                         # print(ref, ha[j])
+#                         # rand_x = random.uniform(0.95, 1.05)
+#                         # rand_y = random.uniform(0.95, 1.05)
+#                         # ax.text(x=strain_pos*rand_x, y=df_plot[var].values[j]*rand_y, s=ref, horizontalalignment=ha[j], size=10, color=palettes[gen_pos])
+#                         ax.text(x=strain_pos, y=df_plot[var].values[j]+up, s=ref, horizontalalignment=ha[j], size=10, color=palettes[gen_pos])
+    
+#                     if n == 0:
+#                         ax.set(ylabel='\n'+ylabel+'\n')
+#                     else: 
+#                         ax.set(ylabel = '')
+#                         ax.tick_params(axis = 'y', labelcolor='w', width=0.1)
+#                         ax.spines['left'].set_color('gray')
+#                         ax.spines['left'].set_linestyle((0,(4,4)))#"dashed")
+#                     ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#                     ax.get_legend().remove()
+                    
+#                     # ax.legend(handles0[:],labels0[:],loc='center left', bbox_to_anchor=(1, 0.5))
+#                     sns.despine()
+                    
+#                     if n == 0:
+#                         handles, labels = m.get_legend_handles_labels()
+#                         # print(handles)
+#                         print(var, '- Genotypes: ',labels)
+    
+#             fig.suptitle(title, fontsize = 30, y=1)
+#             dir2savef = os.path.join(dir2save, 'pl_labels', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+"Lab_"+info+"_"+var+".png"
+#             else: 
+#                 fig_title = dir2savef+"Lab_"+var+".png"
+            
+#             if save: 
+#                 plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+                
 #%%func - plotStatisticsOLD
 # def plotStatisticsOLD(data, x, y, x_label, y_label, box_pairs, figsize, genot2filter,
 #                     colors_bgd, colors_pts, order2plot,
@@ -3315,10 +4812,8 @@ alert('jump',1)
 #     return test_results
 
 
-
-
-#%% func - plotInGroups2
-# def plotInGroups2 (plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
+#%% func - plotInGroups3
+# def plotInGroups3 (plot_type, input_vars, titles, df2plot, gen_legend, strain_legend , stage_legend,
 #                      h_plot, w_plot, save, dir2save, info, dpi = 300, sharey = False, h_add = 5, w_add = 1, ext = 'png'):
     
 #     vars_dict = def_variables(plot_type)
@@ -4217,194 +5712,6 @@ alert('jump',1)
 
     # fig.suptitle(title+txt_title+'\n', fontsize = 12, y=1.01)
 
-#%% func - barPlots_oneGenot
-def barPlots_oneGenot(df2plot, vars2plot, group_vars, colours, title, txt_title, ylabel, strain, dir2save, info='', stack100 = True, 
-                        sub_bar_lab = True, save = True, ext = ['png']): 
-    
-    print('\n>>> '+title)
-    # Create list to contain info of bars and ist highest value
-    y_vals_all = []
-    max_y_vals = []
-    
-    # Filter dataframe 
-    df4plot = df2plot.groupby(group_vars)[vars2plot].mean()
-    df4plot_count = df2plot.groupby(group_vars)[vars2plot].count()
-    
-    # Count and define figure settings accordingly
-    # - number of stages define legend position 
-    stages = sorted(df2plot['Stage'].unique())
-    n_stages_o = len(stages)
-    for nn in range(n_stages_o): stages.append('')
-    if n_stages_o >= 3:
-        leg_pos = 4
-        loc='center'
-    else: 
-        leg_pos = n_stages_o
-        loc='center left'
-    
-    # - number of strains define subplots width
-    if strain != '': 
-        n_strain = len(df2plot[strain].unique())
-    else:
-        n_strain = 1.5
-        
-    # - number of variables/ stacked bars define number of columns in legend
-    if len(vars2plot) == 3:
-        ncols_leg = 3
-    else: 
-        ncols_leg = 2
-        
-    # If bar plots are stacked to 100 transform data to percentages
-    if stack100: 
-        df4plot = df4plot.apply(lambda x: x*100/sum(x), axis=1)
-    
-    # Find minimum bar height to later define offset  
-    min_val = df4plot.min().min()
-
-    # Create figure
-    gridkw = dict(width_ratios=[1,1,1], height_ratios=[1,0.3])
-    fig_size = (math.ceil(2.5*(n_strain/2)*(n_stages_o)),8)
-    fig, axes = plt.subplots(ncols=n_stages_o,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
-    #print('Figure size: ', fig_size)
-    for n, ax, stg in zip(count(), axes.flatten(), stages):
-        # First row will contain the graphs
-        if n < n_stages_o:
-            df_stage = df4plot.iloc[df4plot.index.get_level_values('Stage') == stg]
-            df_stage_count = df4plot_count.iloc[df4plot.index.get_level_values('Stage') == stg]
-            if df_stage.index.nlevels > 1:
-                df_stage = df_stage.droplevel('Stage', axis="index").sort_index(key=lambda x: x.str.lower(), ascending=False)
-                df_stage_count = df_stage_count.mean(axis=1).droplevel('Stage', axis="index").sort_index(key=lambda x: x.str.lower(), ascending=False)
-                if df_stage.index.nlevels > 1:
-                    joined_titles = df_stage.index.map(('\n'.join))
-                    df2plot_titles = [jt+'\nn='+str(int(num)) for i, jt, num in zip(count(), joined_titles, df_stage_count)]
-                else: 
-                    df2plot_titles = df_stage.index
-            else: 
-                df_stage_copy = df_stage.copy()
-                _, _, strains_o_legend, _ = def_legends(df_stage_copy.reset_index())
-                df_stage_count = df_stage_count.mean(axis=1)
-                if strains_o_legend == []:
-                    df2plot_titles = [strain+'\nn='+str(int(num)) for i, strain, num in zip(count(), [info], df_stage_count)] 
-                else: 
-                    df2plot_titles = [strain+'\nn='+str(int(num)) for i, strain, num in zip(count(), strains_o_legend, df_stage_count)]
-                    
-            # Initialize the bottom at zero for the first set of bars.
-            bottom = np.zeros(len(df_stage))
-            
-            # Plot each layer of the bar, adding each bar to the "bottom" so
-            # the next bar starts higher.
-            for i, col in enumerate(df_stage.columns):
-              ax.bar(df2plot_titles, df_stage[col], bottom=bottom, label=col, color=colours[i])
-              bottom += np.array(df_stage[col])
-              ax.set_xticks(df2plot_titles)
-              ax.set_xticklabels(df2plot_titles, rotation=30)
-            y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
-            max_y_vals.append(y_vals[-1])
-            
-            if n == 0:
-                handles, labels = ax.get_legend_handles_labels()
-                ax.set(ylabel=ylabel)
-            # Sum up the rows of our data to get the total value of each bar.
-            totals = df_stage.sum(axis=1)
-            if not stack100:
-                # Set an offset that is used to bump the label up a bit above the bar.
-                if stack100:
-                    y_offset = 2
-                else: 
-                    y_offset = round(0.2*min_val)
-                # Add labels to each bar.
-                for i, total in enumerate(totals):
-                    if total < 100:
-                          ax.text(i, total + y_offset, total, ha='center', weight='bold', size =10)
-                    else: 
-                          ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center',
-                                  weight='bold', size =10)
-              
-            # Let's put the annotations inside the bars themselves by using a
-            # negative offset.
-            if sub_bar_lab: 
-                if stack100:
-                    y_offset = -0.5
-                else: 
-                    y_offset = round(-0.4*min_val)
-                # print(y_offset, min_val)
-                # For each patch (basically each rectangle within the bar), add a label.
-                for bar in ax.patches:
-                    if bar.get_height() < 100:
-                        bar_height = "{0:.1f}".format(bar.get_height())
-                    else: 
-                        bar_height = locale.format("%d",  bar.get_height(), grouping=True)
-                    ax.text(
-                          # Put the text in the middle of each bar. get_x returns the start
-                          # so we add half the width to get to the middle.
-                          bar.get_x() + bar.get_width() / 2,
-                          # Vertically, add the height of the bar to the start of the bar,
-                          # along with the offset.
-                          bar.get_height()//2 + bar.get_y()+ y_offset,
-                          # This is actual value we'll show. original: round(bar.get_height())
-                          bar_height,
-                          # Center the labels and style them a bit.
-                          ha='center', color='w', weight='bold', size=10)
-                  
-            ax.set_title('Stage: '+stg+'hpf')
-            ax.spines['right'].set_visible(False)
-            ax.spines['top'].set_visible(False)
-        
-        # Second row will contain the legend
-        if n >= n_stages_o:
-            ax.set_axis_off()
-            ax.set_title('')
-            if n== leg_pos:
-                legends = def_var_names('bar_plots', labels)
-                ax.legend(handles, legends, loc=loc, frameon = True, fontsize=10, ncol = ncols_leg)
-    
-    # Define axes based on higherst bar
-    if not stack100:
-        max_y_index = max_y_vals.index(max(max_y_vals))
-        ax.set_yticks(y_vals_all[max_y_index])
-        ax.set_yticklabels([locale.format("%d", x, grouping=True) for x in y_vals_all[max_y_index]])
-        # ax.ticklabel_format(axis='y', style='plain')
-
-    fig.suptitle(title+txt_title+'\n', fontsize = 12, y=1.01)
-    if save: 
-        for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'meas_all', 'R_')
-            title2save = title.replace(' per Stage','')
-            title2save = title2save.replace(' ','_')
-            if stack100: 
-                title2save = 'Perc'+title2save
-            if info != '':
-                fig_title = dir2savef+title2save+"_"+info+"."+extf
-            else: 
-                fig_title = dir2savef+title2save+"."+extf
-            # print(fig_title)
-            plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
-            
-#%% func - strainORstrain_o
-def strainORstrain_o(df2plot):
-    
-    vars_opt = ['Stage','GenotypeAll']#,'Manip']
-    strain = ''
-    include_strain = ask4input('Include strain division? >>:', bool)
-    if include_strain:
-        strain_o = ask4input('Strain_o? >>:', bool)
-        if strain_o: 
-            vars_opt.append('Strain_o')
-            strain = 'Strain_o'
-        else: 
-            vars_opt.append('Strain')
-            strain = 'Strain'
-    
-    group_vars = []
-    txt_title = '\n'
-    for var in vars_opt:
-        if len(df2plot[var].unique()) > 1:
-            group_vars.append(var)
-        else: 
-            txt_title = txt_title +'['+ var + ':'+df2plot[var].unique()[0]+'] '
-    
-    return group_vars, txt_title, strain
 
 
-#%% END
+
