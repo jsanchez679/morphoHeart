@@ -19,7 +19,6 @@ import matplotlib as mpl
 import pandas as pd
 import seaborn as sns
 from itertools import count, combinations
-from progress.bar import Bar
 import math
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US')  
@@ -28,10 +27,11 @@ from scipy import stats
 import scikit_posthocs as sp
 from statannot import add_stat_annotation
 
+from progress.bar import Bar
 suffix = '%(index)d/%(max)d - %(elapsed)ds'
 
 #%% Importing morphoHeart packages
-from .morphoHeart_funcBasics import alert, ask4input, getInputNumbers, loadDF
+from .morphoHeart_funcBasics import alert, ask4input, getInputNumbers, loadDF, saveDF
 
 #%% Interesting links
 # Colors for graphs
@@ -75,10 +75,11 @@ def getGenotypeAll(df_input):
             genotA.append(geneA+'STOP:'+genotypeA)
         elif 'prom365' in strain:
             genotA.append(geneA+'365:'+genotypeA)
+        elif 'myl7:lifeActGFP/+; fli1a:AcTagRFP/fli1a:AcTagRFP' in strain:
+            genotA.append(geneA+'_tc:'+genotypeA)
         else: 
             genotA.append(geneA+':'+genotypeA)
     df_input['GenotA'] = genotA
-    
     
     # Merge genotypes
     df_input['GenotB'] = df_input['Gene_B']+':'+df_input['Genotype_B']
@@ -130,6 +131,25 @@ def getMainStrain(df_meas):
             strain_o.append(strain)
 
     df_meas['Strain_o'] = strain_o
+    
+    return df_meas
+
+#%% func - getMainStrain
+def spAnalysis(df_meas):
+    
+    spAn = []
+    for i, txt in zip(count(), df_meas['spAnalysis']):
+        if 'spaw' in txt:
+            if 'lf' in txt: 
+                spAn.append('Left looper')
+            if 'rt' in txt: 
+                spAn.append('Right looper')
+            if 'ct' in txt: 
+                spAn.append('No looper')
+        else: #if 'normal' in txt:
+            spAn.append('normal')
+            
+    df_meas['spAnalysis'] = spAn
     
     return df_meas
 
@@ -505,11 +525,11 @@ def def_variables(plot_type):
                        "SurfArea_Vent.IntEndo" : "Ventricular Lumen\nSurface Area [$\mu$m$^2$]",
                         
                        # Looping ratio
-                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length\n(Int.Myoc) [$\mu$m]",
+                       "linLine_Int.Myoc(Cut)" : "Linear Heart Length [$\mu$m]",
                        "linLine_Ext.Endo(Cut)" : "Linear Heart Length\n(Ext.Endo) [$\mu$m]",
-                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length\n(Int.Myoc) [$\mu$m]",
+                       "Length_CL_Int.Myoc(Cut)" : "Looped Heart Length [$\mu$m]",
                        "Length_CL_Ext.Endo(Cut)" : "Looped Heart Length\n(Ext.Endo) [$\mu$m]",
-                       'Looping_Ratio_Myoc' : 'Looping Ratio (Int.Myoc)',
+                       'Looping_Ratio_Myoc' : 'Looping Ratio',
                        'Looping_Ratio_Endo' : 'Looping Ratio (Ext.Endo)',
                         
                        # Volumes
@@ -667,16 +687,198 @@ def plot_indiv():
                 'Vol_Ext.Myoc': 
                     {'title': 'Heart Size', 
                      'vars' : ['Vol_Ext.Myoc'],
-                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''},
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' : (0.75e6,3e6), 'yset' : 'round'},
                 'Vol_Atr.ExtMyoc': 
                     {'title': 'Atrial Size', 
                      'vars' : ['Vol_Atr.ExtMyoc'],
-                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''},
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' : (0.2e6,2e6), 'yset' : 'round'},
                 'Vol_Vent.ExtMyoc': 
                     {'title': 'Ventricular Size', 
                      'vars' : ['Vol_Vent.ExtMyoc'],
-                     'n_cols': 1, 'yticks_lab':'1e6 - d', 'ylim' : ''}#,
-                     
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' : (0.2e6,2e6), 'yset' : 'round'},
+                    
+                'Vol_Int.Endo': 
+                    {'title': 'Lumen Size', 
+                     'vars' : ['Vol_Int.Endo'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' :  (0,1.6e6), 'yset' : 'round'},
+                'Vol_Atr.IntEndo': 
+                    {'title': 'Atrial Lumen Size', 
+                     'vars' : ['Vol_Atr.IntEndo'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' :  (0,1.2e6), 'yset' : 'round'},
+                'Vol_Vent.IntEndo': 
+                    {'title': 'Ventricular Lumen Size', 
+                     'vars' : ['Vol_Vent.IntEndo'],
+                     'n_cols': 1, 'yticks_lab':'1e6 - d.', 
+                     'ylim' : (0,1.2e6), 'yset' : 'round'},
+                    
+                'linLine_Int.Myoc(Cut)': 
+                    {'title': 'Linear Heart Length', 
+                     'vars' : ['linLine_Int.Myoc(Cut)'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (100,280), 'yset' : 'round'},
+                'Length_CL_Int.Myoc(Cut)': 
+                    {'title': 'Looped Heart Length', 
+                     'vars' : ['Length_CL_Int.Myoc(Cut)'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (180,360), 'yset' : 'round'},
+                'Looping_Ratio_Myoc': 
+                    {'title': 'Looping Ratio', 
+                     'vars' : ['Looping_Ratio_Myoc'],
+                     'n_cols': 1, 'yticks_lab':'d.', 
+                     'ylim' : (1,2.6), 'yset' : 'dec'},
+                    
+                'Vol_Myoc': 
+                    {'title': 'Myocardial Volume', 
+                     'vars' : ['Vol_Myoc'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.',
+                     'ylim' : (250e3,750e3), 'yset' : 'round'},
+                'Vol_Atr.Myoc': 
+                    {'title': 'Atrial Myocardium Volume', 
+                     'vars' : ['Vol_Atr.Myoc'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (100e3,500e3), 'yset' : 'round'},
+                'Vol_Vent.Myoc': 
+                    {'title': 'Ventricular Myocardium Volume', 
+                     'vars' : ['Vol_Vent.Myoc'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (100e3,500e3), 'yset' : 'round'},
+                
+                'Vol_Endo': 
+                    {'title': 'Endocardial Volume', 
+                     'vars' : ['Vol_Endo'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (100e3,450e3), 'yset' : 'round'},
+                'Vol_Atr.Endo': 
+                    {'title': 'Atrial Endocardium Volume', 
+                     'vars' : ['Vol_Atr.Endo'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (50e3,260e3), 'yset' : 'round'},
+                'Vol_Vent.Endo': 
+                    {'title': 'Ventricular Endocardium Volume', 
+                     'vars' : ['Vol_Vent.Endo'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (50e3,260e3), 'yset' : 'round'},
+                
+                'Vol_CJ': 
+                    {'title': 'Cardiac Jelly Volume', 
+                     'vars' : ['Vol_CJ'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,700e3), 'yset' : 'round'},
+                'Vol_Atr.CJ': 
+                    {'title': 'Atrial Cardiac Jelly Volume', 
+                     'vars' : ['Vol_Atr.CJ'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,600e3), 'yset' : 'round'},
+                'Vol_Vent.CJ': 
+                    {'title': 'Ventricular Cardiac Jelly Volume', 
+                     'vars' : ['Vol_Vent.CJ'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,600e3), 'yset' : 'round'},
+                'Vol_CJ.Left': 
+                    {'title': 'Left Cardiac Jelly Volume', 
+                     'vars' : ['Vol_CJ.Left'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,700e3), 'yset' : 'round'},
+                'Vol_CJ.Right': 
+                    {'title': 'Right Cardiac Jelly Volume', 
+                     'vars' : ['Vol_CJ.Right'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,700e3), 'yset' : 'round'},
+                
+                'EllipAtr_Depth': 
+                    {'title': 'Atrial Depth', 
+                     'vars' : ['EllipAtr_Depth'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (60,180), 'yset' : 'round'},
+                'EllipAtr_Length': 
+                    {'title': 'Atrial Length', 
+                     'vars' : ['EllipAtr_Length'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (80,240), 'yset' : 'round'},
+                'EllipAtr_Width': 
+                    {'title': 'Atrial Width', 
+                     'vars' : ['EllipAtr_Width'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (70,160), 'yset' : 'round'},
+                'EllipAtr_Asphericity': 
+                    {'title': 'Atrial Asphericity', 
+                      'vars' : ['EllipAtr_Asphericity'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,0.4), 'yset' : 'dec'},
+                    
+                'EllipVent_Depth': 
+                    {'title': 'Ventricular Depth', 
+                     'vars' : ['EllipVent_Depth'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (60,180), 'yset' : 'round'},
+                'EllipVent_Length': 
+                    {'title': 'Ventricular Length', 
+                     'vars' : ['EllipVent_Length'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (80,240), 'yset' : 'round'},
+                'EllipVent_Width': 
+                    {'title': 'Ventricular Width', 
+                     'vars' : ['EllipVent_Width'],
+                     'n_cols': 1, 'yticks_lab':'d. - 0', 
+                     'ylim' : (70,160), 'yset' : 'round'},
+                'EllipVent_Asphericity': 
+                    {'title': 'Ventricular Asphericity', 
+                      'vars' : ['EllipVent_Asphericity'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,0.4), 'yset' : 'dec'},
+                    
+                'ang_AtrS': 
+                    {'title': 'Atrium Orientation (Saggital Plane)', 
+                      'vars' : ['ang_AtrS'],
+                      'n_cols': 1, 'yticks_lab':'d. - 0',
+                      'ylim' : (0,60), 'yset' : 'round'},
+                'ang_VentS': 
+                    {'title': 'Ventricle Orientation (Saggital Plane)', 
+                      'vars' : ['ang_VentS'],
+                      'n_cols': 1, 'yticks_lab':'d. - 0', 
+                      'ylim' : (120,190), 'yset' : 'round'},
+                'ang_BtwChambersS': 
+                    {'title': 'Angle Between Chambers  (Saggital Plane)', 
+                      'vars' : ['ang_BtwChambersS'],
+                      'n_cols': 1, 'yticks_lab':'d. - 0', 
+                      'ylim' : (80,200), 'yset' : 'round'},
+                
+                'ang_AtrV': 
+                    {'title': 'Atrium Orientation (Ventral Plane)', 
+                      'vars' : ['ang_AtrV'],
+                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'ylim' : (-5,45), 'yset' : 'round'},
+                'ang_VentV': 
+                    {'title': 'Ventricle Orientation (Ventral Plane)', 
+                      'vars' : ['ang_VentV'],
+                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'ylim' : (110,190), 'yset' : 'round'},
+                'ang_BtwChambersV': 
+                    {'title': 'Angle Between Chambers  (Ventral Plane)', 
+                      'vars' : ['ang_BtwChambersV'],
+                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'ylim' : (100,190), 'yset' : 'round'},
+
+                # '': 
+                #     {'title': '', 
+                #       'vars' : [''],
+                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                # '': 
+                #     {'title': '', 
+                #       'vars' : [''],
+                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                # '': 
+                #     {'title': '', 
+                #       'vars' : [''],
+                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
+                
+
+                    
                  }
     return pl_indiv
         
@@ -706,33 +908,47 @@ def def_legends(df_input, df_type = 'meas'):
     """
     
     # GENOTYPES
-    if df_type != 'kde':
+    if df_type == 'meas':
         try: 
             genots = sorted(df_input.GenotypeAll.unique(), reverse = True)
             genotsF = sorted(df_input.GenotypeF.unique(), reverse = True)
             bool_genots = True
+            bool_genotsF = True
         except: 
             bool_genots = False
-    else: 
+            bool_genotsF = False
+            
+    elif df_type == 'changes':
+        try: 
+            genots = sorted(df_input.GenotypeAll.unique(), reverse = True)
+            bool_genots = True
+            bool_genotsF = False
+        except: 
+            bool_genots = False
+            bool_genotsF = False
+            
+    elif df_type == 'changesF':
+        try: 
+            genots = sorted(df_input.GenotypeF.unique(), reverse = True)
+            bool_genotsF = True
+            bool_genots = False
+        except: 
+            bool_genotsF = False
+            bool_genots = False
+    else:  # 'kde'
         try: 
             genots = sorted(df_input.Genotype.unique(), reverse = True)
             genotsF = sorted(df_input.GenotypeF.unique(), reverse = True)
             bool_genots = True
+            bool_genotsF = False
         except: 
             bool_genots = False
+            bool_genotsF = False
     
-    out_genots = dict()
-    out_genotsF = dict()
-    if bool_genots: 
-        # all_genots = ['hapln1a:wt', 'hapln1a:ht', 'hapln1a:mt', 
-        #               'hapln1a:wt/spaw:wt', 'hapln1a:wt/spaw:mt', 'hapln1a:mt/spaw:wt', 'hapln1a:mt/spaw:mt',
-        #               'galff:+/uas:+', 'galff:+/uas:-', 'galff:-/uas:+', 'galff:-/uas:-',
-        #               'vcana:wt', 'vcana:ht', 'vcana:mt', 'wt:wt']
-        
-        leg_genots = {'hapln1a187:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
-                      'hapln1a241:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
-                      'hapln1a3bp:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'},  
-                      'hapln1aSTOP:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+    leg_genots = {'hapln1a187:wt': {'legend': '$wild$-$type_{187KO}$', 'color': '#000080'}, 
+                      'hapln1a241:wt': {'legend': '$wild$-$type_{241KO}$', 'color': '#000080'}, 
+                      'hapln1a3bp:wt': {'legend': '$wild$-$type_{3KO}$', 'color': '#000080'},  
+                      'hapln1aSTOP:wt': {'legend': '$wild$-$type_{STKO}$', 'color': '#000080'}, 
                     
                       'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
                       'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241$', 'color': '#839292'}, 
@@ -742,7 +958,8 @@ def def_legends(df_input, df_type = 'meas'):
                       'hapln1a3bp:mt': {'legend': '$hapln1a^{-/-}_{\Delta3bp}$', 'color': '#c36bea'}, 
                       'hapln1aSTOP:mt': {'legend': '$hapln1a^{-/-}_{STOP}$', 'color': '#72e5ef'}, 
                       
-                      'hapln1a241:wt/spaw:wt': {'legend': '$wild$-$type_{sh}$', 'color': '#000080'}, 
+                      'hapln1a241:wt/spaw:wt': {'legend': '$wild$-$type_{sh}$', 'color': '#000080'},
+                      'hapln1a241:wt/spaw:ht': {'legend': '$hapln1a^{+/+}_{\Delta241};spaw^{+/-}$', 'color': '#000080'},
                       'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
                       'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{-/-}_{\Delta241sh}$', 'color': '#dc133b'}, 
                       'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{-/-}_{\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
@@ -752,13 +969,18 @@ def def_legends(df_input, df_type = 'meas'):
                       'galff:-/uas:+': {'legend': '$galff^-;uas^+$', 'color': '#214d4e'}, 
                       'galff:-/uas:-': {'legend': '$wild$-$type_{OE}$', 'color': '#000080'},
                       
-                      'vcana365:wt': {'legend': '$wild$-$type_{KO}$', 'color': '#000080'}, 
+                      'vcana365:wt': {'legend': '$wild$-$type_{365KO}$', 'color': '#000080'}, 
                       'vcana365:ht': {'legend': '$vcana^{+/-}_{\Delta365}$', 'color': '#a23e27'}, 
                       'vcana365:mt': {'legend': '$vcana^{-/-}_{\Delta365}$', 'color': '#ffa500'}, 
-                      'wt:wt': {'legend': '$wild$-$type$','color': '#000080'}}
-            
+                      'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
+                      'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'}}
+    
+    out_genots = dict()
+    out_genotsF = dict()
+    if bool_genots: 
         for gen in genots:
             out_genots[gen] = leg_genots[gen]
+    if bool_genotsF: 
         for genf in genotsF:
             out_genotsF[genf] = leg_genots[genf]
     
@@ -826,19 +1048,25 @@ def def_legends(df_input, df_type = 'meas'):
                       '32->48': {'legend': '32$\Rightarrow$48hpf', 'color': '#FF6347'},
                       '48->74': {'legend': '48$\Rightarrow$74hpf', 'color': '#FFFF00'}}
         
-        # if df_type != 'changes':
-        #     all_stages = ['32-34', '48-50', '58-60', '72-74']
-        #     leg_stages = ['32-34hpf', '48-50hpf', '58-60hpf', '72-74hpf']
-        # else: 
-        #     all_stages = ['32->48', '48->74']
-        #     leg_stages = ["32$\Rightarrow$48hpf", "48$\Rightarrow$74hpf"]
-        
         for stg in stages:
             out_stages[stg] = leg_stages[stg]
-            # try: 
-            #     out_stages.append(leg_stages[all_stages.index(stg)])
-            # except :
-            #     out_stages.append('')
+            
+    # SPECIFIC ANALYSIS
+    try: 
+        spAn = sorted(df_input.spAnalysis.unique())
+        bool_spAn = True
+    except: 
+        bool_spAn = False
+    
+    out_spAn = dict()
+    if bool_spAn:
+        leg_spAn = {'normal': {'legend':'WT', 'color': '#72e5ef'}, 
+                      'No looper': {'legend': 'No looper', 'color': '#af437c'},
+                      'Right looper': {'legend': 'Right Looper', 'color': '#94d86f'},
+                      'Left looper': {'legend': 'Left Looper', 'color': '#5f4ac2'}}
+
+        for spA in spAn:
+            out_spAn[spA] = leg_spAn[spA]
     
     # TIME-POINTS
     try: 
@@ -849,27 +1077,30 @@ def def_legends(df_input, df_type = 'meas'):
     
     out_tp = []
     if bool_tp:
-        # if df_type != 'changes':
-        #     all_stages = ['32-34', '48-50', '58-60', '72-74']
-        #     leg_stages = ['32-34hpf', '48-50hpf', '58-60hpf', '72-74hpf']
-        # else: 
-        #     all_stages = ['32->48', '48->74']
-        #     leg_stages = ["32$\Rightarrow$48hpf", "48$\Rightarrow$74hpf"]
-        
         for tp in time_points:
-            # try: 
             out_tp.append(tp)#leg_stages[all_stages.index(stg)])
-            # except :
-            #     out_tp.append('')
+            
+    # FISH Reference
+    try: 
+        fish_ref = sorted(df_input.Fish_ref.unique())
+        bool_fr = True
+    except: 
+        bool_fr = False
     
+    out_fr = []
+    if bool_fr:
+        for fr in fish_ref:
+            out_fr.append(fr)
     
     x_labels = {'GenotypeAll': 'Genotype', 'GenotypeF': 'Genotype_f',
                     'Strain' : 'Strain', 'Strain_o' : 'Strain_o',
-                    'Stage': 'Stage [hpf]', 'time_point': 'Heart phase contraction'}
+                    'Stage': 'Stage [hpf]', 'time_point': 'Heart phase contraction',
+                    'Fish_ref' : 'Fish Reference', 'spAnalysis': 'Specific Analysis'}
                 
-    dict_legends = {'GenotypeAll': out_genots, 'Genotype': out_genotsF,
+    dict_legends = {'GenotypeAll': out_genots, 'GenotypeF': out_genotsF,
                     'Strain' : out_strains, 'Strain_o' : out_strains_o,
-                    'Stage': out_stages, 'time_point' : out_tp, 'xlabels': x_labels}
+                    'Stage': out_stages, 'time_point' : out_tp, 'Fish_ref': out_fr,
+                    'spAnalysis': out_spAn, 'xlabels': x_labels}
 
     return dict_legends 
 
@@ -901,11 +1132,11 @@ def genot_order(values, mix_wts = False):
                              ['galff:+/uas:-', 'galff:-/uas:+','galff:+/uas:+','hapln1a241:mt'],
                              ['vcana365:wt', 'vcana365:ht', 'vcana365:mt'],
                              ['vcana365:wt', 'vcana365:mt'],
-                             ['wt:wt','hapln1a241:wt','hapln1a241:ht','hapln1a241:mt', 
+                             ['wt:wt','wt_tc:wt','hapln1a241:wt','hapln1a241:ht','hapln1a241:mt', 
                               'hapln1a187:wt','hapln1a187:ht','hapln1a187:mt',
                               'hapln1a3bp:wt','hapln1a3bp:ht','hapln1a3bp:mt',
                               'hapln1aSTOP:wt','hapln1aSTOP:ht','hapln1aSTOP:mt',
-                              'hapln1a241:wt/spaw:wt', 'hapln1a241:mt/spaw:wt','hapln1a241:wt/spaw:mt', 'hapln1a241:mt/spaw:mt',
+                              'hapln1a241:wt/spaw:wt', 'hapln1a241:wt/spaw:ht', 'hapln1a241:mt/spaw:wt','hapln1a241:wt/spaw:mt', 'hapln1a241:mt/spaw:mt',
                               'galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+', 'galff:+/uas:+',
                               'vcana365:wt', 'vcana365:ht','vcana365:mt']]
         
@@ -926,8 +1157,10 @@ def genot_order(values, mix_wts = False):
 def props_ordered(df2plot, x_var, hue_var, shape_var):
     values = []
     for var in [x_var, hue_var, shape_var]:
+        # print(var)
         if var =='GenotypeAll':
             vals2app = genot_order(df2plot[var].unique(), mix_wts = False)
+            # print(vals2app)
             values.append(vals2app)
         else: 
             reverse = False
@@ -1031,91 +1264,7 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
     
     return df_pct_change, df4plot_pct_change
 
-#%% func - meanHM
-def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save, info):
-    
-    # Get minimum and max values for each group of heatmaps 
-    # (_o: originals, _W: normalised using whole heart, _C: normalised per chamber)
-    normalise, perChamber, norm_type = opt_norm
-    min_vals_o = []; max_vals_o = []; min_vals_N = []; max_vals_N = []
-    for group in groups:
-        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
-        
-        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
-        print(folders)
-        if normalise: 
-            [dfs_o, dfs_hmN], num, _  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
-            min_vals_N.append(df_hmW.min().min())
-            max_vals_N.append(df_hmW.max().max())
-            
-        else: 
-            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
 
-        df_of = concatHeatmaps(dfs_o, operation = 'mean')
-        min_vals_o.append(df_of.min().min())
-        max_vals_o.append(df_of.max().max())
-        
-    min_o = math.floor(min(min_vals_o))
-    max_o = 0.7*math.ceil(max(max_vals_o))
-    if normalise: 
-        max_N = math.ceil(max(max_vals_N))
-
-    for group in groups:
-        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
-        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
-        print('\t - Maximum value_o:', max_o)
-        if normalise: 
-            print('\t - Maximum value_N:', max_N)
-            [dfs_o, dfs_hmN], num, norm_vals  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
-            norm_vals = ['{:.2f}'.format(val) for val in norm_vals]
-            print('\t - Normalisation: ', norm_type, ' - Norm_val:', norm_vals)
-        else: 
-            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
-                                                       dir_data2Analyse, normalise = normalise, 
-                                                       opt_norm = norm_type, perChamber = perChamber)
-        df_of = concatHeatmaps(dfs_o, operation = 'mean')
-
-        gen_info = list(group[1])
-        if '/' in gen_info:
-            ind_sep = gen_info.index('/') 
-            gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
-        ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
-        for ind in ind_gen:
-            gen_info[ind+1] = gen_info[ind+1].upper()
-        if len(ind_gen) == 2:
-            ind_gen[1] -= 1
-        [gen_info.pop(ind) for ind in ind_gen]
-        gen_info  = ''.join(gen_info)
-        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
-                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, info = info, cmap = 'turbo')
-        if normalise:
-            if perChamber:
-                txt_title = 'normCh-'+norm_type
-            else: 
-                txt_title = 'normWh-'+norm_type
-            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
-                      vmin=0, vmax=max_N, n_val = num, normalise = txt_title,  dir2save = dir2save_hmf, 
-                      save = save, info = info, cmap = 'inferno')
-
-#%% func - concatHeatmaps
-def concatHeatmaps(df2concat, operation = 'mean'):
-    
-    if operation == 'std':
-        df_concat = pd.concat(df2concat).groupby(level=0).std()
-    elif operation == 'mean':
-        df_concat = pd.concat(df2concat).groupby(level=0).mean()
-    elif operation == 'sem':
-        df_concat = pd.concat(df2concat).groupby(level=0).sem()
-
-    return df_concat
 
 #%% - STATISTICAL ANALYSIS
 #%% func - normalityTests
@@ -1124,7 +1273,7 @@ def normalityTests (alpha, factor, fact_levels, variable, data, test):
     pval_norm = np.ones(((len(fact_levels)),3))
     
     all_data_normal = True
-    txt_normtest = test +' Normality tests ('+r'$\alpha$:'+str(alpha)+'), \n- p-val: - '
+    txt_normtest = test +' Normality tests ('+'alpha:'+str(alpha)+'), \n- p-val: - '
     data_groups = []
     
     for num, level in enumerate(fact_levels):
@@ -1155,13 +1304,15 @@ def normalityTests (alpha, factor, fact_levels, variable, data, test):
             all_data_normal = False
         
         normtxt = level+':'+str(format(p,'.3f'))
+        txt_normtest = txt_normtest + normtxt 
         if level != fact_levels[-1]:
-            txt_normtest = txt_normtest + normtxt +' / '
+            txt_normtest = txt_normtest +', \n '
         else: 
-            txt_normtest = txt_normtest + normtxt + ' - '  
+            txt_normtest = txt_normtest + ' - '  
         
         data_groups.append(data2testNorm)
     print(" >> Data normally distributed?", all_data_normal)
+    # print(txt_normtest)
     
     return pval_norm, txt_normtest, all_data_normal, data_groups
     
@@ -1246,7 +1397,6 @@ def runStatisticalTests(data, filters, norm_test, box_pairs_all, box_pairs_f, va
             
             dict_spStatisticalRes_in = dict()
             print('\n > Group: ', inter)
-            
             pvalues_norm, txt_normtest, all_data_normal, data_groups = normalityTests(alpha, factor, fact_levels, var, data_out, norm_test)
             # print(var)
             test2use, multcomp_txt, txt_testSelected = selectStatisticalTest(fact_levels, all_data_normal, var)
@@ -1337,9 +1487,17 @@ def stTest_OWANOVA (factor, var, indiv_pairs, data_out, data_groups):
     
     if len(data_groups) == 3:
         statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2])
-        
     elif len(data_groups) == 4:
         statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2], data_groups[3])
+    elif len(data_groups) == 5:
+        statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2], data_groups[3], 
+                                           data_groups[4])
+    elif len(data_groups) == 6:
+        statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2], data_groups[3], 
+                                           data_groups[4], data_groups[5])
+    elif len(data_groups) == 7:
+        statOWA, pval_OWA = stats.f_oneway(data_groups[0], data_groups[1], data_groups[2], data_groups[3], 
+                                           data_groups[4], data_groups[5], data_groups[6])
     
     pval_Tukey_o = sp.posthoc_tukey(data_out, var, factor)
     print ("p-values Tukey's test:\n", pval_Tukey_o)
@@ -1357,9 +1515,18 @@ def stTest_Kruskal (factor, var, indiv_pairs, data_out, data_groups): #(x: facto
     
     if len(data_groups) == 3:
         statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2])
-        
     elif len(data_groups) == 4:
         statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2], data_groups[3])
+    elif len(data_groups) == 5:
+        statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2], data_groups[3],
+                                                  data_groups[4])
+    elif len(data_groups) == 6:
+        statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2], data_groups[3], 
+                                                  data_groups[4], data_groups[5])
+    elif len(data_groups) == 7:
+        statKruskal, pval_Kruskal = stats.kruskal(data_groups[0], data_groups[1], data_groups[2], data_groups[3],
+                                                  data_groups[4], data_groups[5], data_groups[6])
+        
         
     pval_Dunn_o = sp.posthoc_dunn(data_out, var, factor, 'bonferroni')
     print (" - p-values Dunn's test:\n", pval_Dunn_o)
@@ -1457,7 +1624,7 @@ def get_indiv_pairs(pair_f, inter):
     
 #%% func - txtMultComp
 def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, alpha, indiv = False):
-    txt_multcomp = '\n - - - - - - - - - - \n'
+    txt_multcomp = '\n -- STATISTICS -- \n'
     
     if indiv:
         chunks = [box_pairs]
@@ -1476,20 +1643,30 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
             # print(x_val,'-',a_pair, '-',b_pair)
             a_pair.remove(x_val);b_pair.remove(x_val)
             pval_txt = str(format(pval[n],'.3f'))
-            if pval[n] <= alpha:
-                pval_txt = pval_txt +'*'
+            if pval[n] > alpha:
+                pval_txt = pval_txt +' (ns)'
+            elif pval[n] <= 0.05:
+                pval_txt = pval_txt +' (*)'
+            elif pval[n] <= 1e-2:
+                pval_txt = pval_txt +' (**)'
+            elif pval[n] <= 1e-3:
+                pval_txt = pval_txt +' (***)'
+            elif pval[n] <= 1e-4:
+                pval_txt = pval_txt +' (****)'
             pairtxt =  str(a_pair)+ ' vs. '+ str(b_pair) +': '+pval_txt
             n += 1
+            txt_multcomp = txt_multcomp + pairtxt
             if i < len(chunk)-1:
-                txt_multcomp = txt_multcomp + pairtxt + ' \n '
+                txt_multcomp = txt_multcomp + ' \n '
             else: 
-                txt_multcomp = txt_multcomp +  pairtxt + ' - '
+                txt_multcomp = txt_multcomp + ' - '
 
         txt_multcomp = txt_multcomp+'\n - - - - - - - - - - \n'
-        
+     
     return txt_multcomp
 
 #%% - CREATE PLOTS
+#%% Plot properties!
 # from matplotlib import rcParams
 # rcParams['font.family'] = 'sans-serif'
 # rcParams['font.sans-serif'] = ['Tahoma', 'Verdana', 'DejaVu Sans',
@@ -1502,6 +1679,7 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
 contxt = 'poster'
 font_scale = 1
 rc_dict = {'font.size': 20, 
+           'fontname' : 'Myriad Pro',
            # 'lines.linewidth': 3.0,
            'axes.linewidth': 1.5, 
            'axes.labelsize': 16.0, #size fo the axis labels (names)
@@ -1537,8 +1715,8 @@ fontname = 'Myriad Pro' #'Comic Sans MS'
 # for gen in range(n_gen):
 #     palettes.append(palette[gen*len(palette)//n_gen+2])
     
-# eight_pallette = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#8b6fed", "#859947", "#994440", "#36cbd3"]
-# twelve_pallete = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#c36bea", "#214d4e", "#36cbd3", "#a23e27", "#839292", "#8b008b", "#3ff44c", "#000080"]
+eight_palette = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#8b6fed", "#859947", "#994440", "#36cbd3"]
+# twelve_palete = ["#dc133b", "#ffa500", "#6495ed", "#ade64f", "#c36bea", "#214d4e", "#36cbd3", "#a23e27", "#839292", "#8b008b", "#3ff44c", "#000080"]
 
 # twelve pallete with metadata
 # [{"color":"#dc133b", "name":"dark red","textColor":"white"},
@@ -1579,7 +1757,7 @@ def plotIndivperX (# General Plot Settings
                     title, labels2plot, dict_legends, ips, 
                     # Other plot settings
                     suptitle = True, right_legend = False,
-                    yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+                    yticks_lab = 'th,', ylim = [], yset = '', box_plot = True, show_fliers = False,
                     # Saving settings
                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
 
@@ -1589,11 +1767,12 @@ def plotIndivperX (# General Plot Settings
     # Genotypes and Strains being plotted 
     values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
+    print(x_values, hue_values, shape_values)
     
     # Set up the matplotlib figure 
     n_rows = 1
     n_cols = len(hue_values)
-
+    addVars = False
     for index in range(n_cols):
         if index == 0 and len(vars2plot) == 1:
             addVars = True
@@ -1623,7 +1802,7 @@ def plotIndivperX (# General Plot Settings
     if len(x_values) > 3:
         h_add = 0
         wspace = 0.05
-        box_width = 0.8
+        box_width = 0.6
         bbox_lf = -0.5
     else:
         h_plot = 0.8
@@ -1676,9 +1855,16 @@ def plotIndivperX (# General Plot Settings
     sns.set_style("ticks")
     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
+    print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
+    if n_cols == 1 and n_rows == 1 and not right_legend:
+        axes_fl = [axes]
+    else: 
+        axes_fl = axes.flatten()
+    
     # Create list to contain info of yticks and its highest value
-    y_vals_all = []; max_y_vals = []
-    for n, ax, var, ylabel, hue_value in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values):
+    # y_vals_all = []; 
+    max_y_vals = []; min_y_vals = []
+    for n, ax, var, ylabel, hue_value in zip(count(), axes_fl, vars2plot, labels2plot, hue_values):
         if n in index_no_plot and right_legend:
                 if n == n_cols-1:
                     ax.set_axis_off()
@@ -1686,7 +1872,6 @@ def plotIndivperX (# General Plot Settings
                 else: 
                     ax.remove()
         else: 
-            # print(' > Plotting ',hue_value,'\n')
             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
                               marker = 'o', palette = x_color, size = marker_size, 
@@ -1717,9 +1902,9 @@ def plotIndivperX (# General Plot Settings
             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
             sns.despine()
             
-            if ylim != '':
-                print('ylim:', ylim[n][0],'-', ylim[n][1])
-                ax.set_ylim(ylim[n][0], ylim[n][1])
+            if isinstance(ylim, tuple):
+                print('ylim:', ylim[0],'-', ylim[1])
+                ax.set_ylim(ylim[0], ylim[1])
             
             if n == 0:
                 handles, labels = m.get_legend_handles_labels()
@@ -1730,32 +1915,60 @@ def plotIndivperX (# General Plot Settings
                 ax.tick_params(left = False)
     
             y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
             max_y_vals.append(y_vals[-1])
-                
-            # Define axes based on higherst bar
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
-            
-            for tick in ax.get_xticklabels():
-                tick.set_fontname(fontname)
-            for tick in ax.get_yticklabels():
-                tick.set_fontname(fontname)
-            try:
-                ax.yaxis.get_offset_text().set_fontname(fontname)
-                # print(r' -> YAY')
-            except:
-                print(r' -> Nop')
+            min_y_vals.append(y_vals[0])
+    
+    # Find min and maximum value for each axis 
+    # print(min_y_vals, max_y_vals)
+    min_y = min(min_y_vals); max_y = max(max_y_vals)
+
+    if yset == 'round':
+        rounding_set = -1
+        y_step = round((max_y - min_y)/8,rounding_set)
+        if y_step == 0: 
+            rounding_set = 0
+            alert('frog',1)
+        y_step = round((max_y - min_y)/8,rounding_set)
+        y_vals_set = list(range(int(min_y), int(max_y), int(y_step)))
+        y_vals_set.append(y_vals_set[-1]+int(y_step))
+        
+    elif yset == 'dec':
+        rounding_set = 2
+        y_step = round((max_y - min_y)/8,rounding_set)
+        # print(y_step)
+        num_y = (max_y - min_y)//y_step
+        # print(num_y)
+        y_vals_set = np.linspace(min_y, max_y,int(num_y), endpoint = True)
+    # print(y_vals_set)
+    
+    y_valsF = y_vals_set#y_vals_all[max_y_index]
+    
+    for n, ax in zip(count(), axes_fl):
+        ax.set_yticks(y_valsF)
+        # Define axes based on higherst bar
+        if yticks_lab == '1e6 - d.':
+            ax.set_yticks(ax.get_yticks())  #
+            ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_valsF])
+        elif yticks_lab == '1e3 - d.':
+            ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_valsF])
+        elif yticks_lab == 'th,':
+            ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_valsF])
+        elif yticks_lab == 'd. - 0':
+            ax.set_yticklabels(['{:.0f}'.format(w) for w in y_valsF])
+        elif yticks_lab == 'd. - 1':
+            ax.set_yticklabels(['{:.1f}'.format(w) for w in y_valsF])
+        elif yticks_lab == 'd.':
+            ax.set_yticklabels(['{:.2f}'.format(w) for w in y_valsF])
+        
+        for tick in ax.get_xticklabels():
+            tick.set_fontname(fontname)
+        for tick in ax.get_yticklabels():
+            tick.set_fontname(fontname)
+        try:
+            ax.yaxis.get_offset_text().set_fontname(fontname)
+            # print(r' -> YAY')
+        except:
+            print(r' -> Nop')
 
     if suptitle:
         fig.suptitle(title+'\n', y=1, fontname = fontname)
@@ -1763,7 +1976,7 @@ def plotIndivperX (# General Plot Settings
     
     if save: 
         for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            dir2savef = os.path.join(dir2save, 'R_')
             if info != '':
                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
             else: 
@@ -1935,7 +2148,7 @@ def plotInGroups(# General Plot Settings
     fig.suptitle(title+'\n', y=1, fontname = fontname)
     if save: 
         for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            dir2savef = os.path.join(dir2save, 'R_')
             if info != '':
                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
             else: 
@@ -1952,8 +2165,8 @@ def plotIndivStatsperX (# General Plot Settings
                     # Statistic Settings
                     stats_set, statsTxt = True, 
                     # Other plot settings
-                    suptitle = True, right_legend = False,
-                    yticks_lab = 'th,', ylim = '', box_plot = True, show_fliers = False,
+                    suptitle = True, right_legend = True,
+                    yticks_lab = 'th,', ylim = '', yset = '', box_plot = True, show_fliers = False,
                     # Saving settings
                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
 
@@ -1970,6 +2183,7 @@ def plotIndivStatsperX (# General Plot Settings
     # Genotypes and Strains being plotted 
     values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
+    # print(x_values, hue_values, shape_values)
     
     # Set up the matplotlib figure 
     if statsTxt:
@@ -1980,6 +2194,7 @@ def plotIndivStatsperX (# General Plot Settings
         height_ratios = [1]
     n_cols = len(hue_values)
 
+    addVars = False
     for index in range(n_cols):
         if index == 0 and len(vars2plot) == 1:
             addVars = True
@@ -1991,6 +2206,7 @@ def plotIndivStatsperX (# General Plot Settings
             labels2plot.insert(index, label2copy)
     
     # As a right legend wants to be added, we need to add '' to all labels 
+    index_no_plot = []
     if right_legend: 
         index_no_plot = [n_cols]
         for index in index_no_plot:
@@ -2000,8 +2216,22 @@ def plotIndivStatsperX (# General Plot Settings
         n_cols = n_cols+1
     else: 
         width_ratios = [1]*n_cols
-        index_no_plot = [1000]
-
+    
+    # print('index_no_plot:', index_no_plot)
+    index_no_plot2 = []
+    if statsTxt:
+        index_no_plot2 = [n_cols+aaa for aaa in range(n_cols)]
+        for index in index_no_plot2:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+    
+    # print(vars2plot, labels2plot)
+    # print('index_no_plot2:', index_no_plot2)
+    
+    index_plot = list(range(n_cols*n_rows))
+    index_plot = list(set(index_plot) - set(index_no_plot) - set(index_no_plot2))
+    # print('index_plot:', index_plot)
+    
     # Set up the matplotlib figure
     h_plot, w_plot = ips
     h_add = 1; w_add = 1
@@ -2009,10 +2239,10 @@ def plotIndivStatsperX (# General Plot Settings
     if len(x_values) > 3:
         h_add = 0
         wspace = 0.05
-        box_width = 0.8
+        box_width = 0.6
         bbox_lf = -0.5
     else:
-        h_plot = 0.8
+        h_plot = 2#0.8
         wspace = 0.15
         box_width = 0.6
         bbox_lf = -1.8
@@ -2045,10 +2275,10 @@ def plotIndivStatsperX (# General Plot Settings
                                     markerfacecolor=xcol, markersize=12))
         handle_new = legend_elem
         
-        for index in index_no_plot:
-            hue_legend.insert(index, '')
-            hue_values.insert(index, '')
-            dicts_stats.insert(index,'')
+    for index in index_no_plot+index_no_plot2:
+        hue_legend.insert(index, '')
+        hue_values.insert(index, '')
+        dicts_stats.insert(index,'')
             
     marker_size = 8; dodge = True; jitter = 0.3
     
@@ -2063,15 +2293,32 @@ def plotIndivStatsperX (# General Plot Settings
     sns.set_style("ticks")
     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
+    # print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
+    if n_cols == 1 and n_rows == 1 and not right_legend and not statsTxt:
+        axes_fl = [axes]
+    else: 
+        axes_fl = axes.flatten()
+    
+    if statsTxt:
+        index_no_plot_all = index_no_plot+[index_no_plot2[-1]]
+    else:
+        index_no_plot_all = index_no_plot
     # Create list to contain info of yticks and its highest value
-    y_vals_all = []; max_y_vals = []
-    for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes.flatten(), vars2plot, labels2plot, hue_values, dicts_stats):
-        if n in index_no_plot and right_legend:
-                if n == n_cols-1:
+    # y_vals_all = []; 
+    max_y_vals = []; min_y_vals = []
+    for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes_fl, vars2plot, labels2plot, hue_values, dicts_stats):
+        # print(n, len(axes_fl))
+        if n in index_no_plot_all:
+                if n == n_cols-1 and right_legend:
                     ax.set_axis_off()
                     ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
                 else: 
                     ax.remove()
+        elif n in index_no_plot2 and statsTxt:
+            # print(n, 'aja')# elif n == 1 and statsTxt and not right_legend: 
+            ax.text(0.5,10,txt_multcomp_all[n-n_cols], size=11, ha='center', va='baseline', fontname = fontname)
+            ax.set_axis_off()
+            
         else: 
             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
@@ -2094,20 +2341,22 @@ def plotIndivStatsperX (# General Plot Settings
                 txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
                 txt_normtest_all = dict_stats[var]['txt_normtest_all']
                 
+                # print(box_pairs, '\n ',p_val, '\n ',txt_testSelected_all, '\n ',txt_normtest_all)
                 # Added fontname as an imput to add_stat_annotation function in statannot
-                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
-                                                       hue_order = hue_values, order = x_values,
-                                                       box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
-                                                       pvalues=p_val, comparisons_correction=None, #'bonferroni',
-                                                       line_offset_to_box=0.4, line_offset=0.1,
-                                                       line_height=0.015, text_offset=5,
-                                                       text_format='star', loc='inside', fontsize='small', verbose=0,
-                                                       fontname = fontname)
+                # m1, test_results = add_stat_annotation(ax, data=df_xfilt, x=x_var, y=var, hue=hue_var, hue_order = hue_values,
+                #                                        order = x_values,
+                #                                        box_pairs = box_pairs, perform_stat_test = stat_test, test = test,
+                #                                        pvalues = p_val, comparisons_correction=None, #'bonferroni',
+                #                                        line_offset_to_box=0.4, line_offset=0.2,
+                #                                        line_height=0.015, text_offset=5,
+                #                                        text_format='star', loc='inside', fontsize='x-small', verbose=0,
+                #                                        fontname = fontname)
                 tests_res.append(p_val)
                 box_pairs_all.append(box_pairs)
                 txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
                                             txt_normtest_all, alpha, indiv = True)
                 txt_multcomp_all.append(txt_multcomp)
+                # print(n, txt_multcomp)
                 
             if n == 0:
                 if yticks_lab == '1e6 - d.':
@@ -2126,9 +2375,10 @@ def plotIndivStatsperX (# General Plot Settings
             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
             sns.despine()
             
-            if ylim != '':
-                print('ylim:', ylim[n][0],'-', ylim[n][1])
-                ax.set_ylim(ylim[n][0], ylim[n][1])
+            if isinstance(ylim, tuple):
+                addY = (ylim[1] - ylim[0])/10 
+                print('ylim:', ylim[0],'-', ylim[1]+ addY)
+                ax.set_ylim(ylim[0], ylim[1]+addY)
             
             if n == 0:
                 handles, labels = m.get_legend_handles_labels()
@@ -2139,53 +2389,72 @@ def plotIndivStatsperX (# General Plot Settings
                 ax.tick_params(left = False)
     
             y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
+            # print(y_vals)
             max_y_vals.append(y_vals[-1])
-                
-            # Define axes based on higherst bar
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
-            
-            for tick in ax.get_xticklabels():
-                tick.set_fontname(fontname)
-            for tick in ax.get_yticklabels():
-                tick.set_fontname(fontname)
-            try:
-                ax.yaxis.get_offset_text().set_fontname(fontname)
-                # print(r' -> YAY')
-            except:
-                print(r' -> Nop')
+            min_y_vals.append(y_vals[0])
     
-    if statsTxt:
-        gs = axes[1,0].get_gridspec()
-        for axis in axes[1,:]:
-            axis.remove()
-        axbig = fig.add_subplot(gs[1,:])
+    # # Find min and maximum value for each axis 
+    # print(min_y_vals, max_y_vals)
+    min_y = min(min_y_vals); max_y = max(max_y_vals)
+
+    if yset == 'round':
+        rounding_set = -1
+        y_step = round((max_y - min_y)/8,rounding_set)
+        if y_step == 0:
+            y_step = round((max_y - min_y)/8,0)
+        # print(y_step)
+        y_vals_set = list(range(int(min_y), int(max_y), int(y_step)))
+        y_vals_set.append(y_vals_set[-1]+int(y_step))
         
-        print(txt_multcomp_all)
-        txt_multcomp_allf = []
-        for aa, txt in enumerate(txt_multcomp_all):
-            new_txt = txt.replace('\n - - - - - - - - - - \n','\n')
-            new_txt2 = new_txt.replace('$\\alpha$','$alpha$')
-            txt_multcomp_allf.append(new_txt2)
-           
-        txt_multcomp_allf = '- - - - - - - - - - \n STATISTICS: \n'+''.join(txt_multcomp_allf)
-        print(txt_multcomp_allf)
-            
-        axbig.annotate(txt_multcomp_allf, (0.5, 0.225),
-                   xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
-                   horizontalalignment = 'center')
-        axbig.axis('off')
+    elif yset == 'dec':
+        rounding_set = 2
+        y_step = round((max_y - min_y)/8,rounding_set)
+        if y_step == 0:
+            y_step = round((max_y - min_y)/8,3)
+        # print(y_step)
+        num_y = (max_y - min_y)//y_step
+        # print(num_y)
+        y_vals_set = np.linspace(min_y, max_y,int(num_y), endpoint = True)
+    # print(y_vals_set)
+    
+    y_valsF = y_vals_set#y_vals_all[max_y_index]
+    
+    for n, ax in zip(count(), axes_fl[index_plot]):
+        ax.set_yticks(y_valsF)
+        # Define axes based on higherst bar
+        if yticks_lab == '1e6 - d.':
+            ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_valsF])
+        elif yticks_lab == '1e3 - d.':
+            ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_valsF])
+        elif yticks_lab == 'th,':
+            ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_valsF])
+        elif yticks_lab == 'd. - 0':
+            ax.set_yticklabels(['{:.0f}'.format(w) for w in y_valsF])
+        elif yticks_lab == 'd. - 1':
+            ax.set_yticklabels(['{:.1f}'.format(w) for w in y_valsF])
+        elif yticks_lab == 'd.':
+            ax.set_yticklabels(['{:.2f}'.format(w) for w in y_valsF])
+        
+        for tick in ax.get_xticklabels():
+            tick.set_fontname(fontname)
+        for tick in ax.get_yticklabels():
+            tick.set_fontname(fontname)
+        try:
+            ax.yaxis.get_offset_text().set_fontname(fontname)
+            # print(r' -> YAY')
+        except:
+            print(r' -> Nop')
+    
+    # if statsTxt and n_cols > 1:
+    #     gs = axes[1,0].get_gridspec()
+    #     for axis in axes[1,:]:
+    #         axis.remove()
+    #     axbig = fig.add_subplot(gs[1,:])
+    
+    #     axbig.annotate(txt_multcomp, (0.5, 0.225),
+    #                xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
+    #                horizontalalignment = 'center')
+    #     axbig.axis('off')
     
     if suptitle:
         fig.suptitle(title+'\n', y=1, fontname = fontname)
@@ -2193,7 +2462,7 @@ def plotIndivStatsperX (# General Plot Settings
     
     if save: 
         for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_meas', 'R_')
+            dir2savef = os.path.join(dir2save, 'R_')
             if info != '':
                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
             else: 
@@ -2415,6 +2684,189 @@ def plotInGroupsStats(# General Plot Settings
     if statist: 
         return tests_res, box_pairs_all
 
+#%% -> Time course - no statistics
+#%% func - plotIndivTimeCourse
+def plotIndivTimeCourse (# General Plot Settings
+                    df2plot, vars2plot, x_var, hue_var,
+                    # Size, title, labels and legends
+                    title, labels2plot, dict_legends, ips, 
+                    # Other plot settings
+                    suptitle = True, right_legend = True,
+                    yticks_lab = 'th,', ylim = '', 
+                    # Saving settings
+                    save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+    
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var)
+    
+    # Genotypes and Strains being plotted 
+    values = props_ordered(df2plot, x_var, hue_var, 'Strain')
+    x_values, hue_values, _ = values
+    
+    # Set up the matplotlib figure 
+    n_rows = 1
+    n_cols = 1
+    
+    # As a right legend wants to be added, we need to add '' to all labels 
+    if right_legend: 
+        index_no_plot = [n_cols]
+        for index in index_no_plot:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+        width_ratios = [1]*n_cols+[0.2]
+        n_cols = n_cols+1
+    else: 
+        width_ratios = [1]*n_cols
+        index_no_plot = [1000]
+        
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    h_add = 1; w_add = 1
+
+    if len(x_values) > 3:
+        h_add = 0
+        wspace = 0.05
+        bbox_lf = -0.5
+    else:
+        h_plot = 0.8
+        wspace = 0.15
+        bbox_lf = -1
+    
+    size_col = (n_cols)*(h_plot*len(x_values))+h_add
+    size_row = n_rows*w_plot+w_add
+    
+    # Define legends for x and hue
+    v_legend = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+        else: 
+            legend = dict_legends[v_var]
+        v_legend.append(legend)
+    x_legend, hue_legend = v_legend
+    # print('x_legend, hue_legend')
+    # print(x_legend, hue_legend)
+        
+    if right_legend:
+        # Define legends for x
+        legend_elem = []
+        palette_elem = []
+        palette_black = []
+        for aa, xval in zip(count(), hue_legend):
+            legend_elem.append(Line2D([0], [0], color=eight_palette[aa], label=xval,lw = 1))
+            palette_elem.append(eight_palette[aa])
+            palette_black.append('#A9A9A9')
+        handle_new = legend_elem
+            
+    marker_size = 3
+    
+    for k, svar, value in zip(count(), [x_var, hue_var], values):
+        print('\t- '+svar+': ', value)
+        
+    ##  CREATE FIGURE 
+    gridkw = dict(width_ratios=width_ratios)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=1, wspace=wspace)
+    
+    sns.set_style("ticks")
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+    # Create list to contain info of yticks and its highest value
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        if n in index_no_plot and right_legend:
+            if n == n_cols-1:
+                ax.set_axis_off()
+                ax.legend(handle_new, hue_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+            else: 
+                ax.remove()
+        else: 
+            m = sns.lineplot(data=df2plot, x=x_var, y=var, hue=hue_var, ax = ax, 
+                             markers=True, palette = palette_elem)
+            m = sns.stripplot(data=df2plot, x=x_var, y=var, ax = ax, order=x_values,
+                              marker = 'o',size = marker_size, palette = palette_black, 
+                              linewidth=0.5, jitter = False)
+            box = ax.get_position()
+            ax.get_legend().remove()
+            
+            for num in range(len(hue_legend)):
+                ax.lines[num].set_linestyle("--")
+                ax.lines[num].set_linewidth(1)
+    
+            if n == 0:
+                if yticks_lab == '1e6 - d.':
+                    ylabel = ylabel +' x 10$^6$'
+                elif yticks_lab == '1e3 - d.':
+                    ylabel = ylabel +' x 10$^3$'
+                xlabel = dict_legends['xlabels'][x_var]
+                ax.set_xlabel(xlabel, fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname)
+            else:
+                ax.set_xlabel('', fontname = fontname)
+                ax.set_ylabel('', fontname = fontname)
+    
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            xticks = ax.get_xticks()
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='center', fontname = fontname)
+            sns.despine()
+            
+            if ylim != '':
+                print('ylim:', ylim[n][0],'-', ylim[n][1])
+                ax.set_ylim(ylim[n][0], ylim[n][1])
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+            else:
+                ax.spines['left'].set_linestyle('-.')
+                ax.spines['left'].set_color('#696969')
+                ax.spines['left'].set_linewidth(0.8)
+                ax.tick_params(left = False)
+    
+            y_vals = ax.get_yticks()
+            ax.set_yticks(y_vals)
+    
+            # Define axes based on higherst bar
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticks(ax.get_yticks())  #
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+            
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+                # print(r' -> YAY')
+            except:
+                print(r' -> Nop')
+
+    if suptitle:
+        fig.suptitle(title+'\n', y=1, fontname = fontname)
+    # fig.tight_layout()
+    
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'R_')
+            if info != '':
+                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            else: 
+                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+#%% -> RelPlots
 #%% func - relPlotInGroups (test if working!)
 def relPlotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, labels2plot, ips, dir2save,
                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th.', info ='', 
@@ -2549,9 +3001,15 @@ def relPlotInGroups (df2plot, vars2plot, x_var, hue_var, shape_var, title, label
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
             
-#%% func - barPlots (test if working!)
-def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, dict_legends, title, txt_title, ylabel, 
-             dir2save, yticks_lab, info='', stack100 = True, sub_bar_lab = True, save = True, ext = ['png']): 
+#%% func - barPlots (Working!)
+def barPlots(# General Plot Settings
+             df2plot, vars2plot, group_vars, x_var, col_var,
+             # General Plot Settings
+             title, txt_title, ylabel, colours, dict_legends,
+             # Other plot settings
+             yticks_lab, stack100 = True, sub_bar_lab = True,
+             # Saving settings
+             save = True, ext = ['png'], info='', dir2save = ''): 
     
     mpl.rcParams.update(mpl.rcParamsDefault)
     print('\n> '+title)
@@ -2632,6 +3090,10 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, dict_legen
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
     fig_size = (math.ceil(2.5*(n_x/2)*(n_col)),7)
     fig, axes = plt.subplots(ncols=n_col,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
+    
+    sns.set_style("ticks")
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
     for n, ax, col_val in zip(count(), axes.flatten(), col_values):
         # First row will contain the graphs
         if n < n_col:
@@ -2773,8 +3235,14 @@ def barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, dict_legen
             plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
 
 #%% func - pctChange_barPlots (test if working!)
-def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, title, txt_title, ylabel, 
-                       dir2save, info='', sub_bar_lab = True, save = True, ext = ['png']): 
+def pctChange_barPlots(# General Plot Settings
+                       df2plot, vars2plot, group_vars, x_var, col_var, 
+                       # General Plot Settings
+                       title, txt_title, ylabel, colours, dict_legends,
+                       # Other plot settings
+                       sub_bar_lab = True,
+                       # Saving settings
+                       save = True, ext = ['png'], info='', dir2save = ''): 
     
     mpl.rcParams.update(mpl.rcParamsDefault)
     print('\n> '+title.replace('\n',' '))
@@ -2785,23 +3253,31 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
     
     # Filter dataframe 
     df4plot = df2plot.groupby(group_vars)[vars2plot].mean()
-    dict_legend = def_legends(df2plot.reset_index(), df_type = 'changes')
-    # print(dict_legend)
-
+    
     # Count and define figure settings accordingly
     # - number of x_var
     x_values = sorted(df2plot.index.unique(level = x_var))
     n_x = len(x_values)
-        
-    # Define legends
-    col_legend = dict_legend[col_var]
+    
     reverse = False
     if col_var == 'GenotypeAll':
         reverse = True
-        
     # - number of columns define legend position 
     col_values = sorted(df2plot.index.unique(level = col_var), reverse = reverse)
     n_col = len(df2plot.index.unique(level = col_var))
+    
+    # Define legends for columns 
+    v_legend = []
+    for zz, v_var, v_values in zip(count(), [x_var, col_var], [x_values, col_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+        else: 
+            legend = dict_legends[v_var]
+        v_legend.append(legend)
+    x_legend, col_legend = v_legend
+
     for nn in range(n_col): col_values.append('')
     
     # - number of variables/ stacked bars define number of columns in legend
@@ -2818,16 +3294,15 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
             ncols_leg = 3
         else: 
             ncols_leg = 2
-        # if n_col == 1:
-        #     bbox_to_anchor=(0.5, 0.5)
-        # else: 
-        #     bbox_to_anchor=(1, 0.5)
     
     #Create figure
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
     fig_size = (math.ceil(2.5*(n_x/2)*(n_col)),7)
     fig, axes = plt.subplots(ncols=n_col,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
-    #print('Figure size: ', fig_size)
+    
+    sns.set_style("ticks")
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
     for n, ax, col_val in zip(count(), axes.flatten(), col_values):
         # First row will contain the graphs
         if n < n_col:
@@ -2836,9 +3311,8 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
             if df_col.index.nlevels > 1:
                 df2plot_titles = df_col.index.map(('\n'.join))
             else: 
-                df_col_copy = df_col.copy()
-                dict_legend = def_legends(df_col_copy.reset_index(), df_type = 'changes')
-                df2plot_titles = dict_legend[x_var]
+                # df_col_copy = df_col.copy()
+                df2plot_titles = x_legend #dict_legend[x_var]
                 
             print('\n - '+col_val +'\n'); print(df_col)#, df2plot_titles)
             # Initialize the bottom at zero for the first set of bars.
@@ -2862,14 +3336,14 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
                 ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
-                ax.set_xticklabels(df2plot_titles, rotation=30)
+                ax.set_xticklabels(df2plot_titles, rotation=30, fontname = fontname)
             y_vals = ax.get_yticks()
             y_vals_all.append(y_vals)
             max_y_vals.append(y_vals[-1])
             
             if n == 0:
                 handles, labels = ax.get_legend_handles_labels()
-                ax.set(ylabel=ylabel)
+                ax.set_ylabel(ylabel, fontname = fontname)
 
             # Let's put the annotations inside the bars themselves by using a
             # negative offset.
@@ -2891,9 +3365,9 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
                           # This is actual value we'll show. original: round(bar.get_height())
                           bar_height,
                           # Center the labels and style them a bit.
-                          ha='center', color='w', weight='bold', size=10)
+                          ha='center', color='w', weight='bold', size=10,  fontname = fontname)
             
-            ax.set_title(col_legend[n])
+            ax.set_title(col_legend[n],  fontname = fontname)
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
             ax.axhline(0, color='dimgrey', linewidth=0.8)
@@ -2904,15 +3378,26 @@ def pctChange_barPlots(df2plot, vars2plot, group_vars, x_var, col_var, colours, 
             ax.set_title('')
             if n== leg_pos:
                 legends = def_var_names('bar_plots', labels)
-                ax.legend(handles, legends, loc=loc, bbox_to_anchor = bbox_to_anchor, frameon = True, fontsize=10, ncol = ncols_leg)
+                ax.legend(handles, legends, loc=loc, bbox_to_anchor = bbox_to_anchor, frameon = True, fontsize=10, 
+                          ncol = ncols_leg)
+                # ax.legend.set_name(fontname)
     
-    # Define axes based on higherst bar
-    max_y_index = max_y_vals.index(max(max_y_vals))
-    ax.set_yticks(y_vals_all[max_y_index])
-    ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-    # ax.ticklabel_format(axis='y', style='plain')
+        for tick in ax.get_xticklabels():
+            tick.set_fontname(fontname)
+        for tick in ax.get_yticklabels():
+            tick.set_fontname(fontname)
+        try:
+            ax.yaxis.get_offset_text().set_fontname(fontname)
+            # print(r' -> YAY')
+        except:
+            print(r' -> Nop')
+        
+    # # Define axes based on higherst bar
+    # max_y_index = max_y_vals.index(max(max_y_vals))
+    # ax.set_yticks(y_vals_all[max_y_index])
+    # ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]], fontname = fontname)
 
-    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01)
+    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01,  fontname = fontname)
     
     if save: 
         for extf in ext: 
@@ -3166,7 +3651,7 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse
             num += 1
         
         except: 
-            print('-No hmf heatmap dataframe found for '+thickness+' within '+file+' results folder!')
+            print('-No hmf heatmap dataframe found for '+thickness+'-'+file+' inside the results folder!')
             continue
         
     if normalise: 
@@ -3177,7 +3662,7 @@ def getHeatmaps2Unify(folders, chamber, thickness, dir2load_df, dir_data2Analyse
 #%% func - unifyHeatmap
 def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin, vmax, n_val, normalise, dir2save, save, info, cmap = 'turbo'):
     
-    sns.set_context('notebook', font_scale=1.25)
+    sns.set_context('notebook', font_scale=1.25)#, rc = rc_dict)
     stage = stage+'hpf'
     if thickness == 'CjTh':
         title = 'Cardiac jelly thickness [$\mu$m] - ('+chamber+', '+stage+', '+strain+', '+genotype+' - n='+str(n_val)+')_'+normalise+'\n'
@@ -3210,7 +3695,7 @@ def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin
     x_pos_new = np.linspace(x_pos[0], x_pos[-1], 19)
     x_lab_new = np.arange(-180,200,20)
     ax.set_xticks(x_pos_new) 
-    ax.set_xticklabels(x_lab_new, rotation=30)
+    ax.set_xticklabels(x_lab_new, rotation=30, fontname = fontname)
     
     y_pos = ax.get_yticks()
     # y_lab = ax.get_yticklabels()
@@ -3218,16 +3703,321 @@ def unifyHeatmap(df, chamber, stage, strain, genotype, gen_info, thickness, vmin
     y_lab_new = np.linspace(y_labels[0],y_labels[1],11)
     y_lab_new = [format(y,'.2f') for y in y_lab_new]
     ax.set_yticks(y_pos_new) 
-    ax.set_yticklabels(y_lab_new, rotation=0)
+    ax.set_yticklabels(y_lab_new, rotation=0, fontname = fontname)
     
-    plt.ylabel('Centreline position '+y_text+'\n', fontsize=15)
-    plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=15)
-    plt.title(title, fontsize = 15)
+    plt.ylabel('Centreline position '+y_text+'\n', fontsize=15, fontname = fontname)
+    plt.xlabel('Angle (\N{DEGREE SIGN}) [Dorsal >> Right >> Ventral >> Left >> Dorsal]', fontsize=15, fontname = fontname)
+    plt.title(title, fontsize = 15, fontname = fontname)
     
-    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+info+'-'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+strain+'_'+normalise+'.png')
+    dir4heatmap = os.path.join(dir2save,'pl_hmnorm', 'hmfAll_'+info+'-'+gen_info+'_'+thickness+'_'+chamber+'_'+stage+'_'+normalise+'.png')
     # print(dir4heatmap)
     if save: 
         plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
+
+#%% func - meanHM
+def meanHM(df_dataset_hm, filters, groups, chamber, variable, opt_norm,  dir2load_df, dir2save_hmf, dir_data2Analyse, save, info):
+    
+    # Get minimum and max values for each group of heatmaps 
+    # (_o: originals, _W: normalised using whole heart, _C: normalised per chamber)
+    normalise, perChamber, norm_type = opt_norm
+    min_vals_o = []; max_vals_o = []; min_vals_N = []; max_vals_N = []
+    for group in groups:
+        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+        
+        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
+        print(folders)
+        if normalise: 
+            [dfs_o, dfs_hmN], num, _  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
+            min_vals_N.append(df_hmW.min().min())
+            max_vals_N.append(df_hmW.max().max())
+            
+        else: 
+            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+
+        df_of = concatHeatmaps(dfs_o, operation = 'mean')
+        min_vals_o.append(df_of.min().min())
+        max_vals_o.append(df_of.max().max())
+        
+    min_o = math.floor(min(min_vals_o))
+    max_o = 0.7*math.ceil(max(max_vals_o))
+    if normalise: 
+        max_N = math.ceil(max(max_vals_N))
+        
+    max_o = ask4input('Define max value for heatmaps: ', int)
+
+    for group in groups:
+        folders = filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+        print('\n >> Variable: ', variable,' - Group: ', group,' - Chamber: ', chamber)
+        print('\t - Maximum value_o:', max_o)
+        if normalise: 
+            print('\t - Maximum value_N:', max_N)
+            [dfs_o, dfs_hmN], num, norm_vals  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+            df_hmW = concatHeatmaps(dfs_hmN, operation = 'mean')
+            norm_vals = ['{:.2f}'.format(val) for val in norm_vals]
+            print('\t - Normalisation: ', norm_type, ' - Norm_val:', norm_vals)
+        else: 
+            [dfs_o], num  = getHeatmaps2Unify(folders, chamber, variable, dir2load_df, 
+                                                       dir_data2Analyse, normalise = normalise, 
+                                                       opt_norm = norm_type, perChamber = perChamber)
+        df_of = concatHeatmaps(dfs_o, operation = 'mean')
+
+        gen_info = list(group[1])
+        if '/' in gen_info:
+            ind_sep = gen_info.index('/') 
+            gen_info = list(gen_info); gen_info[ind_sep] = '_'; 
+        ind_gen = list(filter(lambda x: gen_info[x] == ':', range(len(gen_info)))) 
+        for ind in ind_gen:
+            gen_info[ind+1] = gen_info[ind+1].upper()
+        if len(ind_gen) == 2:
+            ind_gen[1] -= 1
+        [gen_info.pop(ind) for ind in ind_gen]
+        gen_info  = ''.join(gen_info)
+        unifyHeatmap(df_of, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
+                  vmin=min_o, vmax=max_o, n_val = num, normalise = 'o_all', dir2save = dir2save_hmf, save = save, info = info, cmap = 'turbo')
+        if normalise:
+            if perChamber:
+                txt_title = 'normCh-'+norm_type
+            else: 
+                txt_title = 'normWh-'+norm_type
+            unifyHeatmap(df_hmW, chamber, genotype=group[1], gen_info = gen_info, stage=group[0], strain =group[2], thickness= variable, 
+                      vmin=0, vmax=max_N, n_val = num, normalise = txt_title,  dir2save = dir2save_hmf, 
+                      save = save, info = info, cmap = 'inferno')
+
+#%% func - concatHeatmaps
+def concatHeatmaps(df2concat, operation = 'mean'):
+    
+    if operation == 'std':
+        df_concat = pd.concat(df2concat).groupby(level=0).std()
+    elif operation == 'mean':
+        df_concat = pd.concat(df2concat).groupby(level=0).mean()
+    elif operation == 'sem':
+        df_concat = pd.concat(df2concat).groupby(level=0).sem()
+
+    return df_concat
+
+
+#%% func - defineHMRegions
+def defineHMRegions(angle_div, position_div, chamber): 
+    
+    # Define angle region boundaries
+    angles_f = [-180, -180+angle_div//2]
+    while angles_f[-1]+angle_div <180:
+        angles_f.append(angles_f[-1]+angle_div)
+    angles_f.append(180)
+    
+    ang_cols = [str(ang)+'->'+str(angles_f[a+2]) for a, ang in enumerate(angles_f[1:-2])]
+    ang_cols.append(str(angles_f[-2])+'->'+str(angles_f[1]))
+    angles_tup = [(ang,angles_f[a+2]) for a, ang in enumerate(angles_f[1:-2])]
+    angles_tup.append((angles_f[-2],angles_f[1]))
+    
+    # Define position region boundaries 
+    if 'Atr' in chamber: 
+        pos_f = np.linspace(1,2,num = int(1/position_div)+1, endpoint = True)
+    else: # 'Vent'
+        pos_f = np.linspace(0,1,num = int(1/position_div)+1, endpoint = True)
+    
+    pos_rows = [str(pos)+'->'+str(pos_f[p+1]) for p, pos in enumerate(pos_f[0:-1])]
+    pos_tup = [(pos,pos_f[p+1]) for p, pos in enumerate(pos_f[0:-1])]
+    
+    return ang_cols, angles_tup, pos_rows, pos_tup
+
+#%% func - defineIndex4Regions
+def defineIndex4Regions(hmf, angles_tup, pos_tup): 
+    
+    hmf_rows = list(hmf.index)
+    hmf_cols = list(hmf.columns.values)
+    hmf_colsf = [float(val) for val in hmf_cols]
+    # Get indexes to crop heatmap
+    aa_tup = []
+    for a, angle in zip(count(), angles_tup):
+        # print('\n Cols', angle)
+        found_ci = False; found_cii = False
+        for cc, col in enumerate(hmf_colsf):
+            if col >= angle[0] and not found_ci:
+                ci = cc; found_ci = True
+            if col >= angle[1] and not found_cii:
+                cii = cc; found_cii = True
+        aa_tup.append((ci,cii))
+        # print('->', ci, '/', cii)
+        
+    pp_tup = []
+    for p, pos in zip(count(), pos_tup):
+        # print('\n Rows', pos)
+        found_ri = False; found_rii = False
+        for rr, row in enumerate(hmf_rows):
+            if row >= pos[0] and not found_ri:
+                ri = rr; found_ri = True
+            if row >= pos[1] and not found_rii:
+                rii = rr; found_rii = True
+        if not found_rii:
+            rii = -1
+        pp_tup.append((ri,rii))
+        # print('->', ri, '/', rii)
+        
+    return aa_tup, pp_tup
+
+#%% func - regionaliseDF - Function based on filterUnloopedDF (fcMeshes)
+def regionaliseDF(hmf, chamber, angle_div, position_div, operations =['mean','max','min','median']):
+    """
+    #https://stackoverflow.com/questions/38940946/average-of-multiple-dataframes-with-the-same-columns-and-indices
+    Function based on filterUnloopedDF (fcMeshes)
+
+    """
+    # Define angle and position region boundaries
+    ang_cols, angles_tup, pos_rows, pos_tup = defineHMRegions(angle_div, position_div, chamber)
+    
+    hmf_mean = pd.DataFrame(columns=['z_plane']+ang_cols)
+    hmf_mean['z_plane'] = pos_rows
+    hmf_max = pd.DataFrame(columns=['z_plane']+ang_cols)
+    hmf_max['z_plane'] = pos_rows
+    hmf_min = pd.DataFrame(columns=['z_plane']+ang_cols)
+    hmf_min['z_plane'] = pos_rows
+    hmf_median = pd.DataFrame(columns=['z_plane']+ang_cols)
+    hmf_median['z_plane'] = pos_rows
+    
+    aa_tup, pp_tup = defineIndex4Regions(hmf, angles_tup, pos_tup)
+    
+    region_labels = []
+    n_region = 0
+    
+    for aa, atup, ang_lab in zip(count(), aa_tup, ang_cols):
+        # print(ang_lab)
+        mean_col = []; max_col = []; min_col = []; median_col = []
+        for pp, ptup, pos_lab in zip(count(), pp_tup, pos_rows):
+            # print('\n aa:',aa,atup, ang_lab, '-pp:',pp,ptup, pos_lab)
+            if aa != len(aa_tup)-1:
+                # print(ang_lab)
+                hmf_crop = hmf.iloc[ptup[0]:ptup[1], atup[0]:atup[1]]
+            else: 
+                hmf_crop_right = hmf.iloc[ptup[0]:ptup[1], atup[0]:]
+                hmf_crop_left = hmf.iloc[ptup[0]:ptup[1], 0:atup[1]]
+                hmf_crop = pd.concat([hmf_crop_right, hmf_crop_left], axis=1)
+                
+            vmean = hmf_crop.mean().mean(); mean_col.append(vmean)
+            vmax = hmf_crop.max().max(); max_col.append(vmax); 
+            vmin = hmf_crop.min().min(); min_col.append(vmin); 
+            np_crop = hmf_crop.to_numpy().flatten()
+            vmedian = np.nanmedian(np_crop); median_col.append(vmedian); 
+            # vstdev = np.nanstd(np_crop)
+            # print('mean:', vmean, '- max:',vmax, '- min:',vmin, '- median:', vmedian, '- stdev:', vstdev)
+
+            # _ = plt.hist(np_crop[~np.isnan(np_crop)], bins='auto')
+            # plt.title('Histogram '+str(atup)+'/'+str(ptup))
+            # plt.show()
+            
+            if n_region < 10:
+                region_labels.append((pos_lab,ang_lab,'R-0'+str(n_region)))
+            else: 
+                region_labels.append((pos_lab,ang_lab,'R-'+str(n_region)))
+            n_region +=1
+
+        hmf_mean[ang_lab] = mean_col
+        hmf_max[ang_lab] = max_col
+        hmf_min[ang_lab] = min_col
+        hmf_median[ang_lab] = median_col
+        
+    hmf_all = []
+    for op in operations: 
+        if op == 'mean': 
+            hmf_mean = hmf_mean.set_index('z_plane')
+            hmf_mean.columns.names = ['angle_range']
+            hmf_all.append(hmf_mean)
+        if op == 'max': 
+            hmf_max = hmf_max.set_index('z_plane')
+            hmf_max.columns.names = ['angle_range']
+            hmf_all.append(hmf_max)
+        if op == 'min': 
+            hmf_min= hmf_min.set_index('z_plane')
+            hmf_min.columns.names = ['angle_range']
+            hmf_all.append(hmf_min)
+        if op == 'mean': 
+            hmf_median = hmf_median.set_index('z_plane')
+            hmf_median.columns.names = ['angle_range']
+            hmf_all.append(hmf_median)
+
+    df_reglab = pd.DataFrame(region_labels, columns=['z_plane','angle_range','hm_region'])
+    
+    return hmf_all, df_reglab
+
+#%% func - stackRegHM()
+def stackRegHM(angle_div, position_div,
+               df_dataset_hm, df_meas, var2an, 
+               dir2load_df, save, dir2save):
+    
+    chambers = ['Atr', 'Vent']
+    variables = ['CjTh', 'myocIntBall','MyocTh', 'EndoTh']
+    coVars2add = pd.DataFrame([['Vol_Atr.CJ','Vol_Atr.ExtMyoc','Vol_Atr.Myoc', 'Vol_Atr.Endo'], 
+                               ['Vol_Vent.CJ','Vol_Vent.ExtMyoc','Vol_Vent.Myoc', 'Vol_Vent.Endo']],
+                                    index=chambers, columns=variables)
+    df_m = df_meas.set_index('Folder')
+    
+    ini = False
+    print('\n>>> Dividing '+ var2an+' heatmaps into regions...')
+    folders = df_dataset_hm['Folder']#filterR_Autom (df_dataset_hm, filters, group, col_out = 'Folder')
+    df_data = df_dataset_hm.set_index('Folder')
+    for chamber in chambers: 
+        print('\n >> Variable: ', var2an,' - Chamber: ', chamber, '\n')
+        hmf_file = 'hmf_'+'unloop'+chamber+'_'+var2an
+        bar = Bar('- Processing ', max=len(folders), suffix = suffix, check_tty=False, hide_cursor=False)
+        for n, file in enumerate(folders):
+            try: 
+                hmf = loadDF(file[2:], hmf_file, dir2load_df)
+                # print(r'Filename: ',file, ' - heatmap shape: ', hmf.shape)
+                hmf_all, df_reglab = regionaliseDF(hmf, chamber, angle_div, position_div, operations =['mean'])#,'max','min','median'])
+                hmf_mean = hmf_all[0] # hmf_mean, hmf_max, hmf_min, hmf_median = hmf_all
+                df_reglab = df_reglab.set_index(['z_plane', 'angle_range'])
+                reglab = list(df_reglab['hm_region'])
+                # input()
+                st_mean = hmf_mean.stack()
+                st_mean = st_mean.to_frame()
+                st_mean = st_mean.rename_axis(['z_plane', 'angle_range'])
+                st_mean = st_mean.rename(columns={0: 'value'})
+                st_mean = st_mean.join(df_reglab, on=['z_plane', 'angle_range'])
+                st_mean_reg = st_mean.set_index('hm_region')
+                st_mean_regT = st_mean_reg.T
+                
+                st_mean_regT['Chamber'] = chamber
+                st_mean_regT['var2An'] = var2an
+                st_mean_regT['Folder'] = file
+                st_mean_regT['Strain_o'] = df_data.loc[file,'Strain_o']
+                st_mean_regT['Stage'] = df_data.loc[file,'Stage']
+                st_mean_regT['Manip'] = df_data.loc[file,'Manip']
+                st_mean_regT['GenotypeAll'] = df_data.loc[file,'GenotypeAll']
+                st_mean_regT['GenotypeF'] = df_data.loc[file,'GenotypeF']
+                coVar2add = coVars2add.loc[chamber, var2an]
+                st_mean_regT['coVar2add'] = coVar2add
+                st_mean_regT['coVar_value'] = df_m.loc[file[2:]+'_2A',coVar2add]
+                
+                # print(st_mean_regT)
+                if not ini: 
+                    st_meanF = st_mean_regT.copy()
+                    ini = True
+                else: 
+                    st_meanF = pd.concat([st_meanF, st_mean_regT], ignore_index=True)
+            except: 
+                print('\n-No hmf heatmap dataframe found for '+var2an+'-'+file+' inside the results folder!')
+                
+            bar.next()
+        bar.finish()
+        
+    first_cols = ['Folder', 'Strain_o', 'Stage', 'Manip','GenotypeAll', 'GenotypeF',
+                  'Chamber','var2An','coVar2add', 'coVar_value']
+    
+    st_meanF = st_meanF.reindex(first_cols+reglab, axis =1)
+    
+    if save: 
+        saveDF(filename = 'hm_reg', df2save = st_meanF, df_name = var2an, dir2save = dir2save)
+        
+    alert('frog', 1)
+
+    return st_meanF, reglab
 
 #%% KDE PLOTS
 #%% func - plotKDEs

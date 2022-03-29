@@ -15,7 +15,7 @@ At the end of this script you will end with all the created meshes saved in the 
 saved in the 'centreline' folder.
 
 Important note: 
-Intermediate steps of this process can be saved, but I suggest you to run it complete as it doesn't take too long.'
+Intermediate steps of this process can be saved, but I suggest you to run it complete as it doesn't take too long.
 
 Happy running!
 

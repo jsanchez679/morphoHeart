@@ -31,8 +31,8 @@ font= 'VTK'
 
 # from vedo import *
 from vedo import embedWindow, Plotter, settings, load, Text2D, Mesh, KSpline, Sphere, Plane, Ribbon, Points, merge, shapes
-from vedo import fitPlane, Spheres, Line, Cylinder, colorMap, Cube, Arrow, Video, vedo2trimesh, trimesh2vedo, Ellipsoid
-import trimesh
+from vedo import fitPlane, Spheres, Line, Cylinder, colorMap, Cube, Arrow, Video, Ellipsoid#,vedo2trimesh, trimesh2vedo, 
+# import trimesh
 from time import perf_counter
 embedWindow(False)
 
@@ -1838,7 +1838,7 @@ def divideMeshesLnR(filename, meshes, cl_ribbon, file_num, df_res, colors =  ['s
     """
     
     spaw_analysis = False
-    if 'spaw' in df_res.loc[file_num,'spAnalysis']:
+    if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
         spaw_analysis = True
     
     meshes_LnR = []
@@ -3188,7 +3188,7 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
         pt2add_outf = dict_pts[sph_outf]['sph_position']
         pts_withOutf = np.insert(pts_cl, 0, np.transpose(pt2add_outf), axis=0)
 
-        #Get inflow point for that layer (three options)
+        #Get inflow point for that layer (four options)
         # - Option 1 (add point obtained when creating mesh for centreline - vmtk)
         sph_inf = sph_genName[0]+layerNames[i]
         pt2add_inf = dict_pts[sph_inf]['sph_position']
@@ -3236,7 +3236,7 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
         # - Option 3 (add point of extended original centreline midline between chamber centre and in/outf tract)
         pt_m30 = pts_int_o[-50]
         sph_m30 = Sphere(pos = pt_m30, r=4, c='purple')
-        pt_m1 = pts_int_o[-1]
+        # pt_m1 = pts_int_o[-1]
         dir_v30 = unit_vector(pt_m1-pt_m30)*3
         pts_ext = np.array([pt_m30, pt_m1, pt_m1+dir_v30*2,pt_m1+dir_v30*4,pt_m1+dir_v30*6,pt_m1+dir_v30*8,pt_m1+dir_v30*10])
         # print(pts_ext)
@@ -3262,8 +3262,23 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
         kspl_opt3 = KSpline(pts_int_opt3, res = 300)
         kspl_opt3.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
         
-        ksp_sel = [kspl_opt1, kspl_opt2, kspl_opt3]
-        pt2add_sel = [pt2add_inf, pt2add, pt2add30]
+        # - Option 4 (add mid point between final point of original centreline and inf tract)
+        # pt_m1 = pts_int_o[-1]
+        # pt2add_inf = dict_pts[sph_inf]['sph_position']
+        pt_m4 = pt_m1+(pt2add_inf-pt_m1)/2
+        sph_m4 = Sphere(pos = pt_m4, r=4, c='gold')
+        
+        pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt_m4), axis=0)
+        pts_all_opt4f = np.insert(pts_all_opt4, len(pts_all_opt4), np.transpose(pt2add_inf), axis=0)
+
+        # Interpolate points
+        pts_int_opt4 = getInterpolatedPts(points=pts_all_opt4f, nPoints = 300)
+        # Create kspline with points
+        kspl_opt4 = KSpline(pts_int_opt4, res = 300)
+        kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+        
+        ksp_sel = [kspl_opt1, kspl_opt2, kspl_opt3, kspl_opt4]
+        pt2add_sel = [pt2add_inf, pt2add, pt2add30, pt2add_inf]
         
         #Select the CL to use
         # First look if one has already been selected 
@@ -3275,41 +3290,44 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
             txt1 = Text2D('Option 0', c=c, font = font)
             txt2 = Text2D('Option 1', c=c, font = font)
             txt3 = Text2D('Option 2', c=c, font = font)
-            vp = Plotter(N=3, axes=10)
+            txt4 = Text2D('Option 3', c=c, font = font)
+            vp = Plotter(N=4, axes=10)
             vp.show(kspl_opt1, sph_inf_o, sph_outf_o, myoc.alpha(0.01), txt1, at=0)
             vp.show(kspl_opt2, sph_inf_o, sph_outf_o, sph_m1, sph_m10, myoc.alpha(0.01), txt2, at=1)
-            vp.show(kspl_opt3, sph_inf_o, sph_outf_o, sph_m1, sph_m30, myoc.alpha(0.01), txt3,  at=2, interactive=True)
-            q_select = ask4input('Select the preferred centreline for processing this heart \n\t-[0]: Option 0 - left \n\t-[1]: Option 1 - centre \n\t-[2]: Option 2 - right \n\t-[3]: Define IFT last point manually >>:', int)
+            vp.show(kspl_opt3, sph_inf_o, sph_outf_o, sph_m1, sph_m30, myoc.alpha(0.01), txt3,  at=2)
+            vp.show(kspl_opt4, sph_inf_o, sph_outf_o, sph_m1, sph_m4, myoc.alpha(0.01), txt4,  at=3, interactive=True)
+            q_select = ask4input('Select the preferred centreline for processing this heart \n\t-[0]: Option 0 \n\t-[1]: Option 1 \n\t-[2]: Option 2 \n\t-[3]: Option 3 \n\t-[4]: Define IFT last point manually >>:', int)
             
             dict_kspl['kspl_opt_sel'] = q_select
         
         # If selection is diff to 3 then select that CL
-        if q_select !=3:
+        if q_select !=4:
             kspl_CL.append(ksp_sel[q_select])
             pt2add_final = pt2add_sel[q_select]
             
-        # If selection is 3
+        # If selection is 4
         else: 
+            input('NOTE! Please be aware, this option has not been fully tested! \n\t --> Press "Enter" to continue! >>:')
             # See first if the process of cutting the mesh has already been done
             try: 
-                # - Option 4 (add point obtained when creating mesh for centreline - vmtk)
-                pt2add_inf4 = dict_kspl['linLine_'+layerNames[i]]['kspl_pts'][0]
-                pt2add_inf5 = pts_withOutf[-1]+unit_vector(pt2add_inf4-pts_withOutf[-1])*(findDist(pt2add_inf4,pts_withOutf[-1])/2)
+                # - Option 5 (add point obtained when creating mesh for centreline - vmtk)
+                pt2add_inf6 = dict_kspl['linLine_'+layerNames[i]]['kspl_pts'][0]
+                pt2add_inf5 = pts_withOutf[-1]+unit_vector(pt2add_inf6-pts_withOutf[-1])*(findDist(pt2add_inf6,pts_withOutf[-1])/2)
                 sph_inf5 = Sphere(pos=pt2add_inf5, r=2, c='lightcoral').legend('new_interm_pt')
-                sph_centroid = Sphere(pos=pt2add_inf4, r=2, c='deeppink').legend('new_pt')
-                pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf5), axis=0)
-                pts_all_opt5 = np.insert(pts_all_opt4, len(pts_all_opt4), np.transpose(pt2add_inf4), axis=0)
+                sph_centroid = Sphere(pos=pt2add_inf6, r=2, c='deeppink').legend('new_pt')
+                pts_all_opt6 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf5), axis=0)
+                pts_all_opt5 = np.insert(pts_all_opt6, len(pts_all_opt6), np.transpose(pt2add_inf6), axis=0)
                 
                 # Interpolate points
                 pts_int_opt5 = getInterpolatedPts(points=pts_all_opt5, nPoints = 300)
                 # Create kspline with points
-                kspl_opt4 = KSpline(pts_int_opt5, res = 300)
-                kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+                kspl_opt6 = KSpline(pts_int_opt5, res = 300)
+                kspl_opt6.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
                 
                 vp = Plotter(N=1)
                 text = "- Selected Centreline"
                 txt = Text2D(text, c=c, font=font)
-                vp.show(myoc, kspl_opt4, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
+                vp.show(myoc, kspl_opt6, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
                 
             # If not, then cut the mesh and define final point for centreline
             except: 
@@ -3339,28 +3357,28 @@ def createCLs(filename, dict_cl, dict_pts, dict_kspl, dict_planes, colors, myoc,
                     sph_centroid = Sphere(pos=pt_centroid, r=2, c='deeppink').legend('new_pt')
                     
                       # - Option 4 (add point obtained when re-cutting exported mesh4cl)
-                    pt2add_inf4 = pt_centroid
-                    pt2add_inf5 = pts_withOutf[-1]+unit_vector(pt_centroid-pts_withOutf[-1])*(findDist(pt_centroid,pts_withOutf[-1])/2)
-                    # print(pts_withOutf[-1], pt2add_inf5, pt2add_inf4)
-                    sph_inf5 = Sphere(pos=pt2add_inf5, r=2, c='lightcoral').legend('new_interm_pt')
-                    pts_all_opt4 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf5), axis=0)
-                    pts_all_opt5 = np.insert(pts_all_opt4, len(pts_all_opt4), np.transpose(pt2add_inf4), axis=0)
+                    pt2add_inf7 = pt_centroid
+                    pt2add_inf8 = pts_withOutf[-1]+unit_vector(pt_centroid-pts_withOutf[-1])*(findDist(pt_centroid,pts_withOutf[-1])/2)
+                    # print(pts_withOutf[-1], pt2add_inf8, pt2add_inf7)
+                    sph_inf5 = Sphere(pos=pt2add_inf8, r=2, c='lightcoral').legend('new_interm_pt')
+                    pts_all_opt7 = np.insert(pts_withOutf, len(pts_withOutf), np.transpose(pt2add_inf8), axis=0)
+                    pts_all_opt8 = np.insert(pts_all_opt7, len(pts_all_opt7), np.transpose(pt2add_inf7), axis=0)
             
                     # Interpolate points
-                    pts_int_opt5 = getInterpolatedPts(points=pts_all_opt5, nPoints = 300)
+                    pts_int_opt5 = getInterpolatedPts(points=pts_all_opt8, nPoints = 300)
                     # Create kspline with points
-                    kspl_opt4 = KSpline(pts_int_opt5, res = 300)
-                    kspl_opt4.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
+                    kspl_opt8 = KSpline(pts_int_opt5, res = 300)
+                    kspl_opt8.color(colors[i]).legend('CL_'+layerNames[i]).lw(5)
                     
                     vp = Plotter(N=1)
                     text = "- Resulting mesh after cutting"
                     txt = Text2D(text, c=c, font=font)
-                    vp.show(meshCL_cut, kspl, kspl_opt4, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
+                    vp.show(meshCL_cut, kspl, kspl_opt8, sph_centroid, sph_inf5, txt, at=0, viewup="y", interactive=True)
                     
                     pt_happy = ask4input('Are you happy with the new defined centreline? \n\t-[0]:no, I want to define a new cuting plane to redefine final point\n\t-[1]:yes! >>:', bool)
                     
-            kspl_CL.append(kspl_opt4)
-            pt2add_final = pt2add_inf4
+            kspl_CL.append(kspl_opt8)
+            pt2add_final = pt2add_inf7
             
         # Get linear lines
         linearLine = Line(pt2add_final, pt2add_outf, c=color_linLines[i], lw=3)
@@ -3471,7 +3489,8 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, dict_
 
     pts_cl = kspl_CL2use.points()
     # Extended centreline
-    inf_ext_normal = (pts_cl[-1]+(pts_cl[-1]-pts_cl[-3])*70)
+    nn = -20#-20#-3
+    inf_ext_normal = (pts_cl[nn]+(pts_cl[-1]-pts_cl[nn])*10)#*70
     outf_ext_normal = (pts_cl[0]+(pts_cl[0]-pts_cl[1])*70)
     inf_ext_sphere = Sphere(pos=inf_ext_normal, r=3, c='purple').legend("sph_infCLExtended")
     outf_ext_sphere = Sphere(pos=outf_ext_normal, r=3, c='purple').legend("sph_outfCLExtended")
@@ -3491,7 +3510,7 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, dict_
     kspl_ext = KSpline(resamp_pts, res=601).color('purple').legend('kspl_extended')
 
     spaw_analysis = False
-    if 'spaw' in df_res.loc[file_num,'spAnalysis']:
+    if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
         spaw_analysis = True #ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
         
     # Create plane to project centreline
@@ -3733,7 +3752,7 @@ def getChambersEllipsoid(filename, df_res, file_num, lines_orient, meshes, dict_
     
     # Find orientation in which images where taken or if it is a spaw mutant
     spaw_analysis = False
-    if 'spaw' in df_res.loc[file_num,'spAnalysis']:
+    if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
         spaw_analysis = True #ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
     
     # Heart Orientation
@@ -4670,7 +4689,6 @@ def filterUnloopedDF(filename, val2unloop, dir_results, dir_data2Analyse, save_n
             step = round((angles_f[1]-angles_f[0])/2, 4)
             
             th_list = []
-            # myocIntBall_list = []
             rad_list = []
             zplane_list = []
             theta_list = []
@@ -4683,18 +4701,11 @@ def filterUnloopedDF(filename, val2unloop, dir_results, dir_data2Analyse, save_n
                     filt = df_z[(df_z['theta'] >= ang-step) & (df_z['theta'] < ang+step)]
                     th_val = filt[val].max()
                     th_list.append(th_val)
-                    # if thickness == 'cj_thickness': 
-                    #     myocIntBall_val = filt['myoc_intBall'].max()
-                    #     myocIntBall_list.append(myocIntBall_val)
-                    
                     rad_val = filt['radius'].max()
                     rad_list.append(rad_val)
                     
                     zplane_list.append(round(z_plane, 3))
-            # if val == 'cj_thickness': 
-            #     df_filt = pd.DataFrame(list(zip(zplane_list, theta_list, rad_list, th_list, myocIntBall_list)), 
-            #                            columns =df_cols) 
-            # else: 
+          
             df_filt = pd.DataFrame(list(zip(zplane_list, theta_list, rad_list, th_list)), columns =df_cols[0]) 
             
             alert('wohoo', 1)
@@ -4706,10 +4717,6 @@ def filterUnloopedDF(filename, val2unloop, dir_results, dir_data2Analyse, save_n
             sns.heatmap(heatmap, cmap=cmap)#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
             plt.show()
             
-            # if isinstance(hm_name, list):
-            #     sp_hm_name = hm_name[n]
-            # elif isinstance(hm_name, str):
-            #     sp_hm_name = hm_name
             sp_hm_name = hm_names[nn][ii]
             print('\t- sp_hm_name:',sp_hm_name)
             
@@ -5372,7 +5379,7 @@ def classifyHeartPts(filename, df_res, file_num, dict_planes, m_whole, m_left, m
     df_classPts = pd.DataFrame(columns=cols)
 
     spaw_analysis = False
-    if 'spaw' in df_res.loc[file_num,'spAnalysis']:
+    if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
         spaw_analysis = True #ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
         
     # Classify AnV

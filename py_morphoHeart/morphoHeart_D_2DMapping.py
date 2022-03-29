@@ -77,7 +77,7 @@ if init:
     # Initialise variables
     dict_shapes = dict()
     txt = Text2D(filename, c="k", font= 'CallingCode')
-    df_res = fcBasics.spAnalysis(df_res, file_num)
+    # df_res = fcBasics.spLoopAnalysis(df_res, file_num)
 
     #%% LOAD MESHES, CENTRELINES AND OBJECTS
     #   This section will load all the objects and dataframes needed to unloop the selected heart and create 
@@ -175,7 +175,6 @@ if init:
                                               save_names= dict_unloop[tissue]['save_names'],
                                               hm_names = dict_unloop[tissue]['hm_names'],
                                               saveHM = saveHM, cmap='turbo')
-        
         
         if plotshow:
             if 'kspl_vSurf' not in locals() or 'return_list' not in locals():

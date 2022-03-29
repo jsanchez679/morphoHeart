@@ -2977,7 +2977,7 @@ def closeInfOutfTuple (stack_closed, slices, chStr, exit_code, level):
                     myIm_closed, clicks_close = closeInfOutSlc(myIm_closed, slc, chStr, int(rect_yD), int(rect_xD), clicks_in = [], option = 'first', level = level)
                     done = True
                 elif method == "6":
-                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'w', level, plot_show = False)
+                    myIm_closed, done = close_draw(myIm_closed, slc, chStr, 'white', level, plot_show = False)
                     done = True
                 elif method == 'esc':
                     last_slc = slc

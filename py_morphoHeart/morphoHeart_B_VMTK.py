@@ -50,7 +50,7 @@ if init:
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse
     dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
 
-    #%% GET MESHLAB MESHES AND EXTRACT CENTRELINES
+    #% GET MESHLAB MESHES AND EXTRACT CENTRELINES
     #   This section will find the mesh(es) that was(were) processed in Meshlab, and use it(them) to get the heart
     #   centreline. When running each mesh the code will show the user a window with a 3D interactive plot of the 
     #   selected mesh and a numbered cap in each blunt cut (inflow and outflow tract). (Make sure both blunt cuts

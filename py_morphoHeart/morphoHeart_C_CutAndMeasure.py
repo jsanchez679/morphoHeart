@@ -111,7 +111,7 @@ if init:
         vp.show(m_cjOut, at=4)
         vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 2, azimuth = azimuth, interactive=True)
 
-    df_res = fcBasics.spAnalysis(df_res, file_num)
+    df_res = fcBasics.spLoopAnalysis(df_res, file_num)
     
     #%% Create ksplines, points, lines and centrelines
     #   This section will create spline(s) of the centreline(s) using the information from the loaded dictionary(ies) and
@@ -183,7 +183,7 @@ if init:
                                 names = ['cj_thickness','myoc_thickness','endo_thickness'],
                                 dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
     
-    # % NOTE: Uncomment in case you have already run this section and just want to re-load results
+    #% NOTE: Uncomment in case you have already run this section and just want to re-load results
     # [[m_cjTh, m_myocTh, m_endoTh], [cj_thickness, myoc_thickness, endo_thickness]] = fcMeshes.openThicknessMeshes(filename = filename, 
     #                                                                                       meshes_names = ['cj_thickness','myoc_thickness','endo_thickness'], 
     #                                                                                       extension = 'vtk', dir_stl = directories[2], dir_txtNnpy = directories[1]); 
@@ -251,7 +251,7 @@ if init:
             vp.show(meshes_ball[1].alpha(1), sph_ballonning, at=4)
             vp.show(m_cjTh.alpha(1), scale_cube, at=5, azimuth = azimuth, elevation = 0, zoom = 2, interactive = True)
             
-    #% NOTE: Uncomment in case you have already run this section and just want to re-load results
+    # % NOTE: Uncomment in case you have already run this section and just want to re-load results
     # sph_ballonning = fcMeshes.sphInSpline(kspl_CL = kspl_CL[0], name = 'sphs_ball', every = 0.6)
     # q_selectMeshes = fcBasics.ask4input('Select the meshes from which you would like to extract the ballooning heatmaps \n\t\t[0]: Int.Myocardium/[1]: Ext.Endocardium/[2]: both: ', int)
     # meshes_ball = []
@@ -451,6 +451,12 @@ if init:
                                          file_num = file_num, df_res = df_res, colors = ['salmon', 'brown'])
     df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
                                           names = ['CJ_total','CJ.Left', 'CJ.Right'])
+    
+    # from vedo import Plotter, embedWindow, settings
+    # vp = Plotter(N=2, axes=13)
+    # vp.show(m_cjLnR[0], at=0, zoom=1.2)
+    # vp.show(m_cjLnR[1], at=1, zoom=1.2, interactive=True)
+    
     fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
     
     # Now divide the tissue thickness meshes (myocardium, endocardium and cardiac jelly)

@@ -587,7 +587,7 @@ def add_stat_annotation(ax, plot='boxplot',
                 text, xy=(np.mean([x1, x2]), y + h),
                 xytext=(0, text_offset), textcoords='offset points',
                 xycoords='data', ha='center', va='bottom',
-                fontsize=fontsize, fontname=fontname, clip_on=False, annotation_clip=False)
+                fontsize=fontsize, clip_on=False, annotation_clip=False)
             ann_list.append(ann)
 
             plt.draw()

@@ -87,7 +87,7 @@ if init:
     channel = fcCont.selectChannel()
     # Import stack
     stack_closed, stack_o, stack_m, file, stack_shape, processDict, level = fcCont.main_importImages(filename, channel, directories, n_rows = n_rows)
-
+#split function of plotting and asking for start and end
     #%% ii. CLOSE CONTOURS
     #   This section allows the user to run either/all of the three different functions to close the channel's contours.
     #   1. Automatic closure of the contours
@@ -202,6 +202,7 @@ if init:
         
     print('\n> FINAL TIMINGS!')
     fcBasics.printTime(ticABC, tocABC, 'close contours')
+    
     fcBasics.printTime(ticD, tocD, 'select contours')
     
 #%% OTHER FUNCTIONS
@@ -224,13 +225,13 @@ if others:
 
     #%% Plot the contours from slices 'first' to 'last' in a grid
     # Enter in 'first' and 'last' any slice number within the number of slices in the stack
-    first = 168
-    last = 195
+    first = 43
+    last = 75
     fcCont.showGridContours(myStack = stack_closed, slices = (first,last+1), n_rows = n_rows, level = level)
     
     #%% Plot all the contours of the stack in a grid
     first = 0
-    last = stack_closed.shape[0]
+    last = 27#stack_closed.shape[0]
     fcCont.showGridContours(myStack = stack_closed, slices = (first,last), n_rows = n_rows, level = level)
 
     #%% Plot the selected contours (masks) of a selected group of slices to double check

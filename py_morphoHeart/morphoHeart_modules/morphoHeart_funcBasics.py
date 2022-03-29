@@ -991,7 +991,7 @@ def printTime(tic, toc, txt):
     print("\t>> Total time taken to "+txt+" = ",format(time,'.2f'), "s/", format(time/60,'.2f'), "m/", format(time/3600,'.2f'), "h")
 
 #%% func - spAnalysis 
-def spAnalysis(df_res, file_num):
+def spLoopAnalysis(df_res, file_num):
     """
     
 
@@ -1008,15 +1008,16 @@ def spAnalysis(df_res, file_num):
         DESCRIPTION.
 
     """
-
-    spAn = 'normal'
-    if 'spaw' in df_res.loc[file_num,'Strain']:
-        spaw_analysis = ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
-        if spaw_analysis:
-            spAn = 'spaw'
-        else: 
-            spAn = 'normal'
     
+    loop_analysis = ask4input('Please select the direction in which this heart is looping: \n\t[0]: right to left (dextral looper)\n\t[1]: left to right (sinistral looper)\n\t[2]: dorso-ventral (central/no-looper) >>>: ', int)
+    spAnOp = ['rt', 'lf', 'ct']
+    
+    if 'spaw' in df_res.loc[file_num,'Strain']:
+        # spaw_analysis = ask4input('You are processing a heart that came from an incross of spaw heterozygous.\n  Please, select the way this heart is looping to continue processing: \n\t[0]: right-left\n\t[1]: dorso-ventral >>>: ', bool)
+        spAn = 'spaw_'+spAnOp[loop_analysis]
+    else: 
+        spAn = 'normal_'+spAnOp[loop_analysis]
+        
     df_resFilled = df_res.copy()
     df_resFilled.loc[file_num,'spAnalysis'] = spAn
     
