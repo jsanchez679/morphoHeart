@@ -685,195 +685,200 @@ def plot_groups():
 def plot_indiv():
     pl_indiv = {
                 'Vol_Ext.Myoc': 
-                    {'title': 'Heart Size', 
+                    {'graph_no': '01', 'title': 'Heart Size', 
                      'vars' : ['Vol_Ext.Myoc'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' : (0.75e6,3e6), 'yset' : 'round'},
                 'Vol_Atr.ExtMyoc': 
-                    {'title': 'Atrial Size', 
+                    {'graph_no': '02', 'title': 'Atrial Size', 
                      'vars' : ['Vol_Atr.ExtMyoc'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' : (0.2e6,2e6), 'yset' : 'round'},
                 'Vol_Vent.ExtMyoc': 
-                    {'title': 'Ventricular Size', 
+                    {'graph_no': '03', 'title': 'Ventricular Size', 
                      'vars' : ['Vol_Vent.ExtMyoc'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' : (0.2e6,2e6), 'yset' : 'round'},
                     
                 'Vol_Int.Endo': 
-                    {'title': 'Lumen Size', 
+                    {'graph_no': '04', 'title': 'Lumen Size', 
                      'vars' : ['Vol_Int.Endo'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' :  (0,1.6e6), 'yset' : 'round'},
                 'Vol_Atr.IntEndo': 
-                    {'title': 'Atrial Lumen Size', 
+                    {'graph_no': '05', 'title': 'Atrial Lumen Size', 
                      'vars' : ['Vol_Atr.IntEndo'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' :  (0,1.2e6), 'yset' : 'round'},
                 'Vol_Vent.IntEndo': 
-                    {'title': 'Ventricular Lumen Size', 
+                    {'graph_no': '06', 'title': 'Ventricular Lumen Size', 
                      'vars' : ['Vol_Vent.IntEndo'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
                      'ylim' : (0,1.2e6), 'yset' : 'round'},
                     
                 'linLine_Int.Myoc(Cut)': 
-                    {'title': 'Linear Heart Length', 
+                    {'graph_no': '07', 'title': 'Linear Heart Length', 
                      'vars' : ['linLine_Int.Myoc(Cut)'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (100,280), 'yset' : 'round'},
                 'Length_CL_Int.Myoc(Cut)': 
-                    {'title': 'Looped Heart Length', 
+                    {'graph_no': '08', 'title': 'Looped Heart Length', 
                      'vars' : ['Length_CL_Int.Myoc(Cut)'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (180,360), 'yset' : 'round'},
                 'Looping_Ratio_Myoc': 
-                    {'title': 'Looping Ratio', 
+                    {'graph_no': '09', 'title': 'Looping Ratio', 
                      'vars' : ['Looping_Ratio_Myoc'],
                      'n_cols': 1, 'yticks_lab':'d.', 
                      'ylim' : (1,2.6), 'yset' : 'dec'},
                     
                 'Vol_Myoc': 
-                    {'title': 'Myocardial Volume', 
+                    {'graph_no': '10', 'title': 'Myocardial Volume', 
                      'vars' : ['Vol_Myoc'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.',
                      'ylim' : (250e3,750e3), 'yset' : 'round'},
                 'Vol_Atr.Myoc': 
-                    {'title': 'Atrial Myocardium Volume', 
+                    {'graph_no': '11', 'title': 'Atrial Myocardium Volume', 
                      'vars' : ['Vol_Atr.Myoc'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (100e3,500e3), 'yset' : 'round'},
                 'Vol_Vent.Myoc': 
-                    {'title': 'Ventricular Myocardium Volume', 
+                    {'graph_no': '12', 'title': 'Ventricular Myocardium Volume', 
                      'vars' : ['Vol_Vent.Myoc'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (100e3,500e3), 'yset' : 'round'},
                 
                 'Vol_Endo': 
-                    {'title': 'Endocardial Volume', 
+                    {'graph_no': '13', 'title': 'Endocardial Volume', 
                      'vars' : ['Vol_Endo'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (100e3,450e3), 'yset' : 'round'},
                 'Vol_Atr.Endo': 
-                    {'title': 'Atrial Endocardium Volume', 
+                    {'graph_no': '14', 'title': 'Atrial Endocardium Volume', 
                      'vars' : ['Vol_Atr.Endo'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (50e3,260e3), 'yset' : 'round'},
                 'Vol_Vent.Endo': 
-                    {'title': 'Ventricular Endocardium Volume', 
+                    {'graph_no': '15', 'title': 'Ventricular Endocardium Volume', 
                      'vars' : ['Vol_Vent.Endo'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (50e3,260e3), 'yset' : 'round'},
                 
                 'Vol_CJ': 
-                    {'title': 'Cardiac Jelly Volume', 
+                    {'graph_no': '16', 'title': 'Cardiac Jelly Volume', 
                      'vars' : ['Vol_CJ'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (0,700e3), 'yset' : 'round'},
                 'Vol_Atr.CJ': 
-                    {'title': 'Atrial Cardiac Jelly Volume', 
+                    {'graph_no': '17', 'title': 'Atrial Cardiac Jelly Volume', 
                      'vars' : ['Vol_Atr.CJ'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (0,600e3), 'yset' : 'round'},
                 'Vol_Vent.CJ': 
-                    {'title': 'Ventricular Cardiac Jelly Volume', 
+                    {'graph_no': '18', 'title': 'Ventricular Cardiac Jelly Volume', 
                      'vars' : ['Vol_Vent.CJ'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (0,600e3), 'yset' : 'round'},
                 'Vol_CJ.Left': 
-                    {'title': 'Left Cardiac Jelly Volume', 
+                    {'graph_no': '19', 'title': 'Left Cardiac Jelly Volume', 
                      'vars' : ['Vol_CJ.Left'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (0,700e3), 'yset' : 'round'},
                 'Vol_CJ.Right': 
-                    {'title': 'Right Cardiac Jelly Volume', 
+                    {'graph_no': '20', 'title': 'Right Cardiac Jelly Volume', 
                      'vars' : ['Vol_CJ.Right'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
                      'ylim' : (0,700e3), 'yset' : 'round'},
+                'Vol_CJ.LeftvsRight': 
+                    {'graph_no': '21', 'title': 'Cardiac Jelly Volume leftOverRight', 
+                     'vars' : ['Ratio_VolLeftCJ2VolRightCJ'],
+                     'n_cols': 1, 'yticks_lab':'d.', 
+                     'ylim' : '', 'yset' : 'dec'},
                 
                 'EllipAtr_Depth': 
-                    {'title': 'Atrial Depth', 
+                    {'graph_no': '25', 'title': 'Atrial Depth', 
                      'vars' : ['EllipAtr_Depth'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (60,180), 'yset' : 'round'},
                 'EllipAtr_Length': 
-                    {'title': 'Atrial Length', 
+                    {'graph_no': '26', 'title': 'Atrial Length', 
                      'vars' : ['EllipAtr_Length'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (80,240), 'yset' : 'round'},
                 'EllipAtr_Width': 
-                    {'title': 'Atrial Width', 
+                    {'graph_no': '27', 'title': 'Atrial Width', 
                      'vars' : ['EllipAtr_Width'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (70,160), 'yset' : 'round'},
                 'EllipAtr_Asphericity': 
-                    {'title': 'Atrial Asphericity', 
+                    {'graph_no': '28', 'title': 'Atrial Asphericity', 
                       'vars' : ['EllipAtr_Asphericity'],
                       'n_cols': 1, 'yticks_lab':'d.', 
                       'ylim' : (0,0.4), 'yset' : 'dec'},
                     
                 'EllipVent_Depth': 
-                    {'title': 'Ventricular Depth', 
+                    {'graph_no': '29', 'title': 'Ventricular Depth', 
                      'vars' : ['EllipVent_Depth'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (60,180), 'yset' : 'round'},
                 'EllipVent_Length': 
-                    {'title': 'Ventricular Length', 
+                    {'graph_no': '30', 'title': 'Ventricular Length', 
                      'vars' : ['EllipVent_Length'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (80,240), 'yset' : 'round'},
                 'EllipVent_Width': 
-                    {'title': 'Ventricular Width', 
+                    {'graph_no': '31', 'title': 'Ventricular Width', 
                      'vars' : ['EllipVent_Width'],
                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                      'ylim' : (70,160), 'yset' : 'round'},
                 'EllipVent_Asphericity': 
-                    {'title': 'Ventricular Asphericity', 
+                    {'graph_no': '32', 'title': 'Ventricular Asphericity', 
                       'vars' : ['EllipVent_Asphericity'],
                       'n_cols': 1, 'yticks_lab':'d.', 
                       'ylim' : (0,0.4), 'yset' : 'dec'},
                     
                 'ang_AtrS': 
-                    {'title': 'Atrium Orientation (Saggital Plane)', 
+                    {'graph_no': '40', 'title': 'Atrium Orientation (Saggital Plane)', 
                       'vars' : ['ang_AtrS'],
                       'n_cols': 1, 'yticks_lab':'d. - 0',
                       'ylim' : (0,60), 'yset' : 'round'},
                 'ang_VentS': 
-                    {'title': 'Ventricle Orientation (Saggital Plane)', 
+                    {'graph_no': '41', 'title': 'Ventricle Orientation (Saggital Plane)', 
                       'vars' : ['ang_VentS'],
                       'n_cols': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (120,190), 'yset' : 'round'},
                 'ang_BtwChambersS': 
-                    {'title': 'Angle Between Chambers  (Saggital Plane)', 
+                    {'graph_no': '42', 'title': 'Angle Between Chambers  (Saggital Plane)', 
                       'vars' : ['ang_BtwChambersS'],
                       'n_cols': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (80,200), 'yset' : 'round'},
                 
                 'ang_AtrV': 
-                    {'title': 'Atrium Orientation (Ventral Plane)', 
+                    {'graph_no': '43', 'title': 'Atrium Orientation (Ventral Plane)', 
                       'vars' : ['ang_AtrV'],
                       'n_colV': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (-5,45), 'yset' : 'round'},
                 'ang_VentV': 
-                    {'title': 'Ventricle Orientation (Ventral Plane)', 
+                    {'graph_no': '44', 'title': 'Ventricle Orientation (Ventral Plane)', 
                       'vars' : ['ang_VentV'],
                       'n_colV': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (110,190), 'yset' : 'round'},
                 'ang_BtwChambersV': 
-                    {'title': 'Angle Between Chambers  (Ventral Plane)', 
+                    {'graph_no': '45', 'title': 'Angle Between Chambers  (Ventral Plane)', 
                       'vars' : ['ang_BtwChambersV'],
                       'n_colV': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (100,190), 'yset' : 'round'},
 
                 # '': 
-                #     {'title': '', 
+                #     {'graph_no': 01, 'title': '', 
                 #       'vars' : [''],
                 #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
                 # '': 
-                #     {'title': '', 
+                #     {'graph_no': 01, 'title': '', 
                 #       'vars' : [''],
                 #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
                 # '': 
-                #     {'title': '', 
+                #     {'graph_no': 01, 'title': '', 
                 #       'vars' : [''],
                 #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 'ylim' : ''},
                 
@@ -974,6 +979,36 @@ def def_legends(df_input, df_type = 'meas'):
                       'vcana365:mt': {'legend': '$vcana^{-/-}_{\Delta365}$', 'color': '#ffa500'}, 
                       'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
                       'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'}}
+    
+    # leg_genots = {'hapln1a187:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+    #                   'hapln1a241:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+    #                   'hapln1a3bp:wt': {'legend': '$sibling', 'color': '#000080'},  
+    #                   'hapln1aSTOP:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+                    
+    #                   'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
+    #                   'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241}$', 'color': '#839292'}, 
+                      
+    #                   'hapln1a187:mt': {'legend': '$hapln1a^{\Delta187/\Delta187}$', 'color': '#8B008B'}, 
+    #                   'hapln1a241:mt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
+    #                   'hapln1a3bp:mt': {'legend': '$hapln1a^{\Delta3/\Delta3}$', 'color': '#c36bea'}, 
+    #                   'hapln1aSTOP:mt': {'legend': '$hapln1a^{STOP/STOP}$', 'color': '#72e5ef'}, 
+                      
+    #                   'hapln1a241:wt/spaw:wt': {'legend': '$sibling$', 'color': '#000080'},
+    #                   'hapln1a241:wt/spaw:ht': {'legend': '$sibling$', 'color': '#000080'},
+    #                   'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
+    #                   'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
+    #                   'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{\Delta241/\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
+                      
+    #                   'galff:+/uas:+': {'legend': '$Gal4^+$; $UAS^+$', 'color': '#ade64f'}, 
+    #                   'galff:+/uas:-': {'legend': '$Gal4^+$; $UAS^-$', 'color': '#6495ed'}, 
+    #                   'galff:-/uas:+': {'legend': '$Gal4^-$; $UAS^+$', 'color': '#214d4e'}, 
+    #                   'galff:-/uas:-': {'legend': '$sibling$', 'color': '#000080'},
+                      
+    #                   'vcana365:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+    #                   'vcana365:ht': {'legend': '$vcana^{\Delta365/+}$', 'color': '#a23e27'}, 
+    #                   'vcana365:mt': {'legend': '$vcana^{\Delta365/\Delta365}$', 'color': '#ffa500'}, 
+    #                   'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
+    #                   'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'}}
     
     out_genots = dict()
     out_genotsF = dict()
@@ -1666,7 +1701,71 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
     return txt_multcomp
 
 #%% - CREATE PLOTS
+class Thesis_contxt():
+    def __init__(self,context):
+        self.context = context
+        
+    def get_context(self):
+        return self.context
+    
+    def set_context(self, new_context):
+        self.context = new_context
+
 #%% Plot properties!
+def setSNSContext(thesis_contxt):
+    fontname = 'Myriad Pro'
+    
+    if thesis_contxt: # for thesis
+        contxt = 'poster'
+        font_scale = 1
+        rc_dict = {'font.size': 8, 
+                   'fontname' : 'Myriad Pro',
+                   # 'lines.linewidth': 3.0,
+                   'axes.linewidth': 0.7, 
+                   'axes.labelsize': 8.0, #size for the axis labels (names)
+                   'axes.titlesize': 8, #'axes.titleweight': 200,
+                   'xtick.bottom' : True, 'ytick.left' : True,
+                   'xtick.major.size': 3, 'ytick.major.size': 3,
+                   'xtick.major.width': 0.25, 'ytick.major.width': 0.25,
+                   'xtick.labelsize': 6, 'ytick.labelsize': 8, # size of the labels of each tick
+                   'legend.fontsize': 8, 'legend.title_fontsize': 8,
+                   'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
+                   # 'figure.figsize': (3,2)}
+        
+        boxprops = dict(linestyle = '-', linewidth = 0.25, alpha = 0.4)
+        flierprops = dict(marker='*', markersize=2.5, markerfacecolor='#FFD700', markeredgecolor = '#000000',markeredgewidth = 0.15)#linestyle = 'none')
+        whiskerprops = dict(linewidth = 0.35, alpha = 0.6, color='#000000')#'708090')
+        capprops = dict(linewidth = 0.35, color='#708090')
+        medianprops = dict(linewidth=0.2, linestyle = '--', color = '#708090') #'white')#
+        meanprops = dict(linewidth=0.1, linestyle = '-.', color = '#696969')
+        
+    else: 
+        contxt = 'poster'
+        font_scale = 1
+        rc_dict = {'font.size': 20, 
+                    'fontname' : 'Myriad Pro',
+                    # 'lines.linewidth': 3.0,
+                    'axes.linewidth': 1.5, 
+                    'axes.labelsize': 16.0, #size for the axis labels (names)
+                    'axes.titlesize': 10, #'axes.titleweight': 200,
+                    'xtick.bottom' : True, 'ytick.left' : True,
+                    'xtick.major.size': 10, 'ytick.major.size': 8,
+                    'xtick.major.width': 1, 'ytick.major.width': 1,
+                    'xtick.labelsize': 14, 'ytick.labelsize': 14, # size of the labels of each tick
+                    'legend.fontsize': 16, 'legend.title_fontsize': 16,
+                    'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
+        
+        boxprops = dict(linestyle = '-', linewidth = 1.2, alpha = 0.4)
+        flierprops = dict(marker='*', markersize=8, markerfacecolor='#FFD700', markeredgecolor = '#000000',markeredgewidth = 0.8)#linestyle = 'none')
+        whiskerprops = dict(linewidth = 1, color='#A9A9A9')
+        capprops = dict(color='#A9A9A9')
+        medianprops = dict(linewidth=1, linestyle = '-', color = 'white')#'#696969')
+        meanprops = dict(linewidth=1.5, linestyle = '-.', color = '#696969')
+        
+    all_box_props = [boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops]
+    
+    return contxt, font_scale, rc_dict, all_box_props, fontname
+
 # from matplotlib import rcParams
 # rcParams['font.family'] = 'sans-serif'
 # rcParams['font.sans-serif'] = ['Tahoma', 'Verdana', 'DejaVu Sans',
@@ -1679,24 +1778,48 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
 contxt = 'poster'
 font_scale = 1
 rc_dict = {'font.size': 20, 
-           'fontname' : 'Myriad Pro',
-           # 'lines.linewidth': 3.0,
-           'axes.linewidth': 1.5, 
-           'axes.labelsize': 16.0, #size fo the axis labels (names)
-           'axes.titlesize': 10, #'axes.titleweight': 200,
-           'xtick.bottom' : True, 'ytick.left' : True,
-           'xtick.major.size': 10, 'ytick.major.size': 8,
-           'xtick.major.width': 1, 'ytick.major.width': 1,
-           'xtick.labelsize': 14, 'ytick.labelsize': 14, # size of the labels of each tick
-           'legend.fontsize': 16, 'legend.title_fontsize': 16,
-           'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
+            'fontname' : 'Myriad Pro',
+            # 'lines.linewidth': 3.0,
+            'axes.linewidth': 1.5, 
+            'axes.labelsize': 16.0, #size for the axis labels (names)
+            'axes.titlesize': 10, #'axes.titleweight': 200,
+            'xtick.bottom' : True, 'ytick.left' : True,
+            'xtick.major.size': 10, 'ytick.major.size': 8,
+            'xtick.major.width': 1, 'ytick.major.width': 1,
+            'xtick.labelsize': 14, 'ytick.labelsize': 14, # size of the labels of each tick
+            'legend.fontsize': 16, 'legend.title_fontsize': 16,
+            'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
 
 boxprops = dict(linestyle = '-', linewidth = 1.2, alpha = 0.3)
 flierprops = dict(marker='*', markersize=8, markerfacecolor='#FFD700', markeredgecolor = '#000000',markeredgewidth = 0.8)#linestyle = 'none')
 whiskerprops = dict(linewidth = 1, color='#A9A9A9')
 capprops = dict(color='#A9A9A9')
-medianprops = dict(linewidth=1, linestyle = '-', color = '#696969')
+medianprops = dict(linewidth=1, linestyle = '-', color = 'white')#'#696969')
 meanprops = dict(linewidth=1.5, linestyle = '-.', color = '#696969')
+
+
+# contxt = 'poster'
+# font_scale = 1
+# rc_dict = {'font.size': 8, 
+#            'fontname' : 'Myriad Pro',
+#            # 'lines.linewidth': 3.0,
+#            'axes.linewidth': 0.7, 
+#            'axes.labelsize': 8.0, #size for the axis labels (names)
+#            'axes.titlesize': 8, #'axes.titleweight': 200,
+#            'xtick.bottom' : True, 'ytick.left' : True,
+#            'xtick.major.size': 3, 'ytick.major.size': 3,
+#            'xtick.major.width': 0.25, 'ytick.major.width': 0.25,
+#            'xtick.labelsize': 7, 'ytick.labelsize': 8, # size of the labels of each tick
+#            'legend.fontsize': 8, 'legend.title_fontsize': 8,
+#            'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
+#            # 'figure.figsize': (3,2)}
+
+# boxprops = dict(linestyle = '-', linewidth = 0.15, alpha = 0.4)
+# flierprops = dict(marker='*', markersize=2.5, markerfacecolor='#FFD700', markeredgecolor = '#000000',markeredgewidth = 0.15)#linestyle = 'none')
+# whiskerprops = dict(linewidth = 0.25, color='#708090')
+# capprops = dict(linewidth = 0.25, color='#708090')
+# medianprops = dict(linewidth=0.2, linestyle = '--', color = '#708090') #'white')#
+# meanprops = dict(linewidth=0.1, linestyle = '-.', color = '#696969')
 
 # Setting font!
 # https://jonathansoma.com/lede/data-studio/matplotlib/changing-fonts-in-matplotlib/
@@ -1756,18 +1879,20 @@ def plotIndivperX (# General Plot Settings
                     # Size, title, labels and legends
                     title, labels2plot, dict_legends, ips, 
                     # Other plot settings
-                    suptitle = True, right_legend = False,
+                    suptitle = True, right_legend = False, ctx_style = 0,
                     yticks_lab = 'th,', ylim = [], yset = '', box_plot = True, show_fliers = False,
                     # Saving settings
-                    save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+                    save = True, dpi = 300, ext = ['png'], info = '', dir2save = ''):
 
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
     
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
     # Genotypes and Strains being plotted 
     values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
-    print(x_values, hue_values, shape_values)
+    # print(x_values, hue_values, shape_values)
     
     # Set up the matplotlib figure 
     n_rows = 1
@@ -1797,21 +1922,44 @@ def plotIndivperX (# General Plot Settings
         
     # Set up the matplotlib figure
     h_plot, w_plot = ips
-    h_add = 1; w_add = 1
-
-    if len(x_values) > 3:
-        h_add = 0
-        wspace = 0.05
-        box_width = 0.6
-        bbox_lf = -0.5
-    else:
-        h_plot = 0.8
-        wspace = 0.15
-        box_width = 0.6
-        bbox_lf = -1.8
     
+    
+    if len(x_values) >= 6 and len(hue_values) >= 2:
+        h_add = 1.4
+        wspace = 0.05
+        box_width = 0.4
+        bbox_lf = -0.5
+        w_add = 0.2
+        print('A', len(x_values), len(hue_values))
+    
+    elif len(x_values) >= 3 and len(hue_values) >= 2:
+        h_add = 1
+        wspace = 0.05
+        box_width = 0.4
+        bbox_lf = -0.5
+        w_add = 0.2
+        print('A', len(x_values), len(hue_values))
+    
+    elif len(x_values) >= 3 and len(hue_values) < 2:
+        h_add = 0.4
+        wspace = 0.05
+        box_width = 0.4
+        bbox_lf = -0.5
+        w_add = 0.2
+        print('C', len(x_values), len(hue_values))
+        
+    else:
+        h_add = 0.6
+        h_plot = 0.2#0.8
+        wspace = 0.15#0.15
+        box_width = 0.4
+        bbox_lf = -1.8
+        w_add = 0.2#1
+        print('B', len(x_values), len(hue_values))
+
     size_col = (n_cols)*(h_plot*len(x_values))+h_add
     size_row = n_rows*w_plot+w_add
+    print('-size: ', size_col, size_row)
     
     # Define legends for x and hue
     v_legend = []; v_color = []
@@ -1842,7 +1990,7 @@ def plotIndivperX (# General Plot Settings
             hue_legend.insert(index, '')
             hue_values.insert(index, '')
             
-    marker_size = 8; dodge = True; jitter = 0.3
+    marker_size = 2.5; dodge = True; jitter = 0.3
     
     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
         print('\t- '+svar+': ', value)
@@ -1855,7 +2003,7 @@ def plotIndivperX (# General Plot Settings
     sns.set_style("ticks")
     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
+    # print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
     if n_cols == 1 and n_rows == 1 and not right_legend:
         axes_fl = [axes]
     else: 
@@ -1875,13 +2023,13 @@ def plotIndivperX (# General Plot Settings
             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
                               marker = 'o', palette = x_color, size = marker_size, 
-                              linewidth=0.5, jitter = jitter)
+                              linewidth=0.3, jitter = jitter)
             if box_plot: 
                 m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
                                    dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
                                    boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
-                                   flierprops = flierprops, medianprops = medianprops, 
-                                   meanline = True, meanprops = meanprops, showmeans = True)
+                                   flierprops = flierprops, medianprops = medianprops)#, 
+                                   # meanline = True, showmeans = False, meanprops = meanprops,)
     
             box = ax.get_position()
     
@@ -1911,7 +2059,7 @@ def plotIndivperX (# General Plot Settings
             else:
                 ax.spines['left'].set_linestyle('-.')
                 ax.spines['left'].set_color('#696969')
-                ax.spines['left'].set_linewidth(0.8)
+                ax.spines['left'].set_linewidth(0.6)
                 ax.tick_params(left = False)
     
             y_vals = ax.get_yticks()
@@ -1977,199 +2125,833 @@ def plotIndivperX (# General Plot Settings
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
-            else: 
-                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            # fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            fig_title = dir2savef+info+"_"+title+"."+extf
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
 
 #%% func - plotInGroups
-def plotInGroups(# General Plot Settings
-                 df2plot, vars2plot, x_var, hue_var, shape_var, 
-                 # Size, title, labels and legends
-                 title, labels2plot, dict_legends, ips, 
-                 # Other plot settings
-                 n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
-                 # Saving settings
-                 save = True, dpi = 300, ext = 'png', info ='',dir2save = ''):
+# def plotInGroups(# General Plot Settings
+#                  df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                  # Size, title, labels and legends
+#                  title, labels2plot, dict_legends, ips, 
+#                  # Other plot settings
+#                  n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
+#                  # Saving settings
+#                  save = True, dpi = 300, ext = 'png', info ='',dir2save = ''):
     
-    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    n_rows = math.ceil(num_vars/n_cols)
-    # print('n_rows:' , n_rows)
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)
+#     # print('n_rows:' , n_rows)
     
-    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
-    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
-    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,4))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
 
-    for index in index_no_plot:
-        vars2plot.insert(index, '')
-        labels2plot.insert(index, '')
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
     
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
     
-    # Genotypes and Strains being plotted 
-    values = props_ordered(df2plot, x_var, hue_var, shape_var)
-    x_values, hue_values, shape_values = values
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
     
-    # - number of x_var
-    n_x = len(x_values)
-    if n_x == 1:
-        h_plot = 3.5
+#     # - number of x_var
+#     n_x = len(x_values)
+#     if n_x == 1:
+#         h_plot = 3.5
         
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
     
-    # Define legends for x and hue
-    v_legend = []; v_color = []
-    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
-        if isinstance(dict_legends[v_var], dict):
-            legend = []
-            color = []
-            for v_dict in v_values: 
-                legend.append(dict_legends[v_var][v_dict]['legend'])
-                color.append(dict_legends[v_var][v_dict]['color'])
-        else: 
-            legend = dict_legends[v_var]
-            color = ''
-        v_legend.append(legend)
-        v_color.append(color)
-    x_legend, hue_legend = v_legend
-    x_color, hue_color = v_color
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+#         v_legend.append(legend)
+#         v_color.append(color)
+#     x_legend, hue_legend = v_legend
+#     x_color, hue_color = v_color
 
-    legend_elem_hue = []
-    for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
-        legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
-                                markerfacecolor=hue_col, markersize=20))
+#     legend_elem_hue = []
+#     for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
+#         legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
+#                                 markerfacecolor=hue_col, markersize=20))
         
-    handle_new = legend_elem_hue
-    legend_new = hue_legend
+#     handle_new = legend_elem_hue
+#     legend_new = hue_legend
     
-    marker_size = 10; dodge = True; jitter = 0.3
-    plot_no = 0
+#     marker_size = 10; dodge = True; jitter = 0.3
+#     plot_no = 0
     
-    #  CREATE FIGURE
-    gridkw = dict(width_ratios=[1]*n_cols+[0.2])
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.5, wspace=0.2)
+#     #  CREATE FIGURE
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.5, wspace=0.2)
     
-    sns.set_style("ticks")
-    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
         
-        # Create list to contain info of yticks and ist highest value
-        y_vals_all = []
-        max_y_vals = []
+#         # Create list to contain info of yticks and ist highest value
+#         y_vals_all = []
+#         max_y_vals = []
         
-        if n == 0: 
-            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
-                print('\t- '+svar+': ', value)
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
                 
-        if n in index_no_plot:
-            if n == n_cols:
-                ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-0.5, 1), frameon = False)
-            else: 
-                ax.remove()
-        else: 
-            print(' > ',var,'\n')
-            m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                            dodge = dodge, width= 0.8, showfliers = True, palette = hue_color,
-                            boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
-                            flierprops = flierprops, medianprops = medianprops, 
-                            meanline = True, meanprops = meanprops, showmeans = True)
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-0.5, 1), frameon = False)
+#             else: 
+#                 ax.remove()
+#         else: 
+#             print(' > ',var,'\n')
+#             m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                             dodge = dodge, width= 0.8, showfliers = True, palette = hue_color,
+#                             boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                             flierprops = flierprops, medianprops = medianprops, 
+#                             meanline = True, meanprops = meanprops, showmeans = True)
 
-            m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              marker = 'o', palette = hue_color, dodge = dodge, size = marker_size, 
-                              linewidth=1, jitter = jitter)
+#             m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                               marker = 'o', palette = hue_color, dodge = dodge, size = marker_size, 
+#                               linewidth=1, jitter = jitter)
 
-            box = ax.get_position()
-            if yticks_lab == '1e6 - d.':
-                ylabel = ylabel +' x 10$^6$'
-            elif yticks_lab == '1e3 - d.':
-                ylabel = ylabel +' x 10$^3$'
+#             box = ax.get_position()
+#             if yticks_lab == '1e6 - d.':
+#                 ylabel = ylabel +' x 10$^6$'
+#             elif yticks_lab == '1e3 - d.':
+#                 ylabel = ylabel +' x 10$^3$'
                 
-            ax.set_xlabel(hue_legend, fontname = fontname)
-            ax.set_ylabel(ylabel, fontname = fontname)
-            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
-            ax.set_position([box.x0, box.y0, box.width*1, box.height])
-            ax.get_legend().remove()
-            sns.despine()
+#             ax.set_xlabel(hue_legend, fontname = fontname)
+#             ax.set_ylabel(ylabel, fontname = fontname)
+#             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             ax.get_legend().remove()
+#             sns.despine()
             
-            if ylim != '':
-                # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
-                ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+#             if ylim != '':
+#                 # print('ylim:', ylim[plot_no][0],'-', ylim[plot_no][1])
+#                 ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
             
-            if n == 0:
-                handles, labels = m.get_legend_handles_labels()
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
 
-            y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
-            max_y_vals.append(y_vals[-1])
-            if n_x > 1: 
-                vline_pos = list(range(1,n_x,1))
-                for pos in vline_pos:
-                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+#             y_vals = ax.get_yticks()
+#             y_vals_all.append(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             if n_x > 1: 
+#                 vline_pos = list(range(1,n_x,1))
+#                 for pos in vline_pos:
+#                     ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
             
-            # Define axes based on higherst bar
-            max_y_index = max_y_vals.index(max(max_y_vals))
-            ax.set_yticks(y_vals_all[max_y_index])
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
                 
-            for tick in ax.get_xticklabels():
-                tick.set_fontname(fontname)
-            for tick in ax.get_yticklabels():
-                tick.set_fontname(fontname)
-            try:
-                ax.yaxis.get_offset_text().set_fontname(fontname)
-            except:
-                print(r' -> Nop')
+#             for tick in ax.get_xticklabels():
+#                 tick.set_fontname(fontname)
+#             for tick in ax.get_yticklabels():
+#                 tick.set_fontname(fontname)
+#             try:
+#                 ax.yaxis.get_offset_text().set_fontname(fontname)
+#             except:
+#                 print(r' -> Nop')
                 
-        plot_no +=1
+#         plot_no +=1
 
-    fig.suptitle(title+'\n', y=1, fontname = fontname)
-    if save: 
-        for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
-            else: 
-                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#     fig.suptitle(title+'\n', y=1, fontname = fontname)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
 
-            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
 
 #%% ->With statistics        
 #%% func - plotIndivStatsperX
-def plotIndivStatsperX (# General Plot Settings
+# def plotIndivStatsperX (# General Plot Settings
+#                     df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                     # Size, title, labels and legends
+#                     title, labels2plot, dict_legends, ips, 
+#                     # Statistic Settings
+#                     stats_set, statsTxt = True, 
+#                     # Other plot settings
+#                     suptitle = True, right_legend = True,
+#                     yticks_lab = 'th,', ylim = '', yset = '', box_plot = True, show_fliers = False,
+#                     # Saving settings
+#                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+#     if stats_set[0]: 
+#         tests_res = []
+#         box_pairs_all = []
+#         statist = True
+#         dicts_stats = stats_set[1]
+#         alpha = stats_set[2]
+#         txt_multcomp_all = []
+        
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
+#     # print(x_values, hue_values, shape_values)
+    
+#     # Set up the matplotlib figure 
+#     if statsTxt:
+#         n_rows = 2
+#         height_ratios = [1,1]
+#     else: 
+#         n_rows = 1
+#         height_ratios = [1]
+#     n_cols = len(hue_values)
+
+#     addVars = False
+#     for index in range(n_cols):
+#         if index == 0 and len(vars2plot) == 1:
+#             addVars = True
+#             var2copy = vars2plot[0]
+#             label2copy = labels2plot[0]
+        
+#         if addVars and index != 0:
+#             vars2plot.insert(index, var2copy)
+#             labels2plot.insert(index, label2copy)
+    
+#     # As a right legend wants to be added, we need to add '' to all labels 
+#     index_no_plot = []
+#     if right_legend: 
+#         index_no_plot = [n_cols]
+#         for index in index_no_plot:
+#             vars2plot.insert(index, '')
+#             labels2plot.insert(index, '')
+#         width_ratios = [1]*n_cols+[0.2]
+#         n_cols = n_cols+1
+#     else: 
+#         width_ratios = [1]*n_cols
+    
+#     # print('index_no_plot:', index_no_plot)
+#     index_no_plot2 = []
+#     if statsTxt:
+#         index_no_plot2 = [n_cols+aaa for aaa in range(n_cols)]
+#         for index in index_no_plot2:
+#             vars2plot.insert(index, '')
+#             labels2plot.insert(index, '')
+    
+#     # print(vars2plot, labels2plot)
+#     # print('index_no_plot2:', index_no_plot2)
+    
+#     index_plot = list(range(n_cols*n_rows))
+#     index_plot = list(set(index_plot) - set(index_no_plot) - set(index_no_plot2))
+#     # print('index_plot:', index_plot)
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     h_add = 1; w_add = 1
+
+#     if len(x_values) > 3:
+#         h_add = 0
+#         wspace = 0.05
+#         box_width = 0.6
+#         bbox_lf = -0.5
+#     else:
+#         h_plot = 2#0.8
+#         wspace = 0.15
+#         box_width = 0.6
+#         bbox_lf = -1.8
+    
+#     size_col = (n_cols)*(h_plot*len(x_values))+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+#         v_legend.append(legend)
+#         v_color.append(color)
+#     x_legend, hue_legend = v_legend
+#     x_color, _ = v_color
+        
+#     if right_legend:
+#         # Define legends for x
+#         legend_elem = []
+#         for aa, xval, xcol in zip(count(), x_legend, x_color):
+#             legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
+#                                     markerfacecolor=xcol, markersize=12))
+#         handle_new = legend_elem
+        
+#     for index in index_no_plot+index_no_plot2:
+#         hue_legend.insert(index, '')
+#         hue_values.insert(index, '')
+#         dicts_stats.insert(index,'')
+            
+#     marker_size = 8; dodge = True; jitter = 0.3
+    
+#     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#         print('\t- '+svar+': ', value)
+        
+#     ##  CREATE FIGURE 
+#     gridkw = dict(width_ratios=width_ratios, height_ratios=height_ratios)
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.25, wspace=wspace)
+    
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+#     # print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
+#     if n_cols == 1 and n_rows == 1 and not right_legend and not statsTxt:
+#         axes_fl = [axes]
+#     else: 
+#         axes_fl = axes.flatten()
+    
+#     if statsTxt:
+#         index_no_plot_all = index_no_plot+[index_no_plot2[-1]]
+#     else:
+#         index_no_plot_all = index_no_plot
+#     # Create list to contain info of yticks and its highest value
+#     # y_vals_all = []; 
+#     max_y_vals = []; min_y_vals = []
+#     for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes_fl, vars2plot, labels2plot, hue_values, dicts_stats):
+#         # print(n, len(axes_fl))
+#         if n in index_no_plot_all:
+#                 if n == n_cols-1 and right_legend:
+#                     ax.set_axis_off()
+#                     ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+#                 else: 
+#                     ax.remove()
+#         elif n in index_no_plot2 and statsTxt:
+#             # print(n, 'aja')# elif n == 1 and statsTxt and not right_legend: 
+#             ax.text(0.5,10,txt_multcomp_all[n-n_cols], size=11, ha='center', va='baseline', fontname = fontname)
+#             ax.set_axis_off()
+            
+#         else: 
+#             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+#             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                               marker = 'o', palette = x_color, size = marker_size, 
+#                               linewidth=0.5, jitter = jitter)
+#             if box_plot: 
+#                 m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                                    dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+#                                    boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                                    flierprops = flierprops, medianprops = medianprops, 
+#                                    meanline = True, meanprops = meanprops, showmeans = True)
+    
+#             box = ax.get_position()
+            
+#             if statist: 
+#                 box_pairs = dict_stats[var]['box_pairs']
+#                 stat_test = False
+#                 test = None
+#                 p_val = dict_stats[var]['pval_multComp_all']
+#                 txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+#                 txt_normtest_all = dict_stats[var]['txt_normtest_all']
+                
+#                 # print(box_pairs, '\n ',p_val, '\n ',txt_testSelected_all, '\n ',txt_normtest_all)
+#                 # Added fontname as an imput to add_stat_annotation function in statannot
+#                 # m1, test_results = add_stat_annotation(ax, data=df_xfilt, x=x_var, y=var, hue=hue_var, hue_order = hue_values,
+#                 #                                        order = x_values,
+#                 #                                        box_pairs = box_pairs, perform_stat_test = stat_test, test = test,
+#                 #                                        pvalues = p_val, comparisons_correction=None, #'bonferroni',
+#                 #                                        line_offset_to_box=0.4, line_offset=0.2,
+#                 #                                        line_height=0.015, text_offset=5,
+#                 #                                        text_format='star', loc='inside', fontsize='x-small', verbose=0,
+#                 #                                        fontname = fontname)
+#                 tests_res.append(p_val)
+#                 box_pairs_all.append(box_pairs)
+#                 txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
+#                                             txt_normtest_all, alpha, indiv = True)
+#                 txt_multcomp_all.append(txt_multcomp)
+#                 # print(n, txt_multcomp)
+                
+#             if n == 0:
+#                 if yticks_lab == '1e6 - d.':
+#                     ylabel = ylabel +' x 10$^6$'
+#                 elif yticks_lab == '1e3 - d.':
+#                     ylabel = ylabel +' x 10$^3$'
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel(ylabel, fontname = fontname)
+#             else:
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel('', fontname = fontname)
+    
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             xticks = ax.get_xticks()
+#             ax.set_xticks(xticks)
+#             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+#             sns.despine()
+            
+#             if isinstance(ylim, tuple):
+#                 addY = (ylim[1] - ylim[0])/10 
+#                 print('ylim:', ylim[0],'-', ylim[1]+ addY)
+#                 ax.set_ylim(ylim[0], ylim[1]+addY)
+            
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
+#             else:
+#                 ax.spines['left'].set_linestyle('-.')
+#                 ax.spines['left'].set_color('#696969')
+#                 ax.spines['left'].set_linewidth(0.8)
+#                 ax.tick_params(left = False)
+    
+#             y_vals = ax.get_yticks()
+#             # print(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             min_y_vals.append(y_vals[0])
+    
+#     # # Find min and maximum value for each axis 
+#     # print(min_y_vals, max_y_vals)
+#     min_y = min(min_y_vals); max_y = max(max_y_vals)
+
+#     if yset == 'round':
+#         rounding_set = -1
+#         y_step = round((max_y - min_y)/8,rounding_set)
+#         if y_step == 0:
+#             y_step = round((max_y - min_y)/8,0)
+#         # print(y_step)
+#         y_vals_set = list(range(int(min_y), int(max_y), int(y_step)))
+#         y_vals_set.append(y_vals_set[-1]+int(y_step))
+        
+#     elif yset == 'dec':
+#         rounding_set = 2
+#         y_step = round((max_y - min_y)/8,rounding_set)
+#         if y_step == 0:
+#             y_step = round((max_y - min_y)/8,3)
+#         # print(y_step)
+#         num_y = (max_y - min_y)//y_step
+#         # print(num_y)
+#         y_vals_set = np.linspace(min_y, max_y,int(num_y), endpoint = True)
+#     # print(y_vals_set)
+    
+#     y_valsF = y_vals_set#y_vals_all[max_y_index]
+    
+#     for n, ax in zip(count(), axes_fl[index_plot]):
+#         ax.set_yticks(y_valsF)
+#         # Define axes based on higherst bar
+#         if yticks_lab == '1e6 - d.':
+#             ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_valsF])
+#         elif yticks_lab == '1e3 - d.':
+#             ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_valsF])
+#         elif yticks_lab == 'th,':
+#             ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_valsF])
+#         elif yticks_lab == 'd. - 0':
+#             ax.set_yticklabels(['{:.0f}'.format(w) for w in y_valsF])
+#         elif yticks_lab == 'd. - 1':
+#             ax.set_yticklabels(['{:.1f}'.format(w) for w in y_valsF])
+#         elif yticks_lab == 'd.':
+#             ax.set_yticklabels(['{:.2f}'.format(w) for w in y_valsF])
+        
+#         for tick in ax.get_xticklabels():
+#             tick.set_fontname(fontname)
+#         for tick in ax.get_yticklabels():
+#             tick.set_fontname(fontname)
+#         try:
+#             ax.yaxis.get_offset_text().set_fontname(fontname)
+#             # print(r' -> YAY')
+#         except:
+#             print(r' -> Nop')
+    
+#     # if statsTxt and n_cols > 1:
+#     #     gs = axes[1,0].get_gridspec()
+#     #     for axis in axes[1,:]:
+#     #         axis.remove()
+#     #     axbig = fig.add_subplot(gs[1,:])
+    
+#     #     axbig.annotate(txt_multcomp, (0.5, 0.225),
+#     #                xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
+#     #                horizontalalignment = 'center')
+#     #     axbig.axis('off')
+    
+#     if suptitle:
+#         fig.suptitle(title+'\n', y=1, fontname = fontname)
+#     # fig.tight_layout()
+    
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+#     if statist: 
+#         return tests_res, box_pairs_all
+
+#%% func - plotIndivStatTxtsperX
+# def plotIndivStatsTxtperX (# General Plot Settings
+#                     df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                     # Size, title, labels and legends
+#                     title, labels2plot, dict_legends, ips, 
+#                     # Statistic Settings
+#                     stats_set, statsTxt = True, 
+#                     # Other plot settings
+#                     suptitle = True, right_legend = True,
+#                     yticks_lab = 'th,', ylim = '', yset = '', box_plot = True, show_fliers = False,
+#                     # Saving settings
+#                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+#     if stats_set[0]: 
+#         tests_res = []
+#         box_pairs_all = []
+#         statist = True
+#         dicts_stats = stats_set[1]
+#         alpha = stats_set[2]
+#         txt_multcomp_all = []
+        
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+    
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
+#     # print(x_values, hue_values, shape_values)
+    
+#     # Set up the matplotlib figure 
+#     if statsTxt:
+#         n_rows = 2
+#         height_ratios = [1,1]
+#     else: 
+#         n_rows = 1
+#         height_ratios = [1]
+#     n_cols = len(hue_values)
+
+#     addVars = False
+#     for index in range(n_cols):
+#         if index == 0 and len(vars2plot) == 1:
+#             addVars = True
+#             var2copy = vars2plot[0]
+#             label2copy = labels2plot[0]
+        
+#         if addVars and index != 0:
+#             vars2plot.insert(index, var2copy)
+#             labels2plot.insert(index, label2copy)
+    
+#     # As a right legend wants to be added, we need to add '' to all labels 
+#     index_no_plot = []
+#     if right_legend: 
+#         index_no_plot = [n_cols]
+#         for index in index_no_plot:
+#             vars2plot.insert(index, '')
+#             labels2plot.insert(index, '')
+#         width_ratios = [1]*n_cols+[0.2]
+#         n_cols = n_cols+1
+#     else: 
+#         width_ratios = [1]*n_cols
+    
+#     # print('index_no_plot:', index_no_plot)
+#     index_no_plot2 = []
+#     if statsTxt:
+#         index_no_plot2 = [n_cols+aaa for aaa in range(n_cols)]
+#         for index in index_no_plot2:
+#             vars2plot.insert(index, '')
+#             labels2plot.insert(index, '')
+    
+#     # print(vars2plot, labels2plot)
+#     # print('index_no_plot2:', index_no_plot2)
+    
+#     index_plot = list(range(n_cols*n_rows))
+#     index_plot = list(set(index_plot) - set(index_no_plot) - set(index_no_plot2))
+#     # print('index_plot:', index_plot)
+    
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
+#     h_add = 1; w_add = 1
+
+#     if len(x_values) > 3:
+#         h_add = 0
+#         wspace = 0.05
+#         box_width = 0.6
+#         bbox_lf = -0.5
+#     else:
+#         h_plot = 2#0.8
+#         wspace = 0.15
+#         box_width = 0.6
+#         bbox_lf = -1.8
+    
+#     size_col = (n_cols)*(h_plot*len(x_values))+h_add
+#     size_row = n_rows*w_plot+w_add
+    
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+#         v_legend.append(legend)
+#         v_color.append(color)
+#     x_legend, hue_legend = v_legend
+#     x_color, _ = v_color
+        
+#     if right_legend:
+#         # Define legends for x
+#         legend_elem = []
+#         for aa, xval, xcol in zip(count(), x_legend, x_color):
+#             legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
+#                                     markerfacecolor=xcol, markersize=12))
+#         handle_new = legend_elem
+        
+#     for index in index_no_plot+index_no_plot2:
+#         hue_legend.insert(index, '')
+#         hue_values.insert(index, '')
+#         dicts_stats.insert(index,'')
+            
+#     marker_size = 8; dodge = True; jitter = 0.3
+    
+#     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#         print('\t- '+svar+': ', value)
+        
+#     ##  CREATE FIGURE 
+#     gridkw = dict(width_ratios=width_ratios, height_ratios=height_ratios)
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=False, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=0.25, wspace=wspace)
+    
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+#     # print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
+#     if n_cols == 1 and n_rows == 1 and not right_legend and not statsTxt:
+#         axes_fl = [axes]
+#     else: 
+#         axes_fl = axes.flatten()
+    
+#     if statsTxt:
+#         index_no_plot_all = index_no_plot+[index_no_plot2[-1]]
+#     else:
+#         index_no_plot_all = index_no_plot
+#     # Create list to contain info of yticks and its highest value
+#     # y_vals_all = []; 
+#     max_y_vals = []; min_y_vals = []
+#     for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes_fl, vars2plot, labels2plot, hue_values, dicts_stats):
+#         # print(n, len(axes_fl))
+#         if n in index_no_plot_all:
+#                 if n == n_cols-1 and right_legend:
+#                     ax.set_axis_off()
+#                     ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
+#                 else: 
+#                     ax.remove()
+#         elif n in index_no_plot2 and statsTxt:
+#             # print(n, 'aja')# elif n == 1 and statsTxt and not right_legend: 
+#             ax.set_ylim(0,1)
+#             ax.set_xlim(0,1)
+#             ax.text(0.5,0.5,txt_multcomp_all[n-n_cols], size=11, ha='center', va='baseline', fontname = fontname)
+#             ax.set_axis_off()
+            
+#         else: 
+#             df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+#             m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                               marker = 'o', palette = x_color, size = marker_size, 
+#                               linewidth=0.5, jitter = jitter)
+#             if box_plot: 
+#                 m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
+#                                    dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
+#                                    boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                                    flierprops = flierprops, medianprops = medianprops, 
+#                                    meanline = True, meanprops = meanprops, showmeans = True)
+    
+#             box = ax.get_position()
+            
+#             if statist: 
+#                 box_pairs = dict_stats[var]['box_pairs']
+#                 stat_test = False
+#                 test = None
+#                 p_val = dict_stats[var]['pval_multComp_all']
+#                 txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+#                 txt_normtest_all = dict_stats[var]['txt_normtest_all']
+                
+#                 # print(box_pairs, '\n ',p_val, '\n ',txt_testSelected_all, '\n ',txt_normtest_all)
+#                 # Added fontname as an imput to add_stat_annotation function in statannot
+#                 # m1, test_results = add_stat_annotation(ax, data=df_xfilt, x=x_var, y=var, hue=hue_var, hue_order = hue_values,
+#                 #                                        order = x_values,
+#                 #                                        box_pairs = box_pairs, perform_stat_test = stat_test, test = test,
+#                 #                                        pvalues = p_val, comparisons_correction=None, #'bonferroni',
+#                 #                                        line_offset_to_box=0.4, line_offset=0.2,
+#                 #                                        line_height=0.015, text_offset=5,
+#                 #                                        text_format='star', loc='inside', fontsize='x-small', verbose=0,
+#                 #                                        fontname = fontname)
+#                 tests_res.append(p_val)
+#                 box_pairs_all.append(box_pairs)
+#                 txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
+#                                             txt_normtest_all, alpha, indiv = True)
+#                 txt_multcomp_all.append(txt_multcomp)
+#                 # print(n, txt_multcomp)
+                
+#             if n == 0:
+#                 if yticks_lab == '1e6 - d.':
+#                     ylabel = ylabel +' x 10$^6$'
+#                 elif yticks_lab == '1e3 - d.':
+#                     ylabel = ylabel +' x 10$^3$'
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel(ylabel, fontname = fontname)
+#             else:
+#                 ax.set_xlabel(hue_legend[n], fontname = fontname)
+#                 ax.set_ylabel('', fontname = fontname)
+    
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             xticks = ax.get_xticks()
+#             ax.set_xticks(xticks)
+#             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
+#             sns.despine()
+            
+#             if isinstance(ylim, tuple):
+#                 addY = (ylim[1] - ylim[0])/10 
+#                 print('ylim:', ylim[0],'-', ylim[1]+ addY)
+#                 ax.set_ylim(ylim[0], ylim[1]+addY)
+            
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
+#             else:
+#                 ax.spines['left'].set_linestyle('-.')
+#                 ax.spines['left'].set_color('#696969')
+#                 ax.spines['left'].set_linewidth(0.8)
+#                 ax.tick_params(left = False)
+    
+#             y_vals = ax.get_yticks()
+#             # print(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             min_y_vals.append(y_vals[0])
+    
+#     # # Find min and maximum value for each axis 
+#     # print(min_y_vals, max_y_vals)
+#     min_y = min(min_y_vals); max_y = max(max_y_vals)
+
+#     if yset == 'round':
+#         rounding_set = -1
+#         y_step = round((max_y - min_y)/8,rounding_set)
+#         if y_step == 0:
+#             y_step = round((max_y - min_y)/8,0)
+#         # print(y_step)
+#         y_vals_set = list(range(int(min_y), int(max_y), int(y_step)))
+#         y_vals_set.append(y_vals_set[-1]+int(y_step))
+        
+#     elif yset == 'dec':
+#         rounding_set = 2
+#         y_step = round((max_y - min_y)/8,rounding_set)
+#         if y_step == 0:
+#             y_step = round((max_y - min_y)/8,3)
+#         # print(y_step)
+#         num_y = (max_y - min_y)//y_step
+#         # print(num_y)
+#         y_vals_set = np.linspace(min_y, max_y,int(num_y), endpoint = True)
+#     # print(y_vals_set)
+    
+#     y_valsF = y_vals_set#y_vals_all[max_y_index]
+    
+#     for n, ax in zip(count(), axes_fl[index_plot]):
+#         ax.set_yticks(y_valsF)
+#         # Define axes based on higherst bar
+#         if yticks_lab == '1e6 - d.':
+#             ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_valsF])
+#         elif yticks_lab == '1e3 - d.':
+#             ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_valsF])
+#         elif yticks_lab == 'th,':
+#             ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_valsF])
+#         elif yticks_lab == 'd. - 0':
+#             ax.set_yticklabels(['{:.0f}'.format(w) for w in y_valsF])
+#         elif yticks_lab == 'd. - 1':
+#             ax.set_yticklabels(['{:.1f}'.format(w) for w in y_valsF])
+#         elif yticks_lab == 'd.':
+#             ax.set_yticklabels(['{:.2f}'.format(w) for w in y_valsF])
+        
+#         for tick in ax.get_xticklabels():
+#             tick.set_fontname(fontname)
+#         for tick in ax.get_yticklabels():
+#             tick.set_fontname(fontname)
+#         try:
+#             ax.yaxis.get_offset_text().set_fontname(fontname)
+#             # print(r' -> YAY')
+#         except:
+#             print(r' -> Nop')
+    
+#     # if statsTxt and n_cols > 1:
+#     #     gs = axes[1,0].get_gridspec()
+#     #     for axis in axes[1,:]:
+#     #         axis.remove()
+#     #     axbig = fig.add_subplot(gs[1,:])
+    
+#     #     axbig.annotate(txt_multcomp, (0.5, 0.225),
+#     #                xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
+#     #                horizontalalignment = 'center')
+#     #     axbig.axis('off')
+    
+#     if suptitle:
+#         fig.suptitle(title+'\n', y=1, fontname = fontname)
+#     # fig.tight_layout()
+    
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            
+#     if statist: 
+#         return tests_res, box_pairs_all
+
+#%% func - plotIndivStatTxtAllX
+def plotIndivStatsTxtAllX (# General Plot Settings
                     df2plot, vars2plot, x_var, hue_var, shape_var, 
                     # Size, title, labels and legends
-                    title, labels2plot, dict_legends, ips, 
+                    title, dict_legends, 
                     # Statistic Settings
-                    stats_set, statsTxt = True, 
+                    stats_set, 
                     # Other plot settings
-                    suptitle = True, right_legend = True,
-                    yticks_lab = 'th,', ylim = '', yset = '', box_plot = True, show_fliers = False,
+                    suptitle = True, ctx_style = 0,
                     # Saving settings
                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
 
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
+    
     if stats_set[0]: 
         tests_res = []
         box_pairs_all = []
@@ -2183,15 +2965,7 @@ def plotIndivStatsperX (# General Plot Settings
     # Genotypes and Strains being plotted 
     values = props_ordered(df2plot, x_var, hue_var, shape_var)
     x_values, hue_values, shape_values = values
-    # print(x_values, hue_values, shape_values)
     
-    # Set up the matplotlib figure 
-    if statsTxt:
-        n_rows = 2
-        height_ratios = [1,1]
-    else: 
-        n_rows = 1
-        height_ratios = [1]
     n_cols = len(hue_values)
 
     addVars = False
@@ -2199,490 +2973,276 @@ def plotIndivStatsperX (# General Plot Settings
         if index == 0 and len(vars2plot) == 1:
             addVars = True
             var2copy = vars2plot[0]
-            label2copy = labels2plot[0]
         
         if addVars and index != 0:
             vars2plot.insert(index, var2copy)
-            labels2plot.insert(index, label2copy)
-    
-    # As a right legend wants to be added, we need to add '' to all labels 
-    index_no_plot = []
-    if right_legend: 
-        index_no_plot = [n_cols]
-        for index in index_no_plot:
-            vars2plot.insert(index, '')
-            labels2plot.insert(index, '')
-        width_ratios = [1]*n_cols+[0.2]
-        n_cols = n_cols+1
-    else: 
-        width_ratios = [1]*n_cols
-    
-    # print('index_no_plot:', index_no_plot)
-    index_no_plot2 = []
-    if statsTxt:
-        index_no_plot2 = [n_cols+aaa for aaa in range(n_cols)]
-        for index in index_no_plot2:
-            vars2plot.insert(index, '')
-            labels2plot.insert(index, '')
-    
-    # print(vars2plot, labels2plot)
-    # print('index_no_plot2:', index_no_plot2)
-    
-    index_plot = list(range(n_cols*n_rows))
-    index_plot = list(set(index_plot) - set(index_no_plot) - set(index_no_plot2))
-    # print('index_plot:', index_plot)
-    
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
-    h_add = 1; w_add = 1
-
-    if len(x_values) > 3:
-        h_add = 0
-        wspace = 0.05
-        box_width = 0.6
-        bbox_lf = -0.5
-    else:
-        h_plot = 2#0.8
-        wspace = 0.15
-        box_width = 0.6
-        bbox_lf = -1.8
-    
-    size_col = (n_cols)*(h_plot*len(x_values))+h_add
-    size_row = n_rows*w_plot+w_add
     
     # Define legends for x and hue
-    v_legend = []; v_color = []
+    v_legend = []
     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
         if isinstance(dict_legends[v_var], dict):
             legend = []
-            color = []
             for v_dict in v_values: 
                 legend.append(dict_legends[v_var][v_dict]['legend'])
-                color.append(dict_legends[v_var][v_dict]['color'])
         else: 
             legend = dict_legends[v_var]
-            color = ''
         v_legend.append(legend)
-        v_color.append(color)
     x_legend, hue_legend = v_legend
-    x_color, _ = v_color
-        
-    if right_legend:
-        # Define legends for x
-        legend_elem = []
-        for aa, xval, xcol in zip(count(), x_legend, x_color):
-            legend_elem.append(Line2D([0], [0], marker='o', color='w', label=xval,
-                                    markerfacecolor=xcol, markersize=12))
-        handle_new = legend_elem
-        
-    for index in index_no_plot+index_no_plot2:
-        hue_legend.insert(index, '')
-        hue_values.insert(index, '')
-        dicts_stats.insert(index,'')
-            
-    marker_size = 8; dodge = True; jitter = 0.3
     
     for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
         print('\t- '+svar+': ', value)
-        
-    ##  CREATE FIGURE 
-    gridkw = dict(width_ratios=width_ratios, height_ratios=height_ratios)
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=0.25, wspace=wspace)
     
     sns.set_style("ticks")
     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    # print(n_cols, n_rows, axes, right_legend, vars2plot, labels2plot, hue_values)
-    if n_cols == 1 and n_rows == 1 and not right_legend and not statsTxt:
-        axes_fl = [axes]
-    else: 
-        axes_fl = axes.flatten()
-    
-    if statsTxt:
-        index_no_plot_all = index_no_plot+[index_no_plot2[-1]]
-    else:
-        index_no_plot_all = index_no_plot
-    # Create list to contain info of yticks and its highest value
-    # y_vals_all = []; 
-    max_y_vals = []; min_y_vals = []
-    for n, ax, var, ylabel, hue_value, dict_stats in zip(count(), axes_fl, vars2plot, labels2plot, hue_values, dicts_stats):
-        # print(n, len(axes_fl))
-        if n in index_no_plot_all:
-                if n == n_cols-1 and right_legend:
-                    ax.set_axis_off()
-                    ax.legend(handle_new, x_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False)
-                else: 
-                    ax.remove()
-        elif n in index_no_plot2 and statsTxt:
-            # print(n, 'aja')# elif n == 1 and statsTxt and not right_legend: 
-            ax.text(0.5,10,txt_multcomp_all[n-n_cols], size=11, ha='center', va='baseline', fontname = fontname)
-            ax.set_axis_off()
-            
-        else: 
-            df_xfilt = df2plot[df2plot[hue_var] == hue_value]
-            m = sns.stripplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
-                              marker = 'o', palette = x_color, size = marker_size, 
-                              linewidth=0.5, jitter = jitter)
-            if box_plot: 
-                m = sns.boxplot(data=df_xfilt, x=x_var, y=var, ax = ax, order=x_values,
-                                   dodge = dodge, width= box_width, showfliers = show_fliers, palette = x_color,
-                                   boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
-                                   flierprops = flierprops, medianprops = medianprops, 
-                                   meanline = True, meanprops = meanprops, showmeans = True)
-    
-            box = ax.get_position()
-            
-            if statist: 
-                box_pairs = dict_stats[var]['box_pairs']
-                stat_test = False
-                test = None
-                p_val = dict_stats[var]['pval_multComp_all']
-                txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
-                txt_normtest_all = dict_stats[var]['txt_normtest_all']
-                
-                # print(box_pairs, '\n ',p_val, '\n ',txt_testSelected_all, '\n ',txt_normtest_all)
-                # Added fontname as an imput to add_stat_annotation function in statannot
-                # m1, test_results = add_stat_annotation(ax, data=df_xfilt, x=x_var, y=var, hue=hue_var, hue_order = hue_values,
-                #                                        order = x_values,
-                #                                        box_pairs = box_pairs, perform_stat_test = stat_test, test = test,
-                #                                        pvalues = p_val, comparisons_correction=None, #'bonferroni',
-                #                                        line_offset_to_box=0.4, line_offset=0.2,
-                #                                        line_height=0.015, text_offset=5,
-                #                                        text_format='star', loc='inside', fontsize='x-small', verbose=0,
-                #                                        fontname = fontname)
-                tests_res.append(p_val)
-                box_pairs_all.append(box_pairs)
-                txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
-                                            txt_normtest_all, alpha, indiv = True)
-                txt_multcomp_all.append(txt_multcomp)
-                # print(n, txt_multcomp)
-                
-            if n == 0:
-                if yticks_lab == '1e6 - d.':
-                    ylabel = ylabel +' x 10$^6$'
-                elif yticks_lab == '1e3 - d.':
-                    ylabel = ylabel +' x 10$^3$'
-                ax.set_xlabel(hue_legend[n], fontname = fontname)
-                ax.set_ylabel(ylabel, fontname = fontname)
-            else:
-                ax.set_xlabel(hue_legend[n], fontname = fontname)
-                ax.set_ylabel('', fontname = fontname)
-    
-            ax.set_position([box.x0, box.y0, box.width*1, box.height])
-            xticks = ax.get_xticks()
-            ax.set_xticks(xticks)
-            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
-            sns.despine()
-            
-            if isinstance(ylim, tuple):
-                addY = (ylim[1] - ylim[0])/10 
-                print('ylim:', ylim[0],'-', ylim[1]+ addY)
-                ax.set_ylim(ylim[0], ylim[1]+addY)
-            
-            if n == 0:
-                handles, labels = m.get_legend_handles_labels()
-            else:
-                ax.spines['left'].set_linestyle('-.')
-                ax.spines['left'].set_color('#696969')
-                ax.spines['left'].set_linewidth(0.8)
-                ax.tick_params(left = False)
-    
-            y_vals = ax.get_yticks()
-            # print(y_vals)
-            max_y_vals.append(y_vals[-1])
-            min_y_vals.append(y_vals[0])
-    
-    # # Find min and maximum value for each axis 
-    # print(min_y_vals, max_y_vals)
-    min_y = min(min_y_vals); max_y = max(max_y_vals)
+    for n, var, dict_stats in zip(count(), vars2plot, dicts_stats):
+        box_pairs = dict_stats[var]['box_pairs']
+        # stat_test = False
+        # test = None
+        p_val = dict_stats[var]['pval_multComp_all']
+        txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+        txt_normtest_all = dict_stats[var]['txt_normtest_all']
 
-    if yset == 'round':
-        rounding_set = -1
-        y_step = round((max_y - min_y)/8,rounding_set)
-        if y_step == 0:
-            y_step = round((max_y - min_y)/8,0)
-        # print(y_step)
-        y_vals_set = list(range(int(min_y), int(max_y), int(y_step)))
-        y_vals_set.append(y_vals_set[-1]+int(y_step))
-        
-    elif yset == 'dec':
-        rounding_set = 2
-        y_step = round((max_y - min_y)/8,rounding_set)
-        if y_step == 0:
-            y_step = round((max_y - min_y)/8,3)
-        # print(y_step)
-        num_y = (max_y - min_y)//y_step
-        # print(num_y)
-        y_vals_set = np.linspace(min_y, max_y,int(num_y), endpoint = True)
-    # print(y_vals_set)
+        tests_res.append(p_val)
+        box_pairs_all.append(box_pairs)
+        txt_multcomp = txtMultComp(box_pairs, p_val, hue_values[n], hue_legend[n], txt_testSelected_all, 
+                                    txt_normtest_all, alpha, indiv = True)
+        txt_multcomp_all.append(txt_multcomp)
     
-    y_valsF = y_vals_set#y_vals_all[max_y_index]
+    txt_multcomp_f = '\n'.join(txt_multcomp_all)
+    print(txt_multcomp_f)
     
-    for n, ax in zip(count(), axes_fl[index_plot]):
-        ax.set_yticks(y_valsF)
-        # Define axes based on higherst bar
-        if yticks_lab == '1e6 - d.':
-            ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_valsF])
-        elif yticks_lab == '1e3 - d.':
-            ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_valsF])
-        elif yticks_lab == 'th,':
-            ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_valsF])
-        elif yticks_lab == 'd. - 0':
-            ax.set_yticklabels(['{:.0f}'.format(w) for w in y_valsF])
-        elif yticks_lab == 'd. - 1':
-            ax.set_yticklabels(['{:.1f}'.format(w) for w in y_valsF])
-        elif yticks_lab == 'd.':
-            ax.set_yticklabels(['{:.2f}'.format(w) for w in y_valsF])
-        
-        for tick in ax.get_xticklabels():
-            tick.set_fontname(fontname)
-        for tick in ax.get_yticklabels():
-            tick.set_fontname(fontname)
-        try:
-            ax.yaxis.get_offset_text().set_fontname(fontname)
-            # print(r' -> YAY')
-        except:
-            print(r' -> Nop')
-    
-    # if statsTxt and n_cols > 1:
-    #     gs = axes[1,0].get_gridspec()
-    #     for axis in axes[1,:]:
-    #         axis.remove()
-    #     axbig = fig.add_subplot(gs[1,:])
-    
-    #     axbig.annotate(txt_multcomp, (0.5, 0.225),
-    #                xycoords='figure fraction', va='center', fontname = fontname, fontsize = 14, 
-    #                horizontalalignment = 'center')
-    #     axbig.axis('off')
-    
-    if suptitle:
-        fig.suptitle(title+'\n', y=1, fontname = fontname)
-    # fig.tight_layout()
-    
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    fig.subplots_adjust(top=0.85)
+    fig.suptitle(title+'\n', y=1.2, fontname = fontname, fontsize=14)
+    ax.text(0.5,0.5,txt_multcomp_f, size=11, ha='center', va='center', fontname = fontname)
+    ax.set_axis_off()
+    # plt.text(0.5, 0.5, txt_multcomp, fontname = fontname, fontsize = 14, color='green')
+    # plt.show()
+
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
-            else: 
-                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
-
-            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+            # fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")_stats."+extf
+            fig_title = dir2savef+info+"_"+title+"_stats."+extf
+            plt.savefig(fig_title, dpi=100, bbox_inches='tight', transparent=True)
+            
+    plt.show()
             
     if statist: 
         return tests_res, box_pairs_all
 
 #%% func - plotInGroupsStats
-def plotInGroupsStats(# General Plot Settings
-                      df2plot, vars2plot, x_var, hue_var, shape_var, 
-                      # Size, title, labels and legends
-                      title, labels2plot, dict_legends, ips, 
-                      # Statistic Settings
-                      stats_set,
-                      # Other plot settings
-                      n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
-                      # Saving settings
-                      save = True, dpi = 300, ext = 'png', info ='', dir2save=''):
+# def plotInGroupsStats(# General Plot Settings
+#                       df2plot, vars2plot, x_var, hue_var, shape_var, 
+#                       # Size, title, labels and legends
+#                       title, labels2plot, dict_legends, ips, 
+#                       # Statistic Settings
+#                       stats_set,
+#                       # Other plot settings
+#                       n_cols = 3, h_add = 5, w_add = 1, sharey = False, yticks_lab = 'th,', ylim = '', 
+#                       # Saving settings
+#                       save = True, dpi = 300, ext = 'png', info ='', dir2save=''):
     
-    if stats_set[0]: 
-        tests_res = []
-        box_pairs_all = []
-        statist = True
-        dict_stats = stats_set[1]
-        alpha = stats_set[2]
-        txt_multcomp_all = []
+#     if stats_set[0]: 
+#         tests_res = []
+#         box_pairs_all = []
+#         statist = True
+#         dict_stats = stats_set[1]
+#         alpha = stats_set[2]
+#         txt_multcomp_all = []
         
-    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
+#     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var+ ' - shape_var: '+shape_var)
     
-    # Set up the matplotlib figure
-    num_vars = len(vars2plot)
-    n_rows = math.ceil(num_vars/n_cols)+1
+#     # Set up the matplotlib figure
+#     num_vars = len(vars2plot)
+#     n_rows = math.ceil(num_vars/n_cols)+1
     
-    index_right_col = list(range(n_cols,(n_cols+1)*n_rows,n_cols+1))
-    index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
-    index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
-    index_stats = sorted(list(set(index_no_graph).difference(set(index_right_col))))
+#     index_right_col = list(range(n_cols,(n_cols+1)*n_rows,n_cols+1))
+#     index_no_graph = list(range(num_vars, (n_cols+1)*n_rows))
+#     index_no_plot = sorted(list(set(index_right_col).union(set(index_no_graph))))
+#     index_stats = sorted(list(set(index_no_graph).difference(set(index_right_col))))
 
-    for index in index_no_plot:
-        vars2plot.insert(index, '')
-        labels2plot.insert(index, '')
+#     for index in index_no_plot:
+#         vars2plot.insert(index, '')
+#         labels2plot.insert(index, '')
     
-    # Set up the matplotlib figure
-    h_plot, w_plot = ips
+#     # Set up the matplotlib figure
+#     h_plot, w_plot = ips
     
-    # Genotypes and Strains being plotted 
-    values = props_ordered(df2plot, x_var, hue_var, shape_var)
-    x_values, hue_values, shape_values = values
+#     # Genotypes and Strains being plotted 
+#     values = props_ordered(df2plot, x_var, hue_var, shape_var)
+#     x_values, hue_values, shape_values = values
     
-    # - number of x_var
-    n_x = len(x_values)
-    if n_x == 1:
-        h_plot = 6
-        hspace = 0.2; wspace = 1
-    else: 
-        hspace = 0.5; wspace = 0.5
+#     # - number of x_var
+#     n_x = len(x_values)
+#     if n_x == 1:
+#         h_plot = 6
+#         hspace = 0.2; wspace = 1
+#     else: 
+#         hspace = 0.5; wspace = 0.5
         
-    if num_vars == 1:
-        h_add = 0; w_add = 0
-    size_col = (n_cols+1)*h_plot+h_add
-    size_row = n_rows*w_plot+w_add
+#     if num_vars == 1:
+#         h_add = 0; w_add = 0
+#     size_col = (n_cols+1)*h_plot+h_add
+#     size_row = n_rows*w_plot+w_add
     
-    # Define legends for x and hue
-    v_legend = []; v_color = []
-    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
-        if isinstance(dict_legends[v_var], dict):
-            legend = []
-            color = []
-            for v_dict in v_values: 
-                legend.append(dict_legends[v_var][v_dict]['legend'])
-                color.append(dict_legends[v_var][v_dict]['color'])
-        else: 
-            legend = dict_legends[v_var]
-            color = ''
-        v_legend.append(legend)
-        v_color.append(color)
-    x_legend, hue_legend = v_legend
-    x_color, hue_color = v_color
+#     # Define legends for x and hue
+#     v_legend = []; v_color = []
+#     for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+#         if isinstance(dict_legends[v_var], dict):
+#             legend = []
+#             color = []
+#             for v_dict in v_values: 
+#                 legend.append(dict_legends[v_var][v_dict]['legend'])
+#                 color.append(dict_legends[v_var][v_dict]['color'])
+#         else: 
+#             legend = dict_legends[v_var]
+#             color = ''
+#         v_legend.append(legend)
+#         v_color.append(color)
+#     x_legend, hue_legend = v_legend
+#     x_color, hue_color = v_color
 
-    legend_elem_hue = []
-    for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
-        legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
-                                markerfacecolor=hue_col, markersize=20))
+#     legend_elem_hue = []
+#     for aa, hue_val, hue_col in zip(count(), hue_legend, hue_color):
+#         legend_elem_hue.append(Line2D([0], [0], marker='o', color='w', label=hue_val,
+#                                 markerfacecolor=hue_col, markersize=20))
         
-    handle_new = legend_elem_hue
-    legend_new = hue_legend
+#     handle_new = legend_elem_hue
+#     legend_new = hue_legend
 
-    marker_size = 8; dodge = True; plot_no = 0
+#     marker_size = 8; dodge = True; plot_no = 0
     
-    #  CREATE FIGURE
-    gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1.2])
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
-    fig.subplots_adjust(hspace=hspace, wspace=wspace)
+#     #  CREATE FIGURE
+#     gridkw = dict(width_ratios=[1]*n_cols+[0.2], height_ratios = [1,1.2])
+#     fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols+1, figsize=(size_col, size_row), sharex=False, sharey=sharey, gridspec_kw=gridkw)
+#     fig.subplots_adjust(hspace=hspace, wspace=wspace)
     
-    sns.set_style("ticks")
-    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+#     sns.set_style("ticks")
+#     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
     
-    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
-        # Create list to contain info of yticks and ist highest value
-        y_vals_all = []
-        max_y_vals = []
+#     for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+#         # Create list to contain info of yticks and ist highest value
+#         y_vals_all = []
+#         max_y_vals = []
     
-        if n == 0: 
-            for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
-                print('\t- '+svar+': ', value)
+#         if n == 0: 
+#             for k, svar, value in zip(count(), [x_var, hue_var, shape_var], values):
+#                 print('\t- '+svar+': ', value)
         
-        if n in index_no_plot:
-            if n == n_cols:
-                ax.set_axis_off()
-                ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
-            else: 
-                if n in index_stats:
-                    text2add = '- - - - - - - - - - \n STATISTICS: \n'+txt_multcomp_all[n-n_cols-1]
-                    ax.text(0.5, 0.5, text2add, size=16, ha='center', va='center', fontname = fontname)
-                    ax.set_axis_off()
-                else: 
-                    ax.remove()
+#         if n in index_no_plot:
+#             if n == n_cols:
+#                 ax.set_axis_off()
+#                 ax.legend(handle_new, legend_new, loc='upper left', bbox_to_anchor=(-1.8, 1), frameon = False)
+#             else: 
+#                 if n in index_stats:
+#                     text2add = '- - - - - - - - - - \n STATISTICS: \n'+txt_multcomp_all[n-n_cols-1]
+#                     ax.text(0.5, 0.5, text2add, size=16, ha='center', va='center', fontname = fontname)
+#                     ax.set_axis_off()
+#                 else: 
+#                     ax.remove()
                 
-        else: 
-            print(' > ',var,'\n')
-            m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                            dodge = dodge, width =0.8, showfliers = True, palette = hue_color,
-                            boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
-                            flierprops = flierprops, medianprops = medianprops, 
-                            meanline = True, meanprops = meanprops, showmeans = True)
+#         else: 
+#             print(' > ',var,'\n')
+#             m = sns.boxplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                             dodge = dodge, width =0.8, showfliers = True, palette = hue_color,
+#                             boxprops = boxprops, whiskerprops = whiskerprops, capprops = capprops, 
+#                             flierprops = flierprops, medianprops = medianprops, 
+#                             meanline = True, meanprops = meanprops, showmeans = True)
                                   
-            m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
-                              palette = hue_color, dodge = dodge, size = marker_size, jitter = 0.3)
+#             m = sns.stripplot(data=df2plot, x=x_var, y=var, hue = hue_var, hue_order = hue_values, ax = ax, order=x_values,
+#                               palette = hue_color, dodge = dodge, size = marker_size, jitter = 0.3)
             
-            if statist: 
-                box_pairs = dict_stats[var]['box_pairs']
-                stat_test = False
-                test = None
-                p_val = dict_stats[var]['pval_multComp_all']
-                txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
-                txt_normtest_all = dict_stats[var]['txt_normtest_all']
+#             if statist: 
+#                 box_pairs = dict_stats[var]['box_pairs']
+#                 stat_test = False
+#                 test = None
+#                 p_val = dict_stats[var]['pval_multComp_all']
+#                 txt_testSelected_all = dict_stats[var]['txt_testSelected_all']
+#                 txt_normtest_all = dict_stats[var]['txt_normtest_all']
                 
-                m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
-                                                       hue_order = hue_values, order = x_values,
-                                                        box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
-                                                        pvalues=p_val, comparisons_correction=None, #'bonferroni',
-                                                        line_offset_to_box=0.4, line_offset=0.1,
-                                                        line_height=0.015, text_offset=5,
-                                                        text_format='star', loc='inside', fontsize='small', verbose=0,
-                                                        fontname = fontname);
-                tests_res.append(p_val)
-                box_pairs_all.append(box_pairs)
-                txt_multcomp = txtMultComp (box_pairs, p_val, x_values, x_legend, txt_testSelected_all, txt_normtest_all, alpha)
-                txt_multcomp_all.append(txt_multcomp)
-                print('txt_multcomp:', txt_multcomp)
+#                 m1, test_results = add_stat_annotation(ax, data=df2plot, x=x_var, y=var, hue=hue_var, 
+#                                                        hue_order = hue_values, order = x_values,
+#                                                         box_pairs=box_pairs, perform_stat_test = stat_test, test = test,
+#                                                         pvalues=p_val, comparisons_correction=None, #'bonferroni',
+#                                                         line_offset_to_box=0.4, line_offset=0.1,
+#                                                         line_height=0.015, text_offset=5,
+#                                                         text_format='star', loc='inside', fontsize='small', verbose=0,
+#                                                         fontname = fontname);
+#                 tests_res.append(p_val)
+#                 box_pairs_all.append(box_pairs)
+#                 txt_multcomp = txtMultComp (box_pairs, p_val, x_values, x_legend, txt_testSelected_all, txt_normtest_all, alpha)
+#                 txt_multcomp_all.append(txt_multcomp)
+#                 print('txt_multcomp:', txt_multcomp)
                 
-            box = ax.get_position()
-            if yticks_lab == '1e6 - d.':
-                ylabel = ylabel +' x 10$^6$'
-            elif yticks_lab == '1e3 - d.':
-                ylabel = ylabel +' x 10$^3$'
+#             box = ax.get_position()
+#             if yticks_lab == '1e6 - d.':
+#                 ylabel = ylabel +' x 10$^6$'
+#             elif yticks_lab == '1e3 - d.':
+#                 ylabel = ylabel +' x 10$^3$'
             
-            ax.set_xlabel(dict_legends['xlabels'][x_var], fontname = fontname)
-            ax.set_ylabel(ylabel, fontname = fontname)
-            ax.set_xticklabels(dict_legends[x_var], rotation=0, fontname = fontname)
-            ax.set_position([box.x0, box.y0, box.width*1, box.height])
-            ax.get_legend().remove()
-            sns.despine()
-            if ylim != '':
-                ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
+#             ax.set_xlabel(dict_legends['xlabels'][x_var], fontname = fontname)
+#             ax.set_ylabel(ylabel, fontname = fontname)
+#             ax.set_xticklabels(dict_legends[x_var], rotation=0, fontname = fontname)
+#             ax.set_position([box.x0, box.y0, box.width*1, box.height])
+#             ax.get_legend().remove()
+#             sns.despine()
+#             if ylim != '':
+#                 ax.set_ylim(ylim[plot_no][0], ylim[plot_no][1])
             
-            if n == 0:
-                handles, labels = m.get_legend_handles_labels()
+#             if n == 0:
+#                 handles, labels = m.get_legend_handles_labels()
 
-            y_vals = ax.get_yticks()
-            y_vals_all.append(y_vals)
-            max_y_vals.append(y_vals[-1])
-            if n_x > 1: 
-                vline_pos = list(range(1,n_x,1))
-                for pos in vline_pos:
-                    ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
+#             y_vals = ax.get_yticks()
+#             y_vals_all.append(y_vals)
+#             max_y_vals.append(y_vals[-1])
+#             if n_x > 1: 
+#                 vline_pos = list(range(1,n_x,1))
+#                 for pos in vline_pos:
+#                     ax.axvline(pos - 0.5, ymax = 0.95, color='dimgrey', ls='-.', linewidth=0.8)
             
-            # Define axes based on higherst bar
-            max_y_index = max_y_vals.index(max(max_y_vals))
-            ax.set_yticks(y_vals_all[max_y_index])
-            if yticks_lab == '1e6 - d.':
-                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == '1e3 - d.':
-                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'th,':
-                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 0':
-                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd. - 1':
-                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
-            elif yticks_lab == 'd.':
-                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
+#             # Define axes based on higherst bar
+#             max_y_index = max_y_vals.index(max(max_y_vals))
+#             ax.set_yticks(y_vals_all[max_y_index])
+#             if yticks_lab == '1e6 - d.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == '1e3 - d.':
+#                 ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'th,':
+#                 ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 0':
+#                 ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd. - 1':
+#                 ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals_all[max_y_index]])
+#             elif yticks_lab == 'd.':
+#                 ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals_all[max_y_index]])
             
-            for tick in ax.get_xticklabels():
-                tick.set_fontname(fontname)
-            for tick in ax.get_yticklabels():
-                tick.set_fontname(fontname)
-            try:
-                ax.yaxis.get_offset_text().set_fontname(fontname)
-            except:
-                print(r' -> Nop')
+#             for tick in ax.get_xticklabels():
+#                 tick.set_fontname(fontname)
+#             for tick in ax.get_yticklabels():
+#                 tick.set_fontname(fontname)
+#             try:
+#                 ax.yaxis.get_offset_text().set_fontname(fontname)
+#             except:
+#                 print(r' -> Nop')
                 
-            plot_no +=1
+#             plot_no +=1
 
-    fig.suptitle(title+'\n', fontsize = 30, y=0.95, fontname = fontname)
-    if save: 
-        for extf in ext: 
-            dir2savef = os.path.join(dir2save, 'pl_stats', 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
-            else: 
-                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#     fig.suptitle(title+'\n', fontsize = 30, y=0.95, fontname = fontname)
+#     if save: 
+#         for extf in ext: 
+#             dir2savef = os.path.join(dir2save, 'pl_stats', 'R_')
+#             if info != '':
+#                 fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+#             else: 
+#                 fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
 
-            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+#             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
     
-    if statist: 
-        return tests_res, box_pairs_all
+#     if statist: 
+#         return tests_res, box_pairs_all
 
 #%% -> Time course - no statistics
 #%% func - plotIndivTimeCourse
@@ -2813,8 +3373,8 @@ def plotIndivTimeCourse (# General Plot Settings
             sns.despine()
             
             if ylim != '':
-                print('ylim:', ylim[n][0],'-', ylim[n][1])
-                ax.set_ylim(ylim[n][0], ylim[n][1])
+                print('ylim:', ylim[0],'-', ylim[1])
+                ax.set_ylim(ylim[0], ylim[1])
             
             if n == 0:
                 handles, labels = m.get_legend_handles_labels()

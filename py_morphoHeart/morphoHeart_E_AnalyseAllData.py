@@ -50,20 +50,27 @@ if init:
     # fcBasics.saveDF('All', df_meas, 'df_meas', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     # fcBasics.saveDF('spaw-mts_hapln1a-wts', df2plot, 'df2plot', os.path.join(dir_data2Analyse,'R_All', 'df_all','df_meas','R_temp'))
     
+    #%% Set context 
+    thesis_contxt_input = fcAn.ask4input('Define context: \n\t- [0]: presentation or poster \n\t- [1]: document:', bool)
+    thesis_use = fcAn.Thesis_contxt(thesis_contxt_input)
+    ips = [(0.8,6), (0.2,1.5)]
+    
     #%% Plot Individual Plots for Group of Filtered Dataset
     newGroup = True
     while newGroup: 
         #% Filter dataset
         df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
         fcAn.printDFINfo(df2plot)
-        save, info, ext = fcAn.q_savePlot()
+        # save, info, ext = fcAn.q_savePlot()
+        save = True; ext = ['png']
+        info = input('> Figures title: ')
         
         # Settings for statistical analysis
         run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
         filters = ['Stage', 'GenotypeAll']; alpha = 0.05
         btw_x = False; btw_hue = True
         plotInGroups = False
-        
+
         # Individual Plots
         if not plotInGroups:  
             x_var = 'GenotypeAll'; 
@@ -71,8 +78,8 @@ if init:
             # Settings for plots
             pl_indiv = fcAn.plot_indiv()
             vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-            groups = list(pl_indiv.keys())[:]
-            # groups = ['Vol_Ext.Myoc','Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
+            groups = list(pl_indiv.keys())
+            # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
         
             for group in groups: 
                 print(group)
@@ -83,14 +90,14 @@ if init:
                                    df2plot, vars2plot = vars2plot, x_var = x_var, hue_var = hue_var, shape_var = shape_var, 
                                    # Size, title, labels and legends
                                    title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                                   dict_legends = dict_legends, ips = (0.8,6), 
+                                   dict_legends = dict_legends, ips = ips[thesis_contxt_input], 
                                    # Other plot settings
-                                   suptitle = False, right_legend = False,
+                                   suptitle = False, right_legend = False, ctx_style = thesis_use.get_context(),
                                    yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
                                    yset = pl_indiv[group]['yset'],
                                    box_plot = True, show_fliers = False,
                                    # Saving settings
-                                   save = save, dpi = 300, ext = ext, info = info, 
+                                   save = save, dpi = 300, ext = ['png', 'svg'], info = info+'-'+pl_indiv[group]['graph_no'], 
                                    dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
                 if run_stats: 
                     _, hue_values, _ = fcAn.props_ordered(df2plot, x_var, hue_var, shape_var)
@@ -103,37 +110,34 @@ if init:
                                                               vars_group = vars2plot, alpha = alpha))
                     stats = True; stats_set = [stats, dicts_stats, alpha]
                     # Plot using the defined statistics in the dictionary
-                    r_plStats = fcAn.plotIndivStatsperX(# General Plot Settings
+                    r_plStats = fcAn.plotIndivStatsTxtAllX(# General Plot Settings
                                         df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
                                         # Size, title, labels and legends
-                                        title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                                        dict_legends = dict_legends, ips = (1,6), 
+                                        title = pl_indiv[group]['title'], 
+                                        dict_legends = dict_legends,
                                         # Statistic Settings
-                                        stats_set = stats_set, statsTxt = True, 
+                                        stats_set = stats_set, 
                                         # Other plot settings
-                                        suptitle = False, 
-                                        yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
-                                        yset = pl_indiv[group]['yset'],
-                                        box_plot = True, show_fliers = False,
+                                        suptitle = True, ctx_style = thesis_use.get_context(),
                                         # Saving settings
-                                        save = save, dpi = 300, ext = ext, info = info, 
-                                        dir2save = os.path.join(dir_pl_meas,'pl_indiv_stats'))
+                                        save = save, dpi = 300, ext = ['png'], info = info+'-'+pl_indiv[group]['graph_no'], 
+                                        dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
                     
         newGroup = fcBasics.ask4input('Plot another filtered group? [0]: no, [1]: yes! >:', bool)
     
     
     #%%  Plot for filtered wild-types (all strains)
-    #% Filter dataset (Option 1)
-    # filters = ['GenotypeF']; groups = [('wt:wt')]
-    # df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
-    # df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
-    # info = 'all_wts_time'; save = True; ext = ['png']
-    
-    #% Filter dataset (Option 2)
-    filters = ['GenotypeAll']; groups = [('hapln1a241:wt')]
+    # % Filter dataset (Option 1) - all wild-types combined
+    filters = ['GenotypeF']; groups = [('wt:wt')]
     df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
     df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
-    info = 'all_h1a241wts_time'; save = True; ext = ['png']
+    info = 'all_wts_time'; save = True
+    
+    #% Filter dataset (Option 2) - only hapln1a241 wts
+    # filters = ['GenotypeAll']; groups = [('hapln1a241:wt')]
+    # df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
+    # df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
+    # info = 'all_h1a241wts_time'; save = True
 
     fcAn.printDFINfo(df2plot)
     
@@ -151,7 +155,7 @@ if init:
         pl_indiv = fcAn.plot_indiv()
         vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
         groups = list(pl_indiv.keys())[:]
-        # groups = ['Vol_Ext.Myoc','Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
+        # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
     
         for group in groups: 
             print(group)
@@ -159,18 +163,18 @@ if init:
             dict_legends = fcAn.def_legends(df2plot)
             
             fcAn.plotIndivperX(# General Plot Settings
-                               df2plot, vars2plot = vars2plot, x_var = x_var, hue_var = hue_var, shape_var = shape_var, 
-                               # Size, title, labels and legends
-                               title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                               dict_legends = dict_legends, ips = (0.8,6), 
-                               # Other plot settings
-                               suptitle = False, right_legend = False,
-                               yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
-                               yset = pl_indiv[group]['yset'],
-                               box_plot = True, show_fliers = False,
-                               # Saving settings
-                               save = save, dpi = 300, ext = ext, info = info, 
-                               dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
+                                df2plot, vars2plot = vars2plot, x_var = x_var, hue_var = hue_var, shape_var = shape_var, 
+                                # Size, title, labels and legends
+                                title = pl_indiv[group]['title'], labels2plot = labels2plot, 
+                                dict_legends = dict_legends, ips = ips[thesis_contxt_input], 
+                                # Other plot settings
+                                suptitle = False, right_legend = False, ctx_style = thesis_use.get_context(),
+                                yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
+                                yset = pl_indiv[group]['yset'],
+                                box_plot = True, show_fliers = False,
+                                # Saving settings
+                                save = save, dpi = 300, ext = ['png', 'svg'], info = info+'-'+pl_indiv[group]['graph_no'], 
+                                dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
             if run_stats: 
                 _, hue_values, _ = fcAn.props_ordered(df2plot, x_var, hue_var, shape_var)
                 dicts_stats = []
@@ -182,162 +186,20 @@ if init:
                                                           vars_group = vars2plot, alpha = alpha))
                 stats = True; stats_set = [stats, dicts_stats, alpha]
                 # Plot using the defined statistics in the dictionary
-                r_plStats = fcAn.plotIndivStatsperX(# General Plot Settings
+                r_plStats = fcAn.plotIndivStatsTxtAllX(# General Plot Settings
                                     df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
                                     # Size, title, labels and legends
-                                    title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                                    dict_legends = dict_legends, ips = (1,6), 
+                                    title = pl_indiv[group]['title'], 
+                                    dict_legends = dict_legends,
                                     # Statistic Settings
-                                    stats_set = stats_set, statsTxt = True, 
+                                    stats_set = stats_set, 
                                     # Other plot settings
-                                    suptitle = False, 
-                                    yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
-                                    yset = pl_indiv[group]['yset'],
-                                    box_plot = True, show_fliers = False,
+                                    suptitle = True, ctx_style = thesis_use.get_context(),
+                                    
                                     # Saving settings
-                                    save = save, dpi = 300, ext = ext, info = info, 
-                                    dir2save = os.path.join(dir_pl_meas,'pl_indiv_stats'))
+                                    save = save, dpi = 300, ext = ['png'], info = info+'-'+pl_indiv[group]['graph_no'], 
+                                    dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
     
-    
-    #%%
-   df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
-    fcAn.printDFINfo(df2plot)
-    save, info, ext = fcAn.q_savePlot()
-    
-        
-        #%%
-    
-    df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
-    fcAn.printDFINfo(df2plot)
-    save, info, ext = fcAn.q_savePlot()
-    # %%
-# Add function to select GenotypeAll or GenotypeF (joined wts) and x_var/hue_var
-    # x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
-    # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY THIS for all plots
-    
-    # x_var = 'spAnalysis'; hue_var = 'Stage'; shape_var = 'Strain_o' # wt, lf, rt, ct
-    
-    # Settings for statistical analysis
-    run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
-    filters = ['Stage', 'GenotypeAll']; alpha = 0.05
-    btw_x = False; btw_hue = True
-    
-    # Select for indiv or group plots
-    plotInGroups = fcBasics.ask4input('Graph [0] individual or [1] group plots? >> : ', bool)
-    
-    #%%
-    # Individual Plots
-    if not plotInGroups:  
-        x_var = 'GenotypeAll'; 
-        hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY THIS for all plots
-        # Settings for plots
-        pl_indiv = fcAn.plot_indiv()
-        vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-#Add function to select variable(s) to plot
-        groups = list(pl_indiv.keys())[:]
-        groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
-    
-        for group in groups: 
-            print(group)
-            vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'indiv')
-            dict_legends = fcAn.def_legends(df2plot)
-            if not run_stats: 
-                fcAn.plotIndivperX(# General Plot Settings
-                                   df2plot, vars2plot = vars2plot, x_var = x_var, hue_var = hue_var, shape_var = shape_var, 
-                                   # Size, title, labels and legends
-                                   title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                                   dict_legends = dict_legends, ips = (0.8,6), 
-                                   # Other plot settings
-                                   suptitle = False, right_legend = False,
-                                   yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
-                                   yset = pl_indiv[group]['yset'],
-                                   box_plot = True, show_fliers = False,
-                                   # Saving settings
-                                   save = save, dpi = 300, ext = ext, info = info, 
-                                   dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
-            else: 
-                _, hue_values, _ = fcAn.props_ordered(df2plot, x_var, hue_var, shape_var)
-                dicts_stats = []
-                for hue_value in hue_values:
-                    df_xfilt = df2plot[df2plot[hue_var] == hue_value]
-                    box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df_xfilt, x_var, hue_var, btw_x, btw_hue)
-                    dicts_stats.append(fcAn.runStatisticalTests(data = df_xfilt, filters = filters, norm_test = 'Shapiro-Wilk', 
-                                                          box_pairs_all = box_pairs_all, box_pairs_f = box_pairs_f, 
-                                                          vars_group = vars2plot, alpha = alpha))
-                stats = True; stats_set = [stats, dicts_stats, alpha]
-                # Plot using the defined statistics in the dictionary
-                r_plStats = fcAn.plotIndivStatsperX(# General Plot Settings
-                                    df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
-                                    # Size, title, labels and legends
-                                    title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                                    dict_legends = dict_legends, ips = (1,6), 
-                                    # Statistic Settings
-                                    stats_set = stats_set, statsTxt = True, 
-                                    # Other plot settings
-                                    suptitle = False, 
-                                    yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
-                                    yset = pl_indiv[group]['yset'],
-                                    box_plot = True, show_fliers = False,
-                                    # Saving settings
-                                    save = save, dpi = 300, ext = ext, info = info, 
-                                    dir2save = os.path.join(dir_pl_meas,'pl_indiv_stats'))
-                    
-                # test_res, box_pairs_all = r_plStats
-            # input()
-    #%%
-    # Group Plots # NOT WORKING!!!!!
-    else:
-        x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
-        # Settings for plots
-        pl_groups = fcAn.plot_groups()
-        vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-# Add function to select group
-        groups = list(pl_groups.keys())[:]
-        # ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
-        #           'Tissue Endocardium','Tissue Cardiac Jelly','Ratios Cardiac Jelly', 
-        #           'Sagittal Angles','Ventral Angles', 'Volume Percentages','Tissue Volume Percentages'] 
-        groups = ['Heart Size']#['Surface Area CJ']#,'Lumen Size', 'Heart Looping','Tissue Cardiac Jelly (AtrVent)']
-    
-        for group in groups: 
-            vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'group')
-            dict_legends = fcAn.def_legends(df2plot)
-            if not run_stats: 
-                fcAn.plotInGroups(#General Plot Settings
-                                  df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
-                                  # Size, title, labels and legends
-                                  title = pl_groups[group]['title'], labels2plot = labels2plot, 
-                                  dict_legends = dict_legends, ips = (6,6), 
-                                  # Other plot settings
-                                  n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
-                                  yticks_lab = pl_groups[group]['yticks_lab'], ylim = pl_groups[group]['ylim'], 
-                                  # Saving settings
-                                  save = save, dpi = 300, ext = ext, info =info, 
-                                  dir2save = os.path.join(dir_pl_meas,'pl_groups'))
-    
-            else: 
-                # Define all the multiple comparisons to calculate defining box_pairs 
-                box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df2plot, x_var, hue_var, btw_x, btw_hue)
-                dict_stats = fcAn.runStatisticalTests(data = df2plot, filters = filters, norm_test = 'Shapiro-Wilk', 
-                                                      box_pairs_all = box_pairs_all, box_pairs_f = box_pairs_f, 
-                                                      vars_group = vars2plot, alpha = alpha)
-                stats = True; stats_set = [stats, dict_stats, alpha]
-                # Plot using the defined statistics in the dictionary
-                r_plStats= fcAn.plotInGroupsStats(# General Plot Settings
-                                    df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
-                                    # Size, title, labels and legends
-                                    title = pl_groups[group]['title'], labels2plot = labels2plot, 
-                                    dict_legends = dict_legends, ips = (6,6), 
-                                    # Statistic Settings
-                                    stats_set = stats_set,
-                                    # Other plot settings
-                                    n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 2, sharey = False, 
-                                    yticks_lab = pl_groups[group]['yticks_lab'], ylim = '', 
-                                    # Saving settings
-                                    save = save, dpi = 300, ext = ext, info = info, 
-                                    dir2save = os.path.join(dir_pl_meas,'pl_groups_stats'))
-                    
-                test_res, box_pairs_all = r_plStats
-
     #%% Time course
 # Change here the filter to plot agarose experiment
     df2plot_tc = df_meas[df_meas['GenotypeAll'] == 'wt_tc:wt']
@@ -346,7 +208,7 @@ if init:
     pl_indiv = fcAn.plot_indiv()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
 #Add function to select variable(s) to plot
-    groups = list(pl_indiv.keys())[:]
+    groups = list(pl_indiv.keys())[0:1]
     
     for group in groups: 
         print(group)
@@ -653,3 +515,143 @@ if others:
     
 #%%
 init = True
+
+#%% OLD
+#     df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
+#     fcAn.printDFINfo(df2plot)
+#     save, info, ext = fcAn.q_savePlot()
+    
+        
+#         #%%
+    
+#     df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
+#     fcAn.printDFINfo(df2plot)
+#     save, info, ext = fcAn.q_savePlot()
+#     # %%
+# # Add function to select GenotypeAll or GenotypeF (joined wts) and x_var/hue_var
+#     # x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
+#     # x_var = 'GenotypeAll'; hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY THIS for all plots
+    
+#     # x_var = 'spAnalysis'; hue_var = 'Stage'; shape_var = 'Strain_o' # wt, lf, rt, ct
+    
+#     # Settings for statistical analysis
+#     run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
+#     filters = ['Stage', 'GenotypeAll']; alpha = 0.05
+#     btw_x = False; btw_hue = True
+    
+#     # Select for indiv or group plots
+#     plotInGroups = fcBasics.ask4input('Graph [0] individual or [1] group plots? >> : ', bool)
+    
+#     #%%
+#     # Individual Plots
+#     if not plotInGroups:  
+#         x_var = 'GenotypeAll'; 
+#         hue_var = 'Stage'; shape_var = 'Strain_o' #*** WTS ONLY THIS for all plots
+#         # Settings for plots
+#         pl_indiv = fcAn.plot_indiv()
+#         vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
+# #Add function to select variable(s) to plot
+#         groups = list(pl_indiv.keys())[:]
+#         groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
+    
+#         for group in groups: 
+#             print(group)
+#             vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'indiv')
+#             dict_legends = fcAn.def_legends(df2plot)
+#             if not run_stats: 
+#                 fcAn.plotIndivperX(# General Plot Settings
+#                                    df2plot, vars2plot = vars2plot, x_var = x_var, hue_var = hue_var, shape_var = shape_var, 
+#                                    # Size, title, labels and legends
+#                                    title = pl_indiv[group]['title'], labels2plot = labels2plot, 
+#                                    dict_legends = dict_legends, ips = (0.8,6), 
+#                                    # Other plot settings
+#                                    suptitle = False, right_legend = False,
+#                                    yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
+#                                    yset = pl_indiv[group]['yset'],
+#                                    box_plot = True, show_fliers = False,
+#                                    # Saving settings
+#                                    save = save, dpi = 300, ext = ext, info = info, 
+#                                    dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
+#             else: 
+#                 _, hue_values, _ = fcAn.props_ordered(df2plot, x_var, hue_var, shape_var)
+#                 dicts_stats = []
+#                 for hue_value in hue_values:
+#                     df_xfilt = df2plot[df2plot[hue_var] == hue_value]
+#                     box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df_xfilt, x_var, hue_var, btw_x, btw_hue)
+#                     dicts_stats.append(fcAn.runStatisticalTests(data = df_xfilt, filters = filters, norm_test = 'Shapiro-Wilk', 
+#                                                           box_pairs_all = box_pairs_all, box_pairs_f = box_pairs_f, 
+#                                                           vars_group = vars2plot, alpha = alpha))
+#                 stats = True; stats_set = [stats, dicts_stats, alpha]
+#                 # Plot using the defined statistics in the dictionary
+#                 r_plStats = fcAn.plotIndivStatsperX(# General Plot Settings
+#                                     df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
+#                                     # Size, title, labels and legends
+#                                     title = pl_indiv[group]['title'], labels2plot = labels2plot, 
+#                                     dict_legends = dict_legends, ips = (1,6), 
+#                                     # Statistic Settings
+#                                     stats_set = stats_set, statsTxt = True, 
+#                                     # Other plot settings
+#                                     suptitle = False, 
+#                                     yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
+#                                     yset = pl_indiv[group]['yset'],
+#                                     box_plot = True, show_fliers = False,
+#                                     # Saving settings
+#                                     save = save, dpi = 300, ext = ext, info = info, 
+#                                     dir2save = os.path.join(dir_pl_meas,'pl_indiv_stats'))
+                    
+#                 # test_res, box_pairs_all = r_plStats
+#             # input()
+#     #%%
+#     # Group Plots # NOT WORKING!!!!!
+#     else:
+#         x_var = 'Stage'; hue_var = 'GenotypeAll'; shape_var = 'Strain_o'
+#         # Settings for plots
+#         pl_groups = fcAn.plot_groups()
+#         vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
+# # Add function to select group
+#         groups = list(pl_groups.keys())[:]
+#         # ['Surface Area', 'Heart Size','Lumen Size', 'Heart Looping', 'Tissue Myocardium',
+#         #           'Tissue Endocardium','Tissue Cardiac Jelly','Ratios Cardiac Jelly', 
+#         #           'Sagittal Angles','Ventral Angles', 'Volume Percentages','Tissue Volume Percentages'] 
+#         groups = ['Heart Size']#['Surface Area CJ']#,'Lumen Size', 'Heart Looping','Tissue Cardiac Jelly (AtrVent)']
+    
+#         for group in groups: 
+#             vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'group')
+#             dict_legends = fcAn.def_legends(df2plot)
+#             if not run_stats: 
+#                 fcAn.plotInGroups(#General Plot Settings
+#                                   df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var =  hue_var, shape_var = shape_var, 
+#                                   # Size, title, labels and legends
+#                                   title = pl_groups[group]['title'], labels2plot = labels2plot, 
+#                                   dict_legends = dict_legends, ips = (6,6), 
+#                                   # Other plot settings
+#                                   n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 1, sharey = False, 
+#                                   yticks_lab = pl_groups[group]['yticks_lab'], ylim = pl_groups[group]['ylim'], 
+#                                   # Saving settings
+#                                   save = save, dpi = 300, ext = ext, info =info, 
+#                                   dir2save = os.path.join(dir_pl_meas,'pl_groups'))
+    
+#             else: 
+#                 # Define all the multiple comparisons to calculate defining box_pairs 
+#                 box_pairs_all, box_pairs_f = fcAn.def_box_pairs(df2plot, x_var, hue_var, btw_x, btw_hue)
+#                 dict_stats = fcAn.runStatisticalTests(data = df2plot, filters = filters, norm_test = 'Shapiro-Wilk', 
+#                                                       box_pairs_all = box_pairs_all, box_pairs_f = box_pairs_f, 
+#                                                       vars_group = vars2plot, alpha = alpha)
+#                 stats = True; stats_set = [stats, dict_stats, alpha]
+#                 # Plot using the defined statistics in the dictionary
+#                 r_plStats= fcAn.plotInGroupsStats(# General Plot Settings
+#                                     df2plot, vars2plot = vars2plot, x_var =  x_var, hue_var = hue_var, shape_var = shape_var, 
+#                                     # Size, title, labels and legends
+#                                     title = pl_groups[group]['title'], labels2plot = labels2plot, 
+#                                     dict_legends = dict_legends, ips = (6,6), 
+#                                     # Statistic Settings
+#                                     stats_set = stats_set,
+#                                     # Other plot settings
+#                                     n_cols = pl_groups[group]['n_cols'], h_add = 5, w_add = 2, sharey = False, 
+#                                     yticks_lab = pl_groups[group]['yticks_lab'], ylim = '', 
+#                                     # Saving settings
+#                                     save = save, dpi = 300, ext = ext, info = info, 
+#                                     dir2save = os.path.join(dir_pl_meas,'pl_groups_stats'))
+                    
+#                 test_res, box_pairs_all = r_plStats
+
