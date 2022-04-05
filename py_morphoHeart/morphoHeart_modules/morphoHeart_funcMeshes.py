@@ -173,7 +173,7 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy,
         sp_colour = np.load(colour_dir)
 
 
-        mesh_out.pointColors(sp_colour, cmap="jet")
+        mesh_out.pointColors(sp_colour, cmap="turbo")
         mesh_out.addScalarBar(title=bar_names_all[index])
 
         mesh_out.alpha(alpha_all[index]).legend(legend_all[index]).wireframe()
@@ -1816,8 +1816,111 @@ def cutMeshes4CL(filename, meshes, cuts, cut_direction, dicts, plotshow):
 
     return meshes[-num_meshes_out:], dicts_f
 
+#%% func - divideMeshesLnR_new
+def divideMeshesLnR_new(filename, meshes, cl_ribbon, file_num, df_res, 
+                    scale_cube = [], colors =  ['skyblue','darkblue']):
+    """
+    Function that divides meshes into Left and Right using the extended centreline (ribbon)
+
+    Parameters
+    ----------
+    filename : str
+        Reference name given to the images of the embryo being processed (LSXX_FXX_X_XX_XXXX).
+    meshes : list of meshes
+        List of meshes to divide. (vedo Mesh)
+    cl_ribbon : ribbon
+        Dorso-ventral extended centreline (vedo Ribbon)
+
+    Returns
+    -------
+    meshes_LnR : list of list of meshes
+        List of list of the divided meshes [left, right] (vedo Mesh)
+
+    """
+    
+    spaw_analysis = False
+    if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
+        spaw_analysis = True
+    
+    meshes_LnR = []
+    for i, mesh in enumerate(meshes):
+
+        meshes2cutLR = mesh
+        mesh_legend = mesh._legend
+        if not spaw_analysis: 
+            print('\n- Dividing '+mesh_legend+' into left and right sides')
+            names_LnR = ['CJ_total','CJ.Left', 'CJ.Right']
+        else: 
+            print('\n- Dividing '+mesh_legend+' into dorsal and ventral sides')
+            names_LnR = ['CJ_total','CJ.Dorsal', 'CJ.Ventral']
+            
+        mesh_1 = meshes2cutLR.clone().cutWithMesh(cl_ribbon, invert=True)
+        mesh_1.alpha(0.05).wireframe(True).color(colors[0])
+
+        mesh_2 = meshes2cutLR.clone().cutWithMesh(cl_ribbon, invert=False)
+        mesh_2.alpha(0.05).wireframe(True).color(colors[1])
+        alert("wohoo",1)
+
+        text = filename+"\n\n >> Resulting mesh after cutting with centreline \n >> Before closing the window make sure you confirm \n\t"
+        if not spaw_analysis: 
+            mesh_1.legend(mesh_legend+'-Left')
+            mesh_2.legend(mesh_legend+'-Right')
+            txt2 = colors[0]+": Left, AND "+colors[1]+": Right"
+        else: 
+            mesh_1.legend(mesh_legend+'-Dorsal')
+            mesh_2.legend(mesh_legend+'-Ventral')
+            txt2 = colors[0]+": Dorsal, AND "+colors[1]+": Ventral"
+
+        txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .3
+        vp = Plotter(N=3, axes=13)
+        vp.show(meshes2cutLR, cl_ribbon, scale_cube,  txt, at=0)
+        vp.show(mesh_1, at=1)
+        vp.show(mesh_2, at=2, zoom = 0.8, azimuth = 0, interactive=True)
+        
+        # if not spaw_analysis: 
+        q_happy = ask4input('Are meshes classified correctly -'+ txt2 +'- [0]:no/[1]:yes: ', bool)
+        # else: 
+        #     q_happy = ask4input('Are meshes classified correctly -A(light blue):dorsal, B(dark blue):ventral? [0]:no/[1]:yes: ', bool)
+            
+        if not q_happy:
+            if not spaw_analysis:
+                leftMesh = ask4input('Select the mesh number that corresponds to the left side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
+                if leftMesh == 1:
+                    mesh_1.legend(mesh_legend+'-Left')
+                    mesh_2.legend(mesh_legend+'-Right')
+                    mesh_LnR = [mesh_1, mesh_2]
+                elif leftMesh == 2:
+                    mesh_2.legend(mesh_legend+'-Left')
+                    mesh_1.legend(mesh_legend+'-Right')
+                    mesh_LnR = [mesh_2, mesh_1]
+            else: 
+                dorsalMesh = ask4input('Select the mesh number that corresponds to the dorsal side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
+                if dorsalMesh == 1:
+                    mesh_1.legend(mesh_legend+'-Dorsal')
+                    mesh_2.legend(mesh_legend+'-Ventral')
+                    mesh_LnR = [mesh_1, mesh_2]
+                elif dorsalMesh == 2:
+                    mesh_2.legend(mesh_legend+'-Dorsal')
+                    mesh_1.legend(mesh_legend+'-Ventral')
+                    mesh_LnR = [mesh_2, mesh_1]
+        else:
+            mesh_LnR = [mesh_1, mesh_2]
+            
+        txt = Text2D(filename+"\n\n >> Final Meshes", c=c, font=font)
+        settings.legendSize = .3
+        vp = Plotter(N=3, axes=13)
+        vp.show(meshes2cutLR, cl_ribbon, scale_cube,  txt, at=0)
+        vp.show(mesh_1, at=1)
+        vp.show(mesh_2, at=2, zoom = 0.8, azimuth = 0, interactive=True)
+
+        meshes_LnR.append(mesh_LnR)
+
+    return meshes_LnR, names_LnR
+
 #%% func - divideMeshesLnR
-def divideMeshesLnR(filename, meshes, cl_ribbon, file_num, df_res, colors =  ['skyblue','darkblue']):
+def divideMeshesLnR(filename, meshes, cl_ribbon, file_num, df_res, 
+                    scale_cube = [], colors =  ['skyblue','darkblue']):
     """
     Function that divides meshes into Left and Right using the extended centreline (ribbon)
 
@@ -1871,9 +1974,10 @@ def divideMeshesLnR(filename, meshes, cl_ribbon, file_num, df_res, colors =  ['s
         txt = Text2D(text, c=c, font=font)
         settings.legendSize = .3
         vp = Plotter(N=3, axes=13)
-        vp.show(meshes2cutLR, cl_ribbon, txt, at=0)
+        vp.show(meshes2cutLR, cl_ribbon, scale_cube,  txt, at=0)
         vp.show(mesh_1, at=1)
-        vp.show(mesh_2, at=2, zoom = 1.2, interactive=True)
+        vp.show(mesh_2, at=2, zoom = 0.8, azimuth = 0, interactive=True)
+        
         
         # if not spaw_analysis: 
         q_happy = ask4input('Are meshes classified correctly -'+ txt2 +'- [0]:no/[1]:yes: ', bool)
@@ -3034,7 +3138,7 @@ def sphInSpline(kspl_CL, colour = False, name = '', every = 10):
         # ypos = [kspl_CL.points()[i][1] for i in range(len(kspl_CL.points()))]
         # ymin, ymax = np.min(ypos), np.max(ypos)
         # print("min and max of variances:", ymin, ymax)
-        vcols = [colorMap(v, "jet", 0, len(kspl_CL.points())) for v in list(range(len(kspl_CL.points())))]  # scalars->colors
+        vcols = [colorMap(v, "turbo", 0, len(kspl_CL.points())) for v in list(range(len(kspl_CL.points())))]  # scalars->colors
     
     if every > 1:
         spheres_spline = []
@@ -3429,7 +3533,7 @@ def createColouredCL(dict_cl, dict_shapes):
         
         sphData_cl = np.asarray(dictLayer['PointData']['MaximumInscribedSphereRadius'])
         #Plot spheres through centreline inside mesh.
-        vcols = [colorMap(v, "jet", sphData_cl.max(), sphData_cl.min()) for v in sphData_cl]
+        vcols = [colorMap(v, "turbo", sphData_cl.max(), sphData_cl.min()) for v in sphData_cl]
         sph_cl = Spheres(pts_cl, c='red', r=sphData_cl).legend('sphs_maxInsSphRad_'+layerNames[i])
         sph_cl_colour = Spheres(pts_cl, c=vcols, r=sphData_cl.min()).addScalarBar(title='Spheres Radius\n[um]').legend('sphs_maxInsSphRadC_'+layerNames[i])
         sph_cl_colour.mapper().SetScalarRange(sphData_cl.min(),sphData_cl.max())
@@ -3441,7 +3545,9 @@ def createColouredCL(dict_cl, dict_shapes):
     return spheres_CL, spheres_CL_col, dict_shapes
 
 #%% func - createCLRibbon
-def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, dict_kspl, dict_shapes, dict_planes, clRib_type = 'extDV', plotshow = True):
+def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, 
+                   dict_kspl, dict_shapes, dict_planes, 
+                   clRib_type = 'extDV', scale_cube = [],plotshow = True):
     """
     Function that creates dorso-ventral extended centreline ribbon
 
@@ -3580,8 +3686,13 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh, dict_
     
         elevation = 0#df_res.loc[file_num,'ang_Heart']
         settings.legendSize = .3
-        vp = Plotter(N=1, axes=1)
-        vp.show(mesh, linLine, linLineX, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, elevation = elevation, interactive=1)
+        vp = Plotter(N=1, axes=8)
+        vp.show(mesh, linLine, scale_cube, linLineX, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = azimuth, elevation = elevation, interactive=1)
+
+        elevation = 0#df_res.loc[file_num,'ang_Heart']
+        settings.legendSize = .3
+        vp = Plotter(N=1, axes=8)
+        vp.show(mesh, linLine, scale_cube, linLineX, kspl_CL2use, kspl_ext, inf_ext_sphere, outf_ext_sphere, cl_ribbon, txt, at=0, azimuth = 90, elevation = elevation, interactive=1)
 
     if clRib_type == 'HDStack':
         return rib_pts, cl_ribbon
@@ -3717,14 +3828,14 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, 
                                      angles = [ang_heartS, ang_atrS, ang_ventS, ang_chsS]+[ang_atrV, ang_ventV, ang_chsV], 
                                      names = ['ang_HeartS', 'ang_AtrS', 'ang_VentS', 'ang_BtwChambersS']+['ang_AtrV', 'ang_VentV', 'ang_BtwChambersV'])
 
-    z_maxpos = pts_heartS[pts_heartS[:,2].argsort()][-1,-1]+50
+    z_maxpos = -50#pts_heartS[pts_heartS[:,2].argsort()][-1,-1]+50
     
     text0 = filename+"\n\n >> Measuring chamber orientation from the side\n - "+atr_txtS+"\n - "+vent_txtS+"\n - "+chs_txtS+"\n - "+hrt_txt
     text1 = filename+"\n\n >> Measuring chamber orientation ventrally \n - "+atr_txtV+"\n - "+vent_txtV+"\n - "+chs_txtV
     txt0 = Text2D(text0, c="k", font= font)
     txt1 = Text2D(text1, c="k", font= font)
     settings.legendSize = .15
-    vp = Plotter(N=2, axes = 8)
+    vp = Plotter(N=2, axes = 1)
     vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
             orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
             # azimuth = azimuth, elevation = elevation, 
@@ -3733,6 +3844,37 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, 
             orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
             orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
             zoom = 0.8, at=1, azimuth = azimuth, elevation = elevation, interactive=True)
+
+    vp = Plotter(N=2, axes = 1)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
+            # azimuth = azimuth, elevation = elevation, 
+            zoom = 0.8, at=0)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
+            orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
+            zoom = 0.8, at=1, azimuth = 135, elevation = elevation, interactive=True)
+
+    vp = Plotter(N=2, axes = 1)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
+            # azimuth = azimuth, elevation = elevation, 
+            zoom = 0.8, at=0)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
+            orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
+            zoom = 0.8, at=1, azimuth = -135, elevation = elevation, interactive=True)
+
+    vp = Plotter(N=2, axes = 1)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
+            # azimuth = azimuth, elevation = elevation, 
+            zoom = 0.8, at=0)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
+            orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
+            orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
+            zoom = 0.8, at=1, azimuth = 45, elevation = elevation, interactive=True)
+
 
     return sph_orient, lines_orient, dict_pts, dict_kspl, df_res
 
@@ -3978,7 +4120,7 @@ def getDistance2Mesh(filename, m_int, m_ext, title, alpha = 1, plotshow = True):
     for txt in title_split[1:]:
         title_bar = title_bar +'\n'+ txt
 
-    m_ext_out.pointColors(thickness, cmap="jet", vmin=val_min, vmax=val_max)
+    m_ext_out.pointColors(thickness, cmap="turbo", vmin=val_min, vmax=val_max)
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
     m_ext_out.addScalarBar(title=title_bar+' [um]', pos=(0.8, 0.05))
     m_ext_out.mapper().SetScalarRange(val_min,val_max)
@@ -4713,7 +4855,7 @@ def filterUnloopedDF(filename, val2unloop, dir_results, dir_data2Analyse, save_n
             heatmap = pd.pivot_table(df_filt, values= val, columns = 'theta', index='z_plane', aggfunc=np.max)
             heatmap.astype('float16').dtypes
             fig, ax = plt.subplots(figsize=(16, 10))
-            # ax = sns.heatmap(heatmap, cmap='jet')
+            # ax = sns.heatmap(heatmap, cmap='turbo')
             sns.heatmap(heatmap, cmap=cmap)#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
             plt.show()
             
@@ -4812,8 +4954,8 @@ def normUnloopedDF(filename, thickness, dir_results, dir_data2Analyse, names, sa
         heatmap = pd.pivot_table(df_filt, values= thickness+'_norm', columns = 'theta', index='z_plane', aggfunc=np.max)
         heatmap.astype('float16').dtypes
         fig, ax = plt.subplots(figsize=(16, 10))
-        # ax = sns.heatmap(heatmap, cmap='jet')
-        sns.heatmap(heatmap, cmap='jet')#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
+        # ax = sns.heatmap(heatmap, cmap='turbo')
+        sns.heatmap(heatmap, cmap='turbo')#, vmin = vmin, vmax = vmax)#, xticklabels=20, yticklabels=550)
         plt.show()
 
         if saveHM: 
@@ -5905,13 +6047,13 @@ def saveMultVideos(filename, info, meshes4video, rangeThBall, rotAngle, dir2save
         if isinstance(scale, tuple): 
                 [thickness] = loadNPY(filename = filename, names = [name], dir_txtNnpy = dir_txtNnpy, print_txt = False)
                 if isinstance(mesh, list):
-                    mesh[0].pointColors(thickness, cmap="jet", vmin=scale[0], vmax=scale[1])
+                    mesh[0].pointColors(thickness, cmap="turbo", vmin=scale[0], vmax=scale[1])
                     mesh[0].addScalarBar()
                     mesh[0].alpha(1)
                     mesh[0].mapper().SetScalarRange(scale[0],scale[1])
                     mesh4video = mesh
                 else: 
-                    mesh.pointColors(thickness, cmap="jet", vmin=scale[0], vmax=scale[1])
+                    mesh.pointColors(thickness, cmap="turbo", vmin=scale[0], vmax=scale[1])
                     mesh.addScalarBar()
                     mesh.alpha(1)
                     mesh.mapper().SetScalarRange(scale[0],scale[1])
@@ -5963,7 +6105,7 @@ def plotPtClassif(filename, mesh, pts_whole, pts_class):
         every = 20
         
     settings.legendSize = .2
-    vp = Plotter(shape = (1, 4), axes = 1)#13
+    vp = Plotter(shape = (2, 2), axes = 4)#13
     vp.show(mesh, txt, at = 0)
     for i, sp_class in enumerate(pts_class):
 

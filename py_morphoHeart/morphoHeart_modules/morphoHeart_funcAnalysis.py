@@ -134,7 +134,7 @@ def getMainStrain(df_meas):
     
     return df_meas
 
-#%% func - getMainStrain
+#%% func - spAnalysis
 def spAnalysis(df_meas):
     
     spAn = []
@@ -153,6 +153,49 @@ def spAnalysis(df_meas):
     
     return df_meas
 
+#%% func - modifySibsGenot
+def modifySibsGenot(df2plot):
+    askQ = False
+    genotF = df2plot['GenotypeF']
+    for gen in genotF:
+        if gen == 'hapln1a241:wt/spaw:ht':
+            askQ = True
+    if askQ:
+        modif = ask4input('Are you sure you want to modify sibs (hapln1a241:wt,spaw:ht) genotype? \n\t[0]: no, [1]: yes! >:', bool)
+        if modif: 
+            newGenotF = []
+            for genot in genotF:
+                if genot == 'hapln1a241:wt/spaw:ht':
+                    newGenotF.append('wt:wt')
+                else: 
+                    newGenotF.append(genot)
+            df2plot['GenotypeF'] = newGenotF
+    
+    return df2plot
+
+#%% func - modifyOEControlGenot
+def modifyOEControlGenot(df2plot):
+    askQ = False
+    genotF = df2plot['GenotypeF']
+    for gen in genotF:
+        if gen == 'galff:-/uas:+' or gen == 'galff:+/uas:-':
+            askQ = True
+    if askQ:
+        modif = ask4input('Are you sure you want to modify controls (GAL4:- or UAS:-) genotype? \n\t[0]: no, [1]: yes! >:', bool)
+        if modif: 
+            # print('AJAAA')
+            newGenotF = []
+            for genot in genotF:
+                if '-' in genot:
+                    # print(genot)
+                    newGenotF.append('wt:ctrl')
+                else: 
+                    # print(genot, 'Aja')
+                    newGenotF.append(genot)
+            df2plot['GenotypeF'] = newGenotF
+    
+    return df2plot
+    
 #%% func - list_columns
 def list_columns(obj, cols=4, columnwise=True, gap=4):
     """
@@ -714,7 +757,8 @@ def plot_indiv():
                     {'graph_no': '06', 'title': 'Ventricular Lumen Size', 
                      'vars' : ['Vol_Vent.IntEndo'],
                      'n_cols': 1, 'yticks_lab':'1e6 - d.', 
-                     'ylim' : (0,1.2e6), 'yset' : 'round'},
+                     'ylim' : (0,0.6e6), 'yset' : 'round'},#(0,1.2e6)
+                     # 'ylim' : (0,1.2e6), 'yset' : 'round'},
                     
                 'linLine_Int.Myoc(Cut)': 
                     {'graph_no': '07', 'title': 'Linear Heart Length', 
@@ -778,7 +822,8 @@ def plot_indiv():
                     {'graph_no': '18', 'title': 'Ventricular Cardiac Jelly Volume', 
                      'vars' : ['Vol_Vent.CJ'],
                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                     'ylim' : (0,600e3), 'yset' : 'round'},
+                     'ylim' :(0,140e3), 'yset' : 'round'}, # (0,600e3)
+                     # 'ylim' :(0,600e3), 'yset' : 'round'},
                 'Vol_CJ.Left': 
                     {'graph_no': '19', 'title': 'Left Cardiac Jelly Volume', 
                      'vars' : ['Vol_CJ.Left'],
@@ -794,6 +839,11 @@ def plot_indiv():
                      'vars' : ['Ratio_VolLeftCJ2VolRightCJ'],
                      'n_cols': 1, 'yticks_lab':'d.', 
                      'ylim' : '', 'yset' : 'dec'},
+                'Vol_CJ.Right2': 
+                    {'graph_no': '22', 'title': 'Right Cardiac Jelly Volume', 
+                     'vars' : ['Vol_CJ.Right'],
+                     'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                     'ylim' : (0,400e3), 'yset' : 'round'},
                 
                 'EllipAtr_Depth': 
                     {'graph_no': '25', 'title': 'Atrial Depth', 
@@ -856,19 +906,62 @@ def plot_indiv():
                 'ang_AtrV': 
                     {'graph_no': '43', 'title': 'Atrium Orientation (Ventral Plane)', 
                       'vars' : ['ang_AtrV'],
-                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (-5,45), 'yset' : 'round'},
                 'ang_VentV': 
                     {'graph_no': '44', 'title': 'Ventricle Orientation (Ventral Plane)', 
                       'vars' : ['ang_VentV'],
-                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (110,190), 'yset' : 'round'},
                 'ang_BtwChambersV': 
                     {'graph_no': '45', 'title': 'Angle Between Chambers  (Ventral Plane)', 
                       'vars' : ['ang_BtwChambersV'],
-                      'n_colV': 1, 'yticks_lab':'d. - 0', 
+                      'n_cols': 1, 'yticks_lab':'d. - 0', 
                       'ylim' : (100,190), 'yset' : 'round'},
-
+                    
+                'Ratio_VolMyoc2VolExtMyoc': 
+                    {'graph_no': '50', 'title': 'Heart Composition_Myoc', 
+                      'vars' : ['Ratio_VolMyoc2VolExtMyoc'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolEndo2VolExtMyoc': 
+                    {'graph_no': '51', 'title': 'Heart Composition_Endo', 
+                      'vars' : ['Ratio_VolEndo2VolExtMyoc'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolCJ2VolExtMyoc': 
+                    {'graph_no': '52', 'title': 'Heart Composition_CJ', 
+                      'vars' : ['Ratio_VolCJ2VolExtMyoc'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolLumen2VolExtMyoc': 
+                    {'graph_no': '53', 'title': 'Heart Composition_Lumen', 
+                      'vars' : ['Ratio_VolLumen2VolExtMyoc'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                    
+                'Ratio_VolMyoc2VolTissue': 
+                    {'graph_no': '55', 'title': 'Tissue Composition_Myoc', 
+                      'vars' : ['Ratio_VolMyoc2VolTissue'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolEndo2VolTissue': 
+                    {'graph_no': '56', 'title': 'Tissue Composition_Endo', 
+                      'vars' : ['Ratio_VolEndo2VolTissue'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolCJ2VolTissue': 
+                    {'graph_no': '57', 'title': 'Tissue Composition_CJ', 
+                      'vars' : ['Ratio_VolCJ2VolTissue'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                'Ratio_VolLumen2VolTissue': 
+                    {'graph_no': '58', 'title': 'Tissue Composition_Lumen', 
+                      'vars' : ['Ratio_VolLumen2VolTissue'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,1), 'yset' : 'dec'},
+                    
+        
                 # '': 
                 #     {'graph_no': 01, 'title': '', 
                 #       'vars' : [''],
@@ -927,9 +1020,12 @@ def def_legends(df_input, df_type = 'meas'):
         try: 
             genots = sorted(df_input.GenotypeAll.unique(), reverse = True)
             bool_genots = True
-            bool_genotsF = False
         except: 
             bool_genots = False
+        try: 
+            genotsF = sorted(df_input.GenotypeF.unique(), reverse = True)
+            bool_genotsF = True
+        except: 
             bool_genotsF = False
             
     elif df_type == 'changesF':
@@ -950,65 +1046,67 @@ def def_legends(df_input, df_type = 'meas'):
             bool_genots = False
             bool_genotsF = False
     
-    leg_genots = {'hapln1a187:wt': {'legend': '$wild$-$type_{187KO}$', 'color': '#000080'}, 
-                      'hapln1a241:wt': {'legend': '$wild$-$type_{241KO}$', 'color': '#000080'}, 
-                      'hapln1a3bp:wt': {'legend': '$wild$-$type_{3KO}$', 'color': '#000080'},  
-                      'hapln1aSTOP:wt': {'legend': '$wild$-$type_{STKO}$', 'color': '#000080'}, 
-                    
-                      'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
-                      'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241$', 'color': '#839292'}, 
-                      
-                      'hapln1a187:mt': {'legend': '$hapln1a^{-/-}_{\Delta187}$', 'color': '#8B008B'}, 
-                      'hapln1a241:mt': {'legend': '$hapln1a^{-/-}_{\Delta241}$', 'color': '#dc133b'}, 
-                      'hapln1a3bp:mt': {'legend': '$hapln1a^{-/-}_{\Delta3bp}$', 'color': '#c36bea'}, 
-                      'hapln1aSTOP:mt': {'legend': '$hapln1a^{-/-}_{STOP}$', 'color': '#72e5ef'}, 
-                      
-                      'hapln1a241:wt/spaw:wt': {'legend': '$wild$-$type_{sh}$', 'color': '#000080'},
-                      'hapln1a241:wt/spaw:ht': {'legend': '$hapln1a^{+/+}_{\Delta241};spaw^{+/-}$', 'color': '#000080'},
-                      'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
-                      'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{-/-}_{\Delta241sh}$', 'color': '#dc133b'}, 
-                      'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{-/-}_{\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
-                      
-                      'galff:+/uas:+': {'legend': '$galff^+;uas^+$', 'color': '#ade64f'}, 
-                      'galff:+/uas:-': {'legend': '$galff^+;uas^-$', 'color': '#6495ed'}, 
-                      'galff:-/uas:+': {'legend': '$galff^-;uas^+$', 'color': '#214d4e'}, 
-                      'galff:-/uas:-': {'legend': '$wild$-$type_{OE}$', 'color': '#000080'},
-                      
-                      'vcana365:wt': {'legend': '$wild$-$type_{365KO}$', 'color': '#000080'}, 
-                      'vcana365:ht': {'legend': '$vcana^{+/-}_{\Delta365}$', 'color': '#a23e27'}, 
-                      'vcana365:mt': {'legend': '$vcana^{-/-}_{\Delta365}$', 'color': '#ffa500'}, 
-                      'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
-                      'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'}}
-    
-    # leg_genots = {'hapln1a187:wt': {'legend': '$sibling$', 'color': '#000080'}, 
-    #                   'hapln1a241:wt': {'legend': '$sibling$', 'color': '#000080'}, 
-    #                   'hapln1a3bp:wt': {'legend': '$sibling', 'color': '#000080'},  
-    #                   'hapln1aSTOP:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+    # leg_genots = {'hapln1a187:wt': {'legend': '$wild$-$type_{187KO}$', 'color': '#000080'}, 
+    #                   'hapln1a241:wt': {'legend': '$wild$-$type_{241KO}$', 'color': '#000080'}, 
+    #                   'hapln1a3bp:wt': {'legend': '$wild$-$type_{3KO}$', 'color': '#000080'},  
+    #                   'hapln1aSTOP:wt': {'legend': '$wild$-$type_{STKO}$', 'color': '#000080'}, 
                     
     #                   'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
     #                   'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241}$', 'color': '#839292'}, 
                       
-    #                   'hapln1a187:mt': {'legend': '$hapln1a^{\Delta187/\Delta187}$', 'color': '#8B008B'}, 
-    #                   'hapln1a241:mt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
-    #                   'hapln1a3bp:mt': {'legend': '$hapln1a^{\Delta3/\Delta3}$', 'color': '#c36bea'}, 
-    #                   'hapln1aSTOP:mt': {'legend': '$hapln1a^{STOP/STOP}$', 'color': '#72e5ef'}, 
+    #                   'hapln1a187:mt': {'legend': '$hapln1a^{-/-}_{\Delta187}$', 'color': '#8B008B'}, 
+    #                   'hapln1a241:mt': {'legend': '$hapln1a^{-/-}_{\Delta241}$', 'color': '#dc133b'}, 
+    #                   'hapln1a3bp:mt': {'legend': '$hapln1a^{-/-}_{\Delta3bp}$', 'color': '#c36bea'}, 
+    #                   'hapln1aSTOP:mt': {'legend': '$hapln1a^{-/-}_{STOP}$', 'color': '#72e5ef'}, 
                       
-    #                   'hapln1a241:wt/spaw:wt': {'legend': '$sibling$', 'color': '#000080'},
-    #                   'hapln1a241:wt/spaw:ht': {'legend': '$sibling$', 'color': '#000080'},
+    #                   'hapln1a241:wt/spaw:wt': {'legend': '$wild$-$type_{sh}$', 'color': '#000080'},
+    #                   'hapln1a241:wt/spaw:ht': {'legend': '$hapln1a^{+/+}_{\Delta241};spaw^{+/-}$', 'color': '#000080'},
     #                   'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
-    #                   'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
-    #                   'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{\Delta241/\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
+    #                   'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{-/-}_{\Delta241sh}$', 'color': '#dc133b'}, 
+    #                   'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{-/-}_{\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
                       
-    #                   'galff:+/uas:+': {'legend': '$Gal4^+$; $UAS^+$', 'color': '#ade64f'}, 
-    #                   'galff:+/uas:-': {'legend': '$Gal4^+$; $UAS^-$', 'color': '#6495ed'}, 
-    #                   'galff:-/uas:+': {'legend': '$Gal4^-$; $UAS^+$', 'color': '#214d4e'}, 
-    #                   'galff:-/uas:-': {'legend': '$sibling$', 'color': '#000080'},
+    #                   'galff:+/uas:+': {'legend': '$galff^+;uas^+$', 'color': '#ade64f'}, 
+    #                   'galff:+/uas:-': {'legend': '$galff^+;uas^-$', 'color': '#6495ed'}, 
+    #                   'galff:-/uas:+': {'legend': '$galff^-;uas^+$', 'color': '#214d4e'}, 
+    #                   'galff:-/uas:-': {'legend': '$wild$-$type_{OE}$', 'color': '#000080'},
                       
-    #                   'vcana365:wt': {'legend': '$sibling$', 'color': '#000080'}, 
-    #                   'vcana365:ht': {'legend': '$vcana^{\Delta365/+}$', 'color': '#a23e27'}, 
-    #                   'vcana365:mt': {'legend': '$vcana^{\Delta365/\Delta365}$', 'color': '#ffa500'}, 
+    #                   'vcana365:wt': {'legend': '$wild$-$type_{365KO}$', 'color': '#000080'}, 
+    #                   'vcana365:ht': {'legend': '$vcana^{+/-}_{\Delta365}$', 'color': '#a23e27'}, 
+    #                   'vcana365:mt': {'legend': '$vcana^{-/-}_{\Delta365}$', 'color': '#ffa500'}, 
     #                   'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
-    #                   'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'}}
+    #                   'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'},
+    #                   'wt:ctrl': {'legend': '$wild$-$type_{OE}$','color': '#000080'}}
+    
+    leg_genots = {'hapln1a187:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+                      'hapln1a241:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+                      'hapln1a3bp:wt': {'legend': '$sibling', 'color': '#000080'},  
+                      'hapln1aSTOP:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+                    
+                      'hapln1a187:ht': {'legend': '$hapln1a^{+/-}_{\Delta187}$', 'color': '#839292'}, 
+                      'hapln1a241:ht': {'legend': '$hapln1a^{+/-}_{\Delta241}$', 'color': '#839292'}, 
+                      
+                      'hapln1a187:mt': {'legend': '$hapln1a^{\Delta187/\Delta187}$', 'color': '#8B008B'}, 
+                      'hapln1a241:mt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
+                      'hapln1a3bp:mt': {'legend': '$hapln1a^{\Delta3/\Delta3}$', 'color': '#c36bea'}, 
+                      'hapln1aSTOP:mt': {'legend': '$hapln1a^{STOP/STOP}$', 'color': '#72e5ef'}, 
+                      
+                      'hapln1a241:wt/spaw:wt': {'legend': '$sibling$', 'color': '#000080'},
+                      'hapln1a241:wt/spaw:ht': {'legend': '$sibling$', 'color': '#000080'},
+                      'hapln1a241:wt/spaw:mt': {'legend': '$spaw^{-/-}$', 'color': '#36cbd3'}, 
+                      'hapln1a241:mt/spaw:wt': {'legend': '$hapln1a^{\Delta241/\Delta241}$', 'color': '#dc133b'}, 
+                      'hapln1a241:mt/spaw:mt': {'legend': '$hapln1a^{\Delta241/\Delta241};spaw^{-/-}$', 'color': '#3ff44c'},
+                      
+                      'galff:+/uas:+': {'legend': '$Gal4^+$; $UAS^+$', 'color': '#ade64f'}, 
+                      'galff:+/uas:-': {'legend': '$Gal4^+$; $UAS^-$', 'color': '#6495ed'}, 
+                      'galff:-/uas:+': {'legend': '$Gal4^-$; $UAS^+$', 'color': '#214d4e'}, 
+                      'galff:-/uas:-': {'legend': '$sibling$', 'color': '#000080'},
+                      
+                      'vcana365:wt': {'legend': '$sibling$', 'color': '#000080'}, 
+                      'vcana365:ht': {'legend': '$vcana^{\Delta365/+}$', 'color': '#a23e27'}, 
+                      'vcana365:mt': {'legend': '$vcana^{\Delta365/\Delta365}$', 'color': '#ffa500'}, 
+                      'wt:wt': {'legend': '$wild$-$type$','color': '#000080'},
+                      'wt_tc:wt': {'legend': '$wild$-$type_{tc}$','color': '#000080'},
+                      'wt:ctrl': {'legend': '$wild$-$type_{OE}$','color': '#000080'}}
     
     out_genots = dict()
     out_genotsF = dict()
@@ -1172,7 +1270,7 @@ def genot_order(values, mix_wts = False):
                               'hapln1a3bp:wt','hapln1a3bp:ht','hapln1a3bp:mt',
                               'hapln1aSTOP:wt','hapln1aSTOP:ht','hapln1aSTOP:mt',
                               'hapln1a241:wt/spaw:wt', 'hapln1a241:wt/spaw:ht', 'hapln1a241:mt/spaw:wt','hapln1a241:wt/spaw:mt', 'hapln1a241:mt/spaw:mt',
-                              'galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+', 'galff:+/uas:+',
+                              'galff:-/uas:-','galff:+/uas:-', 'galff:-/uas:+', 'wt:ctrl','galff:+/uas:+',
                               'vcana365:wt', 'vcana365:ht','vcana365:mt']]
         
         for poss in poss_combinations:
@@ -1194,6 +1292,10 @@ def props_ordered(df2plot, x_var, hue_var, shape_var):
     for var in [x_var, hue_var, shape_var]:
         # print(var)
         if var =='GenotypeAll':
+            vals2app = genot_order(df2plot[var].unique(), mix_wts = False)
+            # print(vals2app)
+            values.append(vals2app)
+        elif var =='GenotypeF':
             vals2app = genot_order(df2plot[var].unique(), mix_wts = False)
             # print(vals2app)
             values.append(vals2app)
@@ -1234,8 +1336,10 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
             df_change = df_change.dropna()
             df_change = df_change.rename(columns = lambda s: s+'_Change', index={'48-50':'32->48', '72-74':'48->74'}) # index={'48-50':'32->50', '72-74':'48->74'})
             # print(df_change)
-            if bool_genot:
+            if bool_genotAll:
                 df_change ['GenotypeAll'] = [gen for nn in range(len(stages)-1)]
+            if bool_genotF:
+                df_change ['GenotypeF'] = [gen for nn in range(len(stages)-1)]
             if bool_strains_o:
                 df_change['Strain_o'] = [strain for nn in range(len(stages)-1)]
             df_change = df_change.reset_index().set_index(new_index)
@@ -1243,7 +1347,8 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
             df_pct_change.append(df_change)
             
     bool_strains_o = False
-    bool_genot = False
+    bool_genotAll = False
+    bool_genotF = False
     
     df4plot = df2plot.groupby(group_vars)[vars2plot].mean()
     new_index = []
@@ -1253,14 +1358,18 @@ def get_dfPctChange(df2plot, vars2plot, group_vars):
         new_index.append('Strain_o')
     if 'GenotypeAll' in group_vars:
         genots = df2plot.GenotypeAll.unique()
-        bool_genot = True
+        bool_genotAll = True
         new_index.append('GenotypeAll')
+    if 'GenotypeF' in group_vars:
+        genots = df2plot.GenotypeF.unique()
+        bool_genotF = True
+        new_index.append('GenotypeF')
     new_index.append('Stage')
     
     stages = sorted(df2plot.Stage.unique())
     
     df_pct_change = []
-    if bool_genot:
+    if bool_genotAll or bool_genotF:
         for gen in genots:
             if bool_strains_o:
                 for strain in strains_o:
@@ -1308,7 +1417,7 @@ def normalityTests (alpha, factor, fact_levels, variable, data, test):
     pval_norm = np.ones(((len(fact_levels)),3))
     
     all_data_normal = True
-    txt_normtest = test +' Normality tests ('+'alpha:'+str(alpha)+'), \n- p-val: - '
+    txt_normtest = test +' Normality tests \n('+'alpha:'+str(alpha)+'), \n- p-val: - '
     data_groups = []
     
     for num, level in enumerate(fact_levels):
@@ -1677,17 +1786,17 @@ def txtMultComp (box_pairs, pval, x_values, x_labels, test_selected, test_norm, 
             a_pair = list(pair[0]); b_pair = list(pair[1])
             # print(x_val,'-',a_pair, '-',b_pair)
             a_pair.remove(x_val);b_pair.remove(x_val)
-            pval_txt = str(format(pval[n],'.3f'))
+            pval_txt = str(format(pval[n],'.5f'))
             if pval[n] > alpha:
                 pval_txt = pval_txt +' (ns)'
-            elif pval[n] <= 0.05:
-                pval_txt = pval_txt +' (*)'
-            elif pval[n] <= 1e-2:
-                pval_txt = pval_txt +' (**)'
-            elif pval[n] <= 1e-3:
-                pval_txt = pval_txt +' (***)'
             elif pval[n] <= 1e-4:
                 pval_txt = pval_txt +' (****)'
+            elif pval[n] <= 1e-3:
+                pval_txt = pval_txt +' (***)'
+            elif pval[n] <= 1e-2:
+                pval_txt = pval_txt +' (**)'
+            elif pval[n] <= 0.05:
+                pval_txt = pval_txt +' (*)'
             pairtxt =  str(a_pair)+ ' vs. '+ str(b_pair) +': '+pval_txt
             n += 1
             txt_multcomp = txt_multcomp + pairtxt
@@ -1712,6 +1821,7 @@ class Thesis_contxt():
         self.context = new_context
 
 #%% Plot properties!
+#%% func - setSNSContext
 def setSNSContext(thesis_contxt):
     fontname = 'Myriad Pro'
     
@@ -1727,6 +1837,7 @@ def setSNSContext(thesis_contxt):
                    'xtick.bottom' : True, 'ytick.left' : True,
                    'xtick.major.size': 3, 'ytick.major.size': 3,
                    'xtick.major.width': 0.25, 'ytick.major.width': 0.25,
+                   # 'xtick.minor.width': 0.25, 'ytick.minor.width': 0.25,
                    'xtick.labelsize': 6, 'ytick.labelsize': 8, # size of the labels of each tick
                    'legend.fontsize': 8, 'legend.title_fontsize': 8,
                    'figure.dpi': 100, 'savefig.dpi': 300, 'svg.fonttype': None}
@@ -1873,13 +1984,15 @@ palettes = ['deeppink','royalblue','mediumturquoise', 'darkmagenta','darkorange'
 # https://matplotlib.org/stable/tutorials/introductory/customizing.html
 
 #%% ->No statistics
+import matplotlib.ticker as ticker
 #%% func - plotIndivperX
 def plotIndivperX (# General Plot Settings
                     df2plot, vars2plot, x_var, hue_var, shape_var, 
                     # Size, title, labels and legends
                     title, labels2plot, dict_legends, ips, 
                     # Other plot settings
-                    suptitle = True, right_legend = False, ctx_style = 0,
+                    suptitle = True, right_legend = False, 
+                    ctx_style = 0, uni_color = False, 
                     yticks_lab = 'th,', ylim = [], yset = '', box_plot = True, show_fliers = False,
                     # Saving settings
                     save = True, dpi = 300, ext = ['png'], info = '', dir2save = ''):
@@ -1977,6 +2090,15 @@ def plotIndivperX (# General Plot Settings
         v_color.append(color)
     x_legend, hue_legend = v_legend
     x_color, _ = v_color
+    print(x_color, x_values)
+    
+    if uni_color:
+        for pp, hue_val in enumerate(dict_legends[hue_var]):
+            print(hue_val)
+            color = dict_legends[hue_var][hue_val]['color']
+        print(pp+1, color)
+        x_color = [color for n in range(len(x_values))]
+        print(x_color)
         
     if right_legend:
         # Define legends for x
@@ -2032,7 +2154,12 @@ def plotIndivperX (# General Plot Settings
                                    # meanline = True, showmeans = False, meanprops = meanprops,)
     
             box = ax.get_position()
-    
+            # ax.tick_params(which='major', width=0.25, length=1)
+            # ax.tick_params(which='minor', width=0.25, length=0.5)
+            # ax.yaxis.set_major_locator(plt.MaxNLocator(6))
+            # ax.yaxis.set_minor_locator(plt.MaxNLocator(0))
+            # ax.locator_params(axis='y', nbins=4)
+            
             if n == 0:
                 if yticks_lab == '1e6 - d.':
                     ylabel = ylabel +' x 10$^6$'
@@ -2048,7 +2175,7 @@ def plotIndivperX (# General Plot Settings
             xticks = ax.get_xticks()
             ax.set_xticks(xticks)
             ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='right', fontname = fontname)
-            sns.despine()
+            sns.despine()    
             
             if isinstance(ylim, tuple):
                 print('ylim:', ylim[0],'-', ylim[1])
@@ -3010,12 +3137,13 @@ def plotIndivStatsTxtAllX (# General Plot Settings
         txt_multcomp_all.append(txt_multcomp)
     
     txt_multcomp_f = '\n'.join(txt_multcomp_all)
+    txt_multcomp_f = title+'\n-.-.-.-.-.-.-.-.-.-.-.-\n'+txt_multcomp_f
     print(txt_multcomp_f)
     
     fig = plt.figure()
     ax = fig.add_subplot()
     fig.subplots_adjust(top=0.85)
-    fig.suptitle(title+'\n', y=1.2, fontname = fontname, fontsize=14)
+    # fig.suptitle(title+'\n', y=1.2, fontname = fontname, fontsize=14)
     ax.text(0.5,0.5,txt_multcomp_f, size=11, ha='center', va='center', fontname = fontname)
     ax.set_axis_off()
     # plt.text(0.5, 0.5, txt_multcomp, fontname = fontname, fontsize = 14, color='green')
@@ -3251,11 +3379,14 @@ def plotIndivTimeCourse (# General Plot Settings
                     # Size, title, labels and legends
                     title, labels2plot, dict_legends, ips, 
                     # Other plot settings
-                    suptitle = True, right_legend = True,
+                    suptitle = True, right_legend = True, ctx_style = 0,
                     yticks_lab = 'th,', ylim = '', 
                     # Saving settings
                     save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
 
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
+    
     
     print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var)
     
@@ -3281,19 +3412,20 @@ def plotIndivTimeCourse (# General Plot Settings
         
     # Set up the matplotlib figure
     h_plot, w_plot = ips
-    h_add = 1; w_add = 1
-
+    h_add = 0; w_add = 0
+    print(len(x_values), len(hue_values))
     if len(x_values) > 3:
         h_add = 0
         wspace = 0.05
         bbox_lf = -0.5
     else:
-        h_plot = 0.8
-        wspace = 0.15
-        bbox_lf = -1
-    
+        # h_plot = 0.8
+        wspace = 0.05
+        bbox_lf = -0.4
+        
     size_col = (n_cols)*(h_plot*len(x_values))+h_add
     size_row = n_rows*w_plot+w_add
+    print('fig_size:', size_col, size_row)
     
     # Define legends for x and hue
     v_legend = []
@@ -3419,10 +3551,195 @@ def plotIndivTimeCourse (# General Plot Settings
     if save: 
         for extf in ext: 
             dir2savef = os.path.join(dir2save, 'R_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+            fig_title = dir2savef+info+"_"+title+"."+extf
+
+
+            plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
+
+#%% func - plotMultTimeCourse
+def plotMultTimeCourse (# General Plot Settings
+                    df2plot, vars2plot, x_var, hue_var,
+                    # Size, title, labels and legends
+                    title, labels2plot, dict_legends, ips, 
+                    # Other plot settings
+                    suptitle = True, right_legend = True, ctx_style = 0,
+                    yticks_lab = 'th,', ylim = '', 
+                    # Saving settings
+                    save = True, dpi = 300, ext = 'png', info = '', dir2save = ''):
+
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
+    
+    print('\n>> '+ title+' - x_var: '+x_var+ ' - hue_var: '+hue_var)
+    
+    # Genotypes and Strains being plotted 
+    values = props_ordered(df2plot, x_var, hue_var, 'Strain')
+    x_values, hue_values, _ = values
+    
+    # Set up the matplotlib figure 
+    n_rows = 1
+    n_cols = 1
+    
+    # As a right legend wants to be added, we need to add '' to all labels 
+    if right_legend: 
+        index_no_plot = [n_cols]
+        for index in index_no_plot:
+            vars2plot.insert(index, '')
+            labels2plot.insert(index, '')
+        width_ratios = [1]*n_cols+[0.2]
+        n_cols = n_cols+1
+    else: 
+        width_ratios = [1]*n_cols
+        index_no_plot = [1000]
+        
+    # Set up the matplotlib figure
+    h_plot, w_plot = ips
+    h_add = 0; w_add = 0
+    print(len(x_values), len(hue_values))
+    if len(x_values) > 3:
+        h_add = 0
+        wspace = 0.05
+        bbox_lf = -0.5
+    else:
+        # h_plot = 0.8
+        wspace = 0.05
+        bbox_lf = -0.4
+        
+    size_col = (n_cols)*(h_plot*len(x_values))+h_add
+    size_row = n_rows*w_plot+w_add
+    print('fig_size:', size_col, size_row)
+    print(x_values, hue_values)
+    # Define legends for x and hue
+    v_legend = []; v_color = []
+    for zz, v_var, v_values in zip(count(), [x_var, hue_var], [x_values, hue_values]):
+        if isinstance(dict_legends[v_var], dict):
+            legend = []
+            color = []
+            for v_dict in v_values: 
+                legend.append(dict_legends[v_var][v_dict]['legend'])
+                color.append(dict_legends[v_var][v_dict]['color'])
+        else: 
+            legend = dict_legends[v_var]
+            color = ''
+        v_legend.append(legend)
+        v_color.append(color)
+    x_legend, hue_legend = v_legend
+    x_color, hue_color = v_color
+    # print('x_legend, hue_legend')
+    # print(x_legend, hue_legend)
+    # print(x_color, hue_color)
+        
+    if right_legend:
+        # Define legends for x
+        legend_elem = []
+        for aa, xval, xcol in zip(count(), hue_legend, hue_color):
+            legend_elem.append(Line2D([0], [0], color=xcol, label=xval,lw = 1))
+        handle_new = legend_elem
+    
+    for k, svar, value in zip(count(), [x_var, hue_var], values):
+        print('\t- '+svar+': ', value)
+        
+    ##  CREATE FIGURE 
+    gridkw = dict(width_ratios=width_ratios)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(size_col, size_row), sharex=False, sharey=True, gridspec_kw=gridkw)
+    fig.subplots_adjust(hspace=1, wspace=wspace)
+    
+    sns.set_style("ticks")
+    sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    
+    # Create list to contain info of yticks and its highest value
+    for n, ax, var, ylabel in zip(count(), axes.flatten(), vars2plot, labels2plot):
+        print(var, ylabel)
+        if n in index_no_plot and right_legend:
+            if n == n_cols-1:
+                ax.set_axis_off()
+                ax.legend(handle_new, hue_legend, loc='upper left', bbox_to_anchor=(bbox_lf, 1), frameon = False, fontsize=7)
             else: 
-                fig_title = dir2savef+title+"_(x_var_"+x_var+"-hue_var_"+hue_var+")."+extf
+                ax.remove()
+        else: 
+            # m = sns.lineplot(data=df2plot, x=x_var, y=var, hue=hue_var, ax = ax, 
+            #                  markers=True, ci = None, palette = palette_elem)
+            m = sns.pointplot(data=df2plot, x=x_var, y=var, hue=hue_var, ax = ax, order=x_values,
+                              hue_order = hue_values,
+                              scale = 0.15, 
+                              marker = 'o', palette = hue_color,#palette_elem, 
+                              dodge=True, linestyles='--', linewidth = 0.1, errwidth=0.4, capsize=.12)
+            box = ax.get_position()
+            # plt.setp(ax.collections, sizes=[10])
+            ax.get_legend().remove()
+            # lw = m.lines[0].get_linewidth() # lw of first line
+            plt.setp(m.lines,linewidth=0.4) 
+            # for num in range(len(hue_legend)):
+            #     ax.lines[num].set_linestyle("--")
+            #     ax.lines[num].set_linewidth(1)
+    
+            if n == 0:
+                if yticks_lab == '1e6 - d.':
+                    ylabel = ylabel +' x 10$^6$'
+                elif yticks_lab == '1e3 - d.':
+                    ylabel = ylabel +' x 10$^3$'
+                xlabel = dict_legends['xlabels'][x_var]
+                ax.set_xlabel(xlabel, fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname)
+            else:
+                ax.set_xlabel('', fontname = fontname)
+                ax.set_ylabel('', fontname = fontname)
+    
+            ax.set_position([box.x0, box.y0, box.width*1, box.height])
+            xticks = ax.get_xticks()
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(x_legend, rotation=45, horizontalalignment='center', fontname = fontname)
+            sns.despine()
+            
+            if ylim != '':
+                print('ylim:', ylim[0],'-', ylim[1])
+                ax.set_ylim(ylim[0], ylim[1])
+            
+            if n == 0:
+                handles, labels = m.get_legend_handles_labels()
+            else:
+                ax.spines['left'].set_linestyle('-.')
+                ax.spines['left'].set_color('#696969')
+                ax.spines['left'].set_linewidth(0.8)
+                ax.tick_params(left = False)
+    
+            y_vals = ax.get_yticks()
+            ax.set_yticks(y_vals)
+    
+            # Define axes based on higherst bar
+            if yticks_lab == '1e6 - d.':
+                ax.set_yticks(ax.get_yticks())  #
+                ax.set_yticklabels(['{:.2f}'.format(w/1e6) for w in y_vals])
+            elif yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals])
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals])
+            elif yticks_lab == 'd. - 0':
+                ax.set_yticklabels(['{:.0f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd. - 1':
+                ax.set_yticklabels(['{:.1f}'.format(w) for w in y_vals])
+            elif yticks_lab == 'd.':
+                ax.set_yticklabels(['{:.2f}'.format(w) for w in y_vals])
+            
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+            try:
+                ax.yaxis.get_offset_text().set_fontname(fontname)
+                # print(r' -> YAY')
+            except:
+                print(r' -> Nop')
+
+    if suptitle:
+        fig.suptitle(title+'\n', y=1, fontname = fontname)
+    # fig.tight_layout()
+    
+    if save: 
+        for extf in ext: 
+            dir2savef = os.path.join(dir2save, 'R_')
+            fig_title = dir2savef+info+"_"+title+"."+extf
+
 
             plt.savefig(fig_title, dpi=dpi, bbox_inches='tight', transparent=True)
             
@@ -3567,9 +3884,14 @@ def barPlots(# General Plot Settings
              # General Plot Settings
              title, txt_title, ylabel, colours, dict_legends,
              # Other plot settings
-             yticks_lab, stack100 = True, sub_bar_lab = True,
+             yticks_lab, ylim, stack100 = True, sub_bar_lab = True, 
+             ctx_style = 0, bot_legend = True, 
              # Saving settings
              save = True, ext = ['png'], info='', dir2save = ''): 
+    
+    
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
     
     mpl.rcParams.update(mpl.rcParamsDefault)
     print('\n> '+title)
@@ -3620,25 +3942,30 @@ def barPlots(# General Plot Settings
     # - number of variables/ stacked bars define number of columns in legend
     if n_col >= 3:
         leg_pos = 4
-        loc='center'
+        loc='lower center'
         bbox_to_anchor=(0.5, 0.5)
         ncols_leg = len(vars2plot)
     else:
         leg_pos = n_col
-        loc='center'
+        loc='lower center'
         if len(vars2plot) == 3:
             ncols_leg = 3
         else: 
             ncols_leg = 2
         if n_col == 1:
             bbox_to_anchor=(0.5, 0.5)
+            print('A')
         else: 
-            bbox_to_anchor=(1, 0.25)
+            if len(colours) <= 3:
+                bbox_to_anchor=(1, -1.3)
+            else:
+                bbox_to_anchor=(1, -1.7)
+                print('B')
             
     # - number of x_var
     n_x = len(df2plot[x_var].unique())
-    
-    
+    print(n_x)
+
     # If bar plots are stacked to 100 transform data to percentages
     if stack100: 
         df4plot = df4plot.apply(lambda zz: zz*100/sum(zz), axis=1)
@@ -3648,11 +3975,16 @@ def barPlots(# General Plot Settings
     
     #Create figure
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
-    fig_size = (math.ceil(2.5*(n_x/2)*(n_col)),7)
+    if bot_legend:
+        fig_size = (math.ceil(1*(n_x/2)*(n_col)),2.4)
+    else: 
+        fig_size = (math.ceil(1*(n_x/2)*(n_col)),2.4) # for h1aOE subtract -0.5 from x 
+    print(fig_size)
     fig, axes = plt.subplots(ncols=n_col,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
     
     sns.set_style("ticks")
     sns.set_context(contxt, font_scale = font_scale, rc = rc_dict)
+    # print(rc_dict)
     
     for n, ax, col_val in zip(count(), axes.flatten(), col_values):
         # First row will contain the graphs
@@ -3677,13 +4009,14 @@ def barPlots(# General Plot Settings
             # Plot each layer of the bar, adding each bar to the "bottom" so
             # the next bar starts higher.
             for i, colm in enumerate(df_col.columns):
-                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
+                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.75)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
-                ax.set_xticklabels(df2plot_titles, rotation=30, horizontalalignment='center', fontname = fontname)
+                ax.set_xticklabels(df2plot_titles, rotation=30, horizontalalignment='center', 
+                                   fontname = fontname, size =8)
             
             if x_var == 'Stage':
-                ax.set_xlabel('Stage [hpf]', fontname = fontname)
+                ax.set_xlabel('Stage [hpf]', fontname = fontname, size =8)
             y_vals = ax.get_yticks()
             y_vals_all.append(y_vals)
             max_y_vals.append(y_vals[-1])
@@ -3692,11 +4025,12 @@ def barPlots(# General Plot Settings
                 handles, labels = ax.get_legend_handles_labels()
                 if not stack100 and yticks_lab == '1e3 - d.':
                     ylabel = ylabel +' x 10$^3$'
-                ax.set_ylabel(ylabel, fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname, size =8)
                 
             # Sum up the rows of our data to get the total value of each bar.
             totals = df_col.sum(axis=1)
             if not stack100:
+                ax.set_ylim(ylim[0], ylim[1])
                 # Set an offset that is used to bump the label up a bit above the bar.
                 y_offset = round(0.2*min_val)
                 # Add labels to each bar.
@@ -3704,17 +4038,17 @@ def barPlots(# General Plot Settings
                     if total < 100:
                           ax.text(i, total + y_offset, 
                                   ['{:.1f}'.format(w) for w in total], 
-                                  ha='center', weight='bold', size =10, fontname = fontname)
+                                  ha='center', weight='bold', size =6, fontname = fontname)
                     else: 
                           # ax.text(i, total + y_offset ,locale.format("%d", total, grouping=True), ha='center', weight='bold', size =9)
                           if yticks_lab == '1e3 - d.':
                               ax.text(i, total + y_offset ,
                                       '{:.1f}'.format(total/1e3),
-                                      ha='center', weight='bold', size =9, fontname = fontname)
+                                      ha='center', weight='bold', size =6, fontname = fontname)
                           elif yticks_lab == 'th,':
                               ax.text(i, total + y_offset ,
                                       locale.format("%d", total, grouping=True),
-                                      ha='center', weight='bold', size =9, fontname = fontname)
+                                      ha='center', weight='normal', size =6, fontname = fontname)
                               
             # Let's put the annotations inside the bars themselves by using a
             # negative offset.
@@ -3742,7 +4076,7 @@ def barPlots(# General Plot Settings
                           # This is actual value we'll show. original: round(bar.get_height())
                           bar_height,
                           # Center the labels and style them a bit.
-                          ha='center', color='w', weight='bold', size=9,fontname = fontname)
+                          ha='center', color='w', weight='bold', size=6,fontname = fontname)
                   
             ax.set_title(col_legend[n])
             ax.spines['right'].set_visible(False)
@@ -3752,33 +4086,42 @@ def barPlots(# General Plot Settings
         if n >= n_col:
             ax.set_axis_off()
             ax.set_title('')
-            if n== leg_pos:
+            if n== leg_pos and bot_legend:
                 legends = def_var_names('bar_plots', labels)
                 ax.legend(handles, legends, loc=loc, bbox_to_anchor = bbox_to_anchor, 
-                          frameon = True, fontsize=10, ncol = ncols_leg)
+                          frameon = True, fontsize=7, ncol = ncols_leg)
     
     # Define axes based on higherst bar
     if not stack100:
-        max_y_index = max_y_vals.index(max(max_y_vals))
-        ax.set_yticks(y_vals_all[max_y_index])
-        # ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-        if yticks_lab == '1e3 - d.':
-            ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]])
-        elif yticks_lab == 'th,':
-            ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
-        # ax.ticklabel_format(axis='y', style='plain')
+        for n, ax in zip(count(), axes.flatten()):
+            max_y_index = max_y_vals.index(max(max_y_vals))
+            ax.set_yticks(y_vals_all[max_y_index])
+            # ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]])
+            if yticks_lab == '1e3 - d.':
+                ax.set_yticklabels(['{:.0f}'.format(w/1e3) for w in y_vals_all[max_y_index]], 
+                                   fontname = fontname, size =8);# print('aa')
+            elif yticks_lab == 'th,':
+                ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]],
+                                   fontname = fontname, size =8); #print('bb')
+            # ax.ticklabel_format(axis='y', style='plain')
 
-    for tick in ax.get_xticklabels():
-        tick.set_fontname(fontname)
-    for tick in ax.get_yticklabels():
-        tick.set_fontname(fontname)
-    try:
-        ax.yaxis.get_offset_text().set_fontname(fontname)
-        # print(r' -> YAY')
-    except:
-        print(r' -> Nop')
+            # ax.tick_params(axis='y', which='major', labelsize=8)
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+                # print('IN')
         
-    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01, fontname = fontname)
+    else: 
+        for n, ax in zip(count(), axes.flatten()):
+            ax.tick_params(axis='y', which='major', labelsize=8)
+            for tick in ax.get_xticklabels():
+                tick.set_fontname(fontname)
+            for tick in ax.get_yticklabels():
+                tick.set_fontname(fontname)
+                # print('IN')
+        
+    fig.suptitle(title+txt_title+'\n', fontsize = 8, y=1.1, fontname = fontname)
     
     if save: 
         for extf in ext: 
@@ -3788,10 +4131,9 @@ def barPlots(# General Plot Settings
             title2save = title2save.replace(' ','_')
             if stack100: 
                 title2save = 'Perc'+title2save
-            if info != '':
-                fig_title = dir2savef+info+"_"+title2save+"."+extf
-            else: 
-                fig_title = dir2savef+title2save+"."+extf
+
+            fig_title = dir2savef+info+"_"+title2save+"."+extf
+          
             plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
 
 #%% func - pctChange_barPlots (test if working!)
@@ -3801,8 +4143,12 @@ def pctChange_barPlots(# General Plot Settings
                        title, txt_title, ylabel, colours, dict_legends,
                        # Other plot settings
                        sub_bar_lab = True,
+                       ctx_style = 0, bot_legend = True, 
                        # Saving settings
-                       save = True, ext = ['png'], info='', dir2save = ''): 
+                       save = True, ext = ['png'], info='', dir2save = ''):
+    
+    contxt, font_scale, rc_dict, all_box_props, fontname  = setSNSContext(ctx_style)
+    boxprops, flierprops, whiskerprops, capprops, medianprops, meanprops = all_box_props
     
     mpl.rcParams.update(mpl.rcParamsDefault)
     print('\n> '+title.replace('\n',' '))
@@ -3832,6 +4178,7 @@ def pctChange_barPlots(# General Plot Settings
         if isinstance(dict_legends[v_var], dict):
             legend = []
             for v_dict in v_values: 
+                # print(v_var, v_dict)
                 legend.append(dict_legends[v_var][v_dict]['legend'])
         else: 
             legend = dict_legends[v_var]
@@ -3857,7 +4204,7 @@ def pctChange_barPlots(# General Plot Settings
     
     #Create figure
     gridkw = dict(width_ratios=[1]*n_col, height_ratios=[1,0.3])
-    fig_size = (math.ceil(2.5*(n_x/2)*(n_col)),7)
+    fig_size = (math.ceil(1*(n_x/2)*(n_col)),2.4)
     fig, axes = plt.subplots(ncols=n_col,nrows=2, figsize=fig_size, sharey=True, gridspec_kw=gridkw)
     
     sns.set_style("ticks")
@@ -3893,17 +4240,18 @@ def pctChange_barPlots(# General Plot Settings
                         bottom[v] = bottom_negative[v]
                         bottom_negative[v] += val
                 #print('bottom', bottom)
-                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.7)
+                ax.bar(df2plot_titles, df_col[colm], bottom=bottom, label=colm, color=colours[i], width = 0.75)
                 bottom += np.array(df_col[colm])
                 ax.set_xticks(df2plot_titles)
-                ax.set_xticklabels(df2plot_titles, rotation=30, fontname = fontname)
+                ax.set_xticklabels(df2plot_titles, rotation=30, 
+                                   fontname = fontname, size =8)
             y_vals = ax.get_yticks()
             y_vals_all.append(y_vals)
             max_y_vals.append(y_vals[-1])
             
             if n == 0:
                 handles, labels = ax.get_legend_handles_labels()
-                ax.set_ylabel(ylabel, fontname = fontname)
+                ax.set_ylabel(ylabel, fontname = fontname, size =8)
 
             # Let's put the annotations inside the bars themselves by using a
             # negative offset.
@@ -3925,7 +4273,7 @@ def pctChange_barPlots(# General Plot Settings
                           # This is actual value we'll show. original: round(bar.get_height())
                           bar_height,
                           # Center the labels and style them a bit.
-                          ha='center', color='w', weight='bold', size=10,  fontname = fontname)
+                          ha='center', color='w', weight='bold', size=6,  fontname = fontname)
             
             ax.set_title(col_legend[n],  fontname = fontname)
             ax.spines['right'].set_visible(False)
@@ -3936,12 +4284,13 @@ def pctChange_barPlots(# General Plot Settings
         if n >= n_col:
             ax.set_axis_off()
             ax.set_title('')
-            if n== leg_pos:
+            if n== leg_pos and bot_legend:
                 legends = def_var_names('bar_plots', labels)
-                ax.legend(handles, legends, loc=loc, bbox_to_anchor = bbox_to_anchor, frameon = True, fontsize=10, 
-                          ncol = ncols_leg)
+                ax.legend(handles, legends, loc=loc, bbox_to_anchor = bbox_to_anchor, 
+                          frameon = True, fontsize=7, ncol = ncols_leg)
                 # ax.legend.set_name(fontname)
-    
+        
+        ax.tick_params(axis='y', which='major', labelsize=8)
         for tick in ax.get_xticklabels():
             tick.set_fontname(fontname)
         for tick in ax.get_yticklabels():
@@ -3957,7 +4306,7 @@ def pctChange_barPlots(# General Plot Settings
     # ax.set_yticks(y_vals_all[max_y_index])
     # ax.set_yticklabels([locale.format("%d", w, grouping=True) for w in y_vals_all[max_y_index]], fontname = fontname)
 
-    fig.suptitle(title+txt_title+'\n', fontsize = 11, y=1.01,  fontname = fontname)
+    fig.suptitle(title+txt_title+'\n', fontsize = 8, y=1.2,  fontname = fontname)
     
     if save: 
         for extf in ext: 
@@ -3966,10 +4315,8 @@ def pctChange_barPlots(# General Plot Settings
             title2save = title2save.replace(' per Genotype and Stage','')
             title2save = title2save.replace('\n','_')
             title2save = title2save.replace(' ','_')
-            if info != '':
-                fig_title = dir2savef+info+"_"+title2save+"."+extf
-            else: 
-                fig_title = dir2savef+title2save+"."+extf
+            fig_title = dir2savef+info+"_"+title2save+"."+extf
+
             # print(fig_title)
             plt.savefig(fig_title, dpi=300, bbox_inches='tight', transparent=True)
 

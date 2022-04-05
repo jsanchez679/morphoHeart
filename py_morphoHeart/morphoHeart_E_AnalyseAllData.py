@@ -55,30 +55,34 @@ if init:
     thesis_use = fcAn.Thesis_contxt(thesis_contxt_input)
     ips = [(0.8,6), (0.2,1.5)]
     
-    #%% Plot Individual Plots for Group of Filtered Dataset
+    #%% Plot Individual Plots for Group of Filtered Dataset - working for document style!
     newGroup = True
     while newGroup: 
         #% Filter dataset
         df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
         fcAn.printDFINfo(df2plot)
+        df2plot = fcAn.modifySibsGenot(df2plot)
+        df2plot = fcAn.modifyOEControlGenot(df2plot)
+        
         # save, info, ext = fcAn.q_savePlot()
         save = True; ext = ['png']
         info = input('> Figures title: ')
+        GenotVar = 'GenotypeF'#'GenotypeAll'
         
         # Settings for statistical analysis
         run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
-        filters = ['Stage', 'GenotypeAll']; alpha = 0.05
+        filters = ['Stage', GenotVar]; alpha = 0.05
         btw_x = False; btw_hue = True
         plotInGroups = False
 
         # Individual Plots
         if not plotInGroups:  
-            x_var = 'GenotypeAll'; 
+            x_var = GenotVar
             hue_var = 'Stage'; shape_var = 'Strain_o' 
             # Settings for plots
             pl_indiv = fcAn.plot_indiv()
             vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-            groups = list(pl_indiv.keys())
+            groups = list(pl_indiv.keys())#[0:1]
             # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
         
             for group in groups: 
@@ -126,27 +130,34 @@ if init:
         newGroup = fcBasics.ask4input('Plot another filtered group? [0]: no, [1]: yes! >:', bool)
     
     
-    #%%  Plot for filtered wild-types (all strains)
+    #%%  Plots through time for just one genotype!
+    #%Plot for filtered wild-types (all strains) - working for document style!
     # % Filter dataset (Option 1) - all wild-types combined
-    filters = ['GenotypeF']; groups = [('wt:wt')]
-    df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
-    df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
-    info = 'all_wts_time'; save = True
+    # filters = ['GenotypeF']; groups = [('wt:wt')]
+    # df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
+    # df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
+    # info = 'all_wts_time'; save = True; uni_color = False
+    # fcAn.printDFINfo(df2plot)
+    
     
     #% Filter dataset (Option 2) - only hapln1a241 wts
     # filters = ['GenotypeAll']; groups = [('hapln1a241:wt')]
     # df2plot = fcAn.filterR_Autom(df_meas, filters, groups[0])
     # df2plot = df2plot[df2plot['GenotypeAll'] != 'wt_tc:wt']
-    # info = 'all_h1a241wts_time'; save = True
+    # info = 'all_h1a241wts_time'; save = True; uni_color = False
+    # fcAn.printDFINfo(df2plot)
 
+    df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
     fcAn.printDFINfo(df2plot)
+    save = True; ext = ['png', 'svg']; uni_color = True
+    info = input('> Figures title: ')
     
     # Settings for statistical analysis
     run_stats = fcBasics.ask4input('Do you want to run statistical analysis? [0]:no / [1]: yes! >> : ', bool)
     filters = ['Stage', 'GenotypeF']; alpha = 0.05
     btw_x = False; btw_hue = True
     plotInGroups = False
-    
+
     # Individual Plots
     if not plotInGroups:  
         x_var = 'Stage'; 
@@ -154,9 +165,9 @@ if init:
         # Settings for plots
         pl_indiv = fcAn.plot_indiv()
         vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-        groups = list(pl_indiv.keys())[:]
+        groups = list(pl_indiv.keys())#[0:1]
         # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
-    
+        
         for group in groups: 
             print(group)
             vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'indiv')
@@ -168,7 +179,8 @@ if init:
                                 title = pl_indiv[group]['title'], labels2plot = labels2plot, 
                                 dict_legends = dict_legends, ips = ips[thesis_contxt_input], 
                                 # Other plot settings
-                                suptitle = False, right_legend = False, ctx_style = thesis_use.get_context(),
+                                suptitle = False, right_legend = False, 
+                                ctx_style = thesis_use.get_context(), uni_color = uni_color, 
                                 yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
                                 yset = pl_indiv[group]['yset'],
                                 box_plot = True, show_fliers = False,
@@ -195,20 +207,50 @@ if init:
                                     stats_set = stats_set, 
                                     # Other plot settings
                                     suptitle = True, ctx_style = thesis_use.get_context(),
-                                    
                                     # Saving settings
                                     save = save, dpi = 300, ext = ['png'], info = info+'-'+pl_indiv[group]['graph_no'], 
                                     dir2save = os.path.join(dir_pl_meas,'pl_indiv'))
     
-    #%% Time course
-# Change here the filter to plot agarose experiment
+    #%% Pointplots of mts and wts through time
+    df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
+    # Setting spaw sibs (spaw:ht, h1a:wt, as wts to mix with h1a wts)
+    df2plot = fcAn.modifySibsGenot(df2plot)
+    save = True; ext = ['png','svg']
+    info = input('> Figures title: ')
+    x_var = 'Stage'; 
+    hue_var = 'GenotypeF'; shape_var = 'Strain_o' 
+    
+    pl_indiv = fcAn.plot_indiv()
+    vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
+#Add function to select variable(s) to plot
+    groups = list(pl_indiv.keys())#[0:1]
+    
+    for group in groups: 
+        print(group)
+        vars2plot, labels2plot = fcAn.selectVariables_auto(vars_dict, [group], 'indiv')
+        dict_legends = fcAn.def_legends(df2plot)
+        fcAn.plotMultTimeCourse (# General Plot Settings
+                    df2plot = df2plot, vars2plot = vars2plot, x_var=x_var, hue_var=hue_var,
+                    # Size, title, labels and legends
+                    title = pl_indiv[group]['title'], labels2plot = labels2plot, 
+                    dict_legends = dict_legends, ips = (0.3,1.7), 
+                    # Other plot settings
+                    suptitle = False, right_legend = True, ctx_style = thesis_use.get_context(),
+                    yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
+                    # Saving settings
+                    save = save, dpi = 300, ext = ext, info = info+'-'+pl_indiv[group]['graph_no'], 
+                    dir2save = os.path.join(dir_pl_meas,'pl_timecourse'))
+    
+    #%% Time course (agarose experiment) - working for document style!
     df2plot_tc = df_meas[df_meas['GenotypeAll'] == 'wt_tc:wt']
-    save, info, ext = fcAn.q_savePlot()
+    save = True; info = 'wt_tc'; ext = ['png', 'svg']
+    # save, info, ext = fcAn.q_savePlot()
+
     x_var = 'Stage'; hue_var = 'Fish_ref'
     pl_indiv = fcAn.plot_indiv()
     vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
 #Add function to select variable(s) to plot
-    groups = list(pl_indiv.keys())[0:1]
+    groups = list(pl_indiv.keys())
     
     for group in groups: 
         print(group)
@@ -218,45 +260,55 @@ if init:
                     df2plot = df2plot_tc, vars2plot = vars2plot, x_var=x_var, hue_var=hue_var,
                     # Size, title, labels and legends
                     title = pl_indiv[group]['title'], labels2plot = labels2plot, 
-                    dict_legends = dict_legends, ips = (4,4), 
+                    dict_legends = dict_legends, ips = (0.2,1.7), 
                     # Other plot settings
-                    suptitle = False, right_legend = True,
+                    suptitle = False, right_legend = True, ctx_style = thesis_use.get_context(),
                     yticks_lab = pl_indiv[group]['yticks_lab'], ylim = pl_indiv[group]['ylim'], 
                     # Saving settings
-                    save = save, dpi = 300, ext = ext, info = info, 
+                    save = save, dpi = 300, ext = ext, info = info+'-'+pl_indiv[group]['graph_no'], 
                     dir2save = os.path.join(dir_pl_meas,'pl_timecourse'))
     
     #%% Tissue composition (whole, atrium and ventricle)
     print('\n=> TISSUE COMPOSITION ANALYSIS')
     df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
     fcAn.printDFINfo(df2plot)
-    save, info, ext = fcAn.q_savePlot()
+    # save, info, ext = fcAn.q_savePlot()
+    save = True; info = 'all_wts'; ext = ['png','svg']
     
+    # all_h1a_wtVmt
+    # all_h1a187_wtVmt
+    # all_h1aOE
+    # all_spaw,h1a_sibsVmt
+    # all_spaw_sibsVmt
+    # all_wts
+    #%%
     colours = ['lightseagreen','darkorange','darkmagenta' ]
     vars2plot_all = [['Vol_Myoc','Vol_CJ','Vol_Endo'],
                      ['Vol_Atr.Myoc','Vol_Atr.CJ','Vol_Atr.Endo'],
                      ['Vol_Vent.Myoc','Vol_Vent.CJ','Vol_Vent.Endo']]
     add_vars2plot_all = ['Vol_Int.Endo','Vol_Atr.IntEndo','Vol_Vent.IntEndo']
     title_sp_all = ['Whole Heart ','Atrial ', 'Ventricular ']
-    
+    ylim_all = [[(0,1500e3),(0,2500e3)],[(0,1000e3),(0,1500e3)],[(0,600e3),(0,1000e3)]]
 # Add function to select GenotypeAll or GenotypeF (joined wts) and x_var/hue_var
     # x = 'GenotypeAll'; col = 'Stage'; per = 'per Stage and Genotype'
     x = 'Stage'; col = 'GenotypeAll'; per = 'per Genotype and Stage'#**
     group_vars = ['Stage', 'GenotypeAll']
     txt_title = fcAn.get_txt_title(['Strain_o'], df2plot)
     dict_legends = fcAn.def_legends(df2plot)
-    for n, vars2plot, add_var, title_sp in zip(count(), vars2plot_all, add_vars2plot_all, title_sp_all):
-        for m, stack100, unit in zip(count(), [True, False], [' (%)', ' [um$^3$]']):
+    for n, vars2plot, add_var, title_sp, ylim in zip(count(), vars2plot_all, add_vars2plot_all, title_sp_all, ylim_all):
+        for m, stack100, unit in zip(count(), [True, False], [' (%)', ' [$\mu$m$^3$]']):
+
             # => Only tissues 
             fcAn.barPlots(# General Plot Settings
                           df2plot = df2plot, vars2plot = vars2plot, group_vars = group_vars, 
                           x_var = x, col_var = col, 
                           # General Plot Settings
                           title = title_sp +'Tissue Composition '+ per, txt_title = txt_title,
-                          ylabel = title_sp +'Tissue Composition'+unit, colours = colours, 
+                          ylabel = title_sp +'Tissue \nComposition '+unit, colours = colours, 
                           dict_legends = dict_legends, 
                           # Other plot settings
-                          yticks_lab = '1e3 - d.', stack100 = stack100, sub_bar_lab = True,
+                          yticks_lab = '1e3 - d.', ylim = ylim[0], stack100 = stack100, sub_bar_lab = True,
+                          ctx_style = thesis_use.get_context(), bot_legend = False, 
                           # Saving settings
                           save = save, ext = ext, info = info, dir2save = dir_pl_meas)
             # => Including lumen 
@@ -265,34 +317,46 @@ if init:
                           x_var = x, col_var = col, 
                           # General Plot Settings
                           title = title_sp +'Composition '+ per, txt_title = txt_title,
-                          ylabel = title_sp +'Composition'+unit, colours = colours + ['tomato'], 
+                          ylabel = title_sp +'\nComposition'+unit, colours = colours + ['tomato'], 
                           dict_legends = dict_legends,
                           # Other plot settings
-                          yticks_lab = '1e3 - d.', stack100 = stack100, sub_bar_lab = True,
+                          yticks_lab = '1e3 - d.', ylim = ylim[1], stack100 = stack100, sub_bar_lab = True,
+                          ctx_style = thesis_use.get_context(), bot_legend = False, 
                           # Saving settings
                           save = save, ext = ext, info = info, dir2save = dir_pl_meas)
     
     #%% Tissue Expansion or Shrinkage (not corrected after dictLegends changed!)
     print('\n=> TISSUE EXPANSION OR SHRINKAGE ANALYSIS')
+    df2plot, genots, strains, strains_o, stages = fcAn.filterDF2Plot(df_meas, df2plot)
     fcAn.printDFINfo(df2plot)
     
-    group_vars = ['GenotypeAll', 'Stage'] # ['GenotypeAll', 'Strain_o', 'Stage']
+    save = True; info = 'all_wts_mixed'; ext = ['png','svg']
+    # all_h1a_wtVmt
+    # all_spaw,h1a_sibsVmt
+    # all_spaw_sibsVmt
+    # all_wts
+    
+    #%%
+    genot_var = 'GenotypeAll'
+    group_vars = [genot_var, 'Stage'] # ['GenotypeAll', 'Strain_o', 'Stage']
     txt_title = fcAn.get_txt_title(['Strain_o'], df2plot)
-    for  n, vars2plot, add_var, title_sp in zip(count(), vars2plot_all, add_vars2plot_all, title_sp_all[:1]):
+    for  n, vars2plot, add_var, title_sp in zip(count(), vars2plot_all, add_vars2plot_all, title_sp_all):
+        # print(n,vars2plot, add_var, title_sp)
         _, df4plot_pct_change = fcAn.get_dfPctChange(df2plot, vars2plot, group_vars)
         dict_legends = fcAn.def_legends(df4plot_pct_change.reset_index(), df_type = 'changes')
-        print(dict_legends)
+        # print(dict_legends)
         # => x = 'Stage', col = 'GenotypeAll'
         fcAn.pctChange_barPlots(# General Plot Settings
                                 df2plot = df4plot_pct_change, vars2plot = [var+'_Change' for var in vars2plot], 
-                                group_vars = group_vars, x_var = 'Stage', col_var = 'GenotypeAll', 
+                                group_vars = group_vars, x_var = 'Stage', col_var = genot_var, 
                                 # General Plot Settings
                                 title = title_sp + 'Percentage Changes\nin Tissue Composition per Genotype and Stage', 
                                 txt_title = txt_title, 
-                                ylabel = 'Percentage changes in tissue composition \nwith respect to previous stage(%)', 
+                                ylabel = 'Changes in tissue composition \nwith respect to previous stage (%)', 
                                 colours = colours, dict_legends = dict_legends,
                                 # Other plot settings
                                 sub_bar_lab = True, 
+                                ctx_style = thesis_use.get_context(), bot_legend = False, 
                                 # Saving settings
                                 save = save, ext = ext, info=info, dir2save = dir_pl_meas)
         
@@ -304,13 +368,22 @@ if init:
         #                         dir2save = dir_pl_meas, info=info, sub_bar_lab = True, save = save)
         
         # => Including lumen 
-        # vars2plot = vars2plot + [add_var]
-        # _, df4plot_pct_change = fcAn.get_df_pctChange(df2plot, vars2plot, group_vars)
-        # fcAn.pctChange_barPlots(df2plot = df4plot_pct_change, vars2plot = [var+'_Change' for var in vars2plot], 
-        #                         group_vars = group_vars, x = 'Stage', col = 'GenotypeAll',colours = colours+['tomato'], 
-        #                         title = title_sp + 'Percentage Changes\nin Composition per Genotype and Stage', 
-        #                         txt_title = txt_title, ylabel = 'Percentage changes in tissue composition \nwith respect to previous stage(%)', 
-        #                         dir2save = dir_pl_meas, info=info, sub_bar_lab = True, save = save)
+        vars2plot = vars2plot + [add_var]
+        _, df4plot_pct_change = fcAn.get_dfPctChange(df2plot, vars2plot, group_vars)
+        fcAn.pctChange_barPlots(# General Plot Settings
+                                df2plot = df4plot_pct_change, vars2plot = [var+'_Change' for var in vars2plot], 
+                                group_vars = group_vars, x_var = 'Stage', col_var = genot_var,
+                                # General Plot Settings
+                                title = title_sp + 'Percentage Changes\nin Composition per Genotype and Stage', 
+                                txt_title = txt_title, 
+                                ylabel = 'Changes in tissue composition \nwith respect to previous stage (%)', 
+                                colours = colours+['tomato'], dict_legends = dict_legends,
+                                # Other plot settings
+                                sub_bar_lab = True, 
+                                ctx_style = thesis_use.get_context(), bot_legend = False, 
+                                # Saving settings
+                                save = save, ext = ext, info=info, dir2save = dir_pl_meas)
+
 
     #%% Heatmaps 
     # - turbo colormap: https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html

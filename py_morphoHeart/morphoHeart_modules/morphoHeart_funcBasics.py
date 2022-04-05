@@ -851,6 +851,8 @@ def code4vmtkCL(filename, mesh_name, dir_cl, printshow = True):
         cl_dir_str = '"'+cl_dir+'"'
         vmtktxt = "vmtksurfacereader -ifile "+ meshML_dir +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dir_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
         vmtktxts.append(vmtktxt)
+        # code for voronoi diagrams
+        # vmtktxt = "vmtksurfacereader -ifile "+ meshML_dir +" --pipe vmtksurfacesmoothing -passband 0.1 -iterations 30 --pipe vmtkcenterlines -seedselector openprofiles -ofile"+ cl_dir_str+ " --pipe vmtkrenderer --pipe vmtksurfaceviewer -opacity 0.25 --pipe vmtksurfaceviewer -i @vmtkcenterlines.voronoidiagram -array MaximumInscribedSphereRadius -i @vmtkcenterlines.o -array MaximumInscribedSphereRadius"
 
     if printshow:
         print("\nYou are done in python for a little while... \n\t\tto get the centreline of each of the selected meshes follow the next steps:")
