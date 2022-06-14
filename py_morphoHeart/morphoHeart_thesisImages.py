@@ -51,18 +51,20 @@ if init:
 
     # Get main directories
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R', out_type = 'xlsx')
     # Get file to process and directories
-    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[0:-3]; dORv = filename[9:10]
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset, end_name = 'R'); filename = folder[2:]; dORv = filename[9:10]
     #stage = df_file.loc[file_num,'Stage']
     # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
-    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
+    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = 'R')
+    # df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R', out_type = 'xlsx')
+
     # Import the metadata to know pixel size and distance between slices
     xy_Scaling_um, z_Scaling_um = fcBasics.metadataExt(filename,dir_data2Analyse)
     res = [xy_Scaling_um,xy_Scaling_um,z_Scaling_um]
     # Import df_results
     df_res = fcBasics.loadDF(filename = filename, file = 'ResultsDF', dir_results = dir_results)
-    file_num = df_res[df_res['Folder']==folder].index.values[0]
+    file_num = df_res[df_res['Folder']==filename+'_2A'].index.values[0]
     if dORv == 'D' or 'CJ' in filename:
         azimuth = -90
     else: 
@@ -72,7 +74,7 @@ if init:
     txt = Text2D(filename, c="k", font= 'CallingCode')
     rotAngle =  df_res.loc[file_num,'ang_HeartS']
     
-    #%% LOAD MESHES, CENTRELINES AND OBJECTS
+    #% LOAD MESHES, CENTRELINES AND OBJECTS
     #   This section will load all the heart tissue layer meshes already created in previous scripts, as well as the
     #   centreline(s) dictionary(ies) and create a plot with all of the meshes.
     #   ================================================================================================================
@@ -114,18 +116,36 @@ if init:
         vp.show(m_cj.alpha(0.01), scale_cube,  at=2)
         vp.show(m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.05), scale_cube, at=3)
         vp.show(m_cjOut, scale_cube, at=4)
-        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = azimuth, interactive=True)
+        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, 
+                zoom = 1.6, azimuth = 90, interactive=True)
+
+        # text = str(filename); txt = Text2D(text, c=c, font=font)
+        # settings.legendSize = .20
+        # vp = Plotter(N=6, axes=13)
+        # vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
+        # vp.show(m_endo.alpha(0.01), scale_cube, at=1)
+        # vp.show(m_cj.alpha(0.01), scale_cube,  at=2)
+        # vp.show(m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.05), scale_cube, at=3)
+        # vp.show(m_cjOut, scale_cube, at=4)
+        # vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = 90, interactive=True)
 
 
-        text = str(filename); txt = Text2D(text, c=c, font=font)
-        settings.legendSize = .20
-        vp = Plotter(N=6, axes=13)
-        vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
-        vp.show(m_myocInt.alpha(0.01), scale_cube, at=1)
-        vp.show(m_myocExt.alpha(0.01), scale_cube, at=2)
-        vp.show(m_endo.alpha(0.01), scale_cube, at=3)
-        vp.show(m_endoInt.alpha(0.01), scale_cube, at=4)
-        vp.show(m_endoExt.alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = azimuth, interactive=True)
+        # text = str(filename); txt = Text2D(text, c=c, font=font)
+        # settings.legendSize = .20
+        # vp = Plotter(N=6, axes=13)
+        # vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
+        # vp.show(m_myocInt.alpha(0.01), scale_cube, at=1)
+        # vp.show(m_myocExt.alpha(0.01), scale_cube, at=2)
+        # vp.show(m_endo.alpha(0.01), scale_cube, at=3)
+        # vp.show(m_endoInt.alpha(0.01), scale_cube, at=4)
+        # vp.show(m_endoExt.alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = azimuth, interactive=True)
+        
+        # text = str(filename); txt = Text2D(text, c=c, font=font)
+        # settings.legendSize = .20
+        # vp = Plotter(N=1, axes=13)
+        # vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), scale_cube, at=0, zoom = 1.6, azimuth = 0, interactive=True)
+
+
 
 
     #%% Create ksplines, points, lines and centrelines
@@ -149,28 +169,36 @@ if init:
 
     lw = 8
     if plot:
-        settings.legendSize = .20
-        vp = Plotter(N=1, axes=13)
-        vp.show(txt, scale_cube, kspl_CL.color('corn flower blue').lw(lw), #ksplSph_o0.color('darkorange').lw(lw), 
-                linLines.color('lime').lw(lw), m_myoc.alpha(0.01), at=0, azimuth = azimuth, zoom = 1.6, interactive=True)
+        # settings.legendSize = .20
+        # vp = Plotter(N=1, axes=13)
+        # vp.show(txt, scale_cube, kspl_CL.color('corn flower blue').lw(lw), #ksplSph_o0.color('darkorange').lw(lw), 
+        #         linLines.color('lime').lw(lw), m_myoc.alpha(0.01), at=0, azimuth = 0, zoom = 1.6, interactive=True)
+        # settings.legendSize = .20
+        # vp = Plotter(N=1, axes=13)
+        # vp.show(txt, scale_cube, kspl_CL.color('corn flower blue').lw(lw), #ksplSph_o0.color('darkorange').lw(lw), 
+        #         linLines.color('lime').lw(lw), m_myoc.alpha(0.01), at=0, azimuth = 90, zoom = 1.6, interactive=True)
 
-        settings.legendSize = .20
-        vp = Plotter(N=4, axes=13)
-        vp.show(m_myoc.alpha(0.01), sph_CL_colour, scale_cube, txt, at=0)
-        vp.show(m_myoc.alpha(0.01), sph_CL, scale_cube, at=1) 
-        vp.show(m_myocInt.alpha(0.01), sph_CL_colour, scale_cube, txt, at=2)
-        vp.show(m_myocInt.alpha(0.01), sph_CL, scale_cube, at=3, azimuth = azimuth, zoom = 1.6, interactive=True)
+        # settings.legendSize = .20
+        # vp = Plotter(N=4, axes=13)
+        # vp.show(m_myoc.alpha(0.01), sph_CL_colour, scale_cube, txt, at=0)
+        # vp.show(m_myoc.alpha(0.01), sph_CL, scale_cube, at=1) 
+        # vp.show(m_myocInt.alpha(0.01), sph_CL_colour, scale_cube, txt, at=2)
+        # vp.show(m_myocInt.alpha(0.01), sph_CL, scale_cube, at=3, azimuth = azimuth, zoom = 1.6, interactive=True)
 
     
+        # settings.legendSize = .20
+        # vp = Plotter(N=4, axes=13)
+        # vp.show(m_myocExt.alpha(0.01),m_myocInt.alpha(0.01),scale_cube, txt, at=0)
+        # vp.show(m_endoExt.alpha(0.01),m_endoInt.alpha(0.01),scale_cube, at=1)
+        # vp.show(m_endoExt.alpha(0.01),m_myocInt.alpha(0.01),scale_cube, at=2)
+        # vp.show(scale_cube, kspl_CL.color('corn flower blue').lw(lw), 
+        #         m_myocInt.alpha(0.01), at=3, azimuth = azimuth, zoom = 2, interactive=True)
+        
+        text = str(filename); txt = Text2D(text, c=c, font=font)
         settings.legendSize = .20
-        vp = Plotter(N=4, axes=13)
-        vp.show(m_myocExt.alpha(0.01),m_myocInt.alpha(0.01),scale_cube, txt, at=0)
-        vp.show(m_endoExt.alpha(0.01),m_endoInt.alpha(0.01),scale_cube, at=1)
-        vp.show(m_endoExt.alpha(0.01),m_myocInt.alpha(0.01),scale_cube, at=2)
-        vp.show(scale_cube, kspl_CL.color('corn flower blue').lw(lw), 
-                m_myocInt.alpha(0.01), at=3, azimuth = azimuth, zoom = 2, interactive=True)
-        
-        
+        vp = Plotter(N=1, axes=13)
+        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), kspl_CL.color('corn flower blue').lw(lw),
+                linLines.color('lime').lw(lw), scale_cube, at=0, zoom = 1.6, azimuth = 0, interactive=True)
 
 
     #%% GET LAYERS THICKNESS HEATMAP ***
@@ -241,12 +269,16 @@ if init:
     vp.show(m_ventCJ.alpha(0.01), scale_cube, at=5, zoom=1.6, azimuth = azimuth, elevation = 0, interactive=True)
 
 
+    m_ventMyoc.alpha(0.01).color('darkturquoise')
+    
+
     #%% GET CHAMBERS ORIENTATION AND ELLIPSOIDS
     num_pt = dict_pts['numPt_CLChamberCut']
     sph_orient, lines_orient, dict_pts, dict_kspl, df_res = fcMeshes.getChambersOrientation(filename = filename, file_num = file_num, 
                                                                     num_pt = num_pt, kspl_CL2use = kspl_CL, distFromCl = 50,
                                                                     myoc_meshes = [m_atrMyoc, m_ventMyoc], linLine = linLines,
-                                                                    dict_pts = dict_pts, dict_kspl = dict_kspl, df_res = df_res)
+                                                                    dict_pts = dict_pts, dict_kspl = dict_kspl, df_res = df_res,
+                                                                    scale_cube = scale_cube)
    
     orient_atr, orient_vent, orient_atrX, orient_ventX, linLineX = lines_orient
     df_res, dict_shapes = fcMeshes.getChambersEllipsoid(filename = filename, df_res = df_res, file_num = file_num, 
@@ -268,15 +300,20 @@ if init:
                                          file_num = file_num, df_res = df_res, 
                                          scale_cube = scale_cube, colors = ['salmon', 'brown'])
     
+    df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
+                                          names = names_LnR)
+    
     
     settings.legendSize = .20
     vp = Plotter(N=1, axes=8)
-    vp.show(m_cj, cl_ribbon, scale_cube, at=0, zoom=1, azimuth = 0, elevation = 0, interactive=True)
+    vp.show(m_cj.alpha(0.01), cl_ribbon, scale_cube, at=0, zoom=1, azimuth = 0, elevation = 0, interactive=True)
     
     settings.legendSize = .20
     vp = Plotter(N=1, axes=8)
     vp.show(m_cj, cl_ribbon, scale_cube, at=0, zoom=1, azimuth = 90, elevation = 0, interactive=True)
     
+    # m_cjLnR[0].color('salmon')
+    # m_cjLnR[1].color('brown')
     
     settings.legendSize = .20
     vp = Plotter(N=2, axes=13)
@@ -287,6 +324,30 @@ if init:
     vp.show(m_cjLnR[0], scale_cube, at=0)
     vp.show(m_cjLnR[1],scale_cube, at=1, zoom=1.6, azimuth = 90, elevation = 0, interactive=True)
     
+    #%% test atr?vent cj into left and right 
+    m_atrVent = fcMeshes.openMeshes(filename = filename, meshes_names = ['myoc_atr', 'myoc_vent','cj_atr','cj_vent'],
+                                    extension = 'vtk', dir_stl = directories[2],
+                                    alpha = [1,1,1,1], dict_colour = dict_colour)
+    cyl_chamber = dict_shapes['cyl2CutChambers_final']
+    disc = Cylinder(pos = cyl_chamber['cyl_centre'],r = cyl_chamber['radius_max'], height = 2*0.225, 
+                    axis = cyl_chamber['cyl_axis'], c = 'purple', cap = True, res = 300)
+    
+    in_meshes05 = m_atrVent+[disc]
+    out_meshes05 = []
+    for mesh in in_meshes05:
+        mesh = mesh.rotateX(rotAngle)
+        out_meshes05.append(mesh)
+    m_atrMyoc, m_ventMyoc, m_atrCJ, m_ventCJ, disc = out_meshes05
+    
+    # Divide meshes using ribbon (Left/Right) 
+    # First divide the cardiac jelly and save the volumes of it's left and right sides
+    [m_cjLnR], names_LnR = fcMeshes.divideMeshesLnR_new(filename = filename, meshes = [m_atrCJ], cl_ribbon = cl_ribbon, 
+                                         file_num = file_num, df_res = df_res, 
+                                         scale_cube = scale_cube, colors = ['salmon', 'brown'])
+    
+    
+    
+      
     #%%
     cl_ribbonV, kspl_ext, _, _, _ = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
                                                 df_res = df_res, kspl_CL2use = kspl_CL, linLine = linLines,
@@ -337,9 +398,37 @@ if init:
                                             data = [cj_thickness, myoc_intBall], 
                                             names_data = ['cj_thickness', 'myoc_intBall'], plot_show = True)
     
+    #%%
+    # Get main directories
+    _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse)
+    # Get file to process and directories
+    folder, df_file, file_num, blind = fcBasics.selectFile(df_dataset); filename = folder[0:-3]; dORv = filename[9:10]
+    #stage = df_file.loc[file_num,'Stage']
+    # directories = 0.dir_dict, 1.dir_txtNnpy, 2.dir_stl, 3.dir_cl, 4.dir_imsNvideos, 5.dir_ims2Analyse, 6. dir_LS_Folder selected
+    dir_results, directories = fcBasics.createDirectories2Save (filename, dir_data2Analyse, end_name = '2A')
+    # Import the metadata to know pixel size and distance between slices
+    xy_Scaling_um, z_Scaling_um = fcBasics.metadataExt(filename,dir_data2Analyse)
+    res = [xy_Scaling_um,xy_Scaling_um,z_Scaling_um]
+    # Import df_results
+    df_res = fcBasics.loadDF(filename = filename, file = 'ResultsDF', dir_results = dir_results)
+    file_num = df_res[df_res['Folder']==folder].index.values[0]
+    if dORv == 'D' or 'CJ' in filename:
+        azimuth = -90
+    else: 
+        azimuth = 0
+        
+     # Get existing cl_dictionaries
+    [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts_cl] = fcBasics.import_dicts('mH_C', filename, directories)
+
+    # Initialise variables
+    dict_shapes = dict()
+    txt = Text2D(filename, c="k", font= 'CallingCode')
+    rotAngle =  df_res.loc[file_num,'ang_HeartS']
     saveHM = False; savePlot = True
     # Select analysis to run
-    tissue_analysis, tissue_opt, m_myoc, dict_unloop = fcMeshes.load_tissues2unloop(filename, directories, dir_results, dict_colour)
+    tissue_analysis, tissue_opt, m_myoc, dict_unloop = fcMeshes.load_tissues2unloop(filename, directories, dir_results, dict_colour,
+                                                                                    default = True)
     for tissue in tissue_analysis:
         print('- Creating heatmaps for each chamber... Note: this can take a while.')
         heatmaps_th, scale_th = fcMeshes.heatmapUnlooped(filename = filename, 
@@ -348,17 +437,9 @@ if init:
                                                          save_names= dict_unloop[tissue]['save_names'],
                                                          hm_names = dict_unloop[tissue]['hm_names'],
                                                          saveHM = saveHM, savePlot = savePlot, 
-                                                         default = False, cmap = 'turbo')
+                                                         default = True, cmap = 'turbo')
         
 #%% Init
 init = True    
-    
-    
-    
-    
-    
-    
-    
-    
     
     

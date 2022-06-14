@@ -88,13 +88,15 @@ def openMeshes(filename, meshes_names, extension, dir_stl, alpha, dict_colour):
                   'endo','endo_ext','endo_int','endo_atr','endo_vent',
                   'cj','cj_out','cj_in','cj_atr','cj_vent',
                   'cjExt_atr','cjExt_vent', 'cjExt_atrmyoc_vent', 
-                  'myocExt_atr', 'myocExt_vent', 'endoExt_atr', 'endoExt_vent']
+                  'myocExt_atr', 'myocExt_vent', 'endoExt_atr', 'endoExt_vent',
+                  'myocInt_atr', 'myocInt_vent', 'endInt_atr', 'endInt_vent']
 
     legend_all = ['Myocardium','Ext.Myoc', 'Int.Myoc','Atrium(Myoc)','Ventricle(Myoc)',
                   'Endocardium', 'Ext.Endo', 'Int.Endo','Atrium(Endo)','Ventricle(Endo)',
                   'CardiacJelly','Ext.CJ','Int.CJ','Atrium(CJ)','Ventricle(CJ)',
                   'CJ.ExtAtr', 'CJ.ExtVent','CJ.ExtAtr', 
-                  'Myoc.ExtAtr', 'Endo.ExtAtr', 'Myoc.ExtVent', 'Endo.ExtVent']
+                  'Myoc.ExtAtr','Myoc.ExtVent', 'Endo.ExtAtr', 'Endo.ExtVent',
+                  'Myoc.IntAtr', 'Myoc.IntVent', 'Endo.IntAtr', 'Endo.IntVent']
 
     print('- Loading meshes...')
     meshes_out = []
@@ -188,10 +190,14 @@ def openThicknessMeshes(filename, meshes_names, extension, dir_stl, dir_txtNnpy,
     return meshes_out, colour_arrays
 
 #%% func - load_tissues2unloop 
-def load_tissues2unloop(filename, directories, dir_results, dict_colour):
+def load_tissues2unloop(filename, directories, dir_results, dict_colour, default = False):
     
-    q_tissue_analysis = ask4input('Select the heart tissues you want to unloop and get 2D heatmaps out: \n\t[0]: cardiac jelly thickness \n\t[1]: balloning of internal myocardium \n\t[2]: myocardial thickness \n\t[3]: endocardial thickness \n\t[all]: All of them!>> :', str)
+    if default: 
+        q_tissue_analysis = 'all'
+    else:
+        q_tissue_analysis = ask4input('Select the heart tissues you want to unloop and get 2D heatmaps out: \n\t[0]: cardiac jelly thickness \n\t[1]: balloning of internal myocardium \n\t[2]: myocardial thickness \n\t[3]: endocardial thickness \n\t[all]: All of them!>> :', str)
     tissue_opt = ['CjTh','myocIntBall','MyocTh','EndoTh']
+    
     tissue_analysis = [tissue_opt[i] for i in getInputNumbers(q_tissue_analysis, tissue_opt)]
     if 'CjTh' in tissue_analysis and 'myocIntBall' in tissue_analysis: 
         tissue_analysis.remove('CjTh'); tissue_analysis.remove('myocIntBall')
@@ -209,7 +215,11 @@ def load_tissues2unloop(filename, directories, dir_results, dict_colour):
     # Select chambers to unloop
     unloopnames = ['unloopAtr', 'unloopVent']
     chambers = ['Atrium', 'Ventricle']
-    q_both_chs = ask4input('Select the chambers you would like to unloop for the selected tissues: \n\t[0]: atrium\n\t[1]: ventricle\n\t[all/0,1/0-1]: both! >> : ', str)
+    
+    if default: 
+        q_both_chs = '0,1'
+    else: 
+        q_both_chs = ask4input('Select the chambers you would like to unloop for the selected tissues: \n\t[0]: atrium\n\t[1]: ventricle\n\t[all/0,1/0-1]: both! >> : ', str)
     index_selected_chambers = getInputNumbers(q_both_chs, chambers)
 
     dict_unloop = dict()
@@ -1885,35 +1895,36 @@ def divideMeshesLnR_new(filename, meshes, cl_ribbon, file_num, df_res,
             
         if not q_happy:
             if not spaw_analysis:
-                leftMesh = ask4input('Select the mesh number that corresponds to the left side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
-                if leftMesh == 1:
-                    mesh_1.legend(mesh_legend+'-Left')
-                    mesh_2.legend(mesh_legend+'-Right')
-                    mesh_LnR = [mesh_1, mesh_2]
-                elif leftMesh == 2:
-                    mesh_2.legend(mesh_legend+'-Left')
-                    mesh_1.legend(mesh_legend+'-Right')
-                    mesh_LnR = [mesh_2, mesh_1]
+                # leftMesh = ask4input('Select the mesh number that corresponds to the left side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
+                # if leftMesh == 1:
+                #     mesh_1.legend(mesh_legend+'-Left')
+                #     mesh_2.legend(mesh_legend+'-Right')
+                #     mesh_LnR = [mesh_1, mesh_2]
+                # elif leftMesh == 2:
+                mesh_2.legend(mesh_legend+'-Left')
+                mesh_1.legend(mesh_legend+'-Right')
+                mesh_LnR = [mesh_2, mesh_1]
             else: 
-                dorsalMesh = ask4input('Select the mesh number that corresponds to the dorsal side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
-                if dorsalMesh == 1:
-                    mesh_1.legend(mesh_legend+'-Dorsal')
-                    mesh_2.legend(mesh_legend+'-Ventral')
-                    mesh_LnR = [mesh_1, mesh_2]
-                elif dorsalMesh == 2:
-                    mesh_2.legend(mesh_legend+'-Dorsal')
-                    mesh_1.legend(mesh_legend+'-Ventral')
-                    mesh_LnR = [mesh_2, mesh_1]
+                # dorsalMesh = ask4input('Select the mesh number that corresponds to the dorsal side. \n\t[1]: the one in the middle plot \n\t[2]: the one in the right plot', int)
+                # if dorsalMesh == 1:
+                #     mesh_1.legend(mesh_legend+'-Dorsal')
+                #     mesh_2.legend(mesh_legend+'-Ventral')
+                #     mesh_LnR = [mesh_1, mesh_2]
+                # elif dorsalMesh == 2:
+                mesh_2.legend(mesh_legend+'-Dorsal')
+                mesh_1.legend(mesh_legend+'-Ventral')
+                mesh_LnR = [mesh_2, mesh_1]
+            
+            txt = Text2D(filename+"\n\n >> Final Meshes", c=c, font=font)
+            settings.legendSize = .3
+            vp = Plotter(N=3, axes=13)
+            vp.show(meshes2cutLR, cl_ribbon, scale_cube,  txt, at=0)
+            vp.show(mesh_LnR[0], at=1)
+            vp.show(mesh_LnR[1], at=2, zoom = 0.8, azimuth = 0, interactive=True)
+            
         else:
             mesh_LnR = [mesh_1, mesh_2]
             
-        txt = Text2D(filename+"\n\n >> Final Meshes", c=c, font=font)
-        settings.legendSize = .3
-        vp = Plotter(N=3, axes=13)
-        vp.show(meshes2cutLR, cl_ribbon, scale_cube,  txt, at=0)
-        vp.show(mesh_1, at=1)
-        vp.show(mesh_2, at=2, zoom = 0.8, azimuth = 0, interactive=True)
-
         meshes_LnR.append(mesh_LnR)
 
     return meshes_LnR, names_LnR
@@ -2213,7 +2224,8 @@ def getRing2CutChambers(filename, kspl_CL, mesh2cut, resolution, dir_stl, dir_tx
 
 #%% func - getChamberMeshes
 def getChamberMeshes(filename, end_name, names2cut, kspl_CL, num_pt, atr_meshes, vent_meshes, dir_txtNnpy, 
-                     dict_shapes, dict_pts, resolution, s3_cyl = [], plotshow = False, mesh2cut = []):
+                     dict_shapes, dict_pts, resolution, s3_cyl = [], plotshow = False, mesh2cut = [],
+                     colour_anv = ['lightseagreen','darkturquoise']):
     """
     Function to cut meshes and get its chambers (atrium/ventricle) using the cylinder/disc information given as 
     input (dict_shapes)
@@ -2265,8 +2277,8 @@ def getChamberMeshes(filename, end_name, names2cut, kspl_CL, num_pt, atr_meshes,
     else:
         azimuth = 0
         
-    poss_names = ['ch0_cut','ch1_cut', 'cj', 'ch0_cut_ext', 'ch1_cut_int', 'ch0_cut_int', 'ch1_cut_ext']
-    noCut_names = ['ch0_all','ch1_cut', 'cj', 'ch0_ext', 'ch1_int', 'ch0_int', 'ch1_ext']
+    poss_names = ['ch0_cut','ch1_cut', 'cj', 'ch0_cut_ext', 'ch1_cut_int', 'ch0_cut_int', 'ch1_cut_ext', 'cj_AOCVIC', 'cj_AICVOC']
+    noCut_names = ['ch0_all','ch1_cut', 'cj', 'ch0_ext', 'ch1_int', 'ch0_int', 'ch1_ext','cj_AOCVIC', 'cj_AICVOC']
     
     #Load stack shape 
     [[xdim, ydim, zdim]] = loadNPY(filename, ['stackShape'], dir_txtNnpy, print_txt = False)
@@ -2282,6 +2294,7 @@ def getChamberMeshes(filename, end_name, names2cut, kspl_CL, num_pt, atr_meshes,
         normal_unit = dict_shapes['cyl2CutChambers_o']['cyl_axis']
         cl_point = dict_shapes['cyl2CutChambers_o']['cyl_centre']
         
+        # Create a disc with better resolution to transform into pixels to mask stack
         res_cyl = 2000
         num_rad = int(3*int(r_circle_max)) #int(((r_circle_max-r_circle_min)/0.225)+1)
         num_h = 9; h_min = 0.225/2; h_max = 0.225*2
@@ -2297,6 +2310,7 @@ def getChamberMeshes(filename, end_name, names2cut, kspl_CL, num_pt, atr_meshes,
         cyl_data = [r_circle_max, r_circle_min/2, num_rad, h_max, h_min, num_h, normal_unit, cl_point, res_cyl]
         dict_shapes = addShapes2Dict (shapes = [cyl], dict_shapes = dict_shapes, radius = [cyl_data], print_txt = False)
         
+        # Rotate the points that make up the HR disc, to convert them to a stack
         cyl_points_rot = np.zeros_like(cyl_pts)
         if 'CJ' not in filename: 
             axis = [0,0,1]
@@ -2339,12 +2353,15 @@ def getChamberMeshes(filename, end_name, names2cut, kspl_CL, num_pt, atr_meshes,
     
     # Create empty lists to save atrium and ventricles
     if len(end_name) == 1: 
-        atr_color = ['lightseagreen']
-        vent_color = ['darkturquoise']
-    else: 
+        atr_color = colour_anv[0]
+        vent_color = colour_anv[1]
+    elif len(end_name) == 6: 
         atr_color = ['purple', 'orange', 'darkblue', 'maroon', 'tomato', 'cyan']
         vent_color = ['mediumvioletred', 'chocolate', 'indigo', 'crimson', 'skyblue', 'springgreen']
-
+    else: 
+        atr_color = ['lightseagreen', 'purple', 'orange', 'darkblue', 'maroon', 'tomato', 'cyan']
+        vent_color = ['darkturquoise','mediumvioletred', 'chocolate', 'indigo', 'crimson', 'skyblue', 'springgreen']
+        
     try: 
         atr_point = dict_pts['sph_CentreOfAtrium-ChCut']['sph_position']
         vent_point = dict_pts['sph_CentreOfVentricle-ChCut']['sph_position']
@@ -3597,7 +3614,7 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh,
     # Extended centreline
     nn = -20#-20#-3
     inf_ext_normal = (pts_cl[nn]+(pts_cl[-1]-pts_cl[nn])*10)#*70
-    outf_ext_normal = (pts_cl[0]+(pts_cl[0]-pts_cl[1])*70)
+    outf_ext_normal = (pts_cl[0]+(pts_cl[0]-pts_cl[1])*100)#*70 (test for LnR cut Jun14.22)
     inf_ext_sphere = Sphere(pos=inf_ext_normal, r=3, c='purple').legend("sph_infCLExtended")
     outf_ext_sphere = Sphere(pos=outf_ext_normal, r=3, c='purple').legend("sph_outfCLExtended")
 
@@ -3649,7 +3666,7 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh,
     if clRib_type == 'extDV': # Names are switched but it works
         kspl_ext_D = kspl_ext.clone().x(x_cl).y(y_cl).z(z_cl).legend('kspl_CLExtD')
         kspl_ext_V = kspl_ext.clone().x(-x_cl).y(-y_cl).z(-z_cl).legend('kspl_CLExtV')
-        cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(220, 5))
+        cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(1200, 1000))
         cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
     
     elif clRib_type == 'extV':
@@ -3701,7 +3718,7 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh,
 
 #%% - MEASURE
 #%% func - getChambersOrientation
-def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, myoc_meshes, linLine, dict_pts, dict_kspl, df_res):
+def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, myoc_meshes, linLine, dict_pts, dict_kspl, df_res, scale_cube = []):
 
     print('- Measuring chamber orientations')
     m_atrMyoc, m_ventMyoc = myoc_meshes
@@ -3828,7 +3845,7 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, 
                                      angles = [ang_heartS, ang_atrS, ang_ventS, ang_chsS]+[ang_atrV, ang_ventV, ang_chsV], 
                                      names = ['ang_HeartS', 'ang_AtrS', 'ang_VentS', 'ang_BtwChambersS']+['ang_AtrV', 'ang_VentV', 'ang_BtwChambersV'])
 
-    z_maxpos = -50#pts_heartS[pts_heartS[:,2].argsort()][-1,-1]+50
+    z_maxpos = pts_heartS[pts_heartS[:,2].argsort()][-1,-1]-100
     
     text0 = filename+"\n\n >> Measuring chamber orientation from the side\n - "+atr_txtS+"\n - "+vent_txtS+"\n - "+chs_txtS+"\n - "+hrt_txt
     text1 = filename+"\n\n >> Measuring chamber orientation ventrally \n - "+atr_txtV+"\n - "+vent_txtV+"\n - "+chs_txtV
@@ -3853,27 +3870,27 @@ def getChambersOrientation(filename, file_num, num_pt, kspl_CL2use, distFromCl, 
     vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
             orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
             orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
-            zoom = 0.8, at=1, azimuth = 135, elevation = elevation, interactive=True)
-
-    vp = Plotter(N=2, axes = 1)
-    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
-            orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
-            # azimuth = azimuth, elevation = elevation, 
-            zoom = 0.8, at=0)
-    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
-            orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
-            orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
-            zoom = 0.8, at=1, azimuth = -135, elevation = elevation, interactive=True)
-
-    vp = Plotter(N=2, axes = 1)
-    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
-            orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
-            # azimuth = azimuth, elevation = elevation, 
-            zoom = 0.8, at=0)
-    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine,
-            orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
-            orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), txt1,
             zoom = 0.8, at=1, azimuth = 45, elevation = elevation, interactive=True)
+    
+    vp = Plotter(N=2, axes = 4)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine, scale_cube,
+            #orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
+            # azimuth = 0, elevation = elevation, 
+            zoom = 1.6, at=0)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine, scale_cube,
+            #orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
+            #orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), scale_cube, txt1,
+            zoom = 1.6, at=1, azimuth = 0, elevation = elevation, interactive=True)
+    
+    vp = Plotter(N=2, axes = 4)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine, scale_cube,
+            #orient_atrX.alpha(1), orient_ventX.alpha(1), linLineX.alpha(1), txt0, 
+            # azimuth = 90, elevation = elevation, 
+            zoom = 1.6, at=0)
+    vp.show(m_atrMyoc.alpha(0.01), m_ventMyoc.alpha(0.01), sph_orient, kspl_CL2use, orient_atr, orient_vent, linLine, scale_cube,
+            #orient_atrRot.alpha(1), orient_ventRot.alpha(1), linLineRot.alpha(1),
+            #orient_atrRotProj.alpha(1).z(z_maxpos), orient_ventRotProj.alpha(1).z(z_maxpos), linLineRotProj.alpha(1).z(z_maxpos), scale_cube,  txt1,
+            zoom = 1.6, at=1, azimuth = 90, elevation = elevation, interactive=True)
 
 
     return sph_orient, lines_orient, dict_pts, dict_kspl, df_res
@@ -4041,9 +4058,24 @@ def getChambersEllipsoid(filename, df_res, file_num, lines_orient, meshes, dict_
                 txt_ch = Text2D(text+chamber+' - angF: {:.1f}'.format(ang_chF), c="k", font= font)
                 txt_ch2 = Text2D(chamber+': \n\t Width: {:.1f} um, Length: {:.1f} um, Depth: {:.1f} um'.format(width_ch, length_ch, depth_ch), c="k", font= font)
                 
-                vp = Plotter(N=2, axes = 1)
+                vp = Plotter(N=2, axes = 4)
                 vp.show(m_chRot, m_chRot_projX, m_chRot_projZ, txt_ch, at = 0)
-                vp.show(ellip_ch, m_chRot,  orient_ch, orient_chRot, orient_chRotRot, txt_ch2, at=1, interactive = True)
+                vp.show(ellip_ch, m_chRot, txt_ch2, at=1, interactive = True)
+                # vp.show(ellip_ch, m_chRot,  orient_ch, orient_chRot, orient_chRotRot, txt_ch2, at=1, interactive = True)
+                
+                vp = Plotter(N=2, axes = 14)
+                vp.show(m_chRot, m_chRot_projX, m_chRot_projZ, txt_ch, at = 0)
+                vp.show(ellip_ch, m_chRot, txt_ch2, at=1, azimuth = 45, elevation = 20, interactive = True)
+                # vp.show(ellip_ch, m_chRot,  orient_ch, orient_chRot, orient_chRotRot, txt_ch2, at=1, interactive = True)
+                
+                vp = Plotter(N=2, axes = 4)
+                vp.show(m_chRot, m_chRot_projX, m_chRot_projZ, txt_ch, at = 0)
+                vp.show(ellip_ch, m_chRot, txt_ch2, at=1, azimuth = 90, interactive = True)
+                # vp.show(ellip_ch, m_chRot,  orient_ch, orient_chRot, orient_chRotRot, txt_ch2, at=1, interactive = True)
+                
+                vp = Plotter(N=2, axes = 4)
+                vp.show(m_chRot, m_chRot_projX, m_chRot_projZ, txt_ch, at = 0)
+                vp.show(ellip_ch, m_chRot, txt_ch2, at=1, elevation = 90, interactive = True)
             
             else: 
                 print('-ERROR: Something went wrong reorienting the '+chamber+'!')
@@ -4698,10 +4730,10 @@ def heatmapUnlooped (filename, val2unloop, dir_results, dirImgs, save_names, hm_
                             vmax = ask4input('Maximum value for scale bar of -'+val+'-[um]: ',float)
                         else: 
                             vmin = 0
-                            vmax = 25
+                            vmax = 20#25
                     else: 
                         vmin = 0
-                        vmax = 25
+                        vmax = 20#25
                 elif val in ['myoc_thickness', 'endo_thickness']:
                     if not default: 
                         scale_bar = ask4input('Do you want to set a range to the scale bar of -'+ val+'-? \n\t[0]: no, use the default values 0-15 um \n\t[1]: yes, I would like to set the range! >>>: ', bool)
@@ -4710,10 +4742,10 @@ def heatmapUnlooped (filename, val2unloop, dir_results, dirImgs, save_names, hm_
                             vmax = ask4input('Maximum value for scale bar of -'+val+'-[um]: ',float)
                         else: 
                             vmin = 0
-                            vmax = 15
+                            vmax = 12#15
                     else: 
                         vmin = 0
-                        vmax = 15
+                        vmax = 12# 15
                 elif val == 'myoc_intBall': 
                     if not default: 
                         scale_bar = ask4input('Do you want to set a range to the scale bar of -'+ val+'-? \n\t[0]: no, use the default values 0-100 um \n\t[1]: yes, I would like to set the range! >>>: ', bool)
@@ -4722,10 +4754,10 @@ def heatmapUnlooped (filename, val2unloop, dir_results, dirImgs, save_names, hm_
                             vmax = ask4input('Maximum value for scale bar of -'+val+'-[um]: ',float)
                         else: 
                             vmin = 0
-                            vmax = 100
+                            vmax = 60#100
                     else: 
                         vmin = 0
-                        vmax = 100
+                        vmax = 60#100
                         
             # Make figure
             fig, ax = plt.subplots(figsize=(16, 10))
@@ -4767,7 +4799,7 @@ def heatmapUnlooped (filename, val2unloop, dir_results, dirImgs, save_names, hm_
             print('\t- sp_hm_name:',sp_hm_name)
             
             if savePlot: 
-                dir4heatmap = os.path.join(dirImgsf,filename+'_hm_'+sp_hm_name+'.png')
+                dir4heatmap = os.path.join(dirImgsf,filename+'_hm_'+sp_hm_name+'cR.png')
                 plt.savefig(dir4heatmap, dpi=300, bbox_inches='tight', transparent=True)
                 # print(dir4heatmap)
                 

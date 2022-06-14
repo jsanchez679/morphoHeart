@@ -322,7 +322,7 @@ if init:
     m_atr, m_vent, dict_shapes, _ = fcMeshes.getChamberMeshes(filename = filename,
                                         end_name = ['ch1_cut', 'cj', 'ch0_cut_ext', 'ch1_cut_int', 'ch0_cut_int', 'ch1_cut_ext'],
                                         names2cut = ['Endo', 'CJ', 'Ext.Myoc', 'Int.Endo', 'Ext.CJ', 'Ext.Endo'],
-                                        kspl_CL = kspl_CL[0], num_pt = num_pt, atr_meshes = [m_atr[0]], vent_meshes = [m_vent[0]],
+                                        kspl_CL = kspl_CL[0], num_pt = num_pt, atr_meshes = [], vent_meshes = [],
                                         dir_txtNnpy = directories[1], dict_shapes = dict_shapes, dict_pts = dict_pts, 
                                         resolution = res, s3_cyl = s3_cyl, plotshow = plotshow)
     
@@ -359,9 +359,6 @@ if init:
                                           names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr', 'endoExt_atr', 
                                                     'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent', 'endoExt_vent'],
                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'vtk')
-        # Append all dicts to one object dict
-        dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
-                                              names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
        
         dict_colour = fcMeshes.saveMeshes(filename = filename, 
                                           meshes = [m_atrMyoc, m_atrEndo, m_atrCJ, m_atrExtMyo, m_atrIntEnd, m_atrExtCJ, m_atrExtEndo,
@@ -369,6 +366,10 @@ if init:
                                           names = ['myoc_atr', 'endo_atr', 'cj_atr', 'myocExt_atr', 'endInt_atr', 'cjExt_atr', 'endoExt_atr',
                                                     'myoc_vent', 'endo_vent', 'cj_vent', 'myocExt_vent', 'endInt_vent', 'cjExt_vent', 'endoExt_vent'],
                                           dict_colour = dict_colour, dir_stl = directories[2], extension = 'stl')
+        
+        # Append all dicts to one object dict
+        dict_obj = fcMeshes.fillNsaveObjDict(filename = filename, dicts = [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes],
+                                              names = ['dict_planes', 'dict_pts', 'dict_kspl', 'dict_colour', 'dict_shapes'], dir2save = directories[0])
     
     # # Calculating Ext.Endo chambers
     # num_pt = dict_pts['numPt_CLChamberCut']; atr_meshes = []; vent_meshes = []
@@ -447,10 +448,11 @@ if init:
     
     # Divide meshes using ribbon (Left/Right) 
     # First divide the cardiac jelly and save the volumes of it's left and right sides
-    [m_cjLnR] = fcMeshes.divideMeshesLnR(filename = filename, meshes = [m_cj], cl_ribbon = cl_ribbon, 
-                                         file_num = file_num, df_res = df_res, colors = ['salmon', 'brown'])
+    [m_cjLnR], names_LnR = fcMeshes.divideMeshesLnR_new(filename = filename, meshes = [m_cj], cl_ribbon = cl_ribbon, 
+                                             file_num = file_num, df_res = df_res, 
+                                             scale_cube = [], colors = ['salmon', 'brown'])
     df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
-                                          names = ['CJ_total','CJ.Left', 'CJ.Right'])
+                                          names = names_LnR)
     
     # from vedo import Plotter, embedWindow, settings
     # vp = Plotter(N=2, axes=13)

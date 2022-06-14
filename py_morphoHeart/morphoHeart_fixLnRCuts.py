@@ -106,43 +106,55 @@ if init:
     vp.show(m_endo.alpha(0.01), scale_cube, at=1)
     vp.show(m_cj.alpha(0.01), scale_cube,  at=2, zoom = 1.6, azimuth = azimuth, interactive=True)
 
+    for n, side in enumerate(['LnR', 'DnV']):
+        df_res = fcBasics.spLoopAnalysis(df_res, file_num)
+        print('Side being analysed! - ', side)
+        # Get centreline ribbon
+        cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
+                                                                                           df_res = df_res, kspl_CL2use = kspl_CL[0], 
+                                                                                           linLine = linLines[0], mesh = m_myoc, 
+                                                                                           dict_kspl = dict_kspl, dict_shapes = dict_shapes, 
+                                                                                           dict_planes = dict_planes, scale_cube = scale_cube)
+    
+        # Divide meshes using ribbon (Left/Right) 
+        # First divide the cardiac jelly and save the volumes of it's left and right sides
+        [m_cjLnR], names_LnR = fcMeshes.divideMeshesLnR_new(filename = filename, meshes = [m_cj], cl_ribbon = cl_ribbon, 
+                                             file_num = file_num, df_res = df_res, 
+                                             scale_cube = [], colors = ['salmon', 'brown'])
+        print(names_LnR)
+                   
+        df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
+                                              names = names_LnR)
+        txt0 = Text2D("\n >> "+names_LnR[1]+": "+format(m_cjLnR[0].volume(), '.1f'), c=c, font=font)
+        txt1 = Text2D("\n >> "+names_LnR[2]+": "+format(m_cjLnR[1].volume(), '.1f'), c=c, font=font)
+        vp = Plotter(N=2, axes=13)
+        vp.show(m_cjLnR[0], scale_cube, txt0, at=0)
+        vp.show(m_cjLnR[1], scale_cube, txt1, at=1, zoom=1.6, azimuth = 0, elevation = 0, interactive=True)
+        
+        
+    
+    text = str(filename); txt = Text2D(text, c=c, font=font)
+    settings.legendSize = .20
+    vp = Plotter(N=3, axes=13)
+    vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
+    vp.show(m_endo.alpha(0.01), scale_cube, at=1)
+    vp.show(m_cj.alpha(0.01), scale_cube,  at=2, zoom = 1.6, azimuth = azimuth, interactive=True)
+
+    print('\n>>>> FINAL SAY!!!!')
     df_res = fcBasics.spLoopAnalysis(df_res, file_num)
     
-    # Get centreline ribbon
-    cl_ribbon, kspl_ext, dict_kspl, dict_shapes, dict_planes = fcMeshes.createCLRibbon(filename = filename, file_num = file_num, 
-                                                                                       df_res = df_res, kspl_CL2use = kspl_CL[0], 
-                                                                                       linLine = linLines[0], mesh = m_myoc, 
-                                                                                       dict_kspl = dict_kspl, dict_shapes = dict_shapes, 
-                                                                                       dict_planes = dict_planes, scale_cube = scale_cube)
-
-
-    # Divide meshes using ribbon (Left/Right) 
-    # First divide the cardiac jelly and save the volumes of it's left and right sides
-    [m_cjLnR], names_LnR = fcMeshes.divideMeshesLnR_new(filename = filename, meshes = [m_cj], cl_ribbon = cl_ribbon, 
-                                         file_num = file_num, df_res = df_res, 
-                                         scale_cube = [], colors = ['salmon', 'brown'])
-    print(names_LnR)
-               
-    df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
-                                          names = names_LnR)
-    txt0 = Text2D("\n >> "+names_LnR[1]+": "+format(m_cjLnR[0].volume(), '.1f'), c=c, font=font)
-    txt1 = Text2D("\n >> "+names_LnR[2]+": "+format(m_cjLnR[1].volume(), '.1f'), c=c, font=font)
-    vp = Plotter(N=2, axes=13)
-    vp.show(m_cjLnR[0], scale_cube, txt0, at=0)
-    vp.show(m_cjLnR[1], scale_cube, txt1, at=1, zoom=1.6, azimuth = 0, elevation = 0, interactive=True)
-    
     save = fcBasics.ask4input('Save? [0]:no, [1]:yes! >>:', bool)
-    
     if save: 
-        if 'CJ.Dorsal' in names_LnR: 
-            deleteOldCols = fcBasics.ask4input('Delete old columns? [0]: no, [1]: yes! >>:', bool)
-            if deleteOldCols: 
-                if 'Vol_CJ.Left' in df_res.columns:
-                    print('a')
-                    df_res = df_res.drop(['Vol_CJ.Left'], axis=1)
-                if 'Vol_CJ.Right' in df_res.columns:
-                    print('b')
-                    df_res = df_res.drop(['Vol_CJ.Right'], axis=1)
+        # if 'CJ.Dorsal' in names_LnR: 
+        #     deleteOldCols = fcBasics.ask4input('Delete old columns? [0]: no, [1]: yes! >>:', bool)
+        #     if deleteOldCols: 
+        #         if 'Vol_CJ.Left' in df_res.columns:
+        #             print('a')
+        #             df_res = df_res.drop(['Vol_CJ.Left'], axis=1)
+        #         if 'Vol_CJ.Right' in df_res.columns:
+        #             print('b')
+        #             df_res = df_res.drop(['Vol_CJ.Right'], axis=1)
+                        
                 
         fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
         dir_df_meas = fcBasics.new_dir(fcBasics.new_dir(fcBasics.new_dir(dir_data2Analyse, 'R_All'), 'df_all'), 'df_meas')
