@@ -117,33 +117,33 @@ if init:
         vp.show(m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.05), scale_cube, at=3)
         vp.show(m_cjOut, scale_cube, at=4)
         vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, 
-                zoom = 1.6, azimuth = 90, interactive=True)
+                zoom = 1.6, azimuth = 0, interactive=True)
 
-        # text = str(filename); txt = Text2D(text, c=c, font=font)
-        # settings.legendSize = .20
-        # vp = Plotter(N=6, axes=13)
-        # vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
-        # vp.show(m_endo.alpha(0.01), scale_cube, at=1)
-        # vp.show(m_cj.alpha(0.01), scale_cube,  at=2)
-        # vp.show(m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.05), scale_cube, at=3)
-        # vp.show(m_cjOut, scale_cube, at=4)
-        # vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = 90, interactive=True)
+        text = str(filename); txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .20
+        vp = Plotter(N=6, axes=13)
+        vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
+        vp.show(m_endo.alpha(0.01), scale_cube, at=1)
+        vp.show(m_cj.alpha(0.01), scale_cube,  at=2)
+        vp.show(m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.05), scale_cube, at=3)
+        vp.show(m_cjOut, scale_cube, at=4)
+        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), m_cj.clone().alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = 90, interactive=True)
 
 
-        # text = str(filename); txt = Text2D(text, c=c, font=font)
-        # settings.legendSize = .20
-        # vp = Plotter(N=6, axes=13)
-        # vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
-        # vp.show(m_myocInt.alpha(0.01), scale_cube, at=1)
-        # vp.show(m_myocExt.alpha(0.01), scale_cube, at=2)
-        # vp.show(m_endo.alpha(0.01), scale_cube, at=3)
-        # vp.show(m_endoInt.alpha(0.01), scale_cube, at=4)
-        # vp.show(m_endoExt.alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = azimuth, interactive=True)
+        text = str(filename); txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .20
+        vp = Plotter(N=6, axes=13)
+        vp.show(m_myoc.alpha(0.01),scale_cube, txt, at=0)
+        vp.show(m_myocInt.alpha(0.01), scale_cube, at=1)
+        vp.show(m_myocExt.alpha(0.01), scale_cube, at=2)
+        vp.show(m_endo.alpha(0.01), scale_cube, at=3)
+        vp.show(m_endoInt.alpha(0.01), scale_cube, at=4)
+        vp.show(m_endoExt.alpha(0.01), scale_cube, at=5, zoom = 1.6, azimuth = azimuth, interactive=True)
         
-        # text = str(filename); txt = Text2D(text, c=c, font=font)
-        # settings.legendSize = .20
-        # vp = Plotter(N=1, axes=13)
-        # vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), scale_cube, at=0, zoom = 1.6, azimuth = 0, interactive=True)
+        text = str(filename); txt = Text2D(text, c=c, font=font)
+        settings.legendSize = .20
+        vp = Plotter(N=1, axes=13)
+        vp.show(m_myoc.clone().alpha(0.01), m_endo.clone().alpha(0.01), scale_cube, at=0, zoom = 1.6, azimuth = 0, interactive=True)
 
 
 

@@ -40,8 +40,10 @@ if init:
     from morphoHeart_modules import morphoHeart_funcMeshes as fcMeshes
 
     #%% Get directories and file
+    # _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
+    # df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = '2A')
     _, _, dir_data2Analyse = fcBasics.getMainDirectories(root_path)
-    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = '2A')
+    df_dataset = fcBasics.exportDatasetCSV(dir_data2Analyse, end_name = 'R', out_type = 'xlsx')
 
     #%% Recreate plots for selected hearts
     # Get file to process and directories

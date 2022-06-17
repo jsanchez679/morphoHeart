@@ -13,7 +13,7 @@ from time import perf_counter
 from itertools import count
 # from datetime import datetime
 # from vedo import *
-from vedo import Plotter, Cube, settings, Text2D, Cylinder, Plane
+from vedo import Plotter, Cube, settings, Text2D, Cylinder, Plane, merge
 from vedo import embedWindow
 import pandas as pd
 
@@ -49,7 +49,7 @@ if init:
     tic = perf_counter()
 
 #%% func - getCubeRibbon
-    def getCubeRibbonMask(filename, file_num, df_res, cl_ribbon, res, dir_txtNnpy):
+    def getCubeRibbonMask(filename, file_num, df_res, cl_ribbon, res, dir_txtNnpy, mesh, plotshow = False):
         
         spaw_analysis = False
         if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
@@ -61,10 +61,13 @@ if init:
         # cl_ribbonB = cl_ribbon.clone().y(-res[1])
         cl_ribbonT = cl_ribbon.clone().z(res[1])
         # cl_ribbonD = cl_ribbon.clone().z(-res[1])
+        cl_ribbonS = [cl_ribbon, cl_ribbonR, cl_ribbonF, cl_ribbonT]
+        cl_ribbonAll = merge(cl_ribbonS)
         
-        vp = Plotter(N=1, axes = 4)
-        vp.show(cl_ribbon, cl_ribbonR,cl_ribbonF, cl_ribbonT, at=0, interactive = True)
-        
+        if plotshow: 
+            vp = Plotter(N=1, axes = 1)
+            vp.show(mesh, cl_ribbon, cl_ribbonR, cl_ribbonF, cl_ribbonT, at=0, interactive = True)
+            
         dir_txtNnpy = directories[1]
         #Load stack shape 
         [[xdim, ydim, zdim]] = fcBasics.loadNPY(filename, ['stackShape'], dir_txtNnpy, print_txt = False)
@@ -197,71 +200,88 @@ if init:
         s3_rib[rib_pix_outF[:,0],rib_pix_outF[:,1],rib_pix_outF[:,2]] = 1
         s3_rib[rib_pix_outT[:,0],rib_pix_outT[:,1],rib_pix_outT[:,2]] = 1
         
-        # xdim = 10; ydim = 10; zdim = 5
-        s3_filledCube = np.zeros((xdim, ydim, zdim+2))
-        s3_filledCube[1:xdim-1,1:ydim-1,1:zdim+1] = 1
-        s3_filledCube[rib_pix_out[:,0],rib_pix_out[:,1],rib_pix_out[:,2]] = 0
-        s3_filledCube[rib_pix_outR[:,0],rib_pix_outR[:,1],rib_pix_outR[:,2]] = 0
-        s3_filledCube[rib_pix_outF[:,0],rib_pix_outF[:,1],rib_pix_outF[:,2]] = 0
-        s3_filledCube[rib_pix_outT[:,0],rib_pix_outT[:,1],rib_pix_outT[:,2]] = 0
-        
-        # test_rib = fcMeshes.createExtLayerMesh(filename, s3_rib, resolution, 'ribbon', 'ribbon', extractLargest = False, plotshow = False)
-        # test_cube = fcMeshes.createExtLayerMesh(filename, s3_filledCube, resolution, 'cube', 'cube', extractLargest = True, plotshow = False)
-        # test_cube.alpha(0.05)
-        
-        # settings.legendSize = .20
-        # vp = Plotter(N=3, axes = 1)
-        # vp.show(test_cube, test_rib, at=0)
-        # vp.show(test_cube, at = 1)
-        # vp.show(test_rib, at = 2, interactive = True)
-        
-        # print('rib:', test_rib.bounds())
-        # print('cube:', test_cube.bounds())
-            
-        if not spaw_analysis: 
-            for xpos in range(0,xdim):
-                for zpos in range(0,zdim+2): 
-                    yline = s3_filledCube[xpos,0:ydim,zpos]
-                    index_y = np.where(yline == 0)[0]
-                    index_y = list(index_y)
-                    index_y.pop(0);index_y.pop(-1)
-                    if len(index_y) > 0:
-                        # print(index_x, ypos, zpos)
-                        s3_filledCube[xpos,index_y[0]:ydim,zpos] = 0
-        else: 
-            
-            for ypos in range(0,ydim):
-                for zpos in range(0,zdim+2): 
-                    xline = s3_filledCube[0:xdim,ypos,zpos]
-                    index_x = np.where(xline == 0)[0]
-                    index_x = list(index_x)
-                    index_x.pop(0);index_x.pop(-1)
-                    if len(index_x) > 0:
-                        # print(index_x, ypos, zpos)
-                        s3_filledCube[index_x[0]:xdim,ypos,zpos] = 0
-                    
-    
         test_rib = fcMeshes.createExtLayerMesh(filename, s3_rib, resolution, 'ribbon', 'ribbon', extractLargest = False, plotshow = False)
-        test_cube = fcMeshes.createExtLayerMesh(filename, s3_filledCube, resolution, 'cube', 'cube', extractLargest = True, plotshow = False)
-        test_cube.alpha(0.05)
+        # For future development, create 4 different options of cuts and ask user to selec which one to use? 
+        # Maybe just if it is spaw or if user is not happy with the default one selected?
+        happy = False; nn = 0; repeat = False
+        if not happy and nn < 2: 
+            # xdim = 10; ydim = 10; zdim = 5
+            s3_filledCube = np.zeros((xdim, ydim, zdim+2))
+            s3_filledCube[1:xdim-1,1:ydim-1,1:zdim+1] = 1
+            s3_filledCube[rib_pix_out[:,0],rib_pix_out[:,1],rib_pix_out[:,2]] = 0
+            s3_filledCube[rib_pix_outR[:,0],rib_pix_outR[:,1],rib_pix_outR[:,2]] = 0
+            s3_filledCube[rib_pix_outF[:,0],rib_pix_outF[:,1],rib_pix_outF[:,2]] = 0
+            s3_filledCube[rib_pix_outT[:,0],rib_pix_outT[:,1],rib_pix_outT[:,2]] = 0
+                
+            if not spaw_analysis: 
+                if 'V' in filename:
+                    for xpos in range(0,xdim):
+                        for zpos in range(0,zdim+2): 
+                            yline = s3_filledCube[xpos,0:ydim,zpos]
+                            index_y = np.where(yline == 0)[0]
+                            index_y = list(index_y)
+                            index_y.pop(0);index_y.pop(-1)
+                            if len(index_y) > 0:
+                                if not repeat: 
+                                    s3_filledCube[xpos,index_y[0]:ydim,zpos] = 0
+                                else: # repeat: 
+                                    s3_filledCube[xpos,0:index_y[0],zpos] = 0
+                    print('AV')
+                else: 
+                    for xpos in range(0,xdim):
+                        for ypos in range(0,ydim): 
+                            zline = s3_filledCube[xpos,ypos,0:zdim+2]
+                            index_z = np.where(zline == 0)[0]
+                            index_z = list(index_z)
+                            index_z.pop(0);index_z.pop(-1)
+                            if len(index_z) > 0:
+                                if not repeat: 
+                                    s3_filledCube[xpos,ypos,index_z[0]:zdim+2] = 0
+                                else: 
+                                    s3_filledCube[xpos,ypos,0:index_z[0]] = 0
+                    print('AD')
+            else: 
+                for ypos in range(0,ydim):
+                    for zpos in range(0,zdim+2): 
+                        xline = s3_filledCube[0:xdim,ypos,zpos]
+                        index_x = np.where(xline == 0)[0]
+                        index_x = list(index_x)
+                        index_x.pop(0);index_x.pop(-1)
+                        if len(index_x) > 0:#0
+                            if not repeat:
+                                s3_filledCube[index_x[-1]:xdim,ypos,zpos] = 0#[1]
+                            else:
+                                s3_filledCube[0:index_x[1],ypos,zpos] = 0#[0]
+                print('B')
+            
+            test_cube = fcMeshes.createExtLayerMesh(filename, s3_filledCube, resolution, 'cube', 'cube', extractLargest = True, plotshow = False)
+            test_cube.alpha(0.05).color('darkblue')
+            
+            plotshow = True
+            if plotshow: 
+                settings.legendSize = .20
+                vp = Plotter(N=3, axes = 1)
+                vp.show(test_cube, test_rib, at=0)
+                vp.show(test_cube, at = 1)
+                vp.show(test_rib, at = 2, interactive = True)
+
+            happy = True#fcBasics.ask4input('>> Happy with the ribbon cube? [0]:no, [1]: yes, continue! >>: ',bool)
+            if not happy: 
+                repeat = True
+            nn += 1
         
-        settings.legendSize = .20
-        vp = Plotter(N=3, axes = 1)
-        vp.show(test_cube, test_rib, at=0)
-        vp.show(test_cube, at = 1)
-        vp.show(test_rib, at = 2, interactive = True)
-        
-        s3_filledCubeBoolA = s3_filledCube.astype(bool)
-        
-        return s3_filledCubeBoolA
+        return s3_filledCubeBoolA, cl_ribbonAll, happy
 
 #%% def function - cutLR then atr/vent
     def divideMeshesLnR_newUp(filename, df_res, directories, dir_data2Analyse, mesh, s3_filledCubeBoolA, res, 
-                              scale_cube = [], colors =  ['skyblue','darkblue'], saveStacks = True, chambers = True):
+                              scale_cube = [], colors =  ['skyblue','darkblue'], saveStacks = True, plotshow = False):
         
         spaw_analysis = False
+        spaw_sinistral = False
         if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
             spaw_analysis = True
+        if 'spaw_lf' in df_res.loc[file_num,'spAnalysis']:
+            spaw_sinistral = True
         
         mesh_legend = mesh._legend
         if not spaw_analysis: 
@@ -286,17 +306,24 @@ if init:
         masked_s3B[s3_filledCubeBoolB] = 0
         test_cutB = fcMeshes.createExtLayerMesh(filename, masked_s3B, res, 'cjcutB', 'cjcutB', extractLargest = False, plotshow = False)
         test_cutB.legend(mesh_legend+names_LnRm[2]).color(colors[1])
+
         
-        settings.legendSize = .20
-        vp = Plotter(N=3, axes = 1)
-        vp.show(mesh, at=0)
-        vp.show(test_cutA, scale_cube, at = 1)
-        vp.show(test_cutB, scale_cube, at = 2, interactive = True)
+        if plotshow: 
+            settings.legendSize = .20
+            vp = Plotter(N=3, axes = 1)
+            vp.show(mesh, at=0)
+            vp.show(test_cutA, scale_cube, at = 1)
+            vp.show(test_cutB, scale_cube, at = 2, interactive = True)
         
         if saveStacks:
-            fcCont.save_s3(filename = filename, s3 = masked_s3A, dir_txtNnpy = directories[1], layer = 'cj_AOCVIC')
-            fcCont.save_s3(filename = filename, s3 = masked_s3B, dir_txtNnpy = directories[1], layer = 'cj_AICVOC')
-    
+            if not spaw_sinistral: 
+                fcCont.save_s3(filename = filename, s3 = masked_s3A, dir_txtNnpy = directories[1], layer = 'cj_AOCVIC')
+                fcCont.save_s3(filename = filename, s3 = masked_s3B, dir_txtNnpy = directories[1], layer = 'cj_AICVOC')
+              
+            else: 
+                fcCont.save_s3(filename = filename, s3 = masked_s3A, dir_txtNnpy = directories[1], layer = 'cj_AICVOC')
+                fcCont.save_s3(filename = filename, s3 = masked_s3B, dir_txtNnpy = directories[1], layer = 'cj_AOCVIC')
+            
         print(m_cj.volume())
         print(test_cutA.volume())
         print(test_cutB.volume())
@@ -343,9 +370,12 @@ if init:
         dict_shapes = dict()
         txt = Text2D(filename, c="k", font= 'CallingCode')
         rotAngle =  df_res.loc[file_num,'ang_HeartS']
-        plot = True
+        plot = False
         
-        #%%
+        spaw_sinistral = False
+        if 'spaw_lf' in df_res.loc[file_num,'spAnalysis']:
+            spaw_sinistral = True
+        
         # Get existing cl_dictionaries
         [dict_planes, dict_pts, dict_kspl, dict_colour, dict_shapes, dicts_cl] = fcBasics.import_dicts('mH_C', filename, directories)
         
@@ -370,26 +400,48 @@ if init:
                                                                                             linLine = linLines[0], mesh = m_myoc, 
                                                                                             dict_kspl = dict_kspl, dict_shapes = dict_shapes, 
                                                                                             dict_planes = dict_planes, scale_cube = scale_cube, 
-                                                                                            plotshow = True)
+                                                                                            plotshow = False)
         
-        s3_filledCubeBoolA = getCubeRibbonMask(filename, file_num, df_res, cl_ribbon, res, directories[1])
+
+        s3_filledCubeBoolA, cl_ribbonAll, happy = getCubeRibbonMask(filename, file_num, df_res, cl_ribbon, res, directories[1], mesh = [m_cj], plotshow = True)
+        
+        # s3_filledCubeBoolC = s3_filledCubeBoolA
+        # s3_filledCubeBoolA = np.invert(s3_filledCubeBoolA)
+        
+        # s3_filledCubeBoolF = np.logical_or(s3_filledCubeBoolA, s3_filledCubeBoolAV)
+        # s3_filledCubeBoolFint = s3_filledCubeBoolF.astype(int)
+        
+        # s3_filledCubeBoolFinv= np.invert(s3_filledCubeBoolF)
+        # s3_filledCubeBoolFinvint = s3_filledCubeBoolFinv.astype(int)
+        # test_cube = fcMeshes.createExtLayerMesh(filename, s3_filledCubeBoolFinvint, resolution, 'cube', 'cube', extractLargest = True, plotshow = False)
+        # test_cube.alpha(0.05).color('darkblue')
         
         # Just Cardiac Jelly (Total)
         mesh = m_cj
         m_cjLnR , names_LnR = divideMeshesLnR_newUp(filename, df_res, directories, dir_data2Analyse, mesh, s3_filledCubeBoolA, res, 
-                                                      scale_cube = [], colors =  ['skyblue','darkblue'], chambers = True)
+                                                      scale_cube = [], colors =  ['skyblue','darkblue'], 
+                                                      plotshow = True)
         
+        m_cjR = m_cjLnR[0]
+        m_cjL = m_cjLnR[1]
+        
+        m_cjLnR = [m_cjL, m_cjR]
+        if not spaw_sinistral: 
+            m_cjAOCVIC = m_cjLnR[0]
+            m_cjAICVOC = m_cjLnR[1]
+        else: 
+            print('aja')
+            m_cjAOCVIC = m_cjLnR[1]
+            m_cjAICVOC = m_cjLnR[0]
+            
         print(names_LnR)
                    
         df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, meshes = [m_cj]+m_cjLnR, 
                                               names = names_LnR)
         txt0 = Text2D("\n >> "+names_LnR[1]+": "+format(m_cjLnR[0].volume(), '.1f'), c=c, font=font)
         txt1 = Text2D("\n >> "+names_LnR[2]+": "+format(m_cjLnR[1].volume(), '.1f'), c=c, font=font)
-        vp = Plotter(N=2, axes=13)
-        vp.show(m_cjLnR[0], scale_cube, txt0, at=0)
-        vp.show(m_cjLnR[1], scale_cube, txt1, at=1, zoom=1.6, azimuth = 0, elevation = 0, interactive=True)
         
-        save = fcBasics.ask4input('Save? [0]:no, [1]:yes! >>:', bool)
+        save = True#fcBasics.ask4input('Save? [0]:no, [1]:yes! >>:', bool)
         if save: 
             fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_results)
             dir_df_meas = fcBasics.new_dir(fcBasics.new_dir(fcBasics.new_dir(dir_data2Analyse, 'R_All'), 'df_all'), 'df_meas')
@@ -404,6 +456,7 @@ if init:
         
         s32cut = ['cj_AOCVIC','cj_AICVOC']
         s32cutn = ['CJ.AOCVIC','CJ.AICVOC']
+            
         m_atr, m_vent, dict_shapes, _ = fcMeshes.getChamberMeshes(filename = filename,
                                     end_name = s32cut,
                                     names2cut = s32cutn,
@@ -413,11 +466,16 @@ if init:
                                     colour_anv = ['lightseagreen','darkturquoise'])
         m_AOC, m_AIC = m_atr
         m_VIC, m_VOC = m_vent
-        
+            
         m_AOC.legend('CJ.AOC')
         m_AIC.legend('CJ.AIC')
         m_VOC.legend('CJ.VOC')
         m_VIC.legend('CJ.VIC')
+        
+        settings.legendSize = .20
+        vp = Plotter(N=2, axes=13)
+        vp.show(m_cjLnR[0], scale_cube, cl_ribbon, txt0, at=0)
+        vp.show(m_cjLnR[1], scale_cube, txt1, at=1, zoom=1.6, azimuth = 0, elevation = 0, interactive=True)
         
         settings.legendSize = .20
         vp = Plotter(N=4, axes = 1)
@@ -427,10 +485,10 @@ if init:
         vp.show(m_VOC, scale_cube, at = 3, interactive = True)
         
         df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, 
-                                              meshes = [m_cjLnR[0],m_AOC, m_VIC], 
+                                              meshes = [m_cjAOCVIC,m_AOC, m_VIC], 
                                               names = ['CJ.AOC-VIC','CJ.AOC', 'CJ.VIC'])
         df_res = fcMeshes.addLayersVolume2df (df_res = df_res, file_num = file_num, 
-                                              meshes = [m_cjLnR[1],m_AIC, m_VOC], 
+                                              meshes = [m_cjAICVOC,m_AIC, m_VOC], 
                                               names = ['CJ.AIC-VOC','CJ.AIC', 'CJ.VOC'])
         
         save = True#fcBasics.ask4input('Save? [0]:no, [1]:yes! >>:', bool)
@@ -439,25 +497,17 @@ if init:
             dir_df_meas = fcBasics.new_dir(fcBasics.new_dir(fcBasics.new_dir(dir_data2Analyse, 'R_All'), 'df_all'), 'df_meas')
             fcBasics.saveFilledDF(filename = filename, df_res = df_res, dir2save = dir_df_meas)#, name = 'ResultsDFf')
             
-        # q_nextHeart = fcBasics.ask4input('Next Heart [0]:no, [1]:yes! >>:', bool)
-        # if q_nextHeart:
-        #     continue
-        # else: 
-        #     print('Last heart number ', nn)
-        #     break
+        q_nextHeart = fcBasics.ask4input('Next Heart [0]:no, [1]:yes! >>:', bool)
+        if q_nextHeart:
+            continue
+        else: 
+            print('Last heart number ', nn)
+            break
     
     fcBasics.alert('frog', 1)
     fcBasics.alert('jump', 2)
     
 #%% Init
 init = True    
-    
-    
-    
-    
-    
-    
-    
-    
     
     

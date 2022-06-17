@@ -268,7 +268,7 @@ def exportDatasetCSV(dir_data2Analyse, end_name = '2A', out_type = 'csv'):
         df_dataset = df_dataset[['Folder','LS_Session', 'Fish_ref','Strain','Stage', 'Manip',
                                   'Gene_A', 'Genotype_A','Gene_B', 'Genotype_B']]
 
-        dir_dfDataset = os.path.join(dir_data2Analyse,'df_dataset'+end_name+'.'+out_type)
+    dir_dfDataset = os.path.join(dir_data2Analyse,'df_dataset'+end_name+'.'+out_type)
     if out_type == 'csv':
         df_dataset.to_csv(dir_dfDataset)
     else: #'xls

@@ -3628,9 +3628,9 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh,
     dist = np.sqrt(xd**2+yd**2+zd**2)
     u = np.cumsum(dist)
     u = np.hstack([[0],u])
-    t = np.linspace(0, u[-1], 601)
+    t = np.linspace(0, u[-1], 601)#601
     resamp_pts = interpn((u,), pts_cl_ext, t)
-    kspl_ext = KSpline(resamp_pts, res=601).color('purple').legend('kspl_extended')
+    kspl_ext = KSpline(resamp_pts, res=601).color('purple').legend('kspl_extended')#601
 
     spaw_analysis = False
     if 'spaw_ct' in df_res.loc[file_num,'spAnalysis']:
@@ -3666,7 +3666,7 @@ def createCLRibbon(filename, file_num, df_res, kspl_CL2use, linLine, mesh,
     if clRib_type == 'extDV': # Names are switched but it works
         kspl_ext_D = kspl_ext.clone().x(x_cl).y(y_cl).z(z_cl).legend('kspl_CLExtD')
         kspl_ext_V = kspl_ext.clone().x(-x_cl).y(-y_cl).z(-z_cl).legend('kspl_CLExtV')
-        cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(1200, 1000))
+        cl_ribbon = Ribbon(kspl_ext_D, kspl_ext_V, alpha=0.2, res=(1500, 1500))
         cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(D-V)")
     
     elif clRib_type == 'extV':

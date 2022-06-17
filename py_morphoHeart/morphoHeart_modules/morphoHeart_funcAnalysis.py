@@ -134,7 +134,7 @@ def getMainStrain(df_meas):
     
     return df_meas
 
-#%% func - spAnalysis
+#%% func - spAnalysis # what if a normal heart diff than spaw loops left? or dorso/ventral
 def spAnalysis(df_meas):
     
     spAn = []
@@ -196,228 +196,239 @@ def modifyOEControlGenot(df2plot):
     
     return df2plot
 
+#%% func - cleanDfCols
+def cleanDfCols(df2plot):
+    labels2del = ['Vol_CJ_total','Vol_CJ_total-Atr','Vol_CJ.Left-Atr','Vol_CJ.Right-Atr',
+                  'Vol_CJ_total-Vent','Vol_CJ.Left-Vent','Vol_CJ.Right-Vent', 
+                  'ang_Heart','ang_Atr','ang_Vent','ang_BtwChambers',
+                  'Vol_CJ.Dorsal-Atr','Vol_CJ.Ventral-Atr','Vol_CJ.Dorsal-Vent','Vol_CJ.Ventral-Vent']
+    for lab in labels2del:
+        df2plot = df2plot.drop([lab], axis =1)
+    
+    return df2plot
+    
 #%% func - checkCJCurvatures (under development)
-def checkCJCurvatures(df2plot):
-    filename = list(df2plot['Folder'])
-    sp_analysis = list(df2plot['spAnalysis'])
-    cj_all = list(df2plot['Vol_CJ'])
-    cj_left = list(df2plot['Vol_CJ.Left'])
-    cj_right = list(df2plot['Vol_CJ.Right'])
-    cj_dorsal = list(df2plot['Vol_CJ.Dorsal'])
-    cj_ventral = list(df2plot['Vol_CJ.Ventral'])
-    #Atr
-    cj_Atr = list(df2plot['Vol_Atr.CJ'])
-    cj_leftAtr = list(df2plot['Vol_CJ.Left-Atr'])
-    cj_rightAtr = list(df2plot['Vol_CJ.Right-Atr'])
-    cj_dorsalAtr = list(df2plot['Vol_CJ.Dorsal-Atr'])
-    cj_ventralAtr = list(df2plot['Vol_CJ.Ventral-Atr'])
-    #Vent
-    cj_Vent = list(df2plot['Vol_Vent.CJ'])
-    cj_leftVent = list(df2plot['Vol_CJ.Left-Vent'])
-    cj_rightVent = list(df2plot['Vol_CJ.Right-Vent'])
-    cj_dorsalVent = list(df2plot['Vol_CJ.Dorsal-Vent'])
-    cj_ventralVent = list(df2plot['Vol_CJ.Ventral-Vent'])
+# def checkCJCurvatures(df2plot):
+#     filename = list(df2plot['Folder'])
+#     sp_analysis = list(df2plot['spAnalysis'])
+#     cj_all = list(df2plot['Vol_CJ'])
+#     cj_left = list(df2plot['Vol_CJ.Left'])
+#     cj_right = list(df2plot['Vol_CJ.Right'])
+#     cj_dorsal = list(df2plot['Vol_CJ.Dorsal'])
+#     cj_ventral = list(df2plot['Vol_CJ.Ventral'])
+#     #Atr
+#     cj_Atr = list(df2plot['Vol_Atr.CJ'])
+#     cj_leftAtr = list(df2plot['Vol_CJ.Left-Atr'])
+#     cj_rightAtr = list(df2plot['Vol_CJ.Right-Atr'])
+#     cj_dorsalAtr = list(df2plot['Vol_CJ.Dorsal-Atr'])
+#     cj_ventralAtr = list(df2plot['Vol_CJ.Ventral-Atr'])
+#     #Vent
+#     cj_Vent = list(df2plot['Vol_Vent.CJ'])
+#     cj_leftVent = list(df2plot['Vol_CJ.Left-Vent'])
+#     cj_rightVent = list(df2plot['Vol_CJ.Right-Vent'])
+#     cj_dorsalVent = list(df2plot['Vol_CJ.Dorsal-Vent'])
+#     cj_ventralVent = list(df2plot['Vol_CJ.Ventral-Vent'])
     
-    cj_left_new = []; cj_right_new = []; cj_dorsal_new = []; cj_ventral_new = []; 
-    cj_leftAtr_new = []; cj_rightAtr_new = []; cj_dorsalAtr_new = []; cj_ventralAtr_new = []; 
-    cj_leftVent_new = []; cj_rightVent_new = []; cj_dorsalVent_new = []; cj_ventralVent_new = []; 
-    tot = []; atr = []; vent = []; maxPctg = 50
-    for n, spAn, file in zip(count(), sp_analysis, filename):
-        # print(file, spAn)#, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
-        if spAn == 'Sinistral looper' or spAn == 'Dextral looper' or spAn == 'normal':
-            vol_tot = [cj_all[n], cj_left[n], cj_right[n]]
-            diff_tot = abs(100*(1-(vol_tot[1]+vol_tot[2])/vol_tot[0]))
-            if diff_tot > maxPctg:
-                tot.append(filename[n]+'Total-'+spAn)
-                cj_left_new.append(np.nan)
-                cj_right_new.append(np.nan)
-                cj_dorsal_new.append(np.nan)
-                cj_ventral_new.append(np.nan)
-                rt = 'Tot'
-                print(rt, file, spAn, diff_tot)
-            else: 
-                cj_left_new.append(cj_left[n])
-                cj_right_new.append(cj_right[n])
-                cj_dorsal_new.append(cj_dorsal[n])
-                cj_ventral_new.append(cj_ventral[n])
+#     cj_left_new = []; cj_right_new = []; cj_dorsal_new = []; cj_ventral_new = []; 
+#     cj_leftAtr_new = []; cj_rightAtr_new = []; cj_dorsalAtr_new = []; cj_ventralAtr_new = []; 
+#     cj_leftVent_new = []; cj_rightVent_new = []; cj_dorsalVent_new = []; cj_ventralVent_new = []; 
+#     tot = []; atr = []; vent = []; maxPctg = 50
+#     for n, spAn, file in zip(count(), sp_analysis, filename):
+#         # print(file, spAn)#, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
+#         if spAn == 'Sinistral looper' or spAn == 'Dextral looper' or spAn == 'normal':
+#             vol_tot = [cj_all[n], cj_left[n], cj_right[n]]
+#             diff_tot = abs(100*(1-(vol_tot[1]+vol_tot[2])/vol_tot[0]))
+#             if diff_tot > maxPctg:
+#                 tot.append(filename[n]+'Total-'+spAn)
+#                 cj_left_new.append(np.nan)
+#                 cj_right_new.append(np.nan)
+#                 cj_dorsal_new.append(np.nan)
+#                 cj_ventral_new.append(np.nan)
+#                 rt = 'Tot'
+#                 print(rt, file, spAn, diff_tot)
+#             else: 
+#                 cj_left_new.append(cj_left[n])
+#                 cj_right_new.append(cj_right[n])
+#                 cj_dorsal_new.append(cj_dorsal[n])
+#                 cj_ventral_new.append(cj_ventral[n])
             
-            vol_Atr = [cj_Atr[n], cj_leftAtr[n], cj_rightAtr[n]]
-            diff_Atr = abs(100*(1-(vol_Atr[1]+vol_Atr[2])/vol_Atr[0]))
-            if diff_Atr > maxPctg:
-                atr.append(filename[n]+'Atr-'+spAn)
-                cj_leftAtr_new.append(np.nan)
-                cj_rightAtr_new.append(np.nan)
-                cj_dorsalAtr_new.append(np.nan)
-                cj_ventralAtr_new.append(np.nan)
-                rt = 'Atr'
-                print(rt, file, spAn, diff_Atr)
-            else: 
-                cj_leftAtr_new.append(cj_leftAtr[n])
-                cj_rightAtr_new.append(cj_rightAtr[n])
-                cj_dorsalAtr_new.append(cj_dorsalAtr[n])
-                cj_ventralAtr_new.append(cj_ventralAtr[n])
+#             vol_Atr = [cj_Atr[n], cj_leftAtr[n], cj_rightAtr[n]]
+#             diff_Atr = abs(100*(1-(vol_Atr[1]+vol_Atr[2])/vol_Atr[0]))
+#             if diff_Atr > maxPctg:
+#                 atr.append(filename[n]+'Atr-'+spAn)
+#                 cj_leftAtr_new.append(np.nan)
+#                 cj_rightAtr_new.append(np.nan)
+#                 cj_dorsalAtr_new.append(np.nan)
+#                 cj_ventralAtr_new.append(np.nan)
+#                 rt = 'Atr'
+#                 print(rt, file, spAn, diff_Atr)
+#             else: 
+#                 cj_leftAtr_new.append(cj_leftAtr[n])
+#                 cj_rightAtr_new.append(cj_rightAtr[n])
+#                 cj_dorsalAtr_new.append(cj_dorsalAtr[n])
+#                 cj_ventralAtr_new.append(cj_ventralAtr[n])
             
-            vol_Vent = [cj_Vent[n], cj_leftVent[n], cj_rightVent[n]]
-            diff_Vent = abs(100*(1-(vol_Vent[1]+vol_Vent[2])/vol_Vent[0]))
-            if diff_Vent > maxPctg:
-                vent.append(filename[n]+'Vent-'+spAn)
-                cj_leftVent_new.append(np.nan)
-                cj_rightVent_new.append(np.nan)
-                cj_dorsalVent_new.append(np.nan)
-                cj_ventralVent_new.append(np.nan)
-                rt = 'Vent'
-                print(rt, file, spAn, diff_Vent)
-            else: 
-                cj_leftVent_new.append(cj_leftVent[n])
-                cj_rightVent_new.append(cj_rightVent[n])
-                cj_dorsalVent_new.append(cj_dorsalVent[n])
-                cj_ventralVent_new.append(cj_ventralVent[n])
-            # print(rt, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
+#             vol_Vent = [cj_Vent[n], cj_leftVent[n], cj_rightVent[n]]
+#             diff_Vent = abs(100*(1-(vol_Vent[1]+vol_Vent[2])/vol_Vent[0]))
+#             if diff_Vent > maxPctg:
+#                 vent.append(filename[n]+'Vent-'+spAn)
+#                 cj_leftVent_new.append(np.nan)
+#                 cj_rightVent_new.append(np.nan)
+#                 cj_dorsalVent_new.append(np.nan)
+#                 cj_ventralVent_new.append(np.nan)
+#                 rt = 'Vent'
+#                 print(rt, file, spAn, diff_Vent)
+#             else: 
+#                 cj_leftVent_new.append(cj_leftVent[n])
+#                 cj_rightVent_new.append(cj_rightVent[n])
+#                 cj_dorsalVent_new.append(cj_dorsalVent[n])
+#                 cj_ventralVent_new.append(cj_ventralVent[n])
+#             # print(rt, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
         
-        elif spAn == 'No looper':
-            vol_tot = [cj_all[n], cj_dorsal[n], cj_ventral[n]]
-            diff_tot = abs(100*(1-(vol_tot[1]+vol_tot[2])/vol_tot[0]))
-            if diff_tot > maxPctg:
-                tot.append(filename[n]+'Total-'+spAn)
-                cj_left_new.append(np.nan)
-                cj_right_new.append(np.nan)
-                cj_dorsal_new.append(np.nan)
-                cj_ventral_new.append(np.nan)
-                rt = 'Tot'
-                print(rt, file, spAn, diff_tot)
-            else: 
-                cj_left_new.append(cj_left[n])
-                cj_right_new.append(cj_right[n])
-                cj_dorsal_new.append(cj_dorsal[n])
-                cj_ventral_new.append(cj_ventral[n])
+#         elif spAn == 'No looper':
+#             vol_tot = [cj_all[n], cj_dorsal[n], cj_ventral[n]]
+#             diff_tot = abs(100*(1-(vol_tot[1]+vol_tot[2])/vol_tot[0]))
+#             if diff_tot > maxPctg:
+#                 tot.append(filename[n]+'Total-'+spAn)
+#                 cj_left_new.append(np.nan)
+#                 cj_right_new.append(np.nan)
+#                 cj_dorsal_new.append(np.nan)
+#                 cj_ventral_new.append(np.nan)
+#                 rt = 'Tot'
+#                 print(rt, file, spAn, diff_tot)
+#             else: 
+#                 cj_left_new.append(cj_left[n])
+#                 cj_right_new.append(cj_right[n])
+#                 cj_dorsal_new.append(cj_dorsal[n])
+#                 cj_ventral_new.append(cj_ventral[n])
             
-            vol_Atr = [cj_Atr[n], cj_dorsalAtr[n], cj_ventralAtr[n]]
-            diff_Atr = abs(100*(1-(vol_Atr[1]+vol_Atr[2])/vol_Atr[0]))
-            if diff_Atr > maxPctg:
-                atr.append(filename[n]+'Atr-'+spAn)
-                cj_leftAtr_new.append(np.nan)
-                cj_rightAtr_new.append(np.nan)
-                cj_dorsalAtr_new.append(np.nan)
-                cj_ventralAtr_new.append(np.nan)
-                rt = 'Atr'
-                print(rt, file, spAn, diff_Atr)
-            else: 
-                cj_leftAtr_new.append(cj_leftAtr[n])
-                cj_rightAtr_new.append(cj_rightAtr[n])
-                cj_dorsalAtr_new.append(cj_dorsalAtr[n])
-                cj_ventralAtr_new.append(cj_ventralAtr[n])
+#             vol_Atr = [cj_Atr[n], cj_dorsalAtr[n], cj_ventralAtr[n]]
+#             diff_Atr = abs(100*(1-(vol_Atr[1]+vol_Atr[2])/vol_Atr[0]))
+#             if diff_Atr > maxPctg:
+#                 atr.append(filename[n]+'Atr-'+spAn)
+#                 cj_leftAtr_new.append(np.nan)
+#                 cj_rightAtr_new.append(np.nan)
+#                 cj_dorsalAtr_new.append(np.nan)
+#                 cj_ventralAtr_new.append(np.nan)
+#                 rt = 'Atr'
+#                 print(rt, file, spAn, diff_Atr)
+#             else: 
+#                 cj_leftAtr_new.append(cj_leftAtr[n])
+#                 cj_rightAtr_new.append(cj_rightAtr[n])
+#                 cj_dorsalAtr_new.append(cj_dorsalAtr[n])
+#                 cj_ventralAtr_new.append(cj_ventralAtr[n])
             
-            vol_Vent = [cj_Vent[n], cj_dorsalVent[n], cj_ventralVent[n]]
-            diff_Vent = abs(100*(1-(vol_Vent[1]+vol_Vent[2])/vol_Vent[0]))
-            if diff_Vent > maxPctg:
-                vent.append(filename[n]+'Vent-'+spAn)
-                cj_leftVent_new.append(np.nan)
-                cj_rightVent_new.append(np.nan)
-                cj_dorsalVent_new.append(np.nan)
-                cj_ventralVent_new.append(np.nan)
-                rt = 'Vent'
-                print(rt, file, spAn, diff_Vent)
-            else: 
-                cj_leftVent_new.append(cj_leftVent[n])
-                cj_rightVent_new.append(cj_rightVent[n])
-                cj_dorsalVent_new.append(cj_dorsalVent[n])
-                cj_ventralVent_new.append(cj_ventralVent[n])
-            # print('>>',rt, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
+#             vol_Vent = [cj_Vent[n], cj_dorsalVent[n], cj_ventralVent[n]]
+#             diff_Vent = abs(100*(1-(vol_Vent[1]+vol_Vent[2])/vol_Vent[0]))
+#             if diff_Vent > maxPctg:
+#                 vent.append(filename[n]+'Vent-'+spAn)
+#                 cj_leftVent_new.append(np.nan)
+#                 cj_rightVent_new.append(np.nan)
+#                 cj_dorsalVent_new.append(np.nan)
+#                 cj_ventralVent_new.append(np.nan)
+#                 rt = 'Vent'
+#                 print(rt, file, spAn, diff_Vent)
+#             else: 
+#                 cj_leftVent_new.append(cj_leftVent[n])
+#                 cj_rightVent_new.append(cj_rightVent[n])
+#                 cj_dorsalVent_new.append(cj_dorsalVent[n])
+#                 cj_ventralVent_new.append(cj_ventralVent[n])
+#             # print('>>',rt, cj_all[n], cj_left[n], cj_right[n],cj_dorsal[n], cj_ventral[n])
             
-    df2plot['Vol_CJ.Left'] = cj_left_new
-    df2plot['Vol_CJ.Right'] = cj_right_new
-    df2plot['Vol_CJ.Dorsal'] = cj_dorsal_new
-    df2plot['Vol_CJ.Ventral'] = cj_ventral_new
-    #Atr
-    df2plot['Vol_CJ.Left-Atr'] = cj_leftAtr_new
-    df2plot['Vol_CJ.Right-Atr'] = cj_rightAtr_new
-    df2plot['Vol_CJ.Dorsal-Atr'] = cj_dorsalAtr_new
-    df2plot['Vol_CJ.Ventral-Atr'] = cj_ventralAtr_new
-    #Vent
-    df2plot['Vol_CJ.Left-Vent'] = cj_leftVent_new
-    df2plot['Vol_CJ.Right-Vent'] = cj_rightVent_new
-    df2plot['Vol_CJ.Dorsal-Vent'] = cj_dorsalVent_new
-    df2plot['Vol_CJ.Ventral-Vent'] = cj_ventralVent_new
+#     df2plot['Vol_CJ.Left'] = cj_left_new
+#     df2plot['Vol_CJ.Right'] = cj_right_new
+#     df2plot['Vol_CJ.Dorsal'] = cj_dorsal_new
+#     df2plot['Vol_CJ.Ventral'] = cj_ventral_new
+#     #Atr
+#     df2plot['Vol_CJ.Left-Atr'] = cj_leftAtr_new
+#     df2plot['Vol_CJ.Right-Atr'] = cj_rightAtr_new
+#     df2plot['Vol_CJ.Dorsal-Atr'] = cj_dorsalAtr_new
+#     df2plot['Vol_CJ.Ventral-Atr'] = cj_ventralAtr_new
+#     #Vent
+#     df2plot['Vol_CJ.Left-Vent'] = cj_leftVent_new
+#     df2plot['Vol_CJ.Right-Vent'] = cj_rightVent_new
+#     df2plot['Vol_CJ.Dorsal-Vent'] = cj_dorsalVent_new
+#     df2plot['Vol_CJ.Ventral-Vent'] = cj_ventralVent_new
     
-    return df2plot, tot, atr, vent
+#     return df2plot, tot, atr, vent
     
 #%% func - defCJCurvatures
-def defCJCurvatures (df2plot, ready = False):
-    sp_analysis = list(df2plot['spAnalysis'])
-    cj_left = list(df2plot['Vol_CJ.Left'])
-    cj_right = list(df2plot['Vol_CJ.Right'])
-    cj_dorsal = list(df2plot['Vol_CJ.Dorsal'])
-    cj_ventral = list(df2plot['Vol_CJ.Ventral'])
+# def defCJCurvatures (df2plot, ready = False):
+#     sp_analysis = list(df2plot['spAnalysis'])
+#     cj_left = list(df2plot['Vol_CJ.Left'])
+#     cj_right = list(df2plot['Vol_CJ.Right'])
+#     cj_dorsal = list(df2plot['Vol_CJ.Dorsal'])
+#     cj_ventral = list(df2plot['Vol_CJ.Ventral'])
     
-    if ready: 
-        #Atr
-        cj_leftAtr = list(df2plot['Vol_CJ.Left-Atr'])
-        cj_rightAtr = list(df2plot['Vol_CJ.Right-Atr'])
-        cj_dorsalAtr = list(df2plot['Vol_CJ.Dorsal-Atr'])
-        cj_ventralAtr = list(df2plot['Vol_CJ.Ventral-Atr'])
-        #Vent
-        cj_leftVent = list(df2plot['Vol_CJ.Left-Vent'])
-        cj_rightVent = list(df2plot['Vol_CJ.Right-Vent'])
-        cj_dorsalVent = list(df2plot['Vol_CJ.Dorsal-Vent'])
-        cj_ventralVent = list(df2plot['Vol_CJ.Ventral-Vent'])
+#     if ready: 
+#         #Atr
+#         cj_leftAtr = list(df2plot['Vol_CJ.Left-Atr'])
+#         cj_rightAtr = list(df2plot['Vol_CJ.Right-Atr'])
+#         cj_dorsalAtr = list(df2plot['Vol_CJ.Dorsal-Atr'])
+#         cj_ventralAtr = list(df2plot['Vol_CJ.Ventral-Atr'])
+#         #Vent
+#         cj_leftVent = list(df2plot['Vol_CJ.Left-Vent'])
+#         cj_rightVent = list(df2plot['Vol_CJ.Right-Vent'])
+#         cj_dorsalVent = list(df2plot['Vol_CJ.Dorsal-Vent'])
+#         cj_ventralVent = list(df2plot['Vol_CJ.Ventral-Vent'])
     
-    # print(len(cj_left), len(cj_right), len(cj_dorsal), len(cj_ventral))
-    cj_outer = []
-    cj_inner = []
-    cjAtr_outer = []
-    cjAtr_inner = []
-    cjVent_outer = []
-    cjVent_inner = []
+#     # print(len(cj_left), len(cj_right), len(cj_dorsal), len(cj_ventral))
+#     cj_outer = []
+#     cj_inner = []
+#     cjAtr_outer = []
+#     cjAtr_inner = []
+#     cjVent_outer = []
+#     cjVent_inner = []
     
-    for n, spAn in enumerate(sp_analysis):
-        # print(n, spAn, cjl, cjr, cjd, cjv)
-        if spAn == 'Sinistral looper':
-            # print('A')
-            cj_outer.append(cj_right[n])
-            cj_inner.append(cj_left[n])
-            if ready: 
-                cjAtr_outer.append(cj_rightAtr[n])
-                cjAtr_inner.append(cj_leftAtr[n])
-                cjVent_inner.append(cj_rightVent[n])
-                cjVent_outer.append(cj_leftVent[n])
+#     for n, spAn in enumerate(sp_analysis):
+#         # print(n, spAn, cjl, cjr, cjd, cjv)
+#         if spAn == 'Sinistral looper':
+#             # print('A')
+#             cj_outer.append(cj_right[n])
+#             cj_inner.append(cj_left[n])
+#             if ready: 
+#                 cjAtr_outer.append(cj_rightAtr[n])
+#                 cjAtr_inner.append(cj_leftAtr[n])
+#                 cjVent_inner.append(cj_rightVent[n])
+#                 cjVent_outer.append(cj_leftVent[n])
         
-        elif spAn == 'No looper':
-            # print('B')
-            cj_outer.append(cj_dorsal[n])
-            cj_inner.append(cj_ventral[n])
-            if ready: 
-                cjAtr_outer.append(cj_dorsalAtr[n])
-                cjAtr_inner.append(cj_ventralAtr[n])
-                cjVent_inner.append(cj_dorsalVent[n])
-                cjVent_outer.append(cj_ventralVent[n])
+#         elif spAn == 'No looper':
+#             # print('B')
+#             cj_outer.append(cj_dorsal[n])
+#             cj_inner.append(cj_ventral[n])
+#             if ready: 
+#                 cjAtr_outer.append(cj_dorsalAtr[n])
+#                 cjAtr_inner.append(cj_ventralAtr[n])
+#                 cjVent_inner.append(cj_dorsalVent[n])
+#                 cjVent_outer.append(cj_ventralVent[n])
             
-        else: # if spAn == 'Dextral looper':
-            # print('C')
-            cj_outer.append(cj_left[n])
-            cj_inner.append(cj_right[n])
-            if ready: 
-                cjAtr_outer.append(cj_leftAtr[n])
-                cjAtr_inner.append(cj_rightAtr[n])
-                cjVent_inner.append(cj_leftVent[n])
-                cjVent_outer.append(cj_rightVent[n])
+#         else: # if spAn == 'Dextral looper':
+#             # print('C')
+#             cj_outer.append(cj_left[n])
+#             cj_inner.append(cj_right[n])
+#             if ready: 
+#                 cjAtr_outer.append(cj_leftAtr[n])
+#                 cjAtr_inner.append(cj_rightAtr[n])
+#                 cjVent_inner.append(cj_leftVent[n])
+#                 cjVent_outer.append(cj_rightVent[n])
             
-        # print('Final:',cj_outer[-1], cj_inner[-1])
-    df2plot['Vol_CJ.AOC-VIC'] = cj_outer
-    df2plot['Vol_CJ.AIC-VOC'] = cj_inner
-    if ready: 
-        df2plot['Vol_CJ.AOC'] = cjAtr_outer
-        df2plot['Vol_CJ.AIC'] = cjAtr_inner
-        df2plot['Vol_CJ.VOC'] = cjVent_outer
-        df2plot['Vol_CJ.VIC'] = cjVent_inner
+#         # print('Final:',cj_outer[-1], cj_inner[-1])
+#     df2plot['Vol_CJ.AOC-VIC'] = cj_outer
+#     df2plot['Vol_CJ.AIC-VOC'] = cj_inner
+#     if ready: 
+#         df2plot['Vol_CJ.AOC'] = cjAtr_outer
+#         df2plot['Vol_CJ.AIC'] = cjAtr_inner
+#         df2plot['Vol_CJ.VOC'] = cjVent_outer
+#         df2plot['Vol_CJ.VIC'] = cjVent_inner
     
-    df2plot['Ratio_VolAOC-VIC2VolAIC-VOC'] = df2plot['Vol_CJ.AOC-VIC']/df2plot['Vol_CJ.AIC-VOC'] 
-    if ready: 
-        df2plot['Ratio_VolAOC2VolAIC'] = df2plot['Vol_CJ.AOC']/df2plot['Vol_CJ.AIC'] 
-        df2plot['Ratio_VolAIC2VolAOC'] = df2plot['Vol_CJ.AIC']/df2plot['Vol_CJ.AOC'] 
-        df2plot['Ratio_VolVOC2VolVIC'] = df2plot['Vol_CJ.VOC']/df2plot['Vol_CJ.VIC'] 
-        df2plot['Ratio_VolVIC2VolVOC'] = df2plot['Vol_CJ.VIC']/df2plot['Vol_CJ.VOC'] 
+#     df2plot['Ratio_VolAOC-VIC2VolAIC-VOC'] = df2plot['Vol_CJ.AOC-VIC']/df2plot['Vol_CJ.AIC-VOC'] 
+#     if ready: 
+#         df2plot['Ratio_VolAOC2VolAIC'] = df2plot['Vol_CJ.AOC']/df2plot['Vol_CJ.AIC'] 
+#         df2plot['Ratio_VolAIC2VolAOC'] = df2plot['Vol_CJ.AIC']/df2plot['Vol_CJ.AOC'] 
+#         df2plot['Ratio_VolVOC2VolVIC'] = df2plot['Vol_CJ.VOC']/df2plot['Vol_CJ.VIC'] 
+#         df2plot['Ratio_VolVIC2VolVOC'] = df2plot['Vol_CJ.VIC']/df2plot['Vol_CJ.VOC'] 
         
-    return df2plot
+#     return df2plot
 
 #%% func - normalAsDextLoopers
 def normalAsDextLoopers(df2plot):
@@ -584,18 +595,38 @@ def selectVariables_auto (vars_dict, group, plot_type):
 def sortDFCols(df_meas):
     
     first_cols = ['Folder', 'LS_Session', 'Fish_ref', 'Ref', 'Strain', 'Strain_o', 'Stage', 'Manip',
-       'Gene_A', 'Genotype_A','GenotA', 'Gene_B', 'Genotype_B', 'GenotB', 'GenotypeAll', 'GenotypeF']
+       'Gene_A', 'Genotype_A','GenotA', 'Gene_B', 'Genotype_B', 'GenotB', 'GenotypeAll', 'GenotypeF']#,'spAnalysis']
+
+    ang_cols = ['ang_HeartS','ang_AtrS','ang_VentS','ang_BtwChambersS','ang_AtrV','ang_VentV','ang_BtwChambersV']
+    ellips_cols = ['EllipAtr_Width','EllipAtr_Length','EllipAtr_Depth','EllipAtr_Asphericity','EllipVent_Width','EllipVent_Length','EllipVent_Depth','EllipVent_Asphericity']
+    loop_cols = ['linLine_Int.Myoc(Cut)','Length_CL_Int.Myoc(Cut)','Looping_Ratio_Myoc','linLine_Ext.Endo(Cut)','Length_CL_Ext.Endo(Cut)','Looping_Ratio_Endo']
+    surfA_cols = ['SurfArea_Myoc','SurfArea_Int.Myoc','SurfArea_Ext.Myoc','SurfArea_Endo','SurfArea_Int.Endo','SurfArea_Ext.Endo','SurfArea_CJ','SurfArea_Int.CJ','SurfArea_Ext.CJ','SurfArea_Atr.ExtMyoc','SurfArea_Atr.IntEndo','SurfArea_Atr.ExtCJ','SurfArea_Vent.ExtMyoc','SurfArea_Vent.IntEndo','SurfArea_Vent.ExtCJ']
+    grossVol_cols = ['Vol_Int.Myoc','Vol_Ext.Myoc','Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc','Vol_Int.Endo','Vol_Atr.IntEndo','Vol_Vent.IntEndo','Vol_Ext.Endo','Vol_Myoc','Vol_Atr.Myoc','Vol_Vent.Myoc','Vol_Endo','Vol_Atr.Endo','Vol_Vent.Endo','Vol_CJ','Vol_Atr.CJ','Vol_Vent.CJ']
+    regVol_cols = ['Vol_CJ.Left','Vol_CJ.Right','Vol_CJ.Dorsal','Vol_CJ.Ventral','Vol_CJ.AOC-VIC','Vol_CJ.AOC','Vol_CJ.VIC','Vol_CJ.AIC-VOC','Vol_CJ.AIC','Vol_CJ.VOC']
+    tissVol_cols = ['Vol_Tissue','Vol_Atr.Tissue','Vol_Vent.Tissue']
+    ratio_cols = ['Ratio_VolMyoc2VolExtMyoc','Ratio_VolEndo2VolExtMyoc','Ratio_VolCJ2VolExtMyoc','Ratio_VolLumen2VolExtMyoc',
+                    'Ratio_VolMyoc2VolTissue','Ratio_VolEndo2VolTissue','Ratio_VolCJ2VolTissue','Ratio_VolLumen2VolTissue',
+                    'Ratio_VolAtrMyoc2VolAtrExtMyoc','Ratio_VolAtrEndo2VolAtrExtMyoc','Ratio_VolAtrCJ2VolAtrExtMyoc',
+                    'Ratio_VolAtrLumen2VolAtrExtMyoc','Ratio_VolAtrMyoc2VolAtrTissue','Ratio_VolAtrEndo2VolAtrTissue',
+                    'Ratio_VolAtrCJ2VolAtrTissue','Ratio_VolAtrLumen2VolAtrTissue','Ratio_VolVentMyoc2VolVentExtMyoc',
+                    'Ratio_VolVentEndo2VolVentExtMyoc','Ratio_VolVentCJ2VolVentExtMyoc','Ratio_VolVentLumen2VolVentExtMyoc',
+                    'Ratio_VolVentMyoc2VolVentTissue','Ratio_VolVentEndo2VolVentTissue','Ratio_VolVentCJ2VolVentTissue',
+                    'Ratio_VolVentLumen2VolVentTissue','Ratio_VolAtrCJ2VolVentCJ','Ratio_VolAOC-VIC2VolAIC-VOC',
+                    'Ratio_VolAOC2VolAIC','Ratio_VolAIC2VolAOC','Ratio_VolVOC2VolVIC','Ratio_VolVIC2VolVOC']
+    
+    all_cols = ang_cols+ellips_cols+loop_cols+surfA_cols+grossVol_cols+regVol_cols+tissVol_cols+ratio_cols
 
     other_cols = []
     for col in df_meas.columns:
         if col == 'spAnalysis':
             first_cols.append(col)
-        elif col not in first_cols:
+        elif col not in first_cols+all_cols:
+            print(col)
             other_cols.append(col)
     
     other_cols = sorted(other_cols,  key=lambda s: s.lower())
     
-    df_meas_sorted = df_meas.reindex(first_cols+other_cols, axis =1)
+    df_meas_sorted = df_meas.reindex(first_cols+all_cols+other_cols, axis =1)
     
     return df_meas_sorted
 
@@ -785,18 +816,21 @@ def getVarRatios(df_meas):
     df_meas['Ratio_VolVentLumen2VolVentTissue'] = df_meas['Vol_Vent.IntEndo']/ df_meas['Vol_Vent.Tissue']
     
     # Left and right CJ
-    df_meas['Ratio_VolLeftCJ2VolRightCJ'] = df_meas['Vol_CJ.Left']/ df_meas['Vol_CJ.Right']
+    # df_meas['Ratio_VolLeftCJ2VolRightCJ'] = df_meas['Vol_CJ.Left']/ df_meas['Vol_CJ.Right']
     df_meas['Ratio_VolAtrCJ2VolVentCJ'] = df_meas['Vol_Atr.CJ']/ df_meas['Vol_Vent.CJ']
-    df_meas['Ratio_VolVentCJ2VolDorsCJ'] = df_meas['Vol_CJ.Ventral']/ df_meas['Vol_CJ.Dorsal']
+    # df_meas['Ratio_VolVentCJ2VolDorsCJ'] = df_meas['Vol_CJ.Ventral']/ df_meas['Vol_CJ.Dorsal']
     
     # CJ Atr
-    df_meas['Ratio_VolLeftCJ2VolRightAtrCJ'] = df_meas['Vol_CJ.Left-Atr']/ df_meas['Vol_CJ.Right-Atr']
+    # df_meas['Ratio_VolLeftCJ2VolRightAtrCJ'] = df_meas['Vol_CJ.Left-Atr']/ df_meas['Vol_CJ.Right-Atr']
     
     # CJ Vent
-    df_meas['Ratio_VolLeftCJ2VolRightVentCJ'] = df_meas['Vol_CJ.Left-Vent']/ df_meas['Vol_CJ.Right-Vent']
+    # df_meas['Ratio_VolLeftCJ2VolRightVentCJ'] = df_meas['Vol_CJ.Left-Vent']/ df_meas['Vol_CJ.Right-Vent']
     
-
-    
+    df_meas['Ratio_VolAOC-VIC2VolAIC-VOC'] = df_meas['Vol_CJ.AOC-VIC']/df_meas['Vol_CJ.AIC-VOC'] 
+    df_meas['Ratio_VolAOC2VolAIC'] = df_meas['Vol_CJ.AOC']/df_meas['Vol_CJ.AIC'] 
+    df_meas['Ratio_VolAIC2VolAOC'] = df_meas['Vol_CJ.AIC']/df_meas['Vol_CJ.AOC'] 
+    df_meas['Ratio_VolVOC2VolVIC'] = df_meas['Vol_CJ.VOC']/df_meas['Vol_CJ.VIC'] 
+    df_meas['Ratio_VolVIC2VolVOC'] = df_meas['Vol_CJ.VIC']/df_meas['Vol_CJ.VOC'] 
     # df_meas['Ratio_VolAOC2VolAIC'] = df_meas['Vol_CJ.AtrOutCurv']/ df_meas['Vol_CJ.AtrInnCurv']
     
     
@@ -873,17 +907,17 @@ def def_variables(plot_type):
                        
                        'Vol_CJ.Left' : "Left Volume\nCardiac Jelly [$\mu$m$^3$]",
                        'Vol_CJ.Right' : "Right Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Left-Atr' : "Left Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Right-Atr' : "Right Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Left-Vent' : "Left Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Right-Vent' : "Right Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Left-Atr' : "Left Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Right-Atr' : "Right Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Left-Vent' : "Left Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Right-Vent' : "Right Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
                        
                        'Vol_CJ.Dorsal' : "Dorsal Volume\nCardiac Jelly [$\mu$m$^3$]",
                        'Vol_CJ.Ventral' : "Ventral Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Dorsal-Atr' : "Dorsal Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Ventral-Atr' : "Ventral Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Dorsal-Vent' : "Dorsal Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
-                       'Vol_CJ.Ventral-Vent' : "Ventral Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Dorsal-Atr' : "Dorsal Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Ventral-Atr' : "Ventral Atr. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Dorsal-Vent' : "Dorsal Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
+                       # 'Vol_CJ.Ventral-Vent' : "Ventral Vent. Volume\nCardiac Jelly [$\mu$m$^3$]",
                        'Vol_CJ.AOC-VIC' : "AOC, VIC Volume\nCardiac Jelly [$\mu$m$^3$]",
                        'Vol_CJ.AIC-VOC' : "AIC, VOC Volume\nCardiac Jelly [$\mu$m$^3$]",
                        'Vol_CJ.AOC' : "AOC Volume\nCardiac Jelly [$\mu$m$^3$]",
@@ -926,13 +960,13 @@ def def_variables(plot_type):
                        'Ratio_VolVentCJ2VolVentTissue' : 'Ventricular ardiac Jelly Volume / \nVentricular Tissue  Volume', 
                        'Ratio_VolVentLumen2VolVentTissue' : 'Ventricular Lumen Volume / \nVentricular Tissue  Volume', 
                        
-                       'Ratio_VolLeftCJ2VolRightCJ' : 'Left Vol.Cardiac Jelly / \nRight Vol.Cardiac Jelly', 
+                       #CJ Ratios
+                       # 'Ratio_VolLeftCJ2VolRightCJ' : 'Left Vol.Cardiac Jelly / \nRight Vol.Cardiac Jelly', 
                        'Ratio_VolAtrCJ2VolVentCJ' : 'Atrial Vol.Cardiac Jelly / \nVentricular Vol.Cardiac Jelly',
-                       'Ratio_VolVentCJ2VolDorsCJ' : 'Ventral Vol.Cardiac Jelly / \nDorsal Vol.Cardiac Jelly',
+                       # 'Ratio_VolVentCJ2VolDorsCJ' : 'Ventral Vol.Cardiac Jelly / \nDorsal Vol.Cardiac Jelly',
                        
-                       'Ratio_VolLeftCJ2VolRightAtrCJ' : 'Left Atr.Vol.Cardiac Jelly / \nRight Atr.Vol.Cardiac Jelly',
-                       'Ratio_VolLeftCJ2VolRightVentCJ' : 'Left Vent.Vol.Cardiac Jelly / \nRight Vent.Vol.Cardiac Jelly',
-                       
+                       # 'Ratio_VolLeftCJ2VolRightAtrCJ' : 'Left Atr.Vol.Cardiac Jelly / \nRight Atr.Vol.Cardiac Jelly',
+                       # 'Ratio_VolLeftCJ2VolRightVentCJ' : 'Left Vent.Vol.Cardiac Jelly / \nRight Vent.Vol.Cardiac Jelly',
                        
                        'Ratio_VolAOC-VIC2VolAIC-VOC' : 'AOC, VIC Vol.Cardiac Jelly / \n AIC, VOC Vol.Cardiac Jelly',
                         
@@ -1518,116 +1552,116 @@ def plot_indiv():
                       'ylim' : '', 'yset' : 'dec'},
                 
                 
-                # #CJ Outer and Inner Curvatures
-                # 'Vol_CJ.AOC-VIC': 
-                #     {'graph_no': '80', 'title': 'AOC,VIC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AOC-VIC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : '', 'yset': 'round'},
-                # 'Vol_CJ.AOC-VIC2': 
-                #     {'graph_no': '80-2', 'title': 'AOC,VIC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AOC-VIC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (0,700e3), 'yset': 'round'},
-                # 'Vol_CJ.AIC-VOC': 
-                #     {'graph_no': '81', 'title': 'AIC,VOC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AIC-VOC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (0,300e3), 'yset': 'round'},
-                # 'Vol_CJ.AIC-VOC2': 
-                #     {'graph_no': '81-2', 'title': 'AIC,VOC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AIC-VOC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (0,700e3), 'yset': 'round'},
+                #CJ Outer and Inner Curvatures
+                'Vol_CJ.AOC-VIC': 
+                    {'graph_no': '80', 'title': 'AOC,VIC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AOC-VIC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : '', 'yset': 'round'},
+                'Vol_CJ.AOC-VIC2': 
+                    {'graph_no': '80-2', 'title': 'AOC,VIC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AOC-VIC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,600e3), 'yset': 'round'},
+                'Vol_CJ.AIC-VOC': 
+                    {'graph_no': '81', 'title': 'AIC,VOC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AIC-VOC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,300e3), 'yset': 'round'},
+                'Vol_CJ.AIC-VOC2': 
+                    {'graph_no': '81-2', 'title': 'AIC,VOC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AIC-VOC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,600e3), 'yset': 'round'},
                     
-                # 'Ratio_VolAOC-VIC2VolAIC-VOC': 
-                #     {'graph_no': '82', 'title': 'AOC,VIC CjVol Over AIC,VOC CjVol', 
-                #       'vars' : ['Ratio_VolAOC-VIC2VolAIC-VOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : '', 'yset': 'dec'},
-                # 'Ratio_VolAOC-VIC2VolAIC-VOC2': 
-                #     {'graph_no': '82-2', 'title': 'AOC,VIC CjVol Over AIC,VOC CjVol', 
-                #       'vars' : ['Ratio_VolAOC-VIC2VolAIC-VOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : (0,10), 'yset': 'dec'},
+                'Ratio_VolAOC-VIC2VolAIC-VOC': 
+                    {'graph_no': '82', 'title': 'AOC,VIC CjVol Over AIC,VOC CjVol', 
+                      'vars' : ['Ratio_VolAOC-VIC2VolAIC-VOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : '', 'yset': 'dec'},
+                'Ratio_VolAOC-VIC2VolAIC-VOC2': 
+                    {'graph_no': '82-2', 'title': 'AOC,VIC CjVol Over AIC,VOC CjVol', 
+                      'vars' : ['Ratio_VolAOC-VIC2VolAIC-VOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,6), 'yset': 'dec'},
                     
-                # #AtrCJ Outer and Inner Curvatures
-                # 'Vol_CJ.AOC': 
-                #     {'graph_no': '85', 'title': 'AOC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AOC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : '', 'yset': 'round'},
-                # 'Vol_CJ.AOC2': 
-                #     {'graph_no': '85-2', 'title': 'AOC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AOC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (-20e3,550e3), 'yset': 'round'},
-                # 'Vol_CJ.AIC': 
-                #     {'graph_no': '86', 'title': 'AIC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AIC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : '', 'yset': 'round'},
-                # 'Vol_CJ.AIC2': 
-                #     {'graph_no': '86-2', 'title': 'AIC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.AIC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (-20e3,550e3), 'yset': 'round'},
+                #AtrCJ Outer and Inner Curvatures
+                'Vol_CJ.AOC': 
+                    {'graph_no': '85', 'title': 'AOC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AOC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : '', 'yset': 'round'},
+                'Vol_CJ.AOC2': 
+                    {'graph_no': '85-2', 'title': 'AOC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AOC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,600e3), 'yset': 'round'},
+                'Vol_CJ.AIC': 
+                    {'graph_no': '86', 'title': 'AIC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AIC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : '', 'yset': 'round'},
+                'Vol_CJ.AIC2': 
+                    {'graph_no': '86-2', 'title': 'AIC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.AIC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,600e3), 'yset': 'round'},
                     
-                # 'Ratio_VolAOC2VolAIC': #Outer/Inner
-                #     {'graph_no': '87-1', 'title': 'AOC CjVol Over AIC CjVol', 
-                #       'vars' : ['Ratio_VolAOC2VolAIC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : '', 'yset': 'dec'},
-                # 'Ratio_VolAOC2VolAIC2': 
-                #     {'graph_no': '87-2', 'title': 'AOC CjVol Over AIC CjVol', 
-                #       'vars' : ['Ratio_VolAOC2VolAIC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : (0,50), 'yset': 'dec'},
+                'Ratio_VolAOC2VolAIC': #Outer/Inner
+                    {'graph_no': '87-1', 'title': 'AOC CjVol Over AIC CjVol', 
+                      'vars' : ['Ratio_VolAOC2VolAIC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : '', 'yset': 'dec'},
+                'Ratio_VolAOC2VolAIC2': 
+                    {'graph_no': '87-2', 'title': 'AOC CjVol Over AIC CjVol', 
+                      'vars' : ['Ratio_VolAOC2VolAIC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,6), 'yset': 'dec'},
                 
-                # 'Ratio_VolAIC2VolAOC': #Inner/Outer
-                #     {'graph_no': '88-1', 'title': 'AIC CjVol Over AOC CjVol', 
-                #       'vars' : ['Ratio_VolAIC2VolAOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : '', 'yset': 'dec'},
-                # 'Ratio_VolAIC2VolAOC2': #Inner/Outer
-                #     {'graph_no': '88-2', 'title': 'AIC CjVol Over AOC CjVol', 
-                #       'vars' : ['Ratio_VolAIC2VolAOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : (0,7), 'yset': 'dec'},
+                'Ratio_VolAIC2VolAOC': #Inner/Outer
+                    {'graph_no': '88-1', 'title': 'AIC CjVol Over AOC CjVol', 
+                      'vars' : ['Ratio_VolAIC2VolAOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : '', 'yset': 'dec'},
+                'Ratio_VolAIC2VolAOC2': #Inner/Outer
+                    {'graph_no': '88-2', 'title': 'AIC CjVol Over AOC CjVol', 
+                      'vars' : ['Ratio_VolAIC2VolAOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,6), 'yset': 'dec'},
                     
-                # #VentCJ Outer and Inner Curvatures
-                # 'Vol_CJ.VOC': 
-                #     {'graph_no': '90', 'title': 'VOC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.VOC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (0,100e3), 'yset': 'round'},
-                # 'Vol_CJ.VIC': 
-                #     {'graph_no': '91', 'title': 'VIC Cardiac Jelly Volume', 
-                #       'vars' : ['Vol_CJ.VIC'],
-                #       'n_cols': 1, 'yticks_lab':'1e3 - d.', 
-                #       'ylim' : (0,100e3), 'yset': 'round'},
+                #VentCJ Outer and Inner Curvatures
+                'Vol_CJ.VOC': 
+                    {'graph_no': '90', 'title': 'VOC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.VOC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,100e3), 'yset': 'round'},
+                'Vol_CJ.VIC': 
+                    {'graph_no': '91', 'title': 'VIC Cardiac Jelly Volume', 
+                      'vars' : ['Vol_CJ.VIC'],
+                      'n_cols': 1, 'yticks_lab':'1e3 - d.', 
+                      'ylim' : (0,100e3), 'yset': 'round'},
                     
-                # 'Ratio_VolVIC2VolVOC': #Inner/Outer
-                #     {'graph_no': '92-1', 'title': 'VIC CjVol Over VOC CjVol', 
-                #       'vars' : ['Ratio_VolVIC2VolVOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : '', 'yset': 'dec'},
-                # 'Ratio_VolVIC2VolVOC2': #Inner/Outer
-                #     {'graph_no': '92-2', 'title': 'VIC CjVol Over VOC CjVol', 
-                #       'vars' : ['Ratio_VolVIC2VolVOC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : (0,10), 'yset': 'dec'},
+                'Ratio_VolVIC2VolVOC': #Inner/Outer
+                    {'graph_no': '92-1', 'title': 'VIC CjVol Over VOC CjVol', 
+                      'vars' : ['Ratio_VolVIC2VolVOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : '', 'yset': 'dec'},
+                'Ratio_VolVIC2VolVOC2': #Inner/Outer
+                    {'graph_no': '92-2', 'title': 'VIC CjVol Over VOC CjVol', 
+                      'vars' : ['Ratio_VolVIC2VolVOC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,10), 'yset': 'dec'},
                     
-                # 'Ratio_VolVOC2VolVIC': #Outer/Inner
-                #     {'graph_no': '93-1', 'title': 'VOC CjVol Over VIC CjVol', 
-                #       'vars' : ['Ratio_VolVOC2VolVIC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : '', 'yset': 'dec'},
-                # 'Ratio_VolVOC2VolVIC2': #Outer/Inner
-                #     {'graph_no': '93-2', 'title': 'VOC CjVol Over VIC CjVol', 
-                #       'vars' : ['Ratio_VolVOC2VolVIC'],
-                #       'n_cols': 1, 'yticks_lab':'d.', 
-                #       'ylim' : (0,8), 'yset': 'dec'},
+                'Ratio_VolVOC2VolVIC': #Outer/Inner
+                    {'graph_no': '93-1', 'title': 'VOC CjVol Over VIC CjVol', 
+                      'vars' : ['Ratio_VolVOC2VolVIC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : '', 'yset': 'dec'},
+                'Ratio_VolVOC2VolVIC2': #Outer/Inner
+                    {'graph_no': '93-2', 'title': 'VOC CjVol Over VIC CjVol', 
+                      'vars' : ['Ratio_VolVOC2VolVIC'],
+                      'n_cols': 1, 'yticks_lab':'d.', 
+                      'ylim' : (0,6), 'yset': 'dec'},
                 
                 # '': 
                 #     {'graph_no': 01, 'title': '', 

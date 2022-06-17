@@ -46,8 +46,7 @@ if init:
     df2plot = []; df_cjPDF2plot = []
     # Add all other measurements to dataframe and apply format
     df_meas = fcAn.spAnalysis(fcAn.getMainStrain(fcAn.getGenotypeAll(df_meas)))
-    # df_meas, tot, atr, vent = fcAn.checkCJCurvatures(df_meas)
-    # df_meas = fcAn.defCJCurvatures(df_meas, ready = True)
+    df_meas = fcAn.cleanDfCols(df_meas)
     df_meas = fcAn.sortDFCols(fcAn.getVarRatios(df_meas))
 
     # fcAn.printDFINfo(df_meas)
@@ -86,7 +85,7 @@ if init:
     
     groupsA =['spaw_mtVsibs_time_shape']
     groupsA =['spaw-h1a_mtVsibs_time_shape']
-    # groupsA = ['all_NotMx']
+    groupsA = ['all_NotMx']
     #%%
     # while newGroup: 
     for info in groupsA:
@@ -123,7 +122,7 @@ if init:
             # Settings for plots
             pl_indiv = fcAn.plot_indiv()
             vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-            groups = list(pl_indiv.keys())[0:1]#+list(pl_indiv.keys())[63:66]
+            groups = list(pl_indiv.keys())[63:]#+list(pl_indiv.keys())[63:66]
             # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
         
             for group in groups: 
@@ -294,7 +293,8 @@ if init:
         
     #%%  Plots through time for just one genotype!
     #%Plot for filtered wild-types (all strains) - working for document style!
-    groupsB = [#'all_mixedWt_time']#,
+    groupsB = [
+                # 'all_mixedWt_time'#,
                 # 'h1a241_mts_time', 
                 'spaw_mts_time_shape', 
                 # 'spaw-h1a_mts_time_shape']
@@ -351,7 +351,7 @@ if init:
         # Settings for plots
         pl_indiv = fcAn.plot_indiv()
         vars_dict = fcAn.def_variables(plot_type = 'strip_plots')
-        groups = list(pl_indiv.keys())
+        groups = list(pl_indiv.keys())[63:]
         # groups = ['Vol_Ext.Myoc']#,'Vol_Atr.ExtMyoc','Vol_Vent.ExtMyoc']#,'Looping_Ratio_Myoc']
         for group in groups: 
             print(group)
