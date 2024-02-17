@@ -1,0 +1,9 @@
+QDialog {
+    background-color: rgb(63, 63, 63);
+
+
+    QLabel {
+    color: rgb(255, 255, 255);
+    }
+}
+

@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>logos_1o75mm.png</file>
+    <file>logos_2o5mm.png</file>
+    <file>logos_7o5mm.png</file>
+    <file>logos_10mm.png</file>
+    <file>logos_5mm.png</file>
+  </qresource>
+</RCC>
