@@ -78,7 +78,7 @@ class WelcomeScreen(QDialog):
 
     def __init__(self) -> None:
         super().__init__()
-        uic.loadUi('src/gui/ui/welcome_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'welcome_screen.ui'), self)
         # self.setFixedSize(600,680)
         self.setWindowTitle('Welcome to morphoHeart...')
         self.mH_logo_XL.setPixmap(QPixmap(mH_big))
@@ -107,9 +107,9 @@ class WelcomeScreen(QDialog):
     def on_cB_theme_currentIndexChanged(self, theme):
         print('mH_config.theme:',mH_config.theme)
         if theme == 'Light' or theme == 0: 
-            file = 'src/gui/themes/Light.qss'
+            file = str(mH_config.path_themes / 'Light.qss')
         else: 
-            file = 'src/gui/themes/Dark.qss'
+            file = str(mH_config.path_themes / 'Dark.qss')
         #Open the file
         with open(file, 'r') as f: 
             style_str = f.read()
@@ -121,7 +121,7 @@ class WelcomeScreen(QDialog):
 class Prompt_ok_cancel(QDialog):
     def __init__(self, title:str, msg:str, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/prompt_ok_cancel.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_ok_cancel.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -146,7 +146,7 @@ class Prompt_ok_cancel(QDialog):
 class Prompt_ok(QDialog):
     def __init__(self, title:str, msg:str, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/prompt_ok.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_ok.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -166,7 +166,7 @@ class Prompt_ok(QDialog):
 class Prompt_ok_cancel_Big(QDialog):
     def __init__(self, title:str, msg:list, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/prompt_ok_cancel_big.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_ok_cancel_big.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -199,7 +199,7 @@ class Prompt_ok_cancel_Big(QDialog):
 class Prompt_ok_cancel_radio(QDialog):
     def __init__(self, title:str, msg:str, items:dict, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/prompt_ok_cancel_radio.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_ok_cancel_radio.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -300,7 +300,7 @@ class Prompt_ok_cancel_radio(QDialog):
 class Prompt_ok_cancel_checkbox(QDialog):
     def __init__(self, title:str, msg:str, items:dict, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/prompt_ok_cancel_checkbox.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_ok_cancel_checkbox.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -379,7 +379,7 @@ class Prompt_ok_cancel_checkbox(QDialog):
 class Prompt_user_input(QDialog):
     def __init__(self, msg:str, title:str, info:Union[str, tuple, list], parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/prompt_user_input.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_user_input.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -478,7 +478,7 @@ class Prompt_user_input(QDialog):
 class Prompt_save_all(QDialog): 
     def __init__(self, msg:list, info:list, parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/prompt_saveall_discard_cancel.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_saveall_discard_cancel.ui'), self)
         self.setWindowTitle('Save all?')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -524,7 +524,7 @@ class Prompt_save_all(QDialog):
 class Prompt_save_all_chs3(QDialog): 
     def __init__(self, msg:list, info:list, parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/prompt_saveall_discard_cancel_chs3.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'prompt_saveall_discard_cancel_chs3.ui'), self)
         self.setWindowTitle('Save all?')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -570,7 +570,7 @@ class Prompt_save_all_chs3(QDialog):
 class Process_ongoing(QDialog):
     def __init__(self, title:str, organ, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/process_ongoing_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'process_ongoing_screen.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -649,7 +649,7 @@ class CreateNewProj(QDialog):
         super().__init__()
         self.proj_name = ''
         self.proj_dir_parent = ''
-        uic.loadUi('src/gui/ui/new_project_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'new_project_screen.ui'), self)
         self.setWindowTitle('Create New Project...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -2786,7 +2786,7 @@ class SetMeasParam(QDialog):
 
     def __init__(self, mH_settings:dict, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/set_meas_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'set_meas_screen.ui'), self)
         self.setWindowTitle('Set Parameters to Measure...')
         self.setWindowTitle('Select the parameters to measure from the segmented channels...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
@@ -3392,7 +3392,7 @@ class NewOrgan(QDialog):
 
     def __init__(self, proj, parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/create_organ_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'create_organ_screen.ui'), self)
         self.setWindowTitle('Create New Organ...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -3899,7 +3899,7 @@ class LoadProj(QDialog):
 
     def __init__(self, parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/load_project_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'load_project_screen.ui'), self)
         self.setWindowTitle('Load Existing Project...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -4468,7 +4468,7 @@ class Load_MultiProj(QDialog):
 
     def __init__(self, parent=None):
         super().__init__()
-        uic.loadUi('src/gui/ui/multi_proj_analysis_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'multi_proj_analysis_screen.ui'), self)
         self.setWindowTitle('Create Multi-Project Analysis...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -4545,7 +4545,7 @@ class Load_S3s(QDialog):
     
     def __init__(self, proj, organ, parent_win):
         super().__init__()
-        uic.loadUi('src/gui/ui/load_closed_channels_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'load_closed_channels_screen.ui'), self)
         self.setWindowTitle('Loading Stacks with Closed Contours...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -4727,7 +4727,7 @@ class ProjSettings(QDialog):
         super().__init__()
         self.proj_name = ''
         self.proj_dir_parent = ''
-        uic.loadUi('src/gui/ui/project_settings_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'project_settings_screen.ui'), self)
         self.setWindowTitle('Project Settings...')
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -4974,9 +4974,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self, proj, organ, controller):
         super().__init__()
-        uic.loadUi('src/gui/ui/main_window_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'main_window_screen.ui'), self)
         self.setWindowTitle('morphoHeart')
-        mH_logoXS = QPixmap('images/logos_1o75mm.png')
+        mH_logoXS = QPixmap(mH_top_corner)
         self.mH_logo_XS.setPixmap(mH_logoXS)
         self.setWindowIcon(QIcon(mH_icon))
         self.setStyleSheet("background-color:  rgb(255, 255, 255);")
@@ -5014,9 +5014,9 @@ class MainWindow(QMainWindow):
     def on_cB_theme_currentIndexChanged(self, theme):
         print('mH_config.theme:',mH_config.theme)
         if theme == 'Light' or theme == 0: 
-            file = 'src/gui/themes/Light.qss'
+            file = str(mH_config.path_themes / 'Light.qss')
         else: 
-            file = 'src/gui/themes/Dark.qss'
+            file = str(mH_config.path_themes / 'Dark.qss')
         #Open the file
         with open(file, 'r') as f: 
             style_str = f.read()
@@ -11761,7 +11761,8 @@ class MainWindow(QMainWindow):
 
     def set_colormap(self, name):
         value = getattr(self, 'colormap'+name).currentText()
-        dir_pix = 'images/cm_'+value+'.png'
+        pix_name = 'cm_'+value+'.png'
+        dir_pix = str(mH_config.path_mHImages / pix_name)
         pixmap = QPixmap(dir_pix)
         cm_eg = getattr(self, 'cm_eg'+name)
         cm_eg.setPixmap(pixmap)
@@ -13932,9 +13933,9 @@ class MainWindow(QMainWindow):
 class MultipAnalysisWindow(QMainWindow): 
     def __init__(self, projs, organs, df_pando, controller):
         super().__init__()
-        uic.loadUi('src/gui/ui/main_analysis_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'main_analysis_screen.ui'), self)
         self.setWindowTitle('morphoHeart Analysis')
-        mH_logoXS = QPixmap('images/logos_1o75mm.png')
+        mH_logoXS = QPixmap(mH_top_corner)
         self.mH_logo_XS.setPixmap(mH_logoXS)
         self.setWindowIcon(QIcon(mH_icon))
         self.setStyleSheet("background-color:  rgb(255, 255, 255);")
@@ -13968,9 +13969,9 @@ class MultipAnalysisWindow(QMainWindow):
     def on_cB_theme_currentIndexChanged(self, theme):
         print('mH_config.theme:',mH_config.theme)
         if theme == 'Light' or theme == 0: 
-            file = 'src/gui/themes/Light.qss'
+            file = str(mH_config.path_themes / 'Light.qss')
         else: 
-            file = 'src/gui/themes/Dark.qss'
+            file = str(mH_config.path_themes / 'Dark.qss')
         #Open the file
         with open(file, 'r') as f: 
             style_str = f.read()
@@ -14644,7 +14645,8 @@ def update_div(win):
 
 def set_colormap(win): 
     value = getattr(win, 'colormap').currentText()
-    dir_pix = 'images/cm_'+value+'.png'
+    pix_name =  'cm_'+value+'.png'
+    dir_pix = str(mH_config.path_mHImages / pix_name)
     pixmap = QPixmap(dir_pix)
     cm_eg = win.cm_eg
     cm_eg.setPixmap(pixmap)
@@ -15081,7 +15083,7 @@ class PlotWindow(QDialog):
 
     def __init__(self, title:str, width:int, height:int, dpi:int, parent=None):
         super().__init__(parent)
-        uic.loadUi('src/gui/ui/plot_screen.ui', self)
+        uic.loadUi(str(mH_config.path_ui / 'plot_screen.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
@@ -15389,16 +15391,16 @@ def set_qtextedit_lines(lines):
 
 def set_txts(): 
     #% Link to images
-    mH_icon = 'images/logos_w_icon_2o5mm.png'#'images/cat-its-mouth-open.jpg'#
-    mH_big = 'images/logos_7o5mm.png'
-    mH_top_corner = 'images/logos_1o75mm.png'
+    mH_icon = str(mH_config.path_mHImages / 'logos_w_icon_2o5mm.png')#'images/cat-its-mouth-open.jpg'#
+    mH_big = str(mH_config.path_mHImages / 'logos_7o5mm.png')
+    mH_top_corner = str(mH_config.path_mHImages / 'logos_1o75mm.png')
     mH_images = [mH_icon, mH_big, mH_top_corner]
 
     # Play buttons
-    play_bw = 'images/logos_play_black_white.png'
-    play_gw = 'images/logos_play_green_white.png'
-    play_gb = 'images/logos_play_green_dark.png'
-    play_grw = 'images/logos_play_gray_white.png'
+    play_bw = str(mH_config.path_mHImages / 'logos_play_black_white.png')
+    play_gw = str(mH_config.path_mHImages / 'logos_play_green_white.png')
+    play_gb = str(mH_config.path_mHImages / 'logos_play_green_dark.png')
+    play_grw = str(mH_config.path_mHImages / 'logos_play_gray_white.png')
     play_colors = [play_bw, play_gw, play_gb, play_grw]
 
     play_btn = "QPushButton{border-image: url("+play_gw+"); background-repeat: no-repeat; width: 65px; height: 56px}"
