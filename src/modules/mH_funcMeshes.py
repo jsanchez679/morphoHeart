@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from pathlib import Path, WindowsPath, PurePath
 import vedo
-print('vedo:', vedo.__version__)
+#print('vedo:', vedo.__version__)
 import numpy as np
 import math
 # from textwrap import wrap

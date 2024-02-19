@@ -32,7 +32,7 @@ import pandas as pd
 import pickle as pl
 
 import matplotlib
-print('matplotlib:',matplotlib.__version__)
+#print('matplotlib:',matplotlib.__version__)
 matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -79,7 +79,6 @@ class WelcomeScreen(QDialog):
     def __init__(self) -> None:
         super().__init__()
         uic.loadUi(str(mH_config.path_ui / 'welcome_screen.ui'), self)
-        # self.setFixedSize(600,680)
         self.setWindowTitle('Welcome to morphoHeart...')
         self.mH_logo_XL.setPixmap(QPixmap(mH_big))
         self.setWindowIcon(QIcon(mH_icon))
@@ -99,7 +98,7 @@ class WelcomeScreen(QDialog):
         add_sound_bar(self, layout)
         sound_toggled(win=self)
 
-            # Theme 
+        # Theme 
         mH_config.theme = self.cB_theme.currentText()
         self.on_cB_theme_currentIndexChanged(mH_config.theme)
 
@@ -113,7 +112,7 @@ class WelcomeScreen(QDialog):
         #Open the file
         with open(file, 'r') as f: 
             style_str = f.read()
-            print('Selected theme: ', theme)
+
         #Set the theme
         self.setStyleSheet(style_str)
         mH_config.theme = theme

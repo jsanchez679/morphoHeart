@@ -1,3 +1,8 @@
+'''
+morphoHeart_config
+
+@author: Juliana Sanchez-Posada
+'''
 
 class MH_Exception(Exception):
     pass

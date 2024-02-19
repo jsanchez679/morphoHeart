@@ -3,10 +3,10 @@ morphoHeart
 
 @author: Juliana Sanchez-Posada
 '''
-# Relative import problems: stackoverflow.com/a/14132912/8682868
+
 #%% Imports - ########################################################
 import sys
-from PyQt6 import QtWidgets#, QtCore
+from PyQt6 import QtWidgets
 
 #%% morphoHeart Imports - ##################################################
 print('Welcome to morphoHeart!')
@@ -952,94 +952,16 @@ class Controller:
 def main():
     app = QtWidgets.QApplication(sys.argv)
     screen = app.primaryScreen()
-    print('screen.name', screen.name())
+    #print('screen.name', screen.name())
     size = screen.size()
-    print('screen.size: ', size.width(), size.height())
+    #print('screen.size: ', size.width(), size.height())
     controller = Controller()
     controller.show_welcome()
     try: 
-            sys.exit(app.exec())
+        sys.exit(app.exec())
     except: 
         print('Exiting')
 
 if __name__ == '__main__':
     main()
 
-# pd.options.display.max_rows = 500
-
-#python pyuic6 -x name.ui -o name.py
-#C:\Users\bi1jsa\Desktop\pyqt6>D:\Applications\Miniconda\envs\mHpy39_qt\Scripts\pyuic6.exe -x C:\Users\bi1jsa\Desktop\pyqt6\test.ui -o C:\Users\bi1jsa\Desktop\pyqt6\test.py dragging and dropping all the files to get their path
-
-#we defined
-# the direction of insertion of the IFTs via polar coordinates in a
-# local system of orthogonal axes in which the xy plane is transversal
-# to the embryo, and the z axis is aligned with the embryo AP axis
-# The direction of
-# insertion of the IFTs is then defined by two angles: the θ angle and
-# the φ angle (Fig. 5a).
-
-# import re
-# r = re.compile('[+]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?')
-# if r.match('100e-5'): print ('it matches!')
-
-# [+]?((\d+(\.\d*)?)|(\.\d+))([^a-d,f-z,A-D,F-Z][+-]?\d+)?
-
-
-#https://pythex.org/
-#Running example! It works!
-# from PyQt6 import QtWidgets
-# from PyQt6.QtCore import QRegularExpression
-# from PyQt6.QtGui import QRegularExpressionValidator
-# from PyQt6.QtWidgets import QWidget, QLineEdit
-
-# import sys
-
-# class MyWidget(QWidget):
-#     def __init__(self, parent=None):
-#         super(QWidget, self).__init__(parent)
-#         self.le_input = QLineEdit(self)
-
-#         reg_ex = QRegularExpression("[+]?((\d+(\.\d*)?)|(\.\d+))([^a-d,f-z,A-D,F-Z][+-]?\d+)?")
-#         input_validator = QRegularExpressionValidator(reg_ex, self.le_input)
-#         self.le_input.setValidator(input_validator)
-
-# if __name__ == '__main__':
-#     a = QtWidgets.QApplication(sys.argv)
-
-#     w = MyWidget()
-#     w.show()
-
-#     a.exec()
-
-# Create an installer
-#https://build-system.fman.io/pyqt5-tutorial
-# Style sheets
-#https://doc.qt.io/qt-5/stylesheet.html
-#https://doc.qt.io/qt-6.4/stylesheet-examples.html#customizing-qheaderview
-# Images 
-#https://doc.qt.io/qtdesignstudio/quick-images.html
-
-# QDialog ButtonBox
-#https://www.pythonguis.com/tutorials/pyqt-dialogs/
-
-
-#https://www.color-hex.com/color-palette/96194
-#https://www.color-hex.com/color-palette/96197
-#https://www.color-hex.com/color-palette/1024322
-# https://www.pythonguis.com/tutorials/pyqt6-bitmap-graphics/
-
-#Theme 
-#https://www.youtube.com/watch?v=ePG_t9bJQ5I
-#https://raw.githubusercontent.com/NiklasWyld/Wydbid/main/Assets/stylesheet
-#https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/dark/darkstyle.qss
-# https://matiascodesal.com/blog/spice-your-qt-python-font-awesome-icons/
-# https://www.geeksforgeeks.org/pyqt5-change-color-of-check-box-indicator/
-# https://www.youtube.com/watch?v=ms2Ey_SzZZc
-        # https://www.pythontutorial.net/pyqt/qt-style-sheets/
-# https://doc.qt.io/qtforpython-6/overviews/stylesheet-examples.html
-# https://doc.qt.io/qt-6/stylesheet-examples.html
-# https://www.youtube.com/watch?v=ePG_t9bJQ5I
-#self.cB_theme.currentIndexChanged.connect(lambda: self.theme_changed())
-
-# https://stackoverflow.com/questions/23634241/put-an-image-on-a-qpushbutton
-# %%

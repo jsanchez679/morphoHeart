@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
 morphoHeart_config
-Version: Nov 9, 2023
 
 @author: Juliana Sanchez-Posada
 '''
@@ -13,7 +12,7 @@ from pathlib import Path
 __author__     = 'Juliana Sanchez-Posada'
 __license__    = 'MIT'
 __maintainer__ = 'J. Sanchez-Posada'
-__email__      = 'julianasanchezposada@gmail.com'
+__email__      = 'jsanchezposadam@gmail.com'
 __website__    = 'https://github.com/jsanchez679/morphoHeart'
 
 #%% config class
