@@ -2430,19 +2430,23 @@ def unloop_chamber(organ, mesh, kspl_CLnew, kspl_vSurf,
             if len(ksplCL_cut_split) == 1: 
                 ksplCL_cut = ksplCL_cut_split[0].lw(8).color('darkblue')
             else: 
-                for kspl in ksplCL_cut_split:
-                    #Find the CL piece that has the last point 
-                    #Revisar para la auricula si el invert voltearlo? 
-                    if any((kspl.points()[:]==pt_out).all(axis=1)):
-                        print('kspl found!')
-                        ksplCL_cut = kspl.lw(8).color('gold')
-                        break
+                try:
+                    for kspl in ksplCL_cut_split:
+                        #Find the CL piece that has the last point 
+                        #Revisar para la auricula si el invert voltearlo? 
+                        if any((kspl.points()[:]==pt_out).all(axis=1)):
+                            print('kspl found!')
+                            ksplCL_cut = kspl.lw(8).color('gold')
+                            break
+                except:
+                    ksplCL_cut = ksplCL_cut_split[0].lw(8).color('darkblue')
+
             index_guess= len(ksplCL_cut.points())
 
         # Find closest point of the high resolution centreline that has been cut by plane and is close to the
         #  previous pt_o (index_guess point)
         pt_out, index_guess = find_closest_pt2pl(normal, centre, kspl_CLnew, index_guess)
-        # print('pt_out:', pt_out, '- index_guess:', index_guess)
+        print('pt_out:', pt_out, '- index_guess:', index_guess)
         sph_pt_out = vedo.Sphere(pt_out, r=2, c='turquoise')
 
         # C. Cut surface centreline (kspl_vSurf) with plane and identify 0 deg angle point
