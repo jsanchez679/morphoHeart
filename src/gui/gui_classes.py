@@ -5485,10 +5485,10 @@ class MainWindow(QMainWindow):
     def init_mask(self): 
 
         #>> Mask 
-        self.mask_ch1_play.setStyleSheet(style_play)
-        self.mask_ch2_play.setStyleSheet(style_play)
-        self.mask_ch3_play.setStyleSheet(style_play)
-        self.mask_ch4_play.setStyleSheet(style_play)
+        # self.mask_ch1_play.setStyleSheet(style_play)
+        # self.mask_ch2_play.setStyleSheet(style_play)
+        # self.mask_ch3_play.setStyleSheet(style_play)
+        # self.mask_ch4_play.setStyleSheet(style_play)
 
         # - Open
         self.mask_ch1_open.clicked.connect(lambda: self.open_section(name='mask_ch1', ch_name = 'ch1'))
@@ -5520,10 +5520,10 @@ class MainWindow(QMainWindow):
         self.set_npy_mask_ch4.clicked.connect(lambda: self.set_mask_npy('ch4'))
 
         #Play
-        self.npy_mask_ch1_play.setStyleSheet(style_play)
-        self.npy_mask_ch2_play.setStyleSheet(style_play)
-        self.npy_mask_ch3_play.setStyleSheet(style_play)
-        self.npy_mask_ch4_play.setStyleSheet(style_play)
+        # self.npy_mask_ch1_play.setStyleSheet(style_play)
+        # self.npy_mask_ch2_play.setStyleSheet(style_play)
+        # self.npy_mask_ch3_play.setStyleSheet(style_play)
+        # self.npy_mask_ch4_play.setStyleSheet(style_play)
 
         #Reset stack 
         self.reset_mask_ch1.clicked.connect(lambda: self.reset_stack(ch='ch1', proc='mask'))
@@ -5581,10 +5581,10 @@ class MainWindow(QMainWindow):
         self.end_autom_ch4.installEventFilter(self)
 
         # - Play
-        self.autom_close_ch1_play.setStyleSheet(style_play)
-        self.autom_close_ch2_play.setStyleSheet(style_play)
-        self.autom_close_ch3_play.setStyleSheet(style_play)
-        self.autom_close_ch4_play.setStyleSheet(style_play)
+        # self.autom_close_ch1_play.setStyleSheet(style_play)
+        # self.autom_close_ch2_play.setStyleSheet(style_play)
+        # self.autom_close_ch3_play.setStyleSheet(style_play)
+        # self.autom_close_ch4_play.setStyleSheet(style_play)
 
         # - Set
         self.autom_close_ch1_set.clicked.connect(lambda: self.set_autom_close_contours('ch1'))
@@ -5723,10 +5723,10 @@ class MainWindow(QMainWindow):
         self.manual_close_ch4_open.clicked.connect(lambda: self.open_section(name='manual_close_ch4', ch_name = 'ch4'))
 
         # - Play
-        self.manual_close_ch1_play.setStyleSheet(style_play)
-        self.manual_close_ch2_play.setStyleSheet(style_play)
-        self.manual_close_ch3_play.setStyleSheet(style_play)
-        self.manual_close_ch4_play.setStyleSheet(style_play)
+        # self.manual_close_ch1_play.setStyleSheet(style_play)
+        # self.manual_close_ch2_play.setStyleSheet(style_play)
+        # self.manual_close_ch3_play.setStyleSheet(style_play)
+        # self.manual_close_ch4_play.setStyleSheet(style_play)
 
         # - Set
         self.manual_close_ch1_set.clicked.connect(lambda: self.set_manual_close_contours('ch1'))
@@ -6002,10 +6002,10 @@ class MainWindow(QMainWindow):
         self.select_contours_all_ch4_open.clicked.connect(lambda: self.open_section(name='select_contours_all_ch4', ch_name = 'ch4'))
 
         # - Play
-        self.select_contours_ch1_play.setStyleSheet(style_play)
-        self.select_contours_ch2_play.setStyleSheet(style_play)
-        self.select_contours_ch3_play.setStyleSheet(style_play)
-        self.select_contours_ch4_play.setStyleSheet(style_play)
+        # self.select_contours_ch1_play.setStyleSheet(style_play)
+        # self.select_contours_ch2_play.setStyleSheet(style_play)
+        # self.select_contours_ch3_play.setStyleSheet(style_play)
+        # self.select_contours_ch4_play.setStyleSheet(style_play)
 
         # - Set
         self.select_contours_ch1_set.clicked.connect(lambda: self.set_select_contours('ch1'))
@@ -7739,7 +7739,7 @@ class MainWindow(QMainWindow):
         # -Keep largest
         self.keeplargest_open.clicked.connect(lambda: self.open_section(name = 'keeplargest'))
         self.keeplargest_set.clicked.connect(lambda: self.set_keeplargest())
-        self.keeplargest_play.setStyleSheet(style_play)
+        # self.keeplargest_play.setStyleSheet(style_play)
         self.keeplargest_play.setEnabled(False)
         self.keeplargest_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.keeplargest_plot.setEnabled(False)
@@ -7791,7 +7791,7 @@ class MainWindow(QMainWindow):
         self.cleanup_plot_ch4.setEnabled(False)
         
         self.cleanup_set.clicked.connect(lambda: self.set_clean())
-        self.cleanup_play.setStyleSheet(style_play)
+        # self.cleanup_play.setStyleSheet(style_play)
         self.cleanup_play.setEnabled(False)
         self.clean_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.clean_plot.setEnabled(False)
@@ -7836,7 +7836,7 @@ class MainWindow(QMainWindow):
         self.trimming_plot_ch4.setEnabled(False)
         
         self.trimming_set.clicked.connect(lambda: self.set_trim())
-        self.trimming_play.setStyleSheet(style_play)
+        # self.trimming_play.setStyleSheet(style_play)
         self.trimming_play.setEnabled(False)
         self.trimming_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.trimming_plot.setEnabled(False)
@@ -7878,7 +7878,7 @@ class MainWindow(QMainWindow):
 
         self.q_orientation.clicked.connect(lambda: self.help('orientation'))
         self.orientation_set.clicked.connect(lambda: self.set_orientation())
-        self.orientation_play.setStyleSheet(style_play)
+        # self.orientation_play.setStyleSheet(style_play)
         self.orientation_play.setEnabled(False)
 
         self.stack_orient_plot.setEnabled(False)
@@ -7908,7 +7908,7 @@ class MainWindow(QMainWindow):
         self.chNS_open.clicked.connect(lambda: self.open_section(name='chNS'))
         self.chNS_plot.clicked.connect(lambda: self.plot_meshes('chNS'))
         self.chNS_plot.setEnabled(False)
-        self.chNS_play.setStyleSheet(style_play)
+        # self.chNS_play.setStyleSheet(style_play)
         self.chNS_play.setEnabled(False)
         self.q_chNS.clicked.connect(lambda: self.help('chNS'))
         self.chNS_set.clicked.connect(lambda: self.set_chNS())
@@ -8013,21 +8013,21 @@ class MainWindow(QMainWindow):
     
     def init_measure_whole(self): 
         #Buttons
-        self.measure_wholeAll_play.setStyleSheet(style_play)
+        # self.measure_wholeAll_play.setStyleSheet(style_play)
         self.measure_whole_open.clicked.connect(lambda: self.open_section(name='measure_whole'))
 
     def init_centreline(self):
         #Buttons
         self.centreline_open.clicked.connect(lambda: self.open_section(name='centreline'))
-        self.centreline_play.setStyleSheet(style_play)
+        # self.centreline_play.setStyleSheet(style_play)
         self.centreline_play.setEnabled(False)
-        self.centreline_clean_play.setStyleSheet(style_play)
+        # self.centreline_clean_play.setStyleSheet(style_play)
         self.centreline_clean_play.setEnabled(False)
-        self.centreline_ML_play.setStyleSheet(style_play)
+        # self.centreline_ML_play.setStyleSheet(style_play)
         self.centreline_ML_play.setEnabled(False)
-        self.centreline_vmtk_play.setStyleSheet(style_play)
+        # self.centreline_vmtk_play.setStyleSheet(style_play)
         self.centreline_vmtk_play.setEnabled(False)
-        self.centreline_select.setStyleSheet(style_play)
+        # self.centreline_select.setStyleSheet(style_play)
         self.centreline_select.setEnabled(False)
         self.q_centreline.clicked.connect(lambda: self.help('centreline'))
         self.centreline_set.clicked.connect(lambda: self.set_centreline())
@@ -8074,9 +8074,9 @@ class MainWindow(QMainWindow):
     def init_thickness_ballooning(self):
         #Buttons
         self.heatmaps_open.clicked.connect(lambda: self.open_section(name='heatmaps'))
-        self.heatmaps2D_play.setStyleSheet(style_play)
+        # self.heatmaps2D_play.setStyleSheet(style_play)
         self.heatmaps2D_play.setEnabled(False)
-        self.heatmaps3D_play.setStyleSheet(style_play)
+        # self.heatmaps3D_play.setStyleSheet(style_play)
         self.heatmaps3D_play.setEnabled(False)
         self.thickness_set.clicked.connect(lambda: self.set_thickness())
         self.thickness2D_set.clicked.connect(lambda: self.set_thickness2D())
@@ -8281,7 +8281,7 @@ class MainWindow(QMainWindow):
     def init_segments(self):
         #Buttons
         self.segments_open.clicked.connect(lambda: self.open_section(name='segments'))
-        self.segments_play.setStyleSheet(style_play)
+        # self.segments_play.setStyleSheet(style_play)
         self.segments_play.setEnabled(False)
         self.q_segments.clicked.connect(lambda: self.help('segments'))
         self.segments_set.clicked.connect(lambda: self.set_segments())
@@ -8429,7 +8429,7 @@ class MainWindow(QMainWindow):
                 self.ellipsoids_play.setEnabled(False)
                 self.view_ellipsoid.setEnabled(False)
                 self.plot_ellipsoid.setEnabled(False)
-                self.ellipsoids_play.setStyleSheet(style_play)
+                # self.ellipsoids_play.setStyleSheet(style_play)
             else:
                 self.widget_ellipsoid.setVisible(False)
 
@@ -8474,7 +8474,7 @@ class MainWindow(QMainWindow):
     def init_sections(self):
         #Buttons
         self.sections_open.clicked.connect(lambda: self.open_section(name='sections'))
-        self.sections_play.setStyleSheet(style_play)
+        # self.sections_play.setStyleSheet(style_play)
         self.sections_play.setEnabled(False)
         self.q_sections.clicked.connect(lambda: self.help('sections'))
         self.sections_set.clicked.connect(lambda: self.set_sections())
@@ -8623,7 +8623,7 @@ class MainWindow(QMainWindow):
     def init_segm_sect(self): 
         #Buttons
         self.segm_sect_open.clicked.connect(lambda: self.open_section(name='segm_sect'))
-        self.segm_sect_play.setStyleSheet(style_play)
+        # self.segm_sect_play.setStyleSheet(style_play)
         self.segm_sect_play.setEnabled(False)
         self.q_segm_sect.clicked.connect(lambda: self.help('segm_sect'))
         self.update_segm_sect.clicked.connect(lambda: self.update_segm_sect_play())
@@ -10745,7 +10745,7 @@ class MainWindow(QMainWindow):
         self.fillcolor_chA.clicked.connect(lambda: self.color_picker(name = 'chA'))
         self.remove_cells_set.clicked.connect(lambda: self.set_remove_cells())
         self.reset_remove_cells.clicked.connect(lambda: self.reset_cells_to_original())
-        self.remove_cells_play.setStyleSheet(style_play)
+        # self.remove_cells_play.setStyleSheet(style_play)
         self.remove_cells_play.setEnabled(False)
         self.q_remove_cells.clicked.connect(lambda: self.help('remove_cells'))
 
@@ -10772,10 +10772,10 @@ class MainWindow(QMainWindow):
     def init_segments_mC(self):
         #Buttons
         self.cell_segments_open.clicked.connect(lambda: self.open_section(name='cell_segments'))
-        self.cell_segments_play.setStyleSheet(style_play)
+        # self.cell_segments_play.setStyleSheet(style_play)
         self.cell_segments_play.setEnabled(False)
 
-        self.ind_segments_play.setStyleSheet(style_play)
+        # self.ind_segments_play.setStyleSheet(style_play)
         self.ind_segments_play.setEnabled(False)
         self.q_cell_segments.clicked.connect(lambda: self.help('cell_segments'))
         self.cell_segments_set.clicked.connect(lambda: self.set_cell_segments())
@@ -10907,7 +10907,7 @@ class MainWindow(QMainWindow):
     def init_zones_mC(self):
         #Buttons
         self.cell_zones_open.clicked.connect(lambda: self.open_section(name='cell_zones'))
-        self.cell_zones_play.setStyleSheet(style_play)
+        # self.cell_zones_play.setStyleSheet(style_play)
         self.cell_zones_play.setEnabled(False)
 
         self.q_cell_zones.clicked.connect(lambda: self.help('cell_zones'))
@@ -15396,16 +15396,16 @@ def set_txts():
     mH_images = [mH_icon, mH_big, mH_top_corner]
 
     # Play buttons
-    play_bw = str(mH_config.path_mHImages / 'logos_play_black_white.png')
-    play_gw = str(mH_config.path_mHImages / 'logos_play_green_white.png')
-    play_gb = str(mH_config.path_mHImages / 'logos_play_green_dark.png')
+    play_bw =  str(mH_config.path_mHImages / 'logos_play_black_white.png')
+    play_gw =  str(mH_config.path_mHImages / 'logos_play_green_white.png')
+    play_gb =  str(mH_config.path_mHImages / 'logos_play_green_dark.png')
     play_grw = str(mH_config.path_mHImages / 'logos_play_gray_white.png')
     play_colors = [play_bw, play_gw, play_gb, play_grw]
 
-    play_btn = "QPushButton{border-image: url("+play_gw+"); background-repeat: no-repeat; width: 65px; height: 56px}"
-    hover_btn = " QPushButton:hover{border-image: url("+play_bw+")}"
-    pressed_btn = " QPushButton:checked{border-image: url("+play_gb+")}"
-    disbled_btn = " QPushButton:disabled{border-image: url("+play_grw+")}"
+    play_btn = 'QPushButton{border-image: url("'+play_gw+'"); background-repeat: no-repeat; width: 65px; height: 56px}'
+    hover_btn = ' QPushButton:hover{border-image: url("'+play_bw+'")}'
+    pressed_btn = ' QPushButton:checked{border-image: url("'+play_gb+'")}'
+    disbled_btn = ' QPushButton:disabled{border-image: url("'+play_grw+'")}'
     style_play = play_btn+hover_btn+pressed_btn+disbled_btn
 
     html_txt = ['<html><head><meta name="qrichtext" content="1" /><style type="text/css"> p, li { white-space: pre-wrap; } </style></head><body style=" font-family:"Calibri Light"; font-size:11pt; font-weight:24; font-style:normal;">',
