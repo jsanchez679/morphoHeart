@@ -565,11 +565,6 @@ font: 25 10pt &quot;Calibri Light&quot;;</string>
                  <string>Light</string>
                 </property>
                </item>
-               <item>
-                <property name="text">
-                 <string>Dark</string>
-                </property>
-               </item>
               </widget>
              </item>
             </layout>
