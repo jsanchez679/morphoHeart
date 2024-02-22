@@ -5165,6 +5165,7 @@ class MainWindow(QMainWindow):
         print('Tab was changed to '+str(self.tabWidget.currentIndex()))
         self.current_tab = self.tabWidget.currentIndex()
 
+    ############################################################################################
     #- Init SEGMENTATION Tab
     def init_segment_tab(self): 
 
@@ -5247,7 +5248,7 @@ class MainWindow(QMainWindow):
         #Init channel progress
         self.init_ch_progress()
     
-    #>> Initialise all modules of Process and Analyse
+    #>> Initialise all modules
     def init_segm_ch(self, ch): 
 
         #Regular expressions
@@ -6136,7 +6137,6 @@ class MainWindow(QMainWindow):
             update = self.gui_select_contours
             self.organ.update_settings(proc_set, update, 'mH', add='select_contours')
      
-
     def init_plot_widget(self): 
 
         #Central plot
@@ -6466,6 +6466,7 @@ class MainWindow(QMainWindow):
         n_cols_val = int(n_cols.value())
         palette = getattr(self, 'color_palette_'+ch_name).currentText()
         num_pal = getattr(self, 'num_color_palette_'+ch_name).value()
+        unify_levels = getattr(self, 'unify_level_'+ch_name).isChecked()
         
         self.contours_palette =  palette_rbg(palette, num_pal, False)*20
 
@@ -6474,7 +6475,8 @@ class MainWindow(QMainWindow):
                                 'n_rows': n_rows_val, 
                                 'n_cols': n_cols_val, 
                                 'palette': palette, 
-                                'n_palette': num_pal}
+                                'n_palette': num_pal,
+                                'unify_levels': unify_levels}
         
         print('gui_plot_contours: ', gui_plot_contours)
         return gui_plot_contours
@@ -6847,6 +6849,11 @@ class MainWindow(QMainWindow):
                 getattr(self, 'plot_slices_'+ch_name+'_open').setChecked(True)
                 self.open_section(name = 'plot_slices_'+ch_name)
                 self.set_plot_contour_settings(ch_name=ch_name, init=True)
+                try: 
+                    ul_checked = wf_info['plot_contours_settings'][ch_name]['unify_level']
+                except: 
+                    ul_checked = True
+                getattr(self, 'unify_level_'+ch_name).setChecked(ul_checked)
         else: 
             wdg = getattr(self, 'plot_slices_'+ch_name+'_widget')
             scrollArea = getattr(self, 'scrollArea_'+ch_name)
@@ -7077,14 +7084,26 @@ class MainWindow(QMainWindow):
         tableW.verticalScrollBar().setValue(tableW.verticalScrollBar().maximum())
 
     def slider_changed(self, wdg_name, wdg_type, info=None, divider = 1):
+        ch_name = wdg_name.split('_')[-1]
         if 'slider' == wdg_type: 
             #Get value from slider
             value = getattr(self, wdg_name+'_slider').value()
             wdg_txt = getattr(self, wdg_name+'_value')
-            if divider == 1:
-                wdg_txt.setText(str(value))
+            if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
+                for wdgn in ['level_'+ch_name,'manual_level_'+ch_name, 'select_level_'+ch_name]:
+                    wdg_val = getattr(self, wdgn+'_value')
+                    wdg_sl = getattr(self, wdgn+'_slider')
+                    if divider == 1:
+                        wdg_val.setText(str(value))
+                    else: 
+                        wdg_val.setText(str(value/divider))
+                    wdg_sl.setValue(float(value))
+
             else: 
-                wdg_txt.setText(str(value/divider))
+                if divider == 1:
+                    wdg_txt.setText(str(value))
+                else: 
+                    wdg_txt.setText(str(value/divider))
 
         else: #'value' == wdg_type: 
             #Get value from text
@@ -7106,10 +7125,23 @@ class MainWindow(QMainWindow):
                 value = slider.minimum()
             
             wdg_txt = getattr(self, wdg_name+'_slider')
-            wdg_txt.setValue(float(value)*divider)
+            if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
+                for wdgn in ['level_'+ch_name+'_slider','manual_level_'+ch_name+'_slider', 'select_level_'+ch_name+'_slider']:
+                    wdg_txt = getattr(self, wdgn)
+                    wdg_txt.setValue(float(value)*divider)
+            else: 
+                wdg_txt = getattr(self, wdg_name+'_slider')
+                wdg_txt.setValue(float(value)*divider)
 
         if info != None: 
             self.set_plot_contour_settings(ch_name=info)
+
+    def unify_levels_set(self, ch_name): 
+        try: 
+            r_bool = self.plot_contours_settings[ch_name]['unify_levels']
+            return r_bool
+        except: 
+            return False
 
     def slices_changed(self, ch_name, process): 
         #Untoggle button
