@@ -85,13 +85,18 @@ class WelcomeScreen(QDialog):
         self.label_version.setText('v'+mH_config.version)
         self.label_version.setStyleSheet('color: rgb(116, 116, 116); font: bold 15pt "Calibri Light";')
         
+        self.btn_link2paper.clicked.connect(lambda: webbrowser.open(mH_config.link2paper))
+        self.btn_link2paper.installEventFilter(self)
+        self.btn_link2docs.clicked.connect(lambda: webbrowser.open(mH_config.link2docs))
+        self.btn_link2docs.installEventFilter(self)
+        self.btn_link2github.clicked.connect(lambda: webbrowser.open(mH_config.link2github))
+        self.btn_link2github.installEventFilter(self)
 
-        # self.btn_link2paper
-        self.btn_link2paper.clicked.connect(lambda: webbrowser.open('https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'))
-        # self.btn_link2docs
-        self.btn_link2docs.clicked.connect(lambda: webbrowser.open('https://www.dropbox.com/scl/fi/ft7i6t8d0hc859t7ii9a3/User-Manual-v1o0o0.pdf?rlkey=ebyp3xyjhau78kc3tqu5td8s0&dl=0'))
-        # self.btn_link2github.setIcon(qta.icon("fa5b.github"))
-        self.btn_link2github.clicked.connect(lambda: webbrowser.open('https://github.com/jsanchez679/morphoHeart'))
+        #Main Buttons
+        self.button_new_proj.installEventFilter(self)
+        self.button_new_proj_from_template.installEventFilter(self)
+        self.button_load_proj.installEventFilter(self)
+        self.button_multi_proj.installEventFilter(self)
 
         # Sound Buttons
         layout = self.hL_sound_on_off 
@@ -116,6 +121,72 @@ class WelcomeScreen(QDialog):
         #Set the theme
         self.setStyleSheet(style_str)
         mH_config.theme = theme
+
+    def eventFilter(self, widget, event):
+        # FocusOut event
+        if event.type() == QtCore.QEvent.Type.HoverEnter:
+            widget_name = widget.objectName()
+            self.print_msg(widget_name)
+        elif event.type() == QtCore.QEvent.Type.HoverLeave:
+            self.button_txt.setText('')
+
+        return super().eventFilter(widget, event)
+
+    def print_msg(self, name):
+        if 'link2paper' in name: 
+            self.button_txt.setText("Check out morphoHeart's release paper")
+        elif 'link2docs' in name: 
+            self.button_txt.setText("Check out morphoHeart's step-by-step guide and Video Tutorials")
+        elif 'link2github' in name: 
+            self.button_txt.setText("Check out morphoHeart's GitHub Repository")
+        elif '_new_proj_from_template' in name: 
+            self.button_txt.setText("Create a new project from a template")
+        elif '_new_proj' in name: 
+            self.button_txt.setText("Create a new project in morphoHeart")
+        elif '_load_proj' in name: 
+            self.button_txt.setText("Load a project, create/load/delete an organ, or launch project's combinatorial analysis")
+        elif '_multi_proj' in name: 
+            self.button_txt.setText("Launch Multi-Project Combinatorial Analysis (on development)")
+        else: 
+            self.button_txt.setText('')
+
+class AboutScreen(QDialog):
+
+    def __init__(self) -> None:
+        super().__init__()
+        uic.loadUi(str(mH_config.path_ui / 'about_screen.ui'), self)
+        self.setWindowTitle('About morphoHeart...')
+        self.mH_logo_XL.setPixmap(QPixmap(mH_big))
+        self.setWindowIcon(QIcon(mH_icon))
+        self.label_version.setText('v'+mH_config.version)
+        self.label_version.setStyleSheet('color: rgb(116, 116, 116); font: bold 15pt "Calibri Light";')
+        
+        self.btn_link2paper.clicked.connect(lambda: webbrowser.open('https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'))
+        self.btn_link2paper.installEventFilter(self)
+        self.btn_link2docs.clicked.connect(lambda: webbrowser.open('https://www.dropbox.com/scl/fi/ft7i6t8d0hc859t7ii9a3/User-Manual-v1o0o0.pdf?rlkey=ebyp3xyjhau78kc3tqu5td8s0&dl=0'))
+        self.btn_link2docs.installEventFilter(self)
+        self.btn_link2github.clicked.connect(lambda: webbrowser.open('https://github.com/jsanchez679/morphoHeart'))
+        self.btn_link2github.installEventFilter(self)
+
+    def eventFilter(self, widget, event):
+        # FocusOut event
+        if event.type() == QtCore.QEvent.Type.HoverEnter:
+            widget_name = widget.objectName()
+            self.print_msg(widget_name)
+        elif event.type() == QtCore.QEvent.Type.HoverLeave:
+            self.button_txt.setText('')
+
+        return super().eventFilter(widget, event)
+
+    def print_msg(self, name):
+        if 'link2paper' in name: 
+            self.button_txt.setText("Check out morphoHeart's release paper")
+        elif 'link2docs' in name: 
+            self.button_txt.setText("Check out morphoHeart's step-by-step guide and Video Tutorials")
+        elif 'link2github' in name: 
+            self.button_txt.setText("Check out morphoHeart's GitHub Repository")
+        else: 
+            self.button_txt.setText('')
 
 class Prompt_ok_cancel(QDialog):
     def __init__(self, title:str, msg:str, parent=None):
@@ -5065,6 +5136,10 @@ class MainWindow(QMainWindow):
         self.actionSave_Project_and_Organ.triggered.connect(self.save_project_and_organ_pressed)
         self.actionGo_to_Welcome_Page.triggered.connect(self.go_to_welcome_pressed)
         self.actionClose.triggered.connect(self.close_morphoHeart_pressed)
+
+        #About menu
+        self.actionDocs_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2docs))
+        self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
 
         #Sounds
         layout = self.hL_sound_on_off 

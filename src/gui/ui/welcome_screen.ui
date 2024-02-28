@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>601</width>
-    <height>698</height>
+    <width>633</width>
+    <height>760</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,17 +18,34 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <spacer name="horizontalSpacer_5">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+    <widget class="QLabel" name="prompt_val_2">
+     <property name="minimumSize">
       <size>
-       <width>40</width>
-       <height>20</height>
+       <width>120</width>
+       <height>15</height>
       </size>
      </property>
-    </spacer>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>15</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(170, 0, 127);
+font: 25 8pt &quot;Calibri Light&quot;;
+background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="welcome_to_msg">
@@ -146,7 +163,7 @@ font: bold 12pt &quot;Calibri Light&quot;;
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>60</height>
+         <height>50</height>
         </size>
        </property>
        <property name="maximumSize">
@@ -451,32 +468,78 @@ color: rgb(230, 230, 230);
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="label_instructions_3">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>100</height>
-      </size>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>80</height>
-      </size>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 25 12pt &quot;Calibri Light&quot;; color: rgb(116, 116, 116)</string>
-     </property>
-     <property name="text">
-      <string>Don't forget to cite the lastest morphoHeart paper when 
-you publish your results using the software!</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="leftMargin">
+       <number>45</number>
+      </property>
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <property name="rightMargin">
+       <number>45</number>
+      </property>
+      <property name="bottomMargin">
+       <number>20</number>
+      </property>
+      <item>
+       <widget class="QFrame" name="frame_2">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="topMargin">
+          <number>12</number>
+         </property>
+         <property name="bottomMargin">
+          <number>12</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">font: 25 12pt &quot;Calibri Light&quot;; color: rgb(116, 116, 116)</string>
+           </property>
+           <property name="text">
+            <string>Don't forget to cite morphoHeart's paper when 
+you publish your results using the software!
+</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="styleSheet">
+            <string notr="true">font: 25 italic 11pt &quot;Calibri Light&quot;; color: rgb(116, 116, 116)</string>
+           </property>
+           <property name="text">
+            <string>Sánchez-Posada, J. &amp; Noël, E. S. morphoHeart: a novel quantitative tool to perform 
+integrated 3D morphometric analyses of heart and ECM morphology
+during embryonic development. Preprint (2024).</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -517,7 +580,7 @@ color:rgb(136, 136, 136);
 font: 12pt &quot;Calibri&quot;;}
 
 QPushButton:hover{
-	color: rgb(255, 60, 128)}
+	color: rgb(170, 0, 127)}
 </string>
        </property>
        <property name="text">
@@ -545,7 +608,7 @@ color:rgb(136, 136, 136);
 font: 12pt &quot;Calibri&quot;;}
 
 QPushButton:hover{
-	color: rgb(255, 60, 128)}
+	color: rgb(170, 0, 127)}
 </string>
        </property>
        <property name="text">
@@ -573,7 +636,7 @@ color:rgb(136, 136, 136);
 font: 12pt &quot;Calibri&quot;;}
 
 QPushButton:hover{
-	color: rgb(255, 60, 128)}
+	color: rgb(170, 0, 127)}
 </string>
        </property>
        <property name="text">
@@ -597,18 +660,23 @@ QPushButton:hover{
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="mH_logo_XL_3">
+    <widget class="QLabel" name="button_txt">
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>50</height>
+       <height>40</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>110</height>
+       <height>40</height>
       </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 25 italic 11pt &quot;Calibri Light&quot;; 
+background-color: rgba(255, 255, 255, 180);
+color: rgb(170, 0, 127)</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
@@ -622,17 +690,34 @@ QPushButton:hover{
     </widget>
    </item>
    <item>
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+    <widget class="QLabel" name="prompt_val_3">
+     <property name="minimumSize">
       <size>
-       <width>40</width>
-       <height>20</height>
+       <width>120</width>
+       <height>30</height>
       </size>
      </property>
-    </spacer>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>15</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(170, 0, 127);
+font: 25 8pt &quot;Calibri Light&quot;;
+background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">

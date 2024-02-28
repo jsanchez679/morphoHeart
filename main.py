@@ -28,6 +28,7 @@ class Controller:
         self.multip_analysis_win = None
         self.load_s3s = None
         self.proj_settings_win = None
+        self.about_window = None
 
         self.wins = ['new_proj_win','meas_param_win','load_proj_win','load_multi_proj_win', 
                      'new_organ_win','main_win','load_s3s', 'proj_settings_win']
@@ -216,6 +217,11 @@ class Controller:
             self.proj_settings_win = ProjSettings(proj = self.proj, controller=self) 
         self.proj_settings_win.show()
         getattr(parent_win, 'button_see_proj_settings').setChecked(False)
+    
+    def show_about(self): 
+        if self.about_window == None:
+            self.about_window = AboutScreen() 
+        self.about_window.show()
 
     #Inititalise windows
     def init_load_proj(self): 
@@ -288,6 +294,7 @@ class Controller:
         self.main_win.actionCreate_new_Project.triggered.connect(self.create_new_project)
         self.main_win.actionOpen_another_organ_from_current_project.triggered.connect(self.open_another_organ_same_project)
         self.main_win.actionCreate_new_organ_within_the_current_project.triggered.connect(self.create_new_organ_same_project)
+        self.main_win.actionAbout_morphoHeart.triggered.connect(self.show_about)
 
     def init_segmentation_tab(self): 
         #Segmentation Tab
@@ -964,4 +971,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
