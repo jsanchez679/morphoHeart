@@ -5040,6 +5040,114 @@ class ProjSettings(QDialog):
         self.close()
         self.controller.proj_settings_win = None
 
+class OrganSettings(QDialog): 
+    def __init__(self, proj, organ, controller, parent=None):
+        super().__init__()
+        self.proj_name = ''
+        self.proj_dir_parent = ''
+        self.organ_name = ''
+        self.organ_dir = ''
+        uic.loadUi(str(mH_config.path_ui / 'organ_settings_screen.ui'), self)
+        self.setWindowTitle('Organ/ROI Settings...')
+        self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
+        self.setWindowIcon(QIcon(mH_icon))
+
+        self.proj = proj
+        self.organ = organ
+        self.controller = controller
+
+        #Initialise window sections
+        self.init_gral_proj_and_organ()
+        #Initialise Tabs for morphoHeart Analysis and morphoCell
+        for n, tab, process in zip(count(), ['tab_mHeart', 'tab_mCell'], ['morphoHeart', 'morphoCell']):
+            ch_tab = getattr(self, 'tabWidget')
+            ch_tab.setTabVisible(n, self.proj.analysis[process])
+        self.init_image_tabs()
+
+        #Close button
+        self.button_close.clicked.connect(lambda: self.close_window())
+
+    def init_gral_proj_and_organ(self): 
+
+        #Project General Info
+        self.lab_filled_proj_name.setText(self.proj.info['user_projName'])
+        self.lab_filled_ref_notes.setText(self.proj.info['user_projNotes'])
+        self.lab_filled_proj_dir.setText(str(self.proj.dir_proj))
+
+        #Organ General Info
+        self.lineEdit_organ_name.setText(self.organ.info['user_organName'])
+        self.textEdit_ref_notes.setText(self.organ.info['user_organNotes'])
+        date = self.organ.info['date_created']
+        date_qt = QDate.fromString(date, "yyyy-MM-dd")
+        self.dateEdit.setDate(date_qt)
+        self.cB_strain.setText(self.organ.info['strain'])
+        self.cB_stage.setText(self.organ.info['stage'])
+        self.cB_genotype.setText(self.organ.info['genotype'])
+        self.cB_manipulation.setText(self.organ.info['manipulation'])
+
+        #Metadata
+        self.cB_stack_orient.setText(self.organ.info['im_orientation'])
+        self.cust_angle.setText(self.organ.info['custom_angle'])
+        self.scaling_x.setText(str(self.organ.info['resolution'][0]))
+        self.scaling_y.setText(str(self.organ.info['resolution'][1]))
+        self.scaling_z.setText(str(self.organ.info['resolution'][2]))
+        self.cB_units.setText(self.organ.info['im_res_units'][0])
+
+    def init_image_tabs(self): 
+
+        if self.proj.analysis['morphoHeart']: 
+            #Change channels
+            #-mH
+            mH_channels = self.proj.mH_channels
+            for ch in ['ch1', 'ch2', 'ch3', 'ch4']: 
+                label = getattr(self, 'lab_'+ch) 
+                name = getattr(self, 'lab_filled_name_'+ch)
+                brw_ch = getattr(self, 'browse_'+ch)
+                dir_ch = getattr(self, 'lab_filled_dir_'+ch)
+                check_ch = getattr(self, 'check_'+ch)
+                brw_mk = getattr(self, 'browse_mask_'+ch)
+                dir_mk = getattr(self, 'lab_filled_dir_mask_'+ch)
+                check_mk = getattr(self, 'check_mask_'+ch)
+                if ch not in mH_channels.keys():
+                    label.setVisible(False)
+                    name.setVisible(False)
+                    brw_ch.setVisible(False)
+                    dir_ch.setVisible(False)
+                    check_ch.setVisible(False)
+                    brw_mk.setVisible(False)
+                    dir_mk.setVisible(False)
+                    check_mk.setVisible(False)
+                else: 
+                    name.setText(self.proj.mH_channels[ch])
+                    path_ch = self.organ.img_dirs[ch]['image']['dir']
+                    dir_ch.setText(str(path_ch))
+                    if path_ch.is_file():
+                        check_ch.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(0, 255, 0); color: rgb(0, 255, 0); font: 25 2pt 'Calibri Light'")
+                        check_ch.setText('Done')
+                    else: 
+                        check_ch.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); color: rgb(255, 0, 0); font: 25 2pt 'Calibri Light'")
+                        check_ch.setText('ERROR')
+
+                    if not self.proj.mH_settings['setup']['mask_ch'][ch]:
+                        brw_mk.setEnabled(False)
+                        dir_mk.setEnabled(False)
+                        check_mk.setEnabled(False)
+                    else: 
+                        path_mask = self.organ.img_dirs[ch]['mask']['dir']
+                        dir_mk.setText(str(path_ch))
+                        if path_mask.is_file():
+                            check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(0, 255, 0); color: rgb(0, 255, 0); font: 25 2pt 'Calibri Light'")
+                            check_mk.setText('Done')
+                        else: 
+                            check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); color: rgb(255, 0, 0); font: 25 2pt 'Calibri Light'")
+                            check_mk.setText('ERROR')
+            
+        self.lab_filled_organ_dir.setText(str(self.organ.dir_res()))
+
+    def close_window(self):
+        self.close()
+        self.controller.organ_settings_win = None
+
 class MainWindow(QMainWindow):
 
     def __init__(self, proj, organ, controller):
@@ -6412,7 +6520,7 @@ class MainWindow(QMainWindow):
                 procf = 'RAW'
 
         title = 'Resetting STACK...'
-        msg = 'Are you sure you want to reset the stack to '+txt+'? If so press  -Ok-, else press  -Cancel-.' 
+        msg = 'Are you sure you want to reset the stack to '+txt+'? If so press  -Ok-, else press  -Cancel-. Note: Make sure the original image files are still in the provided directory, otherwise the process will not be able to run.' 
         prompt = Prompt_ok_cancel(title, msg, parent=self)
         prompt.exec()
         print('output:',prompt.output, '\n')

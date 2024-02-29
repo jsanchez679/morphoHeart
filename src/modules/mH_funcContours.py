@@ -714,7 +714,7 @@ def close_convex_hull(win):
                 point2add = np.array([[y0],[x0]])
                 xy_contours_new = np.concatenate((xy_contours, np.transpose(point2add)))
                 qg_num = 'QG'+str(len(xy_contours_new)-1)
-                hull = ConvexHull(points=xy_contours_new,qhull_options=qg_num)
+                hull = ConvexHull(points=xy_contours_new, qhull_options=qg_num)
                 merge = hull.simplices[hull.good]
                 closing_pt1, closing_pt2 = selectHull (merge, xy_contours_new)
                 if type(closing_pt1) == tuple and type(closing_pt2) == tuple: 

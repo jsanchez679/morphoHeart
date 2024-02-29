@@ -28,10 +28,12 @@ class Controller:
         self.multip_analysis_win = None
         self.load_s3s = None
         self.proj_settings_win = None
+        self.organ_settings_win = None
         self.about_window = None
 
         self.wins = ['new_proj_win','meas_param_win','load_proj_win','load_multi_proj_win', 
-                     'new_organ_win','main_win','load_s3s', 'proj_settings_win']
+                     'new_organ_win','main_win', 'multip_analysis_win', 'load_s3s', 
+                     'proj_settings_win', 'organ_settings_win', 'about_window']
 
     def show_welcome(self):
         #Close previous windows if existent
@@ -218,6 +220,12 @@ class Controller:
         self.proj_settings_win.show()
         getattr(parent_win, 'button_see_proj_settings').setChecked(False)
     
+    def show_organ_settings(self, parent_win):
+        if self.organ_settings_win == None: 
+            self.organ_settings_win = OrganSettings(proj = self.proj, organ = self.organ, controller=self)
+        self.organ_settings_win.show()
+        getattr(parent_win, 'button_see_organ_settings').setChecked(False)
+    
     def show_about(self): 
         if self.about_window == None:
             self.about_window = AboutScreen() 
@@ -285,6 +293,7 @@ class Controller:
     def init_main_win(self): 
         
         self.main_win.button_see_proj_settings.clicked.connect(lambda: self.show_proj_settings(parent_win=self.main_win))
+        self.main_win.button_see_organ_settings.clicked.connect(lambda: self.show_organ_settings(parent_win=self.main_win))
         self.init_segmentation_tab()
         self.init_morphoHeart_tab()
         self.init_morphoCell_tab()
