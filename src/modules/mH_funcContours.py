@@ -231,7 +231,7 @@ def maskContour(myIm, contour):
     # label image regions
     label_r_mask = label(r_mask_int)
     label_r_mask = np.transpose(label_r_mask)
-    print(label_r_mask.shape, myIm.shape)
+    # print(label_r_mask.shape, myIm.shape)
     
     props = regionprops(label_r_mask, intensity_image = myIm)
     
