@@ -4854,6 +4854,9 @@ class ProjSettings(QDialog):
             pass
             # self.init_mCell_tab()
 
+
+        #Measurement Parameters 
+        self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
         #Close button
         self.button_close.clicked.connect(lambda: self.close_window())
     
@@ -4934,6 +4937,7 @@ class ProjSettings(QDialog):
                 getattr(self, 'sB_no_segm'+num).setVisible(False)
                 getattr(self, 'cB_obj_segm'+num).setVisible(False)
                 getattr(self, 'sB_segm_noObj'+num).setVisible(False)
+                getattr(self, 'names_segm'+num).setVisible(False)
 
                 for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
                     for cont in ['int', 'tiss', 'ext']:
@@ -5002,22 +5006,24 @@ class ProjSettings(QDialog):
                             ch, cont = ch_cont.split('_')
                             getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setChecked(True)
                     else: 
-                        # getattr(self, 'lab_sect'+rcut[-1]).setVisible(False)   
+                        getattr(self, 'lab_sect'+rcut[-1]).setVisible(False)   
                         for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
                             for cont in ['int', 'tiss', 'ext']: 
                                 getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
                         self.line_19.setVisible(False)
             else: 
                 # getattr(self, 'lab_segm'+scut[-1]).setVisible(False)   
+                getattr(self, 'lab_segm2').setVisible(False)
                 self.line_18.setVisible(False)
                 self.line_19.setVisible(False)
                 self.line_20.setVisible(False)
                 self.line_21.setVisible(False)
-                for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
-                    getattr(self, 'label_'+scut+'_'+ch).setVisible(False)   
-                    for cont in ['int', 'tiss', 'ext']: 
-                        getattr(self, 'label_'+scut+'_'+ch+'_'+cont).setVisible(False)
-                        getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
+                for rcut in ['Cut1', 'Cut2']:
+                    for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
+                        getattr(self, 'label_'+scut+'_'+ch).setVisible(False)   
+                        for cont in ['int', 'tiss', 'ext']: 
+                            getattr(self, 'label_'+scut+'_'+ch+'_'+cont).setVisible(False)
+                            getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
 
         for chh in ['ch1', 'ch2', 'ch3', 'ch4']: 
             if chh not in self.proj.mH_settings['setup']['name_chs'].keys(): 
@@ -5031,6 +5037,10 @@ class ProjSettings(QDialog):
         self.cB_volume_segm_sect.setChecked(sp_set['measure']['Vol'])
         self.cB_area_segm_sect.setChecked(sp_set['measure']['SA'])
     
+    def open_meas_param(self): 
+        self.meas_param_win = MeasSettings(proj = self.proj, controller = self.controller, parent = self)
+        self.meas_param_win.show()
+    
     def closeEvent(self, event):
         print('User pressed X: ProjSettings')
         event.accept()
@@ -5039,6 +5049,113 @@ class ProjSettings(QDialog):
     def close_window(self):
         self.close()
         self.controller.proj_settings_win = None
+
+class MeasSettings(QDialog):
+    def __init__(self, proj, controller, parent=None):
+        super().__init__()
+        uic.loadUi(str(mH_config.path_ui / 'meas_settings_screen.ui'), self)
+        self.setWindowTitle('Measurement Parameters...')
+        self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
+        self.setWindowIcon(QIcon(mH_icon))
+
+        self.proj = proj
+        self.controller = controller
+        self.parent_win = parent
+        print(proj.__dict__)
+
+        self.params = self.proj.mH_settings['setup']['params']
+
+        self.init_meas_selected()
+        self.init_ball_cl_hm()
+
+        #Close button
+        self.button_close.clicked.connect(lambda: self.close_window())
+
+    def init_meas_selected(self):
+
+        self.ch_all = self.proj.mH_settings['setup']['name_chs']
+        for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']: 
+            if ch in self.ch_all: 
+                getattr(self, 'label_'+ch).setText(self.ch_all[ch])
+            else:
+                getattr(self, 'label_'+ch).setVisible(False)   
+                getattr(self, 'label_'+ch+'_2').setVisible(False)    
+                for cont in ['int', 'tiss', 'ext']:
+                    getattr(self, 'label_'+ch+'_'+cont).setVisible(False)
+                for num in range(10): 
+                    for cont in ['int', 'tiss', 'ext']:
+                        getattr(self, 'cB_'+ch+'_'+cont+'_param'+str(num)).setVisible(False)
+        
+        self.meas_sel = self.proj.mH_settings['measure']
+        #Set Measurement Parameters
+        for key in self.params.keys():
+            param_short = self.params[key]['s']
+            getattr(self, 'lab_param'+str(key)).setText(self.params[key]['l'])
+            sp_meas = self.meas_sel[param_short]
+            print('sp_meas:', sp_meas.keys())
+            for ch_cont in sp_meas.keys(): 
+                if 'roi' not in ch_cont:
+                    if '(' not in ch_cont: 
+                        ch_cont = ch_cont.split('_whole')[0]
+                        getattr(self, 'cB_'+ch_cont+'_param'+str(key)).setChecked(True)
+                    else: 
+                        ch_cont = ch_cont.split('_(')[0]
+                        getattr(self, 'cB_'+ch_cont+'_param'+str(key)).setChecked(True)
+                else: 
+                    getattr(self, 'cB_roi_param'+str(key)).setChecked(True)
+
+        for nn in range(int(key)+1,10,1): 
+            getattr(self, 'lab_param'+str(nn)).setVisible(False)
+            getattr(self, 'q_param'+str(nn)).setVisible(False)
+            for ch in self.ch_all.keys(): 
+                for cont in ['int', 'tiss', 'ext']:
+                        getattr(self, 'cB_'+ch+'_'+cont+'_param'+str(nn)).setVisible(False)
+            getattr(self, 'cB_roi_param'+str(nn)).setVisible(False)
+
+    def init_ball_cl_hm(self): 
+
+        #Ballooning Settings
+        ball_meas = self.meas_sel['ball']
+
+        nn = 1
+        for item in ball_meas.keys(): 
+            ch_cont, cl = item.split('_(')
+            ch_to, cont_to = ch_cont.split('_')
+            ch_cl, cont_cl = cl.split('_')
+            label_name = self.ch_all[ch_to]+' ('+ch_to+')'+'-'+cont_to
+            getattr(self, 'cB_balto'+str(nn)).setText(label_name)
+            getattr(self, 'cB_ch_bal'+str(nn)).setText(ch_cl)
+            getattr(self, 'cB_cont_bal'+str(nn)).setText(cont_cl[:-1]+'ernal')
+            nn+=1
+
+        for num in range(nn,5,1):
+            getattr(self, 'label_bal'+str(num)).setVisible(False)
+            getattr(self, 'cB_balto'+str(num)).setVisible(False)
+            getattr(self, 'cB_ch_bal'+str(num)).setVisible(False)
+            getattr(self, 'cB_cont_bal'+str(num)).setVisible(False)
+
+        #Centreline Settings
+        getattr(self, 'cB_cl_LoopLen').setChecked(self.params['2']['measure']['looped_length'])
+        getattr(self, 'cB_cl_LinLen').setChecked(self.params['2']['measure']['linear_length'])
+
+        #Heatmaps
+        if 'hm3Dto2D' in self.proj.mH_settings['measure'].keys():
+            getattr(self, 'cB_hm3d2d').setChecked(True)
+            ch_cont = list(self.proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
+            chs, conts = ch_cont.split('_')
+            getattr(self, 'hm_cB_ch').setText(chs)
+            getattr(self, 'hm_cB_cont').setText(conts+'ernal')
+        try: 
+            getattr(self, 'improve_hm2D').setChecked(self.proj.mH_settings['setup']['segm']['improve_hm2d'])
+        except: 
+            pass
+
+    def closeEvent(self, event):
+        print('User pressed X: MeasSettings')
+        event.accept()
+
+    def close_window(self):
+        self.close()
 
 class OrganSettings(QDialog): 
     def __init__(self, proj, organ, controller, parent=None):
@@ -5134,7 +5251,7 @@ class OrganSettings(QDialog):
                         check_mk.setEnabled(False)
                     else: 
                         path_mask = self.organ.img_dirs[ch]['mask']['dir']
-                        dir_mk.setText(str(path_ch))
+                        dir_mk.setText(str(path_mask))
                         if path_mask.is_file():
                             check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(0, 255, 0); color: rgb(0, 255, 0); font: 25 2pt 'Calibri Light'")
                             check_mk.setText('Done')

@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>1078</width>
-    <height>874</height>
+    <height>895</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
@@ -167,7 +173,7 @@
                </size>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::StrongFocus</enum>
+               <enum>Qt::NoFocus</enum>
               </property>
               <property name="layoutDirection">
                <enum>Qt::RightToLeft</enum>
@@ -357,6 +363,9 @@ QLineEdit:focus { border: 1px solid #eb6fbd;}
               <width>16777215</width>
               <height>38</height>
              </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
             </property>
             <property name="styleSheet">
              <string notr="true">QTextEdit {background-color: rgba(0,0,0,0);
@@ -2152,7 +2161,7 @@ background-color: rgb(255, 255, 255);</string>
                 <item>
                  <widget class="QPushButton" name="set_meas_param_all">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -2201,12 +2210,7 @@ background-color: rgb(232, 232, 232);
 border-color: rgb(158, 158, 158);
 color: rgb(125, 125, 125);
 }
-
-QPushButton:checked{
-background-color: rgb(107, 0, 80);
-border-color: rgb(76, 0, 57);
-color: rgb(234, 234, 234);
-}</string>
+</string>
                   </property>
                   <property name="text">
                    <string>Measurement Parameters</string>
@@ -2312,47 +2316,22 @@ background-color: rgb(255, 255, 255);</string>
 QCheckBox:disabled{color: rgb(0, 0, 0)}</string>
                        </property>
                        <property name="text">
-                        <string>Improve 2D heatmaps using segments   &gt;&gt;&gt;</string>
+                        <string>Improve 2D heatmaps using segments </string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="lab_hmselected">
-                       <property name="minimumSize">
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
                         <size>
-                         <width>110</width>
+                         <width>40</width>
                          <height>20</height>
                         </size>
                        </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>110</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;</string>
-                       </property>
-                       <property name="text">
-                        <string>Heatmaps selected: </string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="text_hmselected">
-                       <property name="minimumSize">
-                        <size>
-                         <width>300</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;</string>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </widget>
+                      </spacer>
                      </item>
                     </layout>
                    </item>
