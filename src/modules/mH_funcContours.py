@@ -464,8 +464,11 @@ def fill_contours(selected_cont, slc_s3):
     """
 
     if len(selected_cont['contours']) > 0:
+        print('>>:', type(selected_cont['contours']), len(selected_cont['contours']))
         for n, cont in enumerate(selected_cont['contours']):
+            print(type(cont))
             r_mask = np.zeros_like(slc_s3, dtype='bool')
+            print('>>', slc_s3.shape, r_mask.shape)
             # Create a contour masked image by using the contour coordinates rounded to their nearest integer value
             r_mask[np.round(cont[:, 0]).astype('int'), np.round(cont[:, 1]).astype('int')] = 1
             # Fill in the holes created by the contour boundary

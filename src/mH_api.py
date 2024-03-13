@@ -709,8 +709,8 @@ def enable_close_functions(controller, process, ch_name, widgets=True):
             #Show and enable
             controller.main_win.close_draw_btns_widget.setVisible(True)
             controller.main_win.close_draw_btns_widget.setEnabled(False)
-            getattr(controller.main_win, 'next_slice_'+ch_name).setShortcut("Ctrl+Right")
-            getattr(controller.main_win, 'prev_slice_'+ch_name).setShortcut("Ctrl+Left")
+            getattr(controller.main_win, 'next_slice_'+ch_name).setShortcut("Ctrl+M")
+            getattr(controller.main_win, 'prev_slice_'+ch_name).setShortcut("Ctrl+N")
             #Open Buttons Section
             controller.main_win.functions_btns_open.setChecked(False)
             controller.main_win.open_section(name = 'functions_btns')

@@ -148,6 +148,7 @@ class Controller:
         win = getattr(self, parent_win)
         if parent_win == 'new_organ_win':
             if self.new_organ_win.button_create_new_organ.isChecked():
+
                 pass# self.new_organ_win.close()
             else: 
                 error_txt = '*You need to first create the organ to continue.'
@@ -180,6 +181,7 @@ class Controller:
             self.main_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
             self.init_main_win()
         win.close()
+        setattr(self, parent_win, None)
         self.main_win.show()
 
     def show_analysis_window(self, parent_win:str, single_proj:bool): 
@@ -903,7 +905,6 @@ class Controller:
         res = mA.run_zones(controller=self, zone=zone)
         if not mH_config.dev and res != None:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
-
 
     #Actions Main Win
     def open_new_organ_and_project(self): 

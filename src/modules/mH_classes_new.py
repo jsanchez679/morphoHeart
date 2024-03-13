@@ -2328,7 +2328,7 @@ class ImChannel(): #channel
         dirs_cont = []; shapes_s3 = []
         aa = 0
         for cont in cont_list:
-            win.win_msg('Creating masked stacks for each contour of Channel '+self.channel_no[-1]+' ('+str(aa+1)+'/'+str(len(cont_list))+').')
+            win.win_msg('Creating masked stacks for each contour of Channel '+self.channel_no[-1]+' ('+str(aa)+'/'+str(len(cont_list))+').')
             s3 = ContStack(im_channel=self, cont_type=cont, layerDict=layerDict)#new=True,
             self.add_contStack(s3)
             path2file = self.parent_organ.dir_res(dir='s3_numpy') / s3.s3_file
@@ -2342,7 +2342,8 @@ class ImChannel(): #channel
                 win.prog_bar_update(aa)
             except:
                 pass
-        
+            
+        win.win_msg('Creating masked stacks for each contour of Channel '+self.channel_no[-1]+' ('+str(aa)+'/'+str(len(cont_list))+').')
         #Update organ workflow
         if all(flag for flag in dirs_cont):
             if shapes_s3.count(shapes_s3[0]) == len(shapes_s3):

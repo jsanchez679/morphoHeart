@@ -6477,7 +6477,7 @@ class MainWindow(QMainWindow):
         workflow = self.organ.workflow['morphoHeart']
         btn = getattr(self, process+'_'+ch_name+'_done')
         status = getattr(self,process+'_'+ch_name+'_status' )
-
+        hide_btns = False
         if process == 'autom_close': 
             sp_process = ['ImProc', ch_name, 'B-CloseCont','Steps','A-Autom','Status']
             msg = 'Contours of Channel '+str(ch_name[-1])+' have been automatically closed! Saving all changes in channel, organ and project...'
@@ -6491,6 +6491,7 @@ class MainWindow(QMainWindow):
             sp_process3 = ['ImProc', ch_name, 'B-CloseCont','Steps','C-CloseInOut','Status']
             save_ch = True
             save_chS3 = False
+            hide_btns = True
         elif process == 'select_contours':
             sp_process = ['ImProc', ch_name, 'C-SelectCont','Status']
             msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving all changes in channel, organ and project'
@@ -6528,12 +6529,24 @@ class MainWindow(QMainWindow):
                 for cont in ['int', 'tiss', 'ext']: 
                     im_cont = getattr(im_ch, 's3_'+cont)
                     s32save = getattr(self, 's3_'+cont)
+                    msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving s3_'+cont+'...'
+                    self.win_msg(msg)
                     im_cont.s3_save(s32save)
                 getattr(self, 'save_select_contours_'+ch_name).setChecked(True)
+            if hide_btns: 
+                self.functions_btns_widget.setVisible(False)
+            msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving Channel...'
+            self.win_msg(msg)
             self.organ.add_channel(imChannel=im_ch)
+            msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving Organ...'
+            self.win_msg(msg)
             self.organ.save_organ(alert_on=False)
             self.proj.add_organ(self.organ)
+            msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving Project...'
+            self.win_msg(msg)
             self.proj.save_project(alert_on=False)
+            msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished and saved!'
+            self.win_msg(msg)
 
         else: 
             if process == 'manual_close': 
@@ -7520,6 +7533,7 @@ class MainWindow(QMainWindow):
             first_slc_box.clear()
             num_contours_int_box.clear()
             num_contours_ext_box.clear()
+            first_slc_box.setFocus()
             
         else: 
             self.win_msg('*Please provide valid values for "First Slice", "No. Internal Contours", and "No. External Contours" to add tuple.')
@@ -7675,7 +7689,7 @@ class MainWindow(QMainWindow):
                 ax.plot(contour[:, 1], contour[:, 0], linewidth=0.15, color = self.contours_palette[n])
             ax.set_title("Slc "+str(slc+1), fontsize=3, pad=0.1)
 
-        self.fig_title.setText(text +": Slices "+ str(slices_plot[0]+1)+'-'+str(slices_plot[1]-1+1))
+        self.fig_title.setText(text +' ('+ch_name.title()+')'+": Slices "+ str(slices_plot[0]+1)+'-'+str(slices_plot[1]-1+1))
         self.canvas_plot.draw()
     
     def plot_contours_slc(self, params):
@@ -14133,7 +14147,6 @@ class MainWindow(QMainWindow):
         self.win_msg('Results file  -'+ filename + '  was succesfully saved!')
 
     #Functions for all tabs
-
     #Menu functions / Saving functions
     def save_closed_channel(self, ch, print_txt=False, s3s=False):
         #Get channel 
