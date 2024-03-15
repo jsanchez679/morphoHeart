@@ -7603,7 +7603,7 @@ class MainWindow(QMainWindow):
                         print('Image from attr')
         if load: 
             stack = im_ch.im_proc()
-            print('Image loaded')
+            print('Image loaded '+ ch)
 
         slcs_per_im = int(self.plot_contours_settings[ch]['n_rows'])*int(self.plot_contours_settings[ch]['n_cols'])
         #Get settings to plot

@@ -18,7 +18,7 @@ __website__    = 'https://github.com/jsanchez679/morphoHeart'
 #%% config class
 class mH_Config():
     def __init__(self):
-        self.version = '2.0.8'
+        self.version = '2.1.0'
         self.gui_sound = (True, 'All')
         self.theme = 'Light'
         self.heart_default = False
