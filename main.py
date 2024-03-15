@@ -20,6 +20,7 @@ class Controller:
     def __init__(self):
         self.welcome_win = None
         self.new_proj_win = None
+        self.new_proj_win_from_temp = None
         self.meas_param_win = None
         self.load_proj_win = None
         self.load_multi_proj_win = None
@@ -40,6 +41,9 @@ class Controller:
         if self.new_proj_win != None:
             self.new_proj_win.close()
             self.new_proj_win = None
+        if self.new_proj_win_from_temp != None:
+            self.new_proj_win_from_temp.close()
+            self.new_proj_win_from_temp = None
         if self.load_proj_win != None:
             self.load_proj_win.close()
             self.load_proj_win = None
@@ -60,7 +64,7 @@ class Controller:
         # -Load project
         self.welcome_win.button_load_proj.clicked.connect(lambda: self.show_load_proj())
         # -Create new project from template
-        self.welcome_win.button_new_proj_from_template.clicked.connect(lambda: self.button_clicked())
+        self.welcome_win.button_new_proj_from_template.clicked.connect(lambda: self.show_proj_from_temp())
         # -Multi-project analysis
         self.welcome_win.button_multi_proj.clicked.connect(lambda: self.show_multi_proj())
 
@@ -73,6 +77,15 @@ class Controller:
             self.new_proj_win = CreateNewProj(controller=self)
             self.init_create_new_proj()
         self.new_proj_win.show()
+
+    def show_proj_from_temp(self): 
+        #Close welcome window
+        self.welcome_win.close()
+        #Create new proj window and show
+        if self.new_proj_win_from_temp == None: 
+            self.new_proj_win_from_temp = NewProjFromTemp(controller=self)
+            self.init_new_proj_from_temp()
+        self.new_proj_win_from_temp.show()
 
     def show_meas_param(self):
         #Create meas param window and show
@@ -88,6 +101,8 @@ class Controller:
                         self.meas_param_win.ch_all['chNS'] = self.new_proj_win.mH_settings['chNS']['user_nsChName']
                 print(self.meas_param_win.ch_all)
                 self.meas_param_win.set_meas_param_table()
+            if self.new_proj_win.template: 
+                self.meas_param_win.init_template(self.proj_temp)
             self.meas_param_win.show()
             self.meas_param_win.button_set_params.clicked.connect(lambda: self.set_proj_meas_param())
             self.new_proj_win.set_meas_param_all.setChecked(True)
@@ -233,6 +248,27 @@ class Controller:
             self.about_window = AboutScreen() 
         self.about_window.show()
 
+    def show_template(self): 
+        selection = self.new_proj_win_from_temp.cB_temp_names.currentText()
+        if  selection != '--select--': 
+            jsonDict_name = selection+'.json'
+            json2open_dir = mH_config.path_templates / jsonDict_name
+            if json2open_dir.is_file():
+                with open(json2open_dir, "r") as read_file:
+                    print(">> "+jsonDict_name+": Opening JSON encoded data")
+                    load_dict = json.load(read_file)
+                
+            load_dict = make_Paths(load_dict)
+            self.proj_temp = mHC.TempProj(proj_dict = load_dict)
+
+            if self.proj_settings_win == None:
+                self.proj_settings_win = ProjSettings(proj = self.proj_temp, controller=self, template=selection) 
+            self.proj_settings_win.show()
+            getattr(self.new_proj_win_from_temp, 'btn_view_temp').setChecked(False)
+        else: 
+            self.new_proj_win_from_temp.win_msg('*Select a valid template to be able to view its settings...', self.new_proj_win_from_temp.btn_view_temp)
+            return
+
     #Inititalise windows
     def init_load_proj(self): 
         #Connect buttons
@@ -280,6 +316,12 @@ class Controller:
         self.new_proj_win.button_new_proj.clicked.connect(lambda: self.new_proj())
         # -Show New Organ Window 
         self.new_proj_win.button_add_organ.clicked.connect(lambda: self.show_new_organ(parent_win='new_proj_win'))
+
+    def init_new_proj_from_temp(self): 
+        # -Go Back
+        self.new_proj_win_from_temp.button_go_back.clicked.connect(lambda: self.show_welcome())
+        self.new_proj_win_from_temp.btn_view_temp.clicked.connect(lambda: self.show_template())
+        self.new_proj_win_from_temp.button_select_temp.clicked.connect(lambda: self.select_template())
 
     def init_new_organ_win(self, parent_win=None): 
         #Connect Buttons
@@ -659,6 +701,34 @@ class Controller:
             win.button_browse_proj.setChecked(False)
             win.init_tables(load=False)
             win.win_msg('*There is no settings file for a project within the selected directory. Please select a new directory.')
+
+    def select_template(self): 
+        selection = self.new_proj_win_from_temp.cB_temp_names.currentText()
+        if selection != '--select--': 
+            if hasattr(self, 'proj_temp'): 
+                pass
+            else: 
+                jsonDict_name = selection+'.json'
+                json2open_dir = mH_config.path_templates / jsonDict_name
+                if json2open_dir.is_file():
+                    with open(json2open_dir, "r") as read_file:
+                        print(">> "+jsonDict_name+": Opening JSON encoded data")
+                        load_dict = json.load(read_file)
+                    
+                load_dict = make_Paths(load_dict)
+                self.proj_temp = mHC.TempProj(proj_dict = load_dict)
+            
+            #Open new window  filled with information of template
+            self.new_proj_win_from_temp.close()
+            #Create new proj window and show
+            if self.new_proj_win == None: 
+                self.new_proj_win = CreateNewProj(controller=self, template=True)
+                self.init_create_new_proj()
+            self.new_proj_win.init_template(proj = self.proj_temp)
+            self.new_proj_win.show()
+        else: 
+            self.new_proj_win_from_temp.win_msg('*Select a valid template to be use for the new project...', self.new_proj_win_from_temp.button_select_temp)
+            return
 
     #Organ related
     def new_organ(self): 

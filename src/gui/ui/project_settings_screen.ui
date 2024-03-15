@@ -188,7 +188,7 @@ QLineEdit:focus { border: 1px solid #eb6fbd;}
 					</string>
               </property>
               <property name="maxLength">
-               <number>30</number>
+               <number>200</number>
               </property>
               <property name="frame">
                <bool>true</bool>

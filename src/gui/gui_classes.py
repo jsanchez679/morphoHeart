@@ -30,6 +30,8 @@ import vedo
 import numpy as np
 import pandas as pd
 import pickle as pl
+import glob
+import json
 
 import matplotlib
 #print('matplotlib:',matplotlib.__version__)
@@ -46,7 +48,7 @@ plt.rcParams['figure.constrained_layout.use'] = True
 
 #%% morphoHeart Imports - ##################################################
 from ..modules.mH_funcBasics import (get_by_path, compare_dicts, update_gui_set, alert, df_reset_index, 
-                                     df_add_value, palette_rbg)
+                                     df_add_value, palette_rbg, make_Paths)
 from ..modules.mH_funcContours import (checkWfCloseCont, ImChannel, get_contours, get_slices,
                                        plot_props, plot_filled_contours, plot_group_filled_contours, 
                                        close_draw, close_box, close_user, reset_img, close_convex_hull, tuple_pairs, 
@@ -54,7 +56,7 @@ from ..modules.mH_funcContours import (checkWfCloseCont, ImChannel, get_contours
 from ..modules.mH_funcMeshes import (plot_grid, s3_to_mesh, kspl_chamber_cut, get_unlooped_heatmap, 
                                      unit_vector, new_normal_3DRot, measure_ellipse, create_iso_volume, 
                                      extract_segm_IND, create_zone)
-from ..modules.mH_classes_new import Project, Organ, create_submesh
+from ..modules.mH_classes_new import Project, Organ, create_submesh, NumpyArrayEncoder
 from .config import mH_config
 
 path_mHImages = mH_config.path_mHImages
@@ -715,7 +717,7 @@ class Process_ongoing(QDialog):
 
 class CreateNewProj(QDialog):
 
-    def __init__(self, controller, parent=None):
+    def __init__(self, controller, parent=None, template=False):
         super().__init__()
         self.proj_name = ''
         self.proj_dir_parent = ''
@@ -724,6 +726,7 @@ class CreateNewProj(QDialog):
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
         self.controller = controller
+        self.template = template 
 
         self.mH_user_params = None
         self.mC_user_params = None
@@ -1674,10 +1677,12 @@ class CreateNewProj(QDialog):
     def set_selected_processes(self, info='mH'): 
         if info == 'mH': 
             #Get info from checked boxes
-            __ = self.checked('chNS')
+            chNS_bool = self.checked('chNS')
             self.button_set_chNS.setEnabled(True)
+            if chNS_bool and self.template: 
+                self.init_temp_chNS_group()
             #---- Segments
-            segm_bool = self.checked('segm')   
+            segm_bool = self.checked('segm')  
             #---- Sections
             sect_bool = self.checked('sect')
 
@@ -1725,7 +1730,18 @@ class CreateNewProj(QDialog):
             #Enable measurement parameters now to know whether regions was selected
             self.set_meas_param_all.setEnabled(True)
             self.set_meas_param_all.setChecked(False)
-        
+
+            #Initialised based on template
+            if segm_bool and self.template: 
+                self.init_temp_segm_group() 
+            if sect_bool and self.template: 
+                self.init_temp_sect_group() 
+                if 'segm-sect' in self.proj_temp.mH_settings['setup'].keys():
+                    if self.proj_temp.mH_settings['setup']['segm-sect']['cutLayersIn2SegmSect']: 
+                        self.tick_segm_sect_2.setEnabled(True)
+                        self.tick_segm_sect_2.setChecked(True)
+                        self.init_temp_segm_sect_group() 
+
         else: #info == 'mC
             #Get info from checked boxes
             #---- Segments
@@ -2854,6 +2870,186 @@ class CreateNewProj(QDialog):
             self.lab_temp.setEnabled(True)
             self.lineEdit_template_name.setEnabled(True)
 
+    # -- Functions to Initialise Form with Template
+    def init_template(self, proj):
+
+        self.proj_temp = proj
+        self.init_temp_gral_proj_set()
+        #Initialise Tabs for morphoHeart Analysis and morphoCell
+        for n, tab, process in zip(count(), ['tab_mHeart', 'tab_mCell'], ['morphoHeart', 'morphoCell']):
+            ch_tab = getattr(self, 'tabWidget')
+            ch_tab.setTabVisible(n, proj.analysis[process])
+        
+         # #- morphoHeart
+        if proj.analysis['morphoHeart']: 
+            #Orientation
+            self.init_temp_orient_group()
+            #Channels
+            self.init_temp_chs_group()
+            #ChNS
+            if isinstance(self.proj_temp.mH_settings['setup']['chNS'], dict):
+                if self.proj_temp.mH_settings['setup']['chNS']['layer_btw_chs']:
+                    self.tick_chNS.setChecked(True)
+            #Segments
+            if isinstance(self.proj_temp.mH_settings['setup']['segm'], dict):
+                self.tick_segm.setChecked(True)
+            #Regions
+            if isinstance(self.proj_temp.mH_settings['setup']['sect'], dict):
+                self.tick_sect.setChecked(True)
+
+        else: #proj.ananlysis['morphoCell']
+            pass
+
+    def init_temp_gral_proj_set(self):
+
+        heart_def = self.proj_temp.info['heart_default']
+        self.heart_analysis.setChecked(heart_def)
+
+        an_mH = self.proj_temp.analysis['morphoHeart']
+        self.checkBox_mH.setChecked(an_mH)
+        an_mC = self.proj_temp.analysis['morphoCell']
+        self.checkBox_mC.setChecked(an_mC)
+
+        self.win_msg("Project settings initialised using template...")
+
+    def init_temp_orient_group(self):
+        sp_set = self.proj_temp.mH_settings['setup']['orientation']
+        self.cB_stack_orient.setCurrentText(sp_set['stack'])
+        self.cB_roi_orient.setCurrentText(sp_set['roi'])
+
+    def init_temp_chs_group(self): 
+        sp_set = self.proj_temp.mH_settings['setup']
+        for ch in ['ch1', 'ch2', 'ch3', 'ch4']: 
+            if ch in sp_set['name_chs'].keys():
+                getattr(self, 'tick_'+ch).setChecked(True)
+                getattr(self, ch+'_username').setText(sp_set['name_chs'][ch])
+                getattr(self, ch+'_mask').setChecked(sp_set['mask_ch'][ch])
+                getattr(self,'cB_'+ch).setCurrentText(sp_set['chs_relation'][ch]+' layer')
+                for cont in ['int', 'tiss', 'ext']: 
+                    fill = getattr(self, 'fillcolor_'+ch+'_'+cont)
+                    color_btn(btn = fill, color = sp_set['color_chs'][ch][cont])
+                    fill.setText(str(sp_set['color_chs'][ch][cont]))
+
+        self.ck_chs_allcontained.setChecked(sp_set['all_contained'])
+        self.ck_chs_contained.setChecked(sp_set['one_contained'])
+
+    def init_temp_chNS_group(self): 
+
+        sp_set = self.proj_temp.mH_settings['setup']['chNS']
+        self.chNS_username.setText(sp_set['user_nsChName'])
+        self.ext_chNS.setCurrentText(sp_set['ch_ext'][0])
+        self.ext_contNS.setCurrentText(sp_set['ch_ext'][1]+'ernal')
+        self.int_chNS.setCurrentText(sp_set['ch_int'][0])
+        self.int_contNS.setCurrentText(sp_set['ch_int'][1]+'ernal')
+        self.chNS_operation.setCurrentText(sp_set['operation'])
+
+        for cont in ['int', 'tiss', 'ext']: 
+            fill = getattr(self, 'fillcolor_chNS_'+cont)
+            color_btn(btn = fill, color = sp_set['color_chns'][cont])
+            fill.setText(str(sp_set['color_chns'][cont]))
+
+    def init_temp_segm_group(self):
+
+        sp_set = self.proj_temp.mH_settings['setup']['segm']
+        for cut in ['Cut1', 'Cut2']: 
+            num = cut[-1]
+            if cut in sp_set.keys(): 
+                sp_cut = sp_set[cut]
+                getattr(self, 'tick_segm'+num).setChecked(True)
+                getattr(self, 'sB_no_segm'+num).setValue(int(sp_cut['no_segments']))
+                getattr(self, 'cB_obj_segm'+num).setCurrentText(sp_cut['obj_segm'])
+                getattr(self, 'sB_segm_noObj'+num).setValue(int(sp_cut['no_cuts_4segments']))
+                names = []
+                for key in sp_cut['name_segments']:
+                    names.append(sp_cut['name_segments'][key])
+                getattr(self, 'names_segm'+num).setText(', '.join(names))
+
+                for ch in sp_cut['ch_segments']:
+                    for conts in ['int', 'tiss', 'ext']:
+                        getattr(self, 'cB_segm_'+cut+'_'+ch+'_'+conts).setEnabled(True)
+                    for cont in sp_cut['ch_segments'][ch]:
+                        getattr(self, 'cB_segm_'+cut+'_'+ch+'_'+cont).setChecked(True)
+
+        self.cB_volume_segm.setChecked(sp_set['measure']['Vol'])
+        self.cB_area_segm.setChecked(sp_set['measure']['SA'])
+        self.cB_ellip_segm.setChecked(sp_set['measure']['Ellip'])
+        self.cB_angles_segm.setChecked(sp_set['measure']['Angles'])
+        self.improve_hm2D.setChecked(sp_set['improve_hm2d'])
+
+    def init_temp_sect_group(self): 
+        sp_set = self.proj_temp.mH_settings['setup']['sect']
+
+        for cut in ['Cut1', 'Cut2']: 
+            num = cut[-1]
+            if cut in sp_set.keys(): 
+                sp_cut = sp_set[cut]
+                getattr(self, 'tick_sect'+num).setChecked(True)
+                getattr(self, 'cB_obj_sect'+num).setCurrentText(sp_cut['obj_sect'])
+                names = []
+                for key in sp_cut['name_sections']:
+                    names.append(sp_cut['name_sections'][key])
+                getattr(self, 'names_sect'+num).setText(', '.join(names))
+
+                for ch in sp_cut['ch_sections']:
+                    for conts in ['int', 'tiss', 'ext']:
+                        getattr(self, 'cB_sect_'+cut+'_'+ch+'_'+conts).setEnabled(True)
+                    for cont in sp_cut['ch_sections'][ch]:
+                        getattr(self, 'cB_sect_'+cut+'_'+ch+'_'+cont).setChecked(True)
+
+        self.cB_volume_sect.setChecked(sp_set['measure']['Vol'])
+        self.cB_area_sect.setChecked(sp_set['measure']['SA'])
+
+    def init_temp_segm_sect_group(self): 
+
+        sp_set = self.proj_temp.mH_settings['setup']['segm-sect']
+        
+        for scut in ['sCut1', 'sCut2']: 
+            if scut in sp_set.keys(): 
+                for rcut in ['Cut1', 'Cut2']:
+                    if rcut in sp_set[scut].keys():
+                        for ch_cont in sp_set[scut][rcut]['ch_segm_sect']:
+                            ch, cont = ch_cont.split('_')
+                            getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setChecked(True)
+            else: 
+                self.segm_reg_cut2.setVisible(False)
+
+        self.cB_volume_segm_sect.setChecked(sp_set['measure']['Vol'])
+        self.cB_area_segm_sect.setChecked(sp_set['measure']['SA'])
+
+class NewProjFromTemp(QDialog):
+    def __init__(self, controller, parent=None):
+        super().__init__()
+        uic.loadUi(str(mH_config.path_ui / 'new_project_screen_from_temp.ui'), self)
+        self.setWindowTitle('Select Template...')
+        self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
+        self.setWindowIcon(QIcon(mH_icon))
+        self.controller = controller
+
+        #Get all the templates saved in templates folder
+        path_glob = str(mH_config.path_templates)+'\*.json'
+        all_temp = glob.glob(path_glob)
+        cB_temp = []
+        for temp in all_temp: 
+            cB_temp.append(Path(temp).stem)
+
+        self.cB_temp_names.addItems(cB_temp)
+    
+    def win_msg(self, msg, btn=None): 
+        if msg[0] == '*':
+            self.tE_validate.setStyleSheet(error_style)
+            msg = 'Error: '+msg
+            alert('error_beep')
+        elif msg[0] == '!':
+            self.tE_validate.setStyleSheet(note_style)
+            msg = msg[1:]
+        else: 
+            self.tE_validate.setStyleSheet(msg_style)
+        self.tE_validate.setText(msg)
+        print(msg)
+
+        if btn != None: 
+            btn.setChecked(False)
+
 class SetMeasParam(QDialog):
 
     def __init__(self, mH_settings:dict, parent=None):
@@ -3460,6 +3656,82 @@ class SetMeasParam(QDialog):
         error_txt = "Well done! Continue setting up new project."
         controller.new_proj_win.win_msg(error_txt)
 
+    def init_template(self, proj): 
+
+        self.meas_sel = proj.mH_settings['measure']
+        #Set Measurement Parameters
+        for key in proj.mH_settings['setup']['params'].keys():
+            param_short = proj.mH_settings['setup']['params'][key]['s']
+            if int(key) > 5: 
+                getattr(self, 'lab_param'+str(key)).setVisible(True)
+                getattr(self, 'lab_param'+str(key)).setText(proj.mH_settings['setup']['params'][key]['l'])
+                getattr(self, 'q_param'+str(key)).setVisible(True)
+                for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']: 
+                    if ch in self.ch_all: 
+                        for cont in ['int', 'tiss', 'ext']:
+                            getattr(self, 'cB_'+ch+'_'+cont+'_param'+str(key)).setVisible(True)
+                        getattr(self, 'cB_roi_param'+str(key)).setVisible(True)
+                        getattr(self, 'del_param'+str(key)).setVisible(True)
+
+            sp_meas = self.meas_sel[param_short]
+            print('sp_meas:', sp_meas.keys())
+            for ch_cont in sp_meas.keys(): 
+                if 'roi' not in ch_cont:
+                    if '(' not in ch_cont: 
+                        ch_cont = ch_cont.split('_whole')[0]
+                        getattr(self, 'cB_'+ch_cont+'_param'+str(key)).setChecked(True)
+                    else: 
+                        ch_cont = ch_cont.split('_(')[0]
+                        getattr(self, 'cB_'+ch_cont+'_param'+str(key)).setChecked(True)
+                else: 
+                    getattr(self, 'cB_roi_param'+str(key)).setChecked(True)
+        
+        #Ballooning Settings
+        ball_meas = self.meas_sel['ball']
+
+        all_ball = ['--select--']
+        for item in ball_meas.keys(): 
+            ch_cont, _ = item.split('_(')
+            ch_to, cont_to = ch_cont.split('_')
+            label_name = self.ch_all[ch_to]+' ('+ch_to+')'+'-'+cont_to
+            all_ball.append(label_name)
+        
+        for but in ['cB_balto1', 'cB_balto2', 'cB_balto3', 'cB_balto4']:
+            self.ballooning_to = list(set(self.ballooning_to))
+            cB_but = getattr(self, but)
+            cB_but.clear()
+            cB_but.addItems(all_ball)
+            cB_but.setCurrentText('--select--')
+
+        nn = 1; 
+        for item in ball_meas.keys(): 
+            ch_cont, cl = item.split('_(')
+            ch_to, cont_to = ch_cont.split('_')
+            ch_cl, cont_cl = cl.split('_')
+            label_name = self.ch_all[ch_to]+' ('+ch_to+')'+'-'+cont_to
+            getattr(self, 'cB_balto'+str(nn)).setCurrentText(label_name)
+            getattr(self, 'cB_ch_bal'+str(nn)).setCurrentText(ch_cl)
+            getattr(self, 'cB_cont_bal'+str(nn)).setCurrentText(cont_cl[:-1]+'ernal')
+            nn+=1
+
+        #Centreline Settings
+        getattr(self, 'cB_cl_LoopLen').setChecked(proj.mH_settings['setup']['params']['2']['measure']['looped_length'])
+        getattr(self, 'cB_cl_LinLen').setChecked(proj.mH_settings['setup']['params']['2']['measure']['linear_length'])
+
+        #Heatmaps
+        if 'hm3Dto2D' in proj.mH_settings['measure'].keys():
+            getattr(self, 'cB_hm3d2d').setChecked(True)
+            ch_cont = list(proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
+            chs, conts = ch_cont.split('_')
+            getattr(self, 'hm_cB_ch').setEnabled(True); getattr(self, 'hm_cB_cont').setEnabled(True)
+            getattr(self, 'improve_hm2D').setEnabled(True)
+            getattr(self, 'hm_cB_ch').setCurrentText(chs)
+            getattr(self, 'hm_cB_cont').setCurrentText(conts+'ernal')
+        try: 
+            getattr(self, 'improve_hm2D').setChecked(proj.mH_settings['setup']['segm']['improve_hm2d'])
+        except: 
+            pass
+        
 class NewOrgan(QDialog):
 
     def __init__(self, proj, parent=None):
@@ -4795,7 +5067,7 @@ class Load_S3s(QDialog):
             btn.setChecked(False)
 
 class ProjSettings(QDialog): 
-    def __init__(self, proj, controller, parent=None):
+    def __init__(self, proj, controller, parent=None, template=False):
         super().__init__()
         self.proj_name = ''
         self.proj_dir_parent = ''
@@ -4809,7 +5081,7 @@ class ProjSettings(QDialog):
         print(proj.__dict__)
 
         #Initialise window sections
-        self.init_gral_proj()
+        self.init_gral_proj(template)
         #Initialise Tabs for morphoHeart Analysis and morphoCell
         for n, tab, process in zip(count(), ['tab_mHeart', 'tab_mCell'], ['morphoHeart', 'morphoCell']):
             ch_tab = getattr(self, 'tabWidget')
@@ -4856,15 +5128,14 @@ class ProjSettings(QDialog):
             pass
             # self.init_mCell_tab()
 
-
         #Measurement Parameters 
         self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
         #Close button
         self.button_close.clicked.connect(lambda: self.close_window())
     
-    def init_gral_proj(self): 
-        proj_name = self.proj.info['user_projName']
-        self.lineEdit_proj_name.setText(proj_name)
+    def init_gral_proj(self, template=False): 
+        if template != False: 
+            self.lineEdit_proj_name.setText('Template: '+template)
         proj_notes = self.proj.info['user_projNotes']
         self.textEdit_ref_notes.setText(proj_notes)
         date = self.proj.info['date_created']
@@ -4873,15 +5144,11 @@ class ProjSettings(QDialog):
 
         heart_def = self.proj.info['heart_default']
         self.heart_analysis.setChecked(heart_def)
-        proj_dir = self.proj.info['dir_proj']
-        self.lab_filled_proj_dir.setText(str(proj_dir))
 
         an_mH = self.proj.analysis['morphoHeart']
         self.checkBox_mH.setChecked(an_mH)
         an_mC = self.proj.analysis['morphoCell']
         self.checkBox_mC.setChecked(an_mC)
-        # an_mP = self.proj.analysis['morphoPlot']
-        # self.checkBox_mP.setChecked(an_mP)
 
     def init_orient_group(self): 
         sp_set = self.proj.mH_settings['setup']['orientation']
@@ -5042,7 +5309,7 @@ class ProjSettings(QDialog):
     def open_meas_param(self): 
         self.meas_param_win = MeasSettings(proj = self.proj, controller = self.controller, parent = self)
         self.meas_param_win.show()
-    
+
     def closeEvent(self, event):
         print('User pressed X: ProjSettings')
         event.accept()

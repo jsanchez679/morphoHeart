@@ -36,6 +36,7 @@ class mH_Config():
         self.path_mHImages = Path(self.path_o).parent.parent.parent / 'images'
         self.path_ui = Path(self.path_o).parent.parent / 'gui' / 'ui'
         self.path_themes = Path(self.path_o).parent.parent / 'gui' / 'themes'
+        self.path_templates = Path(self.path_o).parent.parent.parent / 'db' / 'templates'
         self.dev = False
         self.dev_plots = False
         self.dev_hm3d2d = False

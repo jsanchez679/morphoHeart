@@ -2342,7 +2342,7 @@ class ImChannel(): #channel
                 win.prog_bar_update(aa)
             except:
                 pass
-            
+
         win.win_msg('Creating masked stacks for each contour of Channel '+self.channel_no[-1]+' ('+str(aa)+'/'+str(len(cont_list))+').')
         #Update organ workflow
         if all(flag for flag in dirs_cont):
@@ -4064,6 +4064,27 @@ class Cells():
 
         return cells_position
         
+class TempProj(): 
+    def __init__(self, proj_dict:dict):
+
+        self.info = proj_dict['info']
+        self.analysis = proj_dict['analysis']
+        self.mH_methods = proj_dict['mH_methods']
+        self.mH_settings = proj_dict['mH_settings']
+        self.mH_channels = proj_dict['mH_channels']
+        self.mH_segments = proj_dict['mH_segments']
+        self.mH_sections = proj_dict['mH_sections']
+
+        self.mC_methods = proj_dict['mC_methods']
+        self.mC_settings = proj_dict['mC_settings']
+        self.mC_channels = proj_dict['mC_channels']
+        self.mC_segments = proj_dict['mC_segments']
+        self.mC_sections = proj_dict['mC_sections']
+
+        self.workflow = proj_dict['workflow']
+        self.organs = proj_dict['organs']
+        self.gui_custom_data = proj_dict['gui_custom_data']
+
 class MyFaceSelectingPlotter(vedo.Plotter):
     def __init__(self, colors, color_o, views, **kwargs):
         
