@@ -977,6 +977,8 @@ class CreateNewProj(QDialog):
         self.button_set_processes_mC.clicked.connect(lambda: self.set_selected_processes(info='mC'))
 
         self.tick_segm_mC.stateChanged.connect(lambda: self.reset_set_processes(info='mC'))
+        self.tick_sect_mC.setVisible(False)
+        self.q_sect_2.setVisible(False)
         self.tick_sect_mC.stateChanged.connect(lambda: self.check_segm_mH())
         self.tick_zone_mC.stateChanged.connect(lambda: self.reset_set_processes(info='mC'))
 
