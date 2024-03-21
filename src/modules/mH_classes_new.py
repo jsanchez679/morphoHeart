@@ -326,9 +326,9 @@ class Project():
 
     def set_mC_methods(self): 
         methods = ['A-Set_Orientation', 'A-SetExtraChs', 'A-CleanCells']
-        if self.mC_segments != None: 
+        if self.mC_segments != None and self.mC_segments != False: 
             methods.append('B-Segments')
-        if self.mC_sections != None: 
+        if self.mC_sections != None and self.mC_sections != False: 
             methods.append('B-Regions')
         if isinstance(self.mC_settings['setup']['segm-sect_mC'], dict):
             methods.append('B-Segments_Regions')

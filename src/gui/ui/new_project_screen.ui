@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -20,6 +20,12 @@
    <size>
     <width>990</width>
     <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>990</width>
+    <height>16777215</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -804,7 +810,7 @@ QScrollBar::handle:vertical:hover {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-247</y>
+            <y>-830</y>
             <width>954</width>
             <height>1394</height>
            </rect>
@@ -10569,7 +10575,7 @@ background-color: rgb(255, 255, 255);</string>
                                </widget>
                               </item>
                               <item row="1" column="0">
-                               <widget class="QLabel" name="lab_sect1">
+                               <widget class="QLabel" name="lab_segm1_sect1">
                                 <property name="sizePolicy">
                                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                                   <horstretch>0</horstretch>
@@ -10600,7 +10606,7 @@ background-color: rgb(255, 255, 255);</string>
                                </widget>
                               </item>
                               <item row="2" column="0">
-                               <widget class="QLabel" name="lab_sect2">
+                               <widget class="QLabel" name="lab_segm1_sect2">
                                 <property name="sizePolicy">
                                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                                   <horstretch>0</horstretch>
@@ -12884,7 +12890,7 @@ background-color: rgb(255, 255, 255);</string>
                                   </widget>
                                  </item>
                                  <item row="1" column="0">
-                                  <widget class="QLabel" name="lab_sect1_5">
+                                  <widget class="QLabel" name="lab_segm2_sect1">
                                    <property name="sizePolicy">
                                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                                      <horstretch>0</horstretch>
@@ -12915,7 +12921,7 @@ background-color: rgb(255, 255, 255);</string>
                                   </widget>
                                  </item>
                                  <item row="2" column="0">
-                                  <widget class="QLabel" name="lab_sect2_5">
+                                  <widget class="QLabel" name="lab_segm2_sect2">
                                    <property name="sizePolicy">
                                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                                      <horstretch>0</horstretch>
@@ -15375,9 +15381,9 @@ QScrollBar::handle:vertical:hover {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-366</y>
+            <y>-394</y>
             <width>954</width>
-            <height>930</height>
+            <height>958</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -19148,6 +19154,38 @@ text-decoration: underline;
                  <string>Zones</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_37">
+                 <item>
+                  <widget class="QLabel" name="lab_no_ch_32">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font: bold 10pt &quot;Calibri&quot;;
+background-color: rgb(255, 255, 255);</string>
+                   </property>
+                   <property name="text">
+                    <string>Tick the zones you would like to include in the analysis...</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_6">
                    <item row="1" column="2">

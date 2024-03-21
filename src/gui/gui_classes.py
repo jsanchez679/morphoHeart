@@ -1060,7 +1060,7 @@ class CreateNewProj(QDialog):
         self.lab_filled_proj_dir.setText(str(self.proj_dir_parent))
 
     def validate_new_proj(self): 
-        valid = []; error_txt = ''
+        error_txt = ''
         #Get project name
         proj_name = self.lineEdit_proj_name.text().strip()
         if len(proj_name)<5:
@@ -1073,7 +1073,6 @@ class CreateNewProj(QDialog):
             return
         else: 
             self.proj_name = proj_name
-            valid.append(True)
         
         #Get Analysis Pipeline
         self.checked_analysis = {'morphoHeart': self.checkBox_mH.isChecked(), 
@@ -1086,7 +1085,7 @@ class CreateNewProj(QDialog):
             self.win_msg(error_txt, self.button_create_initial_proj)
             return
         else: 
-            valid.append(True)
+            pass
         
         #Get Directory
         if isinstance(self.proj_dir_parent, str): 
@@ -1095,30 +1094,25 @@ class CreateNewProj(QDialog):
             return
         else:  
             if self.proj_dir_parent.is_dir() and len(str(self.proj_dir_parent))>1:
-                valid.append(True)
+                pass
             else: 
                 self.button_select_proj_dir.setChecked(False)
                 error_txt = '*The selected project directory is invalid. Please select another directory.'
                 self.win_msg(error_txt, self.button_create_initial_proj)
                 return
 
-        #Check and if all valid create new project
-        if len(valid)== 3 and all(valid):
-            proj_folder = 'R_'+self.proj_name#.replace(' ','_')
-            self.proj_dir = self.proj_dir_parent / proj_folder
-            if self.proj_dir.is_dir():
-                self.win_msg('*There is already a project named "'+self.proj_name+'" in the selected directory. Please select a different name for the new project.', 
-                             self.button_create_initial_proj)
-                return 
-            else: 
-                self.lab_filled_proj_dir.setText(str(self.proj_dir))
-                self.button_create_initial_proj.setChecked(True)
-                self.win_msg('All good. Continue setting up new project!')   
-                self.create_new_proj()  
-        else: 
-            self.button_create_initial_proj.setChecked(False)
-            self.win_msg(error_txt, self.button_create_initial_proj)
+        #Create new project
+        proj_folder = 'R_'+self.proj_name#.replace(' ','_')
+        self.proj_dir = self.proj_dir_parent / proj_folder
+        if self.proj_dir.is_dir():
+            self.win_msg('*There is already a project named "'+self.proj_name+'" in the selected directory. Please select a different name for the new project.', 
+                            self.button_create_initial_proj)
             return 
+        else: 
+            self.lab_filled_proj_dir.setText(str(self.proj_dir))
+            self.button_create_initial_proj.setChecked(True)
+            self.win_msg('All good. Continue setting up new project!')   
+            self.create_new_proj()  
 
     def create_new_proj(self):
         self.tabWidget.setEnabled(True)
@@ -2627,13 +2621,14 @@ class CreateNewProj(QDialog):
             label_segm.setText(sname)
         
         for n, rcut in enumerate([1, 2]): 
-            rname = 'Cut'+str(rcut)
-            label_sect = getattr(self, 'lab_sect'+str(rcut)+add)
-            if getattr(self, 'tick_sect'+str(rcut)+add).isChecked():
-                rname = rname+': '+getattr(self, 'names_sect'+str(rcut)+add).text()
-            else: 
-                label_sect.setEnabled(False)
-            label_sect.setText(rname)
+            for scutt in ['1','2']:
+                rname = 'Cut'+str(rcut)
+                label_sect = getattr(self, 'lab_segm'+scutt+'_sect'+str(rcut)+add)
+                if getattr(self, 'tick_sect'+str(rcut)+add).isChecked():
+                    rname = rname+': '+getattr(self, 'names_sect'+str(rcut)+add).text()
+                else: 
+                    label_sect.setEnabled(False)
+                label_sect.setText(rname)
 
         #Enable or disable Segm
         if info == 'mH':  
@@ -2659,7 +2654,8 @@ class CreateNewProj(QDialog):
             else: 
                 bool_sect = True
 
-            getattr(self, 'lab_sect2'+add).setEnabled(bool_sect)
+            getattr(self, 'lab_segm1_sect2'+add).setEnabled(bool_sect)
+            getattr(self, 'lab_segm2_sect2'+add).setEnabled(bool_sect)
             
             list_segm = [key.split('cB_segm_')[1] for key in self.dict_segm.keys() if self.dict_segm[key]]
             list_sect = [key.split('cB_sect_')[1] for key in self.dict_sect.keys() if self.dict_sect[key]]
@@ -2851,7 +2847,7 @@ class CreateNewProj(QDialog):
                 return False
             else: 
                 line_temp = line_temp.replace(' ', '_')
-                temp_name = 'mH_'+line_temp+'_project.json'
+                temp_name = line_temp+'_temp.json'
                 cwd = Path().absolute()
                 dir_db_temp = cwd / 'db' / 'templates'
                 dir_db_temp.mkdir(parents=True, exist_ok=True) 
@@ -3903,7 +3899,7 @@ class NewOrgan(QDialog):
                             label.setEnabled(False)
                             brw_ch.setEnabled(False)
                             dir_ch.setEnabled(False)
-                            dir_ch.setText('Channel loaded from Morphological (morphoHeart)\t\t\t')
+                            dir_ch.setText('Channel loaded from Morphological Analysis (morphoHeart)\t\t\t')
                             check_ch.setEnabled(False)
 
                     name.setText(proj.mC_channels[ch])
@@ -3919,11 +3915,9 @@ class NewOrgan(QDialog):
             self.tabWidget.setTabVisible(0, False)
         
         if proj.analysis['morphoCell']:
-            if len(self.organ.mC_settings['setup'])>0: 
-                pass
-            else: 
-                self.tabWidget.setTabVisible(1, False)
+            pass
         else: 
+            #Hide morphoCell Tab
             self.tabWidget.setTabVisible(1, False)
 
     def custom_data(self, name:str, gui_name:str):
@@ -5082,10 +5076,6 @@ class ProjSettings(QDialog):
 
         #Initialise window sections
         self.init_gral_proj(template)
-        #Initialise Tabs for morphoHeart Analysis and morphoCell
-        for n, tab, process in zip(count(), ['tab_mHeart', 'tab_mCell'], ['morphoHeart', 'morphoCell']):
-            ch_tab = getattr(self, 'tabWidget')
-            ch_tab.setTabVisible(n, self.proj.analysis[process])
 
         # #- morphoHeart
         if self.proj.analysis['morphoHeart']: 
@@ -5125,8 +5115,38 @@ class ProjSettings(QDialog):
 
         # #- morphoCell
         if self.proj.analysis['morphoCell']: 
-            pass
-            # self.init_mCell_tab()
+            #Cells and Visualisation Channels
+            self.init_cells()
+            #Segments
+            if isinstance(self.proj.mC_settings['setup']['segm_mC'], dict):
+                self.init_segments_group_mC()
+            else: 
+                self.set_segm_mC.setVisible(False)
+                self.tick_segm_mC.setChecked(False)
+            #Regions
+            self.tick_sect_mC.setVisible(False)
+            self.tick_sect_mC.setChecked(False)
+            self.set_sect_mC.setVisible(False)
+            # if isinstance(self.proj.mC_settings['setup']['sect'], dict):
+            #     self.init_sections_group_mC()
+            # else: 
+            #     self.set_sect_mC.setVisible(False)
+            #     self.tick_sect_mC.setChecked(False)
+            #Segments-Regions 
+            self.tick_segm_sect_mC.setVisible(False)
+            self.tick_segm_sect_mC.setChecked(False)
+            self.set_segm_sect_mC.setVisible(False)
+            # if isinstance(self.proj.mC_settings['setup']['segm-sect'], dict):
+            #     self.init_segm_sect_group_mC()
+            # else: 
+            #     self.set_segm_sect_mC.setVisible(False)
+            #     self.tick_segm_sect_mC.setChecked(False)
+            #Zones
+            if isinstance(self.proj.mC_settings['setup']['zone_mC'], dict):
+                self.init_zones_group_mC()
+            else: 
+                self.set_zone_mC.setVisible(False)
+                self.tick_zone_mC.setChecked(False)
 
         #Measurement Parameters 
         self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
@@ -5136,8 +5156,12 @@ class ProjSettings(QDialog):
     def init_gral_proj(self, template=False): 
         if template != False: 
             self.lineEdit_proj_name.setText('Template: '+template)
+        
+        proj_name = self.proj.info['user_projName']
+        self.lineEdit_proj_name.setText(proj_name)
         proj_notes = self.proj.info['user_projNotes']
         self.textEdit_ref_notes.setText(proj_notes)
+        self.lab_filled_proj_dir.setText(str(self.proj.dir_proj))
         date = self.proj.info['date_created']
         date_qt = QDate.fromString(date, "yyyy-MM-dd")
         self.dateEdit.setDate(date_qt)
@@ -5149,6 +5173,20 @@ class ProjSettings(QDialog):
         self.checkBox_mH.setChecked(an_mH)
         an_mC = self.proj.analysis['morphoCell']
         self.checkBox_mC.setChecked(an_mC)
+
+        #Initialise Tabs for morphoHeart Analysis and morphoCell
+        for n, tab, process in zip(count(), ['tab_mHeart', 'tab_mCell'], ['morphoHeart', 'morphoCell']):
+            ch_tab = getattr(self, 'tabWidget')
+            ch_tab.setTabVisible(n, self.proj.analysis[process])
+
+        if an_mH and an_mC: 
+            self.tabWidget.setCurrentIndex(0)
+        elif not an_mH and an_mC: 
+            self.tabWidget.setCurrentIndex(1)
+            self.tab_mHeart.setEnabled(False)
+        else: 
+            self.tabWidget.setCurrentIndex(0)
+            self.tab_mCell.setEnabled(False)
 
     def init_orient_group(self): 
         sp_set = self.proj.mH_settings['setup']['orientation']
@@ -5273,35 +5311,24 @@ class ProjSettings(QDialog):
                     if rcut in sp_set[scut].keys():
                         for ch_cont in sp_set[scut][rcut]['ch_segm_sect']:
                             ch, cont = ch_cont.split('_')
-                            getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setChecked(True)
+                            getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont+'_2').setChecked(True)
                     else: 
-                        getattr(self, 'lab_sect'+rcut[-1]).setVisible(False)   
+                        getattr(self, 'lab_segm'+scut[-1]+'sect'+rcut[-1]).setVisible(False)   
                         for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
                             for cont in ['int', 'tiss', 'ext']: 
                                 getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
                         self.line_19.setVisible(False)
             else: 
-                # getattr(self, 'lab_segm'+scut[-1]).setVisible(False)   
-                getattr(self, 'lab_segm2').setVisible(False)
-                self.line_18.setVisible(False)
-                self.line_19.setVisible(False)
-                self.line_20.setVisible(False)
-                self.line_21.setVisible(False)
-                for rcut in ['Cut1', 'Cut2']:
-                    for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
-                        getattr(self, 'label_'+scut+'_'+ch).setVisible(False)   
-                        for cont in ['int', 'tiss', 'ext']: 
-                            getattr(self, 'label_'+scut+'_'+ch+'_'+cont).setVisible(False)
-                            getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
+                getattr(self, 'segm_reg_cut2_2').setVisible(False)
 
         for chh in ['ch1', 'ch2', 'ch3', 'ch4']: 
             if chh not in self.proj.mH_settings['setup']['name_chs'].keys(): 
                 for scut in ['sCut1', 'sCut2']: 
-                    getattr(self, 'label_'+scut+'_'+chh).setVisible(False)
+                    getattr(self, 'label_'+scut+'_'+chh+'_2').setVisible(False)
                     for rcut in ['Cut1', 'Cut2']:
                         for contt in ['int', 'tiss', 'ext']:
-                            getattr(self, 'label_'+scut+'_'+chh+'_'+contt).setVisible(False)
-                            getattr(self,  'cB_'+scut+'_'+rcut+'_'+chh+'_'+contt).setVisible(False)
+                            getattr(self, 'label_'+scut+'_'+chh+'_'+contt+'_2').setVisible(False)
+                            getattr(self,  'cB_'+scut+'_'+rcut+'_'+chh+'_'+contt+'_2').setVisible(False)
 
         self.cB_volume_segm_sect.setChecked(sp_set['measure']['Vol'])
         self.cB_area_segm_sect.setChecked(sp_set['measure']['SA'])
@@ -5309,6 +5336,70 @@ class ProjSettings(QDialog):
     def open_meas_param(self): 
         self.meas_param_win = MeasSettings(proj = self.proj, controller = self.controller, parent = self)
         self.meas_param_win.show()
+
+    def init_cells(self):
+
+        sp_set = self.proj.mC_settings['setup']
+        for ch in ['chA', 'chB', 'chC', 'chD']: 
+            if ch in sp_set['name_chs'].keys():
+                getattr(self, 'tick_'+ch).setChecked(True)
+                getattr(self, ch+'_username').setText(sp_set['name_chs'][ch])
+            else: 
+                getattr(self, 'tick_'+ch).setVisible(False)
+                getattr(self, ch+'_username').setVisible(False)
+                getattr(self, 'cB_use_mH_tiss_'+ch).setVisible(False)
+                getattr(self,ch+'_select').setVisible(False)
+        
+        if len(sp_set['mH_channel'].keys())>0: 
+            for key in sp_set['mH_channel'].keys():
+                getattr(self, 'cB_use_mH_tiss_'+key).setChecked(True)
+                getattr(self, key+'_select').setText(sp_set['mH_channel'][key])
+
+    def init_segments_group_mC(self):
+
+        sp_set = self.proj.mC_settings['setup']['segm_mC']
+        self.tick_segm_mC.setChecked(True)
+        for cut in ['Cut1', 'Cut2']: 
+            num = cut[-1]
+            if cut in sp_set.keys(): 
+                sp_cut = sp_set[cut]
+                getattr(self, 'tick_segm'+num+'_mC').setChecked(True)
+                getattr(self, 'sB_no_segm'+num+'_mC').setText(str(sp_cut['no_segments']))
+                getattr(self, 'cB_obj_segm'+num+'_mC').setText(sp_cut['obj_segm'])
+                getattr(self, 'sB_segm_noObj'+num+'_mC').setText(str(sp_cut['no_cuts_4segments']))
+                names = []
+                for key in sp_cut['name_segments']:
+                    names.append(sp_cut['name_segments'][key])
+                getattr(self, 'names_segm'+num+'_mC').setText(', '.join(names))
+                getattr(self, 'cB_use_mH_segm'+num).setChecked(sp_cut['use_mH_settings'])
+
+            else: 
+                getattr(self, 'tick_segm'+num+'_mC').setVisible(False)
+                getattr(self, 'sB_no_segm'+num+'_mC').setVisible(False)
+                getattr(self, 'cB_obj_segm'+num+'_mC').setVisible(False)
+                getattr(self, 'sB_segm_noObj'+num+'_mC').setVisible(False)
+                getattr(self, 'names_segm'+num+'_mC').setVisible(False)
+                getattr(self, 'cB_use_mH_segm'+num).setVisible(False)
+
+    def init_zones_group_mC(self):
+
+        sp_set = self.proj.mC_settings['setup']['zone_mC']
+        self.tick_zone_mC.setChecked(True)
+        for zone in ['Zone1', 'Zone2', 'Zone3']:
+            zone_num = zone[-1]
+            if zone in sp_set.keys(): 
+                sp_zone = sp_set[zone]
+                getattr(self, 'tick_zones_no'+zone_num).setChecked(True)
+                getattr(self, 'sB_no_zones'+zone_num+'_mC').setText(str(sp_zone['no_zones']))
+                names = []
+                for key in sp_zone['name_zones']:
+                    names.append(sp_zone['name_zones'][key])
+                getattr(self, 'names_zones'+zone_num).setText(', '.join(names))
+            
+            else: 
+                getattr(self, 'tick_zones_no'+zone_num).setVisible(False)
+                getattr(self, 'sB_no_zones'+zone_num+'_mC').setVisible(False)
+                getattr(self, 'names_zones'+zone_num).setVisible(False)
 
     def closeEvent(self, event):
         print('User pressed X: ProjSettings')

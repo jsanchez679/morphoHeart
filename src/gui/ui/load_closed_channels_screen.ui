@@ -2064,7 +2064,7 @@ color: rgb(230, 230, 230);
 </string>
      </property>
      <property name="text">
-      <string>Add Closed  Stacks to Organ</string>
+      <string>Add Closed Stacks to Organ</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
