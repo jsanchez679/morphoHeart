@@ -1160,7 +1160,7 @@ class CreateNewProj(QDialog):
             self.chC_select.setEnabled(False)
             self.chD_select.setEnabled(False)
             self.tick_sect_mC.setEnabled(False)
-            self.tick_mH_segm.setEnabled(False)
+            # self.tick_mH_segm.setEnabled(False)
             self.set_sect_mC.setVisible(False)
             self.set_segm_sect_mC.setVisible(False)
 
@@ -1239,7 +1239,11 @@ class CreateNewProj(QDialog):
                 ck_mask.setEnabled(True)
                 cB_dist.setEnabled(True)
             else: 
-                use_mH_channel.setEnabled(True)
+                if self.checkBox_mH.isChecked():
+                    use_mH_channel.setEnabled(True)
+                else: 
+                    use_mH_channel.setEnabled(False)
+                    mH_ch.setEnabled(False)
                 fill.setEnabled(True)
 
             if getattr(self, ck).isChecked():
@@ -1268,24 +1272,26 @@ class CreateNewProj(QDialog):
                 self.default_colors(def_col)
 
     def add_mH_chs(self, name): 
-        tick = getattr(self, 'cB_use_mH_tiss_'+name)
-        getattr(self, name+'_select').clear()
-        getattr(self, name+'_select').addItems(['----'])
-        if tick.isChecked(): 
-            #Get channels from mH
-            if self.button_set_initial_set.isChecked(): 
-                getattr(self, name+'_select').setEnabled(True)
-                names = self.mH_settings['name_chs']
-                cb_names = [key+' ('+names[key]+')' for key in names.keys()]
-                getattr(self, name+'_select').addItems(cb_names)
-                getattr(self, name+'_select').currentTextChanged.connect(lambda: self.mH_ch_selected(name))
+
+        if self.checkBox_mH.isChecked(): 
+            tick = getattr(self, 'cB_use_mH_tiss_'+name)
+            getattr(self, name+'_select').clear()
+            getattr(self, name+'_select').addItems(['----'])
+            if tick.isChecked(): 
+                #Get channels from mH
+                if self.button_set_initial_set.isChecked(): 
+                    getattr(self, name+'_select').setEnabled(True)
+                    names = self.mH_settings['name_chs']
+                    cb_names = [key+' ('+names[key]+')' for key in names.keys() if key != 'chNS']
+                    getattr(self, name+'_select').addItems(cb_names)
+                    getattr(self, name+'_select').currentTextChanged.connect(lambda: self.mH_ch_selected(name))
+                else: 
+                    getattr(self, name+'_select').setEnabled(False)
+                    self.win_msg('*Channels have not yet been set in the  -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
+                    tick.setChecked(False)
+                    return
             else: 
                 getattr(self, name+'_select').setEnabled(False)
-                self.win_msg('*Channels have not yet been set in the -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
-                tick.setChecked(False)
-                return
-        else: 
-            getattr(self, name+'_select').setEnabled(False)
 
     def mH_ch_selected(self, name):
         tick = getattr(self, 'cB_use_mH_tiss_'+name)
@@ -1361,55 +1367,57 @@ class CreateNewProj(QDialog):
         ck_type = getattr(self, 'tick_'+stype)
         s_set = getattr(self, 'set_'+stype)
         if ck_type.isChecked():
-            if stype == 'chNS': 
-                self.ch_selected.append('chNS')
-                self.ch_selected = sorted(list(set(self.ch_selected)))
-            if stype in list(self.mH_settings.keys()):
+            if '_mC' in stype: 
                 s_set.setVisible(True)
                 s_set.setEnabled(True)
-                getattr(self, 'button_set_'+stype).setEnabled(False)
-                return True
+                if stype not in self.mC_settings.keys():
+                    self.mC_settings[stype] = {}
             else: 
-                if 'mC' in stype: 
+                if stype == 'chNS': 
+                    self.ch_selected.append('chNS')
+                    self.ch_selected = sorted(list(set(self.ch_selected)))
+                if stype in list(self.mH_settings.keys()):
                     s_set.setVisible(True)
                     s_set.setEnabled(True)
-                    if stype not in self.mC_settings.keys():
-                        self.mC_settings[stype] = {}
+                    getattr(self, 'button_set_'+stype).setEnabled(False)
                 else: 
                     s_set.setVisible(True)
                     s_set.setEnabled(True)
                     if stype not in self.mH_settings.keys():
                         self.mH_settings[stype] = {}
-
-                return True
+            return True
+        
         else: 
-            if stype == 'chNS': 
-                if 'chNS' in self.ch_selected: 
-                    self.ch_selected.remove('chNS')
-            try: 
-                if stype in list(self.mH_settings.keys()):
-                    self.mH_settings.pop(stype, None)
-                    getattr(self, 'button_set_'+stype).setChecked(False)
-            except: 
-                pass
-            try:
-                if stype in list(self.mC_settings.keys()):
-                    self.mC_settings.pop(stype, None)
-                    getattr(self, 'button_set_'+stype).setChecked(False)
-            except: 
-                pass
-            try: 
-                if stype in self.mH_settings['name_chs']: 
-                    self.mH_settings['name_chs'].pop('chNS', None)
-            except: 
-                pass
-            s_set.setVisible(False)
-            s_set.setEnabled(False)
-            if 'mC' in stype:
+            if '_mC' in stype:
+                try:
+                    if stype in list(self.mC_settings.keys()):
+                        self.mC_settings.pop(stype, None)
+                        getattr(self, 'button_set_'+stype).setChecked(False)
+                except: 
+                    pass
                 self.mC_settings[stype] = False
+
             else:
+                if stype == 'chNS': 
+                    if 'chNS' in self.ch_selected: 
+                        self.ch_selected.remove('chNS')
+                    try: 
+                        if stype in self.mH_settings['name_chs']: 
+                            self.mH_settings['name_chs'].pop('chNS', None)
+                            getattr(self, 'button_set_'+stype).setChecked(False)
+                    except: 
+                        pass
+                else: 
+                    try: 
+                        if stype in list(self.mH_settings.keys()):
+                            self.mH_settings.pop(stype, None)
+                            getattr(self, 'button_set_'+stype).setChecked(False)
+                    except: 
+                        pass
                 self.mH_settings[stype] = False
 
+            s_set.setVisible(False)
+            s_set.setEnabled(False)
             return False
     
     def validate_initial_settings(self):
@@ -1558,6 +1566,9 @@ class CreateNewProj(QDialog):
         
         self.win_msg("Great! Now select the processes you would like to include in the workflow and setup their details.")
 
+        if self.template: 
+            self.init_mC_chs_with_mH_chs()
+
         return True
     
     def validate_initial_settings_mC(self): 
@@ -1652,11 +1663,11 @@ class CreateNewProj(QDialog):
                     if self.button_set_sect.isChecked():
                         self.tick_sect_mC.setChecked(True)
                     else: 
-                        error_txt = '*To be able to set cell classification into regions, please set first the Regions analysis in the -Morphological [morphoHeart]- Tab.'
+                        error_txt = '*To be able to set cell classification into regions, please set first the Regions analysis in the  -Morphological [morphoHeart]- Tab.'
                         self.win_msg(error_txt, self.tick_sect_mC)
                         self.tick_sect_mC.setChecked(False)
                 else: 
-                    error_txt = '*To be able to set cell classification into regions, please set first the processes to run in the -Morphological [morphoHeart]- Tab.'
+                    error_txt = '*To be able to set cell classification into regions, please set first the processes to run in the  -Morphological [morphoHeart]- Tab.'
                     self.win_msg(error_txt, self.tick_sect_mC)
                     self.tick_sect_mC.setChecked(False)
             else: 
@@ -2170,7 +2181,7 @@ class CreateNewProj(QDialog):
             self.set_mC_sect_settings()
         
         else: 
-            error_txt = '*Please set first the Regions in the -Morphological [morphoHeart]- Tab to be able to continue.'
+            error_txt = '*Please set first the Regions in the  -Morphological [morphoHeart]- Tab to be able to continue.'
             self.win_msg(error_txt, self.button_set_sect_mC)
             return
 
@@ -2315,6 +2326,9 @@ class CreateNewProj(QDialog):
             if self.button_set_segm.isChecked() and self.button_set_sect.isChecked():
                 self.fill_segm_sect()
                 self.tick_segm_sect_2.setEnabled(True)
+        
+        if self.template: 
+            self.init_mC_segm_from_mH()
 
     def set_sect_settings(self): 
 
@@ -2760,7 +2774,7 @@ class CreateNewProj(QDialog):
                 if self.button_set_sect_mC.isChecked():
                     pass
                 else: 
-                    error_txt = '*You need to set morphoCell sections settings before creating the new project.'
+                    error_txt = '*You need to set morphoCell regions settings before creating the new project.'
                     self.win_msg(error_txt, self.button_new_proj)
                     return False
                 
@@ -2788,7 +2802,7 @@ class CreateNewProj(QDialog):
                     getattr(self, 'cB_use_mH_'+mtype).setChecked(False)
                     return
             else: 
-                self.win_msg('*Segments have not yet been set in the -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
+                self.win_msg('*Segments have not yet been set in the  -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
                 getattr(self, 'cB_use_mH_'+mtype).setChecked(False)
                 return
         else: 
@@ -2798,11 +2812,11 @@ class CreateNewProj(QDialog):
                     getattr(self, 'cB_obj_'+mtype+'_mC').setCurrentText(getattr(self, 'cB_obj_'+mtype).currentText())
                     getattr(self, 'names_'+mtype+'_mC').setText(getattr(self, 'names_'+mtype).text())
                 else: 
-                    self.win_msg('*Region Cut '+mtype[-1]+' has not yet been set in the -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
+                    self.win_msg('*Region Cut '+mtype[-1]+' has not yet been set in the  -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
                     getattr(self, 'cB_use_mH_'+mtype).setChecked(False)
                     return
             else: 
-                self.win_msg('*Regions have not yet been set in the -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
+                self.win_msg('*Regions have not yet been set in the  -Morphological [morphoHeart]- Tab. Please set them first to be able to use them in this analysis.')
                 getattr(self, 'cB_use_mH_'+mtype).setChecked(False)
                 return
 
@@ -2893,8 +2907,17 @@ class CreateNewProj(QDialog):
             if isinstance(self.proj_temp.mH_settings['setup']['sect'], dict):
                 self.tick_sect.setChecked(True)
 
-        else: #proj.ananlysis['morphoCell']
-            pass
+        if proj.analysis['morphoCell']: #proj.ananlysis['morphoCell']
+            #Channels
+            self.init_temp_chs_group_mC()
+            #Segments
+            if isinstance(self.proj_temp.mC_settings['setup']['segm_mC'], dict):
+                self.tick_segm_mC.setChecked(True)
+                self.init_temp_segm_group_mC()
+            # #Zones
+            if isinstance(self.proj_temp.mC_settings['setup']['zone_mC'], dict):
+                self.tick_zone_mC.setChecked(True)
+                self.init_temp_zone_group_mC()  
 
     def init_temp_gral_proj_set(self):
 
@@ -3011,6 +3034,84 @@ class CreateNewProj(QDialog):
 
         self.cB_volume_segm_sect.setChecked(sp_set['measure']['Vol'])
         self.cB_area_segm_sect.setChecked(sp_set['measure']['SA'])
+
+    def init_temp_chs_group_mC(self): 
+        sp_set = self.proj_temp.mC_settings['setup']
+        for ch in ['chA', 'chB', 'chC', 'chD']: 
+            if ch in sp_set['name_chs'].keys():
+                getattr(self, 'tick_'+ch).setChecked(True)
+                if ch != 'chA': 
+                    if ch in sp_set['mH_channel'].keys():
+                        tE = self.tE_mC_channel
+                        tE.setStyleSheet(note_style)
+                        tE.setText('Visualisation channels use morphoHeart settings, please set morphoHeart Channels to proceed.')
+                    else: 
+                        getattr(self, ch+'_username').setText(sp_set['name_chs'][ch])
+                else: 
+                    getattr(self, ch+'_username').setText(sp_set['name_chs'][ch])
+
+                fill = getattr(self, 'fillcolor_'+ch)
+                color_btn(btn = fill, color = sp_set['color_chs'][ch])
+                fill.setText(str(sp_set['color_chs'][ch]))
+
+    def init_mC_chs_with_mH_chs(self):
+
+        sp_set = self.proj_temp.mC_settings['setup']
+        for ch in ['chA', 'chB', 'chC', 'chD']: 
+            if ch in sp_set['name_chs'].keys():
+                getattr(self, 'tick_'+ch).setChecked(True)
+                if ch != 'chA': 
+                    if ch in sp_set['mH_channel'].keys():
+                        getattr(self, ch+'_username').setText(sp_set['name_chs'][ch])
+                        getattr(self, 'cB_use_mH_tiss_'+ch).setChecked(True)
+                        getattr(self, ch+'_select').setCurrentText(sp_set['mH_channel'][ch])
+        self.tE_mC_channel.setText('')
+
+    def init_temp_segm_group_mC(self): 
+        
+        sp_set = self.proj_temp.mC_settings['setup']['segm_mC']
+        for cut in ['Cut1', 'Cut2']: 
+            num = cut[-1]
+            if cut in sp_set.keys(): 
+                sp_cut = sp_set[cut]
+                getattr(self, 'tick_segm'+num+'_mC').setChecked(True)
+                if sp_cut['use_mH_settings']:
+                    tE = self.tE_mC_processes
+                    tE.setStyleSheet(note_style)
+                    tE.setText('morphoCell segments use morphoHeart settings, please set morphoHeart segments to proceed.')
+                else:
+                    getattr(self, 'sB_no_segm'+num+'_mC').setValue(int(sp_cut['no_segments']))
+                    getattr(self, 'cB_obj_segm'+num+'_mC').setCurrentText(sp_cut['obj_segm'])
+                    getattr(self, 'sB_segm_noObj'+num+'_mC').setValue(int(sp_cut['no_cuts_4segments']))
+                    names = []
+                    for key in sp_cut['name_segments']:
+                        names.append(sp_cut['name_segments'][key])
+                    getattr(self, 'names_segm'+num+'_mC').setText(', '.join(names))
+
+    def init_mC_segm_from_mH(self): 
+        sp_set = self.proj_temp.mC_settings['setup']['segm_mC']
+        for cut in ['Cut1', 'Cut2']: 
+            num = cut[-1]
+            if cut in sp_set.keys(): 
+                sp_cut = sp_set[cut]
+                getattr(self, 'tick_segm'+num+'_mC').setChecked(True)
+                if sp_cut['use_mH_settings']:
+                    getattr(self, 'cB_use_mH_segm'+num).setChecked(True)
+        self.tE_mC_processes.setText('')
+    
+    def init_temp_zone_group_mC(self): 
+
+        sp_set = self.proj_temp.mC_settings['setup']['zone_mC']
+        for zone in ['Zone1', 'Zone2', 'Zone3']: 
+            num = zone[-1]
+            if zone in sp_set.keys(): 
+                sp_zone = sp_set[zone]
+                getattr(self, 'tick_zones_no'+num).setChecked(True)
+                getattr(self, 'sB_no_zones'+num+'_mC').setValue(int(sp_zone['no_zones']))
+                names = []
+                for key in sp_zone['name_zones']:
+                    names.append(sp_zone['name_zones'][key])
+                getattr(self, 'names_zones'+num).setText(', '.join(names))
 
 class NewProjFromTemp(QDialog):
     def __init__(self, controller, parent=None):
@@ -3717,14 +3818,16 @@ class SetMeasParam(QDialog):
         #Heatmaps
         if 'hm3Dto2D' in proj.mH_settings['measure'].keys():
             getattr(self, 'cB_hm3d2d').setChecked(True)
-            ch_cont = list(proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
-            chs, conts = ch_cont.split('_')
-            getattr(self, 'hm_cB_ch').setEnabled(True); getattr(self, 'hm_cB_cont').setEnabled(True)
-            getattr(self, 'improve_hm2D').setEnabled(True)
-            getattr(self, 'hm_cB_ch').setCurrentText(chs)
-            getattr(self, 'hm_cB_cont').setCurrentText(conts+'ernal')
+            if len(proj.mH_settings['measure']['hm3Dto2D'])>0:
+                ch_cont = list(proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
+                chs, conts = ch_cont.split('_')
+                getattr(self, 'hm_cB_ch').setEnabled(True); getattr(self, 'hm_cB_cont').setEnabled(True)
+                getattr(self, 'improve_hm2D').setEnabled(True)
+                getattr(self, 'hm_cB_ch').setCurrentText(chs)
+                getattr(self, 'hm_cB_cont').setCurrentText(conts+'ernal')
         try: 
-            getattr(self, 'improve_hm2D').setChecked(proj.mH_settings['setup']['segm']['improve_hm2d'])
+            hm_3dto2d = proj.mH_settings['setup']['segm']['improve_hm2d']
+            getattr(self, 'cB_hm3d2d').setChecked(hm_3dto2d)
         except: 
             pass
         
@@ -5156,12 +5259,12 @@ class ProjSettings(QDialog):
     def init_gral_proj(self, template=False): 
         if template != False: 
             self.lineEdit_proj_name.setText('Template: '+template)
-        
-        proj_name = self.proj.info['user_projName']
-        self.lineEdit_proj_name.setText(proj_name)
+        else: 
+            proj_name = self.proj.info['user_projName']
+            self.lineEdit_proj_name.setText(proj_name)
+            self.lab_filled_proj_dir.setText(str(self.proj.dir_proj))
         proj_notes = self.proj.info['user_projNotes']
         self.textEdit_ref_notes.setText(proj_notes)
-        self.lab_filled_proj_dir.setText(str(self.proj.dir_proj))
         date = self.proj.info['date_created']
         date_qt = QDate.fromString(date, "yyyy-MM-dd")
         self.dateEdit.setDate(date_qt)
@@ -16000,6 +16103,10 @@ def color_btn(btn, color, small=True):
 
     if isinstance(color, list): 
         color = 'rgb'+str(tuple(color))
+    elif isinstance(color, str) and '[' in color:
+        color_nop = color[1:-1]
+        rgb = [int(val) for val in color_nop.split(',')]
+        color = 'rgb'+str(tuple(rgb))
     else: 
         pass
 

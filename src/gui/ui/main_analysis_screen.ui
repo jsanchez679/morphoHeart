@@ -1784,7 +1784,7 @@ QScrollBar::handle:horizontal:hover {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>676</width>
+                    <width>675</width>
                     <height>422</height>
                    </rect>
                   </property>
@@ -7718,7 +7718,7 @@ background-color: rgb(250, 250, 250);</string>
      <x>0</x>
      <y>0</y>
      <width>1485</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

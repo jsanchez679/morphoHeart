@@ -757,7 +757,7 @@ color: rgb(234, 234, 234);
       <string notr="true">font: 25 italic 9pt &quot;Calibri Light&quot;;</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_mHeart">
       <attribute name="title">
@@ -810,7 +810,7 @@ QScrollBar::handle:vertical:hover {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-830</y>
+            <y>-450</y>
             <width>954</width>
             <height>1394</height>
            </rect>
@@ -15381,9 +15381,9 @@ QScrollBar::handle:vertical:hover {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-394</y>
+            <y>0</y>
             <width>954</width>
-            <height>958</height>
+            <height>986</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -16484,25 +16484,64 @@ background-color: rgb(255, 255, 255);</string>
                 </item>
                </layout>
               </item>
-              <item alignment="Qt::AlignRight">
-               <widget class="QPushButton" name="button_set_initial_set_mC">
-                <property name="minimumSize">
-                 <size>
-                  <width>130</width>
-                  <height>20</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>130</width>
-                  <height>20</height>
-                 </size>
-                </property>
-                <property name="autoFillBackground">
-                 <bool>false</bool>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton{border-radius:10px;
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_68">
+                <item>
+                 <widget class="QLineEdit" name="tE_mC_channel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>25</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>25</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 25 9pt &quot;Calibri Light&quot;;
+color: rgb(170, 0, 127);
+background-color: rgb(250, 250, 250);
+</string>
+                  </property>
+                  <property name="frame">
+                   <bool>false</bool>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="button_set_initial_set_mC">
+                  <property name="minimumSize">
+                   <size>
+                    <width>130</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>130</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton{border-radius:10px;
 border-width: 1px;
 border-style: outset;
 border-color: rgb(66, 66, 66);
@@ -16527,14 +16566,16 @@ background-color: rgb(107, 0, 80);
 border-color: rgb(76, 0, 57);
 color: rgb(234, 234, 234);
 }</string>
-                </property>
-                <property name="text">
-                 <string>Set Channel Settings</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
+                  </property>
+                  <property name="text">
+                   <string>Set Channel Settings</string>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>
@@ -18594,6 +18635,47 @@ color: rgb(234, 234, 234);
                </layout>
               </item>
               <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_69">
+                <item>
+                 <widget class="QLineEdit" name="tE_mC_processes">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 25 9pt &quot;Calibri Light&quot;;
+color: rgb(170, 0, 127);
+background-color: rgb(250, 250, 250);
+</string>
+                  </property>
+                  <property name="frame">
+                   <bool>false</bool>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
                <widget class="QGroupBox" name="set_segm_sect_mC">
                 <property name="styleSheet">
                  <string notr="true">QGroupBox#set_segm_sect_mC{
@@ -19224,7 +19306,7 @@ QLineEdit:focus { border: 1px solid #eb6fbd;}
                       <number>50</number>
                      </property>
                      <property name="placeholderText">
-                      <string notr="true">Zones names</string>
+                      <string notr="true">Zone names</string>
                      </property>
                      <property name="clearButtonEnabled">
                       <bool>false</bool>
@@ -19511,7 +19593,7 @@ QLineEdit:focus { border: 1px solid #eb6fbd;}
                       <number>50</number>
                      </property>
                      <property name="placeholderText">
-                      <string notr="true">Zones names</string>
+                      <string notr="true">Zone names</string>
                      </property>
                      <property name="clearButtonEnabled">
                       <bool>false</bool>
@@ -19588,7 +19670,7 @@ QLineEdit:focus { border: 1px solid #eb6fbd;}
                       <number>50</number>
                      </property>
                      <property name="placeholderText">
-                      <string notr="true">Zones names</string>
+                      <string notr="true">Zone names</string>
                      </property>
                      <property name="clearButtonEnabled">
                       <bool>false</bool>

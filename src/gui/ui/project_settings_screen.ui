@@ -674,7 +674,7 @@ QCheckBox:disabled{color: rgb(0, 0, 0)}</string>
       <string notr="true">font: 25 italic 9pt &quot;Calibri Light&quot;;</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_mHeart">
       <attribute name="title">
@@ -7921,32 +7921,6 @@ QCheckBox:disabled{color: rgb(0, 0, 0)}</string>
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QLabel" name="lab_no_ch_29">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">font: bold 10pt &quot;Calibri&quot;;
-background-color: rgb(255, 255, 255);</string>
-                      </property>
-                      <property name="text">
-                       <string>Segment/region intersection to make and the measurements that will be extracted...</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
                      <layout class="QHBoxLayout" name="horizontalLayout_16">
                       <item>
                        <spacer name="horizontalSpacer_7">
@@ -7963,6 +7937,32 @@ background-color: rgb(255, 255, 255);</string>
                       </item>
                       <item>
                        <layout class="QVBoxLayout" name="verticalLayout_42">
+                        <item>
+                         <widget class="QLabel" name="lab_no_ch_29">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                          <property name="styleSheet">
+                           <string notr="true">font: bold 10pt &quot;Calibri&quot;;
+background-color: rgb(255, 255, 255);</string>
+                          </property>
+                          <property name="text">
+                           <string>Segment/region intersection to make and the measurements that will be extracted...</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_50">
                           <item>
@@ -12787,7 +12787,7 @@ QScrollBar::handle:vertical:hover {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>917</width>
+            <width>924</width>
             <height>588</height>
            </rect>
           </property>

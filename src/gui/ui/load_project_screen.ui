@@ -567,7 +567,7 @@ color: rgb(234, 234, 234);
 background-color: rgb(255, 255, 255);</string>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_load_create_delete_organ">
       <attribute name="title">
@@ -948,13 +948,13 @@ color: rgb(125, 125, 125);
           <widget class="QPushButton" name="button_go_back">
            <property name="minimumSize">
             <size>
-             <width>80</width>
+             <width>120</width>
              <height>25</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>80</width>
+             <width>120</width>
              <height>25</height>
             </size>
            </property>
@@ -1557,7 +1557,7 @@ QTableWidget::item:focus{
           <widget class="QPushButton" name="button_go_back_comb">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
              <height>25</height>
             </size>
            </property>
