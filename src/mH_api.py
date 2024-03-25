@@ -138,18 +138,14 @@ def manual_close_contours(controller, ch_name):
     getattr(controller.main_win, 'save_manually_closed_'+ch_name).setChecked(False)
     #Enable and make visible close cont buttons
     enable_close_functions(controller=controller, process = 'manual', ch_name=ch_name)
-    #Get channel and save is as attribute
-    im_ch = controller.organ.obj_imChannels[ch_name]
-    controller.main_win.im_ch = im_ch
-    # Load stack and save it as attribute to use through the process of closing
-    controller.main_win.im_proc = im_ch.im_proc()
-    controller.main_win.im_proc_o = copy.deepcopy(im_ch.im_proc())
+    #Get channel and images and save them as attribute
+    controller.main_win.set_im_proc(ch_name)
     controller.main_win.slc_py = None
     controller.main_win.slc_list = None
     # Get slices
     slc_first_py = controller.main_win.gui_manual_close_contours[ch_name]['start_slc']
     slc_last_py = controller.main_win.gui_manual_close_contours[ch_name]['end_slc']
-    if slc_last_py+1 > controller.main_win.im_proc.shape[0]:
+    if slc_last_py+1 > controller.main_win.im_proc[ch_name].shape[0]:
         pass
     else:
         slc_last_py = slc_last_py+1
@@ -169,7 +165,7 @@ def manual_close_contours(controller, ch_name):
     controller.main_win.user_done(process='manual_close', ch_name=ch_name)
     #Plot initial tuple
     controller.main_win.slc_tuple = controller.main_win.manual_slices[0]
-    plot_tuple_to_manually_close(controller, ch_name, controller.main_win.slc_tuple, controller.main_win.im_proc, initial=True)
+    plot_tuple_to_manually_close(controller, ch_name, controller.main_win.slc_tuple, controller.main_win.im_proc[ch_name], initial=True)
 
 def plot_tuple_to_manually_close(controller, ch_name, slc_tuple, im_proc, initial=True):
     #Get settings
@@ -220,7 +216,7 @@ def close_slcs_tuple(controller, ch_name):
         print('Initial slc_py:', main_win.slc_py)
         slc_user = main_win.slc_py+1
         # Get image from stack
-        main_win.myIm = main_win.im_proc[:][:][main_win.slc_py]
+        main_win.myIm = main_win.im_proc[ch_name][:][:][main_win.slc_py]
         #Get settings
         level = main_win.gui_manual_close_contours[ch_name]['level']
         min_contour_len = main_win.gui_manual_close_contours[ch_name]['min_contour_len']
@@ -244,7 +240,7 @@ def next_prev_slice_in_tuple(next:bool, controller, ch_name:str):
         new_index = index+1
         if new_index>= len(main_win.slc_list):
             plot_tuple_to_manually_close(controller, ch_name, controller.main_win.slc_tuple, 
-                                         controller.main_win.im_proc, initial=False)
+                                         controller.main_win.im_proc[ch_name], initial=False)
             return
         else: 
             pass
@@ -256,7 +252,7 @@ def next_prev_slice_in_tuple(next:bool, controller, ch_name:str):
     print('New slc_py:', main_win.slc_py)
     slc_user = main_win.slc_py+1
     # Get image from stack
-    main_win.myIm = main_win.im_proc[:][:][main_win.slc_py]
+    main_win.myIm = main_win.im_proc[ch_name][:][:][main_win.slc_py]
     main_win.win_msg('!Channel '+ch_name[-1]+': Manually closing contours of Slice '+str(slc_user))
     #Get settings
     level = main_win.gui_manual_close_contours[ch_name]['level']
@@ -279,7 +275,7 @@ def next_prev_tuple_to_manually_close(next:bool, controller, ch_name):
         new_index = index+1
         if new_index+1 > len(main_win.manual_slices):
             main_win.win_msg('!You have reached the end of the slice tuples. The closed channel will be saved and all the slices within the input range will be plotted for you to check!')
-            main_win.save_closed_channel(ch=main_win.im_ch.channel_no)
+            main_win.save_closed_channel(ch=ch_name)
             slc_first_py = controller.main_win.gui_manual_close_contours[ch_name]['start_slc']
             slc_last_py = controller.main_win.gui_manual_close_contours[ch_name]['end_slc']
             main_win.plot_all_slices(ch = ch_name, slice_range = (slc_first_py, slc_last_py+1))
@@ -291,13 +287,13 @@ def next_prev_tuple_to_manually_close(next:bool, controller, ch_name):
     
     if save_after_tuple:
         main_win.win_msg('!Saving channel before continuing with next tuple.')
-        main_win.save_closed_channel(ch=main_win.im_ch.channel_no)
+        main_win.save_closed_channel(ch=ch_name)
         #Check Save ch
         getattr(main_win, 'save_manually_closed_'+ch_name).setChecked(True)
     #Plot next tuple
     main_win.slc_tuple = main_win.manual_slices[new_index]
     print('New slc_tuple:', main_win.slc_tuple)
-    plot_tuple_to_manually_close(controller, ch_name, main_win.slc_tuple, controller.main_win.im_proc, initial=True)
+    plot_tuple_to_manually_close(controller, ch_name, main_win.slc_tuple, controller.main_win.im_proc[ch_name], initial=True)
 
 #Select contours
 def select_contours(controller, ch_name): 
@@ -308,19 +304,19 @@ def select_contours(controller, ch_name):
     #Uncheck Saved S3
     getattr(controller.main_win, 'save_select_contours_'+ch_name).setChecked(False)
     #Get channel and save is as attribute
-    im_ch = controller.organ.obj_imChannels[ch_name]
-    controller.main_win.im_ch = im_ch
-    # Load stack and save it as attribute to use through the process of closing
-    controller.main_win.im_proc = im_ch.im_proc()
+    controller.main_win.set_im_proc(ch_name, close=False)
     #Check if the channels3 already exist, and if not create empty channelS3 
-    if len(im_ch.contStack)<3:
+    if len(controller.main_win.im_ch[ch_name].contStack)<3:
         print('No mask stacks have been created or saved for this channel') 
-        im_ch.create_chS3s(layerDict={}, win=controller.main_win)
+        controller.main_win.im_ch[ch_name].create_chS3s(layerDict={}, win=controller.main_win)
     #Load s3s and save them as attributes
-    im_ch.load_chS3s(cont_types = ['int', 'tiss', 'ext'])
+    controller.main_win.im_ch[ch_name].load_chS3s(cont_types = ['int', 'tiss', 'ext'])
+    if ch_name not in controller.main_win.s3_cont.keys(): 
+        controller.main_win.s3_cont[ch_name] = {}
     for cont in ['int', 'tiss', 'ext']: 
-        s3 = getattr(im_ch, 's3_'+cont).s3()
-        setattr(controller.main_win, 's3_'+cont, s3)
+        s3 = getattr(controller.main_win.im_ch[ch_name], 's3_'+cont).s3()
+        controller.main_win.s3_cont[ch_name][cont] = s3
+        # setattr(controller.main_win.s3_cont, 's3_'+cont, s3)
     #Enable and make visible close cont buttons
     enable_close_functions(controller=controller, process = 'selecting', ch_name=ch_name)
     #Create attribute to save selected contours 
@@ -405,7 +401,7 @@ def get_slc_cont_plot_props(controller, ch_name, tuple_active):
     min_contour_len = controller.main_win.gui_select_contours[ch_name]['min_contour_len']
 
     #Get slice
-    im_proc = controller.main_win.im_proc
+    im_proc = controller.main_win.im_proc[ch_name]
     controller.main_win.myIm = im_proc[:][:][controller.main_win.slc_py]
     slc_user = controller.main_win.slc_py+1
     # Show new closed contours
@@ -444,6 +440,7 @@ def select_slcs_tuple(controller, ch_name):
         if any(flag == True for flag in input_numbers): 
             #Get the s3s with the selected contours
             selected_cont, all_cont, s3s = s3_with_contours(controller = controller, 
+                                                            ch_name = ch_name,
                                                             num_contours=num_contours, 
                                                             contours=main_win.new_contours, 
                                                             slc=main_win.slc_py+1)
@@ -470,7 +467,7 @@ def select_slcs_tuple(controller, ch_name):
             if len(range(slc_o, tuple_range[1], 1)) > 0: 
                 for slc in range(slc_o, tuple_range[1], 1):
                     print('slc:', slc, 'slc_user: ', slc+1)
-                    main_win.myIm = main_win.im_proc[:][:][slc]
+                    main_win.myIm = main_win.im_proc[ch_name][:][:][slc]
                     #Get contours, sort them and get their properties
                     contours = get_contours(myIm=main_win.myIm, min_contour_length = min_contour_len, level = level)
                     contours = sorted(contours, key = len, reverse=True)
@@ -495,6 +492,7 @@ def select_slcs_tuple(controller, ch_name):
                     selected_cont = None
                     #Get the s3s with the automatically selected contours
                     selected_cont, all_out, s3s_out = s3_with_contours(controller = controller,
+                                                                       ch_name = ch_name,
                                                                         num_contours=selected_outf,
                                                                         contours=contours,  
                                                                         slc = slc+1)
@@ -572,7 +570,7 @@ def next_tuple_select(controller, ch_name):
             else: 
                 set_index_active(controller, ch_name, getattr(main_win, 'index_active_'+ch_name)+1)
 
-def s3_with_contours(controller, num_contours, contours, slc):
+def s3_with_contours(controller, ch_name, num_contours, contours, slc):
     
     main_win = controller.main_win
     selected_cont = {}; all_cont = {'contours':[]}; s3s = {}
@@ -586,20 +584,22 @@ def s3_with_contours(controller, num_contours, contours, slc):
             sp_props = fcC.get_cont_props(main_win.myIm, [sp_cont])
             selected_cont[ctype]['props'].append(sp_props[0])
         
-        slc_s3 = getattr(main_win, 's3_'+ctype[:3])[:,:,slc]
+        slc_s3 = main_win.s3_cont[ch_name][ctype[:3]][:,:,slc] #getattr(main_win, 's3_'+ctype[:3])[:,:,slc]
         if len(num_contours[ctype])>0: 
             slc_s3 = fcC.fill_contours(selected_cont[ctype], slc_s3)
         else: 
             slc_s3 = np.zeros_like(slc_s3, dtype='bool').astype(int)
-        getattr(main_win, 's3_'+ctype[:3])[:,:,slc] = slc_s3
+        main_win.s3_cont[ch_name][ctype[:3]][:,:,slc] = slc_s3 
+        #getattr(main_win, 's3_'+ctype[:3])[:,:,slc] = slc_s3
         s3s[ctype[:3]] = slc_s3
     
-    slc_tiss = getattr(main_win, 's3_tiss')[:,:,slc]
+    slc_tiss = main_win.s3_cont[ch_name]['tiss'][:,:,slc] #getattr(main_win, 's3_tiss')[:,:,slc]
     if len(all_cont['contours'])>0: 
         slc_tiss = fcC.fill_contours(all_cont, slc_tiss)
     else: 
         slc_tiss = np.zeros_like(slc_tiss, dtype='bool').astype(int)
-    getattr(main_win, 's3_tiss')[:,:,slc] = slc_tiss
+    main_win.s3_cont[ch_name]['tiss'][:,:,slc] = slc_tiss
+    # getattr(main_win, 's3_tiss')[:,:,slc] = slc_tiss
     s3s['tiss'] = slc_tiss
     main_win.dict_s3s[slc-1] = selected_cont
 
@@ -660,6 +660,7 @@ def select_slc(controller, ch_name):
         
         #Get the s3s with the selected contours
         selected_cont, all_cont, s3s = s3_with_contours(controller = controller, 
+                                                        ch_name = ch_name,
                                                         num_contours=num_contours, 
                                                         contours=main_win.new_contours, 
                                                         slc=main_win.slc_py+1)

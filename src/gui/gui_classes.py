@@ -5745,6 +5745,10 @@ class MainWindow(QMainWindow):
         self.organ = organ
         self.running_process = None
         self.controller = controller
+        self.im_ch = {}
+        self.im_proc = {}
+        self.im_proc_o = {}
+        self.s3_cont = {}
 
         #General Init
         self.init_main_window()
@@ -5821,7 +5825,7 @@ class MainWindow(QMainWindow):
         self.cB_blind.stateChanged.connect(lambda: self.blind_analysis())
 
         #Menu options
-        self.actionSave_Project_and_Organ.triggered.connect(self.save_project_and_organ_pressed)
+        self.actionSave_Project_and_Organ.triggered.connect(lambda: self.save_project_and_organ_pressed(alert_on=True))
         self.actionGo_to_Welcome_Page.triggered.connect(self.go_to_welcome_pressed)
         self.actionClose.triggered.connect(self.close_morphoHeart_pressed)
 
@@ -6935,6 +6939,16 @@ class MainWindow(QMainWindow):
         self.plots_panel_open.clicked.connect(lambda: self.open_section(name='plots_panel'))
         self.functions_btns_open.clicked.connect(lambda: self.open_section(name='functions_btns'))
 
+    def set_im_proc(self, ch_name, close=True):
+        im_ch = self.organ.obj_imChannels[ch_name]
+        self.im_ch[ch_name] = im_ch 
+        if close: 
+            self.im_proc[ch_name] = im_ch.im_proc()
+            self.im_proc_o[ch_name] = copy.deepcopy(im_ch.im_proc())
+        else: 
+            if not ch_name in self.im_proc.keys():
+                self.im_proc[ch_name] = im_ch.im_proc()
+
     #Done function
     def user_done(self, process, ch_name): 
         workflow = self.organ.workflow['morphoHeart']
@@ -6985,8 +6999,8 @@ class MainWindow(QMainWindow):
 
             #Save channel, organ and project
             im_ch = self.organ.obj_imChannels[ch_name]
-            if save_ch and hasattr(self, 'im_proc'):
-                im_ch.save_channel(im_proc=self.im_proc)
+            if ch_name in self.im_proc.keys(): #save_ch and hasattr(self, 'im_proc'):
+                im_ch.save_channel(im_proc=self.im_proc[ch_name])
                 getattr(self, 'save_manually_closed_'+ch_name).setChecked(True)
             if save_chS3: 
                 for cont in ['int', 'tiss', 'ext']: 
@@ -8055,16 +8069,12 @@ class MainWindow(QMainWindow):
     def plot_all_slices(self, ch, slice_range='all'): 
 
         #Get stack
-        load = True
         im_ch = self.organ.obj_imChannels[ch]
-        if hasattr(self, 'im_proc'): 
-            if hasattr(self, 'im_ch'):
-                if self.im_ch.channel_no == im_ch.channel_no:
-                    if 'manual' in self.running_process or 'select' in self.running_process:
-                        stack = self.im_proc
-                        load = False
-                        print('Image from attr')
-        if load: 
+        if ch in self.im_proc.keys():
+            if 'manual' in self.running_process or 'select' in self.running_process:
+                stack = self.im_proc[ch]
+                print('Image from attr')
+        else: 
             stack = im_ch.im_proc()
             print('Image loaded '+ ch)
 
@@ -8213,18 +8223,14 @@ class MainWindow(QMainWindow):
         else: 
             slc_user = int(slc_input)
             #Get stack
-            load = True
             im_ch = self.organ.obj_imChannels[ch]
-            if hasattr(self, 'im_proc'): 
-                if hasattr(self, 'im_ch'):
-                    if self.im_ch.channel_no == im_ch.channel_no:
-                        if 'manual' in self.running_process or 'select' in self.running_process:
-                            stack = self.im_proc
-                            load = False
-                            print('Image from attr')
-            if load: 
+            if ch in self.im_proc.keys():
+                if 'manual' in self.running_process or 'select' in self.running_process:
+                    stack = self.im_proc[ch]
+                    print('Image from attr')
+            else: 
                 stack = im_ch.im_proc()
-                print('Image loaded')
+                print('Image loaded '+ ch)
             
             slc_py = slc_user-1
             myIm = copy.deepcopy(stack[:][:][slc_py])
@@ -8275,10 +8281,10 @@ class MainWindow(QMainWindow):
                     slc_user = slc+1
                     s3s = {}
                     for cont in ['int', 'ext', 'tiss']:
-                        slc_s3 = getattr(self, 's3_'+cont)[:,:,slc+1]
+                        slc_s3 = self.s3_cont[ch][cont][:,:,slc+1]
                         s3s[cont] = slc_s3
 
-                    stack = self.im_proc
+                    stack = self.im_proc[ch]
                     myIm = copy.deepcopy(stack[:][:][slc])
                     if slc in self.dict_s3s.keys(): 
                         all_cont = {'contours':[]}
@@ -8302,10 +8308,10 @@ class MainWindow(QMainWindow):
         self.win_msg('!Plotting the selected contours for all slices. This may take a while so be patient...')
         dict_plot = []; slc_o = start+1
         for slc in range(start, total_slcs): 
-            myIm = self.im_proc[:][:][slc]
+            myIm = self.im_proc[ch][:][:][slc]
             s3s_out = {}
             for cont in ['int', 'tiss', 'ext']: 
-                slc_s3 = getattr(self, 's3_'+cont)[:,:,slc+1]
+                slc_s3 = self.s3_cont[ch][cont][:,:,slc+1]
                 s3s_out[cont] = slc_s3
 
             if slc in self.dict_s3s.keys(): 
@@ -14614,14 +14620,14 @@ class MainWindow(QMainWindow):
     def save_closed_channel(self, ch, print_txt=False, s3s=False):
         #Get channel 
         im_ch = self.organ.obj_imChannels[ch]
-        self.prog_bar_range(0,3)
         if s3s: 
+            self.prog_bar_range(0,3)
             print('Save channel s3s was pressed: ', ch)
             n = 1
             for cont in ['int', 'tiss', 'ext']: 
-                self.win_msg('!Saving masked stack for Channel '+ch[-1]+' (s3_'+cont+')...')
+                self.win_msg('Saving masked stack for Channel '+ch[-1]+' (s3_'+cont+')...')
                 im_cont = getattr(im_ch, 's3_'+cont)
-                s32save = getattr(self, 's3_'+cont)
+                s32save = self.s3_cont[ch][cont]
                 im_cont.s3_save(s32save)
                 self.prog_bar_update(n)
                 n+=1
@@ -14629,12 +14635,11 @@ class MainWindow(QMainWindow):
             print('Save channel was pressed: ', ch)
         
         self.win_msg('!Saving Channel '+ch[-1]+'...')
-        if hasattr(self, 'im_proc'):
-            im_ch.save_channel(im_proc=self.im_proc)
+        if ch in self.im_proc.keys():
+            im_ch.save_channel(im_proc=self.im_proc[ch])
+            if print_txt: 
+                self.win_msg('Channel '+ch[-1]+' was succesfully saved!')
         self.organ.add_channel(imChannel=im_ch)
-
-        if print_txt: 
-            self.win_msg('Channel '+ch[-1]+' was succesfully saved!')
 
     def save_project_and_organ_pressed(self, alert_on=True):
         print('Save project and organ was pressed')
@@ -14674,18 +14679,13 @@ class MainWindow(QMainWindow):
             if save_chs: 
                 ch_save = self.prompt.save_ch.isChecked()
                 s3s_save = self.prompt.save_chs3s.isChecked()
-                process, ch = self.running_process.split('_')
-                im_ch = self.organ.obj_imChannels[ch]
-                hass3s = []
-                for cont in ['int', 'tiss', 'ext']:
-                    hass3s.append(hasattr(self, 's3_'+cont))
-                
-                if len(im_ch.contStack)>0 and s3s_save and all(hass3s):
-                    s3s=True
-                else: 
-                    s3s=False
-                if ch_save: 
-                    self.save_closed_channel(ch=ch, print_txt=True, s3s=s3s)
+                for ch in self.im_ch: 
+                    if ch in self.s3_cont.keys() and len(self.im_ch[ch].contStack)>0 and s3s_save: 
+                        s3s = True
+                    else: 
+                        s3s = False
+                    if ch_save or s3s_save:
+                        self.save_closed_channel(ch=ch, print_txt=True, s3s=s3s)
             self.save_project_and_organ_pressed()
             print('All saved!')
             self.close()
@@ -14713,18 +14713,14 @@ class MainWindow(QMainWindow):
             if save_chs: 
                 ch_save = self.prompt.save_ch.isChecked()
                 s3s_save = self.prompt.save_chs3s.isChecked()
-                process, ch = self.running_process.split('_')
-                im_ch = self.organ.obj_imChannels[ch]
-                hass3s = []
-                for cont in ['int', 'tiss', 'ext']:
-                    hass3s.append(hasattr(im_ch, 's3_'+cont))
-                
-                if len(im_ch.contStack)>0 and s3s_save and all(hass3s):
-                    s3s=True
-                else: 
-                    s3s=False
-                if ch_save: 
-                    self.save_closed_channel(ch=ch, print_txt=True, s3s=s3s)
+                for ch in self.im_ch: 
+                    if ch in self.s3_cont.keys() and len(self.im_ch[ch].contStack)>0 and s3s_save: 
+                        s3s = True
+                    else: 
+                        s3s = False
+                    if ch_save or s3s_save:
+                        self.save_closed_channel(ch=ch, print_txt=True, s3s=s3s)
+
             self.save_project_and_organ_pressed()
             print('All saved!')
             event.accept()

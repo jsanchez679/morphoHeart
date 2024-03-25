@@ -2326,7 +2326,7 @@ class ImChannel(): #channel
             pass
 
         dirs_cont = []; shapes_s3 = []
-        aa = 0
+        aa = 1
         for cont in cont_list:
             win.win_msg('Creating masked stacks for each contour of Channel '+self.channel_no[-1]+' ('+str(aa)+'/'+str(len(cont_list))+').')
             s3 = ContStack(im_channel=self, cont_type=cont, layerDict=layerDict)#new=True,

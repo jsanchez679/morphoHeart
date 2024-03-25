@@ -464,11 +464,11 @@ def fill_contours(selected_cont, slc_s3):
     """
 
     if len(selected_cont['contours']) > 0:
-        print('>>:', type(selected_cont['contours']), len(selected_cont['contours']))
+        # print('>>:', type(selected_cont['contours']), len(selected_cont['contours']))
         for n, cont in enumerate(selected_cont['contours']):
-            print(type(cont))
+            # print(type(cont))
             r_mask = np.zeros_like(slc_s3, dtype='bool')
-            print('>>', slc_s3.shape, r_mask.shape)
+            # print('>>', slc_s3.shape, r_mask.shape)
             # Create a contour masked image by using the contour coordinates rounded to their nearest integer value
             r_mask[np.round(cont[:, 0]).astype('int'), np.round(cont[:, 1]).astype('int')] = 1
             # Fill in the holes created by the contour boundary
@@ -603,7 +603,7 @@ def close_draw(color_draw, win):
     if win.slc_py != None:
         slc_py = win.slc_py
         slc_user = slc_py+1
-        ch_name = win.im_ch.channel_no
+        ch_name = win.running_process.split('_')[-1]
         level = win.gui_manual_close_contours[ch_name]['level']
         min_contour_len = win.gui_manual_close_contours[ch_name]['min_contour_len']
         #Uncheck SAVE
@@ -613,7 +613,7 @@ def close_draw(color_draw, win):
         clicks = get_clicks([], win.myIm, scale=1, text='DRAWING SLICE ('+color_draw+')')
         # Draw white/black line following the clicked pattern
         win.myIm = draw_line(clicks, win.myIm, color_draw)
-        win.im_proc[:][:][slc_py] = win.myIm
+        win.im_proc[ch_name][:][:][slc_py] = win.myIm
 
         #Plot image with closed contours
         params = {'myIm': copy.deepcopy(win.myIm), 'slc_user': slc_user, 'ch': ch_name, 
@@ -631,7 +631,7 @@ def close_box(box, win):
     if win.slc_py != None:
         slc_py = win.slc_py
         slc_user = slc_py+1
-        ch_name = win.im_ch.channel_no
+        ch_name = win.running_process.split('_')[-1]
         level = win.gui_manual_close_contours[ch_name]['level']
         min_contour_len = win.gui_manual_close_contours[ch_name]['min_contour_len']
         #Uncheck SAVE
@@ -640,7 +640,7 @@ def close_box(box, win):
         clicks = get_clicks([], win.myIm, scale=1, text='CLOSING CONTOURS')
         #Close contours and get Image
         win.myIm = crop_n_close(clicks, win.myIm, box, level)
-        win.im_proc[:][:][slc_py] = win.myIm
+        win.im_proc[ch_name][:][:][slc_py] = win.myIm
         #Plot image with closed contours
         params = {'myIm': copy.deepcopy(win.myIm), 'slc_user': slc_user, 'ch': ch_name, 
                     'level': level, 'min_contour_length': min_contour_len}
@@ -670,7 +670,7 @@ def close_convex_hull(win):
     if win.slc_py != None:
         slc_py = win.slc_py
         slc_user = slc_py+1
-        ch_name = win.im_ch.channel_no
+        ch_name = win.running_process.split('_')[-1]
         level = win.gui_manual_close_contours[ch_name]['level']
         min_contour_len = win.gui_manual_close_contours[ch_name]['min_contour_len']
         min_int = win.gui_manual_close_contours[ch_name]['min_int']
@@ -733,7 +733,7 @@ def close_convex_hull(win):
                             int(closing_pt2[0]), int(closing_pt2[1]))
         myIm_closed[rr, cc] = val * 50000
         win.myIm = myIm_closed[150:150+im_height]
-        win.im_proc[:][:][slc_py] = win.myIm
+        win.im_proc[ch_name][:][:][slc_py] = win.myIm
 
         #Plot image with closed contours
         params = {'myIm': copy.deepcopy(win.myIm), 'slc_user': slc_user, 'ch': ch_name, 
@@ -750,15 +750,15 @@ def reset_img(rtype, win):
     if win.slc_py != None:
         slc_py = win.slc_py
         slc_user = slc_py+1
-        ch_name = win.im_ch.channel_no
+        ch_name = win.running_process.split('_')[-1]
         level = win.gui_manual_close_contours[ch_name]['level']
         min_contour_len = win.gui_manual_close_contours[ch_name]['min_contour_len']
         #Uncheck SAVE
         getattr(win, 'save_manually_closed_'+ch_name).setChecked(False)
         if rtype == 'autom': 
-            win.myIm = copy.deepcopy(win.im_proc_o[:][:][slc_py])
+            win.myIm = copy.deepcopy(win.im_proc_o[ch_name][:][:][slc_py])
         else: 
-            im_ch = win.organ.obj_imChannels[ch_name]
+            im_ch = win.im_ch[ch_name]
             myIm = im_ch.im_proc(new=True)[:][:][slc_py]
             if rtype == 'masked': 
                 if win.organ.mH_settings['setup']['mask_ch'][ch_name]: 
@@ -797,7 +797,7 @@ def reset_img(rtype, win):
             else: #rtype = 'raw'
                 win.myIm = copy.deepcopy(myIm)
 
-        win.im_proc[:][:][slc_py] = win.myIm
+        win.im_proc[ch_name][:][:][slc_py] = win.myIm
 
         #Plot image with closed contours
         params = {'myIm': copy.deepcopy(win.myIm), 'slc_user': slc_user, 'ch': ch_name, 
