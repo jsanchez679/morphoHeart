@@ -2960,9 +2960,14 @@ class Mesh_mH():
         
         self.create_mesh(keep_largest = self.keep_largest, rotateZ_90 = self.rotateZ_90)
         if self.channel_no != 'chNS': 
-            self.color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
+            color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
         else: 
-            self.color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
+            color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
+
+        if isinstance(color, str) and '[' in color: 
+            rr,gg,bb = color[1:-1].split(',')
+            color = [int(rr), int(gg), int(bb)]
+        self.color = color
         self.alpha = 0.05
         
         #Update settings
@@ -2981,12 +2986,16 @@ class Mesh_mH():
     def reload_mesh(self, mesh_prop, new_set):#
 
         if self.channel_no != 'chNS': 
-            self.color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
+            color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
             self.alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
         else:
-            self.color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
+            color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
             self.alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
-
+        
+        if isinstance(color, str) and '[' in color: 
+            rr,gg,bb = color[1:-1].split(',')
+            color = [int(rr), int(gg), int(bb)]
+        self.color = color
         self.s3_dir = self.imChannel.contStack[self.mesh_type]['s3_file']
 
         if new_set: 

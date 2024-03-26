@@ -807,6 +807,8 @@ def run_cleanup(controller):
         else: 
             plot_settings = (False, None) 
 
+        #Save temporarily the original s3 in case user wants to restore them
+        save_temp_s3s(controller, option='clean')
         fcM.clean_ch(organ = controller.organ, 
                     gui_clean = controller.main_win.gui_clean, 
                     win=controller.main_win, plot_settings=plot_settings)
@@ -820,6 +822,14 @@ def run_cleanup(controller):
         #Add meshes to plot_user
         controller.main_win.fill_comboBox_all_meshes()
 
+        #Enable Reset Cleaned Meshes
+        controller.main_win.reset_cleaned_s3s.setEnabled(True)
+        #Create prompt window to ask user to check resulting meshes
+        title = 'Check resulting meshes...'
+        msg = 'All selected meshes have been succesfully cleaned! Please check the resulting meshes before continuing with the next process. If you would like to set new cleaning settings, click  -Reset Cleaned Meshes-  and re-run the process. [Note: Resetting the cleaned meshes is only possible after and within the same session of running the cleaning process.]' 
+        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+        prompt.exec()
+
     else: 
         controller.main_win.win_msg('*To clean-up the tissues make sure you have at least run the  -Keep Largest-  section.')
             
@@ -830,7 +840,8 @@ def run_trimming(controller):
         meshes, no_cut, cuts_out = get_trimming_planes(organ = controller.organ,
                                                         gui_trim = controller.main_win.gui_trim,
                                                         win = controller.main_win)
-        
+        #Save temporarily the original s3 in case user wants to restore them
+        save_temp_s3s(controller, option='trim')
         fcM.trim_top_bottom_S3s(organ = controller.organ, meshes = meshes, 
                                 no_cut = no_cut, cuts_out = cuts_out,
                                 win = controller.main_win)
@@ -842,6 +853,15 @@ def run_trimming(controller):
         controller.main_win.update_workflow_progress()
         #Add meshes to plot_user
         controller.main_win.fill_comboBox_all_meshes()
+
+        #Enable Reset Trimmed Meshes
+        controller.main_win.reset_trimmed_s3s.setEnabled(True)
+        #Create prompt window to ask user to check resulting meshes
+        title = 'Check resulting meshes...'
+        msg = 'All selected meshes have been succesfully trimmed! Please check the resulting meshes before continuing with the next process. If you would like to set new trimming planes, click  -Reset Trimmed Meshes-  and re-run the process. [Note: Resetting the trimmed meshes is only possible after and within the same session of running the trimming process.]' 
+        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+        prompt.exec()
+
     else: 
         controller.main_win.win_msg('*To trim the tissues make sure you have at least run the  -Keep Largest-  section.')
 
@@ -896,7 +916,7 @@ def get_trimming_planes(organ, gui_trim, win):
                                                 txt = 'cut '+cuts_names['bottom'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)  
             title = 'Happy with the defined plane?' 
-            msg = 'Are you happy with the defined plane to cut '+cuts_names['bottom'][name_dict]+'?'
+            msg = 'Are you happy with the defined plane to cut '+cuts_names['bottom'][name_dict].upper()+'?'
             items = {0: {'opt':'no, I would like to define a new plane.'}, 1: {'opt':'yes, continue!'}}
             prompt = Prompt_ok_cancel_radio(title, msg, items, parent=win)
             prompt.exec()
@@ -920,7 +940,7 @@ def get_trimming_planes(organ, gui_trim, win):
                                                 meshes = meshes, settings=settings)#, win=win)
 
             title = 'Happy with the defined plane?' 
-            msg = 'Are you happy with the defined plane to cut '+cuts_names['top'][name_dict]+'?'
+            msg = 'Are you happy with the defined plane to cut '+cuts_names['top'][name_dict].upper()+'?'
             items = {0: {'opt':'no, I would like to define a new plane.'}, 1: {'opt':'yes, continue!'}}
             prompt = Prompt_ok_cancel_radio(title, msg, items, parent=win)
             prompt.exec()
@@ -937,11 +957,69 @@ def get_trimming_planes(organ, gui_trim, win):
     print('cuts_out:', cuts_out)
     return meshes, no_cut, cuts_out
 
+def save_temp_s3s(controller, option):
+    #Find the meshes that will be cut and save their s3s
+    s32save = {}
+    if option == 'trim':
+        gui_trim = controller.main_win.gui_trim
+        for ss in gui_trim: 
+            for ch in gui_trim[ss]['chs']: 
+                for cont in gui_trim[ss]['chs'][ch]: 
+                    cut = gui_trim[ss]['chs'][ch][cont]
+                    if cut: 
+                        if ch not in s32save.keys(): 
+                            s32save[ch] = []
+                        if cont not in s32save[ch]:
+                            s32save[ch].append(cont)
+    else: 
+        gui_clean = controller.main_win.gui_clean
+        for ch in gui_clean:
+            if 'ch' in ch: 
+                for cont in gui_clean[ch]['cont']: 
+                    if ch not in s32save.keys(): 
+                            s32save[ch] = []
+                    if cont not in s32save[ch]:
+                        s32save[ch].append(cont)
+    print('s32save:', s32save)
+
+    temp_s3s = {}
+    for ch in s32save.keys(): 
+        #Get channel
+        im_ch = controller.organ.obj_imChannels[ch]
+        temp_s3s[ch] = {}
+        for cont in s32save[ch]:
+            im_ch.load_chS3s(cont_types=[cont])
+            s3 = getattr(im_ch, 's3_'+cont)
+            temp_s3s[ch][cont] = s3.s3()
+            # print(s3.s3())
+    setattr(controller.main_win, 'temp_s3s_'+option, temp_s3s)
+
+def reset_meshes(controller, option): 
+    if hasattr(controller.main_win, 'temp_s3s_'+option):
+        title = 'Do you want to reset meshes' 
+        if option == 'trim':
+            msg = 'Are you sure you want to reset the trimmed meshes? \n If so, select  -OK-, else select  -Cancel-.'
+        else: 
+            msg = 'Are you sure you want to reset the cleaned meshes? \n If so, select  -OK-, else select  -Cancel-.'
+        prompt = Prompt_ok_cancel(title, msg, parent=controller.main_win)
+        prompt.exec()
+        print('output:', prompt.output)
+        if prompt.output: 
+            fcM.reset_meshes(controller, option)
+    else: 
+        title = 'Unable to Reset Meshes ...'
+        if option == 'trim': 
+            msg = "Meshes were trimmed in a previous session and they can't be automatically reset by morphoHeart. If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest, Segmentation Clean-up and Meshes Trimming." 
+        else: 
+            msg = "Meshes were cleaned in a previous session and they can't be automatically reset by morphoHeart. If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest and Segmentation Clean-up. "  
+        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+        prompt.exec()
+        return
+
 def run_axis_orientation(controller, only_roi=False):
     set_process(controller, 'orientation')
     if controller.main_win.keeplargest_play.isChecked(): 
-        #CHECK HERE WHICH ONE HAS BEEN RUN AND IF STACK WAS RUN, 
-        # PROGRAM SO THAT THE STACK DATA DOESN'T GET REMOVED 
+
         workflow = controller.organ.workflow['morphoHeart']
         if not only_roi: 
             fcM.get_stack_orientation(organ = controller.organ,  
@@ -949,10 +1027,8 @@ def run_axis_orientation(controller, only_roi=False):
                                     win = controller.main_win)
         
         try: 
-            print('tryA')
             gui_orientation = controller.main_win.gui_orientation
         except: 
-            print('exceptA')
             gui_orientation = controller.organ.mH_settings['wf_info']['orientation']
 
         on_hold = fcM.get_roi_orientation(organ = controller.organ,

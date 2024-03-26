@@ -61,6 +61,12 @@
    </item>
    <item>
     <widget class="QTextEdit" name="textEdit">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>80</height>
+      </size>
+     </property>
      <property name="styleSheet">
       <string notr="true">QTextEdit {background-color: rgba(0,0,0,0);
 font: 25 11pt &quot;Calibri Light&quot;;

@@ -443,7 +443,9 @@ class Controller:
         #Process and Analyse Tab
         self.main_win.keeplargest_play.clicked.connect(lambda: self.run_keeplargest())
         self.main_win.cleanup_play.clicked.connect(lambda: self.run_cleanup())
+        self.main_win.reset_cleaned_s3s.clicked.connect(lambda: self.reset_meshes(option='clean'))
         self.main_win.trimming_play.clicked.connect(lambda: self.run_trimming())
+        self.main_win.reset_trimmed_s3s.clicked.connect(lambda: self.reset_meshes(option='trim'))
         self.main_win.orientation_play.clicked.connect(lambda: self.run_axis_orientation())
         self.main_win.chNS_play.clicked.connect(lambda: self.run_chNS())
         self.main_win.measure_wholeAll_play.clicked.connect(lambda: self.run_measure_whole())
@@ -878,6 +880,9 @@ class Controller:
         mA.run_trimming(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
+    
+    def reset_meshes(self, option): 
+        mA.reset_meshes(controller=self, option=option)
 
     def run_axis_orientation(self):
         mA.run_axis_orientation(controller=self)

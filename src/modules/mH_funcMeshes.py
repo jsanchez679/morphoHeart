@@ -84,9 +84,9 @@ def s32Meshes(organ, gui_keep_largest:dict, win, rotateZ_90=True):#
         new_set = True
 
         win.prog_bar_range(0,3)
-        aa = 0
+        aa = 1
         for cont in ['int', 'tiss', 'ext']:
-            win.win_msg('Creating meshes of Channel '+im_ch.channel_no[-1]+'! ('+str(aa+1)+'/3)')
+            win.win_msg('Creating meshes of Channel '+im_ch.channel_no[-1]+'! ('+str(aa)+'/3)')
             proc_cont_im = ['ImProc',im_ch.channel_no,'D-S3Create','Info', cont, 'Status']
             proc_cont_ms = ['MeshesProc','A-Create3DMesh', im_ch.channel_no, cont, 'Status']
             mesh_created = im_ch.s32Meshes(cont_type=cont,
@@ -96,6 +96,8 @@ def s32Meshes(organ, gui_keep_largest:dict, win, rotateZ_90=True):#
                 # Update organ workflow
                 organ.update_mHworkflow(proc_cont_im, 'DONE')
                 organ.update_mHworkflow(proc_cont_ms, 'DONE')
+                #Update progress in main_win
+                win.update_workflow_progress()
                 aa+=1
                 win.prog_bar_update(aa)
                 run = True
@@ -211,18 +213,16 @@ def trim_top_bottom_S3s(organ, meshes, no_cut, cuts_out, win):#
                 if cuts_out[side]['chs'][ch_name][cont]:
                     cuts.append(side)
             if len(cuts) > 0: 
-                print('Cutting '+ch_name.title()+' (contour: '+cont+')...')
-                win.win_msg('Cutting '+ch_name.title()+' (contour: '+cont+')...')
                 im_ch.trimS3(cuts=cuts, cont=cont, cuts_out=cuts_out)
                 _ = im_ch.s32Meshes(cont_type=cont, 
-                                    # keep_largest=organ.mH_settings['wf_info']['keep_largest'][ch][cont], 
-                                    # rotateZ_90=organ.mH_settings['setup']['rotateZ_90'], 
                                     new_set=True)
 
                 # Update organ workflow
                 process = proc_im+['Info',cont,'Status']
                 organ.update_mHworkflow(process,'DONE')
                 organ.update_mHworkflow(proc_ms,'DONE')
+                #Update progress in main_win
+                win.update_workflow_progress()
 
             aa+=1
             win.prog_bar_update(aa)
@@ -252,6 +252,74 @@ def trim_top_bottom_S3s(organ, meshes, no_cut, cuts_out, win):#
     print('\nEND Trimming')
     print('organ.mH_settings:', organ.mH_settings)
     print('organ.workflow:', workflow)
+
+def reset_meshes(controller, option): 
+    win = controller.main_win
+    temp_s3s = getattr(win, 'temp_s3s_'+option)
+    organ = win.organ
+
+    workflow = organ.workflow['morphoHeart']
+    if option == 'trim': 
+        proc_ms_all = ['MeshesProc', 'B-TrimMesh', 'Status']
+
+    for ch_name in temp_s3s.keys():
+        im_ch = organ.obj_imChannels[ch_name]
+        if option == 'trim': 
+            proc_im = ['ImProc', ch_name, 'E-TrimS3']
+            key_word = ' trimmed '
+        else: 
+            proc_im = ['ImProc', ch_name, 'E-CleanCh']
+            key_word = ' cleaned '
+        
+        win.prog_bar_range(0,3)
+        aa = 0
+        for cont in ['int', 'tiss', 'ext']: 
+            win.win_msg('Resetting'+key_word+'meshes of Channel '+im_ch.channel_no[-1]+'! ('+str(aa+1)+'/3)')
+            if option == 'trim':
+                proc_ms = ['MeshesProc', 'B-TrimMesh', ch_name, cont, 'Status']
+
+            im_ch.load_chS3s(cont_types=[cont])
+            s3 = getattr(im_ch, 's3_'+cont)
+            temp_s3 = temp_s3s[ch_name][cont]
+            s3.s3_save(temp_s3)
+            _ = im_ch.s32Meshes(cont_type=cont, 
+                        new_set=True)
+            
+            # Update organ workflow
+            process = proc_im+['Info',cont,'Status']
+            organ.update_mHworkflow(process,'NI')
+            if option == 'trim': 
+                organ.update_mHworkflow(proc_ms,'NI')
+
+            #Update progress in main_win
+            win.update_workflow_progress()
+
+            aa+=1
+            win.prog_bar_update(aa)
+        
+    # Update organ workflow 
+    process_up = proc_im+['Status']
+    organ.update_mHworkflow(process_up,'NI')
+    if option == 'trim': 
+        organ.update_mHworkflow(proc_ms_all,'NI')
+        #Update Status in GUI
+        win.update_status(workflow, proc_ms_all, win.trimming_status)
+        #Reset buttons too
+        win.trimming_play.setChecked(False)
+        #Disable button
+        win.reset_trimmed_s3s.setEnabled(False)
+    else: 
+        #Update Status in GUI
+        win.update_status(workflow, process_up, win.cleanup_status)
+        #Reset buttons too
+        win.cleanup_play.setChecked(False)
+        #Disable button
+        win.reset_cleaned_s3s.setEnabled(False)
+
+    #Message User
+    win.win_msg(' Channel '+im_ch.channel_no[-1]+' meshes were successfully reset!')
+    #Update progress in main_win
+    win.update_workflow_progress()
 
 def get_stack_orientation(organ, gui_orientation, win):# 
 
@@ -3183,7 +3251,7 @@ def get_plane(filename, txt:str, meshes:list, settings: dict, def_pl = None,
 
     normal_txt = str([' {:.2f}'.format(i) for i in normal_corrected]).replace("'","")
     centre_txt = str([' {:.2f}'.format(i) for i in pl_centre]).replace("'","")
-    text = filename+'\n\nUser defined plane to '+ txt +'.\nPlane normal: '+normal_txt+' - Plane centre: '+centre_txt+'.\nClose the window when done.'
+    text = filename+'\n\nUser defined plane to '+ txt.upper() +'.\nPlane normal: '+normal_txt+' - Plane centre: '+centre_txt+'.\nClose the window when done.'
     txt2D = vedo.Text2D(text, c=txt_color, font=txt_font, s=txt_size)
 
     vp = vedo.Plotter(N=1, axes=4)
@@ -3213,7 +3281,7 @@ def get_plane_pos(filename, txt, meshes, settings, option,
     box_size = max(x_size, y_size, z_size)
 
     if len(def_pl['pl_centre']) != 3:
-        centre = (x_size/2+xmin, ymin, z_size/2+zmin)
+        centre = (x_size/2+xmin, y_size/2+ymin, z_size/2+zmin)
     else: 
         centre = def_pl['pl_centre']
     normal = def_pl['pl_normal']
@@ -3274,7 +3342,7 @@ def get_plane_pos(filename, txt, meshes, settings, option,
     vp = vedo.Plotter(N=1, axes=8)
     vp.add_icon(logo, pos=(0.85,0.75), size=0.10)
     plane = vedo.Plane(pos=centre, normal=normal, 
-                       s=(box_size*1.5, box_size*1.5)).color('gainsboro').alpha(1)
+                       s=(box_size*1.5, box_size*1.5)).color('dimgray').alpha(1)
     if option[0]: #sliderX
         vp.addSlider2D(sliderX, xval[0], xval[1], value=centre[0],
                     pos=[(0.1,0.15), (0.3,0.15)], title='- > x position > +', 
@@ -3317,7 +3385,7 @@ def get_plane_pos(filename, txt, meshes, settings, option,
                pos=[(0.72,0.40), (0.72,0.50)], c=settings['color'][3], 
                title='Opacity\n'+ settings['name'][3].title(), title_size=txt_slider_size2)
         
-    text = filename+'\n\nDefine plane position to '+txt+'. \nClose the window when done'
+    text = filename+'\n\nDefine plane position to '+txt.upper()+'. \nClose the window when done'
     txt = vedo.Text2D(text, c=txt_color, font=txt_font, s=txt_size)
     vp.show(meshes, plane, lbox, txt, viewup='y', zoom=zoom, interactive=True)
 

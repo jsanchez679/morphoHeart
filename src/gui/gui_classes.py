@@ -8612,6 +8612,12 @@ class MainWindow(QMainWindow):
         self.clean_plot.setEnabled(False)
         self.q_cleanup.clicked.connect(lambda: self.help('cleanup'))
 
+        #Hide plot2D option
+        self.clean_plot2d.setVisible(False)
+        self.clean_lab1.setVisible(False)
+        self.clean_n_slices.setVisible(False)
+        self.clean_lab2.setVisible(False)
+
         #  Segmentation cleanup setup
         for chs in ['ch1', 'ch2', 'ch3', 'ch4']:
             if chs not in self.channels.keys():
@@ -8727,6 +8733,12 @@ class MainWindow(QMainWindow):
         self.chNS_play.setEnabled(False)
         self.q_chNS.clicked.connect(lambda: self.help('chNS'))
         self.chNS_set.clicked.connect(lambda: self.set_chNS())
+
+        #Hide plot2D option
+        self.chNS_plot2d.setVisible(False)
+        self.chNS_lab1.setVisible(False)
+        self.chNS_n_slices.setVisible(False)
+        self.chNS_lab2.setVisible(False)
 
         self.fillcolor_chNS_int.clicked.connect(lambda: self.color_picker(name = 'chNS_int'))
         self.fillcolor_chNS_tiss.clicked.connect(lambda: self.color_picker(name = 'chNS_tiss'))
@@ -9888,6 +9900,7 @@ class MainWindow(QMainWindow):
                 #Toggle Button
                 self.cleanup_set.setChecked(True)
                 self.cleanup_play.setChecked(True)
+                self.reset_cleaned_s3s.setEnabled(True)
                 #Enable other buttons
                 self.clean_plot.setEnabled(True)
                 #Update Status in GUI
@@ -9933,6 +9946,7 @@ class MainWindow(QMainWindow):
                 #Toggle Button
                 self.trimming_set.setChecked(True)
                 self.trimming_play.setChecked(True)
+                self.reset_trimmed_s3s.setEnabled(True)
                 #Update Status in GUI
                 self.update_status(None, 'DONE', self.trimming_status, override=True)
                 self.trimming_open.setChecked(True)
@@ -13018,7 +13032,7 @@ class MainWindow(QMainWindow):
         self.update_workflow_progress()
 
     def update_workflow_progress(self): 
-        print('self.workflow_keys:', self.workflow_keys)
+        # print('self.workflow_keys:', self.workflow_keys)
         titles_inv = {'createMesh': 'A-Create3DMesh',
                        'setOrientation': 'A-Set_Orientation',
                        'trimMesh': 'B-TrimMesh',

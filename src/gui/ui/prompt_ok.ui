@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>378</width>
-    <height>190</height>
+    <width>427</width>
+    <height>228</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,7 +59,7 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
     <widget class="QTextEdit" name="textEdit">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -69,14 +69,14 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>360</width>
+       <width>400</width>
        <height>80</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>390</width>
-       <height>80</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
      <property name="styleSheet">
