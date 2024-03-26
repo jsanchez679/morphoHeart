@@ -11111,6 +11111,7 @@ class MainWindow(QMainWindow):
                             segments[cut]['ch_info'][ch][cont] = txt
                             segments[cut]['measure'][ch][cont] = {}
                             segments[cut]['dirs'][ch][cont] = {}
+                            
         else: 
             for cut in [key for key in segm_set.keys() if 'Cut' in key]:
                 segments[cut] = {'ch_info': {}}

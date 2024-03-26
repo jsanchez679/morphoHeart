@@ -1719,6 +1719,24 @@ def run_segments(controller, btn):
             controller.main_win.segm_btns[segm]['play'].setChecked(False)
             return 
 
+            #Loading external subsegments of the ext-indep 
+            try: 
+                ext_subsgm = controller.organ.ext_subsgm
+                print('try ext_subsgm')
+            except: 
+                ext_subsgm = controller.organ.get_ext_subsgm(cut)
+                print('except ext_subsgm')
+            print('ext_subsgm: ',ext_subsgm)
+
+            # -> Get segments using ext segments
+            meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
+                                            segm_names, palette, ext_subsgm,  win=controller.main_win)
+            
+            #Enable Plot Buttons
+            btn = controller.main_win.segm_btns[segm]['plot']
+            btn.setEnabled(True)
+            print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+
         #Save meshes temporarily within segment buttons
         controller.main_win.segm_btns[segm]['meshes'] = meshes_segm
         print(controller.main_win.segm_btns)
