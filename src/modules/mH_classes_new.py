@@ -31,7 +31,7 @@ from ..gui.gui_classes import *
 from .mH_funcBasics import alert, make_Paths, make_tuples, get_by_path, set_by_path, rename_directory
 from .mH_funcMeshes import (unit_vector, plot_organCLs, find_angle_btw_pts, new_normal_3DRot,
                             classify_segments_from_ext, create_subsegment, create_subsection, plot_grid, 
-                            modify_cube)
+                            modify_cube, get_segments)
 from ..gui.config import mH_config
 
 path_mHImages = mH_config.path_mHImages
@@ -2130,6 +2130,34 @@ class Organ():
     def get_direc(self, name:str):
         return self.dir_res(dir=name)
 
+    def reduce_organ_size(self, info, win):
+
+        dir_meshes = self.dir_res(dir = 'meshes')
+        n = 0
+        for btn in win.segm_btns.keys(): 
+            cut, ch_cont = btn.split(':')
+            ch, cont = ch_cont.split('_')
+            segm_names = self.mH_settings['setup']['segm'][cut]['name_segments']
+            method = self.mH_settings['wf_info']['segments']['setup'][cut]['ch_info'][ch][cont]
+            if method not in ['ext-ext','indep-ext']:
+                for segm in segm_names.keys(): 
+                    try: 
+                        mesh_dir = dir_meshes / self.mH_settings['wf_info']['segments']['setup'][cut]['dirs'][ch][cont][segm]
+                        file2rem = Path(mesh_dir)
+                        print('file2rem exists:',file2rem.is_file())
+                        file2rem.unlink(missing_ok=True)
+                        if not file2rem.is_file(): 
+                            win.win_msg('Segment '+btn+' was succesfully removed!')
+                            n+=1
+                    except: 
+                        pass #print('empty - ', cut, ch, cont, segm)
+                self.mH_settings['wf_info']['segments']['setup'][cut]['dirs'][ch][cont] = {}
+        if n > 0: 
+            win.win_msg('All unnecessary segments were successfully removed, reducing space taken by organ in disk!')
+        else: 
+            win.win_msg("No unnecessary meshes were found in the organ. The organ size can't be further reduced.")
+        alert('woohoo')
+
 class ImChannel(): #channel
     'morphoHeart Image Channel Class (this class will be used to contain the images as tiffs that have been'
     'closed and the resulting s3s that come up from each channel'
@@ -3623,14 +3651,53 @@ class SubMesh():
             alert('error_beep')
             return None
 
-    def get_segm_mesh(self):
+    def get_segm_mesh(self, win=None, key2cut=None):
         
-        print('>>>> get_segm_mesh: ',self.sub_name_all)
+        # print('>>>> get_segm_mesh: ',self.sub_name_all)
         cut, ch, cont, segm = self.sub_name_all.split('_')
-        directory = self.parent_mesh.parent_organ.dir_res(dir = 'meshes')
-        mesh_dir = directory / self.parent_mesh.parent_organ.mH_settings['wf_info']['segments']['setup'][cut]['dirs'][ch][cont][segm]
-        segm_mesh = vedo.load(str(mesh_dir))
-        print('segm_mesh:', type(segm_mesh))
+        try: 
+            directory = self.parent_mesh.parent_organ.dir_res(dir = 'meshes')
+            mesh_dir = directory / self.parent_mesh.parent_organ.mH_settings['wf_info']['segments']['setup'][cut]['dirs'][ch][cont][segm]
+            segm_mesh = vedo.load(str(mesh_dir))
+            print('Mesh loaded from disc - ', self.sub_name_all)
+        except: 
+            try: 
+                segm_mesh = win.segm_btns[key2cut]['meshes'][segm]
+                print('loaded from segm_btns - ', self.sub_name_all)
+            except: 
+                #Get method 
+                mesh2cut =  self.parent_mesh.parent_organ.obj_meshes[ch+'_'+cont]
+                segm_names = self.parent_mesh.parent_organ.mH_settings['setup']['segm'][cut]['name_segments']
+                colors_all = self.parent_mesh.parent_organ.mH_settings['setup']['segm'][cut]['colors']
+                palette = [colors_all[key] for key in colors_all.keys()]
+                method = self.parent_mesh.parent_organ.mH_settings['wf_info']['segments']['setup'][cut]['ch_info'][ch][cont]
+                if method ==  'cut_with_ext-ext' or method == 'cut_with_other_ext-ext':
+                    try: 
+                        ext_subsgm = self.parent_mesh.parent_organ.ext_subsgm
+                        print('try ext_subsgm')
+                    except: 
+                        ext_subsgm = self.parent_mesh.parent_organ.get_ext_subsgm(cut)
+                        print('except ext_subsgm')
+                    print('ext_subsgm: ',ext_subsgm)
+                elif method == 'cut_with_ext-indep':
+                    #Loading external subsegments of the ext-indep 
+                    ext_subsgm = {}
+                    for ssi in segm_names.keys(): 
+                        name_ext_ind = cut+'_'+ch+'_ext_'+ssi
+                        print(name_ext_ind)
+                        ext_subsgm[ssi] = self.parent_mesh.parent_organ.obj_subm[name_ext_ind]
+                else: 
+                    print('What?'); alert('bubble')
+
+                # -> Get segments using ext segments
+                meshes_segm = get_segments(self.parent_mesh.parent_organ, mesh2cut, cut, 
+                                                segm_names, palette, ext_subsgm)
+                if win != None and key2cut != None: 
+                    win.segm_btns[key2cut]['meshes'] = meshes_segm
+                segm_mesh = meshes_segm[segm]
+                print('created from scratch - ', self.sub_name_all)
+
+        # print('segm_mesh:', type(segm_mesh))
         segm_mesh.color(self.parent_mesh.parent_organ.mH_settings['setup']['segm'][cut]['colors'][segm])
         segm_mesh.legend(self.sub_legend).wireframe().alpha(self.alpha)
             
@@ -3661,7 +3728,7 @@ class SubMesh():
                 if 's' in seg_cut: 
                     seg_cut = seg_cut[1:]
                 ext_subsgm = self.imChannel.parent_organ.get_ext_subsgm(seg_cut)
-            print('except ext_subsgm')
+                print('except ext_subsgm')
             print('ext_subsgm: ',ext_subsgm)
 
             #Classify the resulting segments using ext mesh

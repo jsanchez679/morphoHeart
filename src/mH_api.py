@@ -788,7 +788,7 @@ def run_keeplargest(controller):
         
     else: 
         title = 'Channels not closed / Contours not selected!'
-        msg = 'You are not done closing/selecting the contours of the input channels! \nPlease go back to  -mH: Segment Channels-  Tab and continue processing the channels before running the processes in this tab'
+        msg = 'You are not done closing/selecting the contours of the input channels! Please go back to  -mH: Segment Channels-  Tab and continue processing the channels before running the processes in this tab'
         prompt = Prompt_ok(title, msg, parent=controller.welcome_win)
         prompt.exec()
         print('output:', prompt.output)
@@ -824,10 +824,11 @@ def run_cleanup(controller):
 
         #Enable Reset Cleaned Meshes
         controller.main_win.reset_cleaned_s3s.setEnabled(True)
-        #Create prompt window to ask user to check resulting meshes
+        # Create prompt window to ask user to check resulting meshes
         title = 'Check resulting meshes...'
-        msg = 'All selected meshes have been succesfully cleaned! Please check the resulting meshes before continuing with the next process. If you would like to set new cleaning settings, click  -Reset Cleaned Meshes-  and re-run the process. [Note: Resetting the cleaned meshes is only possible after and within the same session of running the cleaning process.]' 
-        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+        msg = ['All selected meshes have been succesfully cleaned! Please check the resulting meshes before continuing with the next process. If you would like to set new cleaning settings, click  -Reset Cleaned Meshes-  and re-run the process.',
+               '[Note: Resetting the cleaned meshes is only possible after and within the same session of running the cleaning process].']
+        prompt = Prompt_ok(title, msg, win_size=[425, 300], parent=controller.main_win)
         prompt.exec()
 
     else: 
@@ -858,8 +859,9 @@ def run_trimming(controller):
         controller.main_win.reset_trimmed_s3s.setEnabled(True)
         #Create prompt window to ask user to check resulting meshes
         title = 'Check resulting meshes...'
-        msg = 'All selected meshes have been succesfully trimmed! Please check the resulting meshes before continuing with the next process. If you would like to set new trimming planes, click  -Reset Trimmed Meshes-  and re-run the process. [Note: Resetting the trimmed meshes is only possible after and within the same session of running the trimming process.]' 
-        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+        msg = ['All selected meshes have been succesfully trimmed! Please check the resulting meshes before continuing with the next process. If you would like to set new trimming planes, click  -Reset Trimmed Meshes-  and re-run the process.',
+               '[Note: Resetting the trimmed meshes is only possible after and within the same session of running the trimming process].'] 
+        prompt = Prompt_ok(title, msg, win_size=[425, 300], parent=controller.main_win)
         prompt.exec()
 
     else: 
@@ -998,10 +1000,10 @@ def reset_meshes(controller, option):
     if hasattr(controller.main_win, 'temp_s3s_'+option):
         title = 'Do you want to reset meshes' 
         if option == 'trim':
-            msg = 'Are you sure you want to reset the trimmed meshes? \n If so, select  -OK-, else select  -Cancel-.'
+            msg = 'Are you sure you want to reset the trimmed meshes? If so, select  -OK-, else select  -Cancel-.'
         else: 
-            msg = 'Are you sure you want to reset the cleaned meshes? \n If so, select  -OK-, else select  -Cancel-.'
-        prompt = Prompt_ok_cancel(title, msg, parent=controller.main_win)
+            msg = 'Are you sure you want to reset the cleaned meshes? If so, select  -OK-, else select  -Cancel-.'
+        prompt = Prompt_ok_cancel(title, msg, win_size=[350, 150], parent=controller.main_win)
         prompt.exec()
         print('output:', prompt.output)
         if prompt.output: 
@@ -1009,10 +1011,12 @@ def reset_meshes(controller, option):
     else: 
         title = 'Unable to Reset Meshes ...'
         if option == 'trim': 
-            msg = "Meshes were trimmed in a previous session and they can't be automatically reset by morphoHeart. If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest, Segmentation Clean-up and Meshes Trimming." 
+            msg = ["Meshes were trimmed in a previous session and they can't be automatically reset by morphoHeart.",
+                   "If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest, Segmentation Clean-up and Meshes Trimming."] 
         else: 
-            msg = "Meshes were cleaned in a previous session and they can't be automatically reset by morphoHeart. If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest and Segmentation Clean-up. "  
-        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+            msg = ["Meshes were cleaned in a previous session and they can't be automatically reset by morphoHeart.",
+                "If you wish to reset them, you will need to go back and re-select the contours of the channels you would like to reset, then re-run Keep Largest and Segmentation Clean-up."]  
+        prompt = Prompt_ok(title, msg, win_size=[425, 250], parent=controller.main_win)
         prompt.exec()
         return
 
@@ -1225,7 +1229,7 @@ def run_centreline_select(controller):
                                                         nPoints = nPoints)
                     
                     title = 'Check centreline...'
-                    msg = 'Are you happy with the created centreline?! \n If so, select  -OK-, else select  -Cancel- and redefine it.'
+                    msg = 'Are you happy with the created centreline? If so, select  -OK-, else select  -Cancel- and redefine it.'
                     prompt2 = Prompt_ok_cancel(title, msg, parent=controller.main_win)
                     prompt2.exec()
                     print('output:', prompt2.output)
@@ -1609,7 +1613,7 @@ def run_segments(controller, btn):
             if cut_key == cut and int(num_key) == int(num): 
                 segm2cut = key
                 break
-        segm_set = [segm2cut] #[segm_list[int(num)-1]]
+        segm_set = [segm2cut] 
     else: 
         segm_set = segm_list
     print('segm_set:',segm_set)
@@ -1633,7 +1637,6 @@ def run_segments(controller, btn):
     else: 
         cl_spheres = None
 
-    # print('cl_spheres: ', cl_spheres)
     print('organ.obj_temp:', controller.organ.obj_temp)
 
     #Loop through all the tissues that are going to be segmented
@@ -1656,8 +1659,8 @@ def run_segments(controller, btn):
         user_names = '('+', '.join([segm_names[val] for val in segm_names])+')'
         print('\n- Dividing '+mesh2cut.legend+' into segments '+user_names)
         controller.main_win.win_msg('Dividing '+mesh2cut.legend+' into segments '+user_names)
-
-        if method == 'ext-ext' or method == 'indep-ext': #TEST!!!
+        
+        if method == 'ext-ext' or method == 'indep-ext': 
             # -> Get the discs that are going to be used to cut
             get_segm_discs(controller.organ, 
                             cut = cut, ch=ch, cont=cont, 
@@ -1689,8 +1692,18 @@ def run_segments(controller, btn):
                 #Enable play buttons of meshes with other methods
                 for sgmt in segm_list:
                     if sgmt != segm: 
-                        play_btn = controller.main_win.segm_btns[sgmt]['play']
-                        play_btn.setEnabled(True)
+                        #Get names and methods for each button
+                        ccut, cch_cont = sgmt.split(':')
+                        cch, ccont = cch_cont.split('_')
+                        cmethod = controller.organ.mH_settings['wf_info']['segments']['setup'][ccut]['ch_info'][cch][ccont]
+                        if method == 'ext-ext': 
+                            if cmethod == 'cut_with_ext-ext' or cmethod == 'cut_with_other_ext-ext':
+                                play_btn = controller.main_win.segm_btns[sgmt]['play']
+                                play_btn.setEnabled(True)
+                        else: # method == 'indep-ext'
+                            if cmethod == 'cut_with_ext-indep':
+                                play_btn = controller.main_win.segm_btns[sgmt]['play']
+                                play_btn.setEnabled(True)
             
         elif method == 'cut_with_ext-ext' or method == 'cut_with_other_ext-ext':
             #Loading external subsegments 
@@ -1704,7 +1717,7 @@ def run_segments(controller, btn):
 
             # -> Get segments using ext segments
             meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
-                                            segm_names, palette, ext_subsgm,  win=controller.main_win)
+                                            segm_names, palette, ext_subsgm, win=controller.main_win)
             
             #Enable Plot Buttons
             btn = controller.main_win.segm_btns[segm]['plot']
@@ -1712,25 +1725,16 @@ def run_segments(controller, btn):
             print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
 
         else: #method == 'cut_with_ext-indep'
-            print('No functions for this method:', method)
-            alert('error_beep')
-            meshes_segm = None
-            controller.main_win.win_msg('*Process to cut indep other than ext not yet coded: '+ method)
-            controller.main_win.segm_btns[segm]['play'].setChecked(False)
-            return 
-
             #Loading external subsegments of the ext-indep 
-            try: 
-                ext_subsgm = controller.organ.ext_subsgm
-                print('try ext_subsgm')
-            except: 
-                ext_subsgm = controller.organ.get_ext_subsgm(cut)
-                print('except ext_subsgm')
-            print('ext_subsgm: ',ext_subsgm)
+            ext_subsgm = {}
+            for ssi in segm_names.keys(): 
+                name_ext_ind = cut+'_'+ch+'_ext_'+ssi
+                print(name_ext_ind)
+                ext_subsgm[ssi] = controller.organ.obj_subm[name_ext_ind]
 
             # -> Get segments using ext segments
             meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
-                                            segm_names, palette, ext_subsgm,  win=controller.main_win)
+                                            segm_names, palette, ext_subsgm, win=controller.main_win)
             
             #Enable Plot Buttons
             btn = controller.main_win.segm_btns[segm]['plot']
@@ -1786,7 +1790,6 @@ def run_segments(controller, btn):
     
     #Add meshes to plot_user
     controller.main_win.fill_comboBox_all_meshes()
-
     print('organ.obj_temp:', controller.organ.obj_temp)
 
 def get_segm_discs(organ, cut, ch, cont, cl_spheres, win): 
@@ -1940,6 +1943,20 @@ def get_segm_discs(organ, cut, ch, cont, cl_spheres, win):
             organ.update_settings(proc, update = {}, mH = 'mH')
         organ.update_settings(proc+[cyl_name], update = cyl_dict, mH = 'mH')
         print('wf_info:', organ.mH_settings['wf_info']['segments']['setup'])
+
+def reduce_space(controller, info): 
+    title = 'Are you sure you want to reduce space in disk...' 
+    if info == 'segm':
+        msg = ['Are you sure you want to reduce organ size by removing all unnecessary segments (*.vtk files) from disk? If so, select  -OK-, else select  -Cancel-.',
+                '[Note: This process will delete all the saved segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
+    
+    prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), wdg_size=[[433,50],[433,100]],
+                              parent=controller.main_win)
+    prompt.exec()
+    print('output:', prompt.output)
+    if prompt.output: 
+        controller.organ.reduce_organ_size(info=info, win=controller.main_win)
+    del prompt
 
 # > Angles Segments
 def run_angles(controller, btn): 
@@ -2219,7 +2236,7 @@ def run_sections(controller, btn):
                                                                 use_prev=use_prev, ext_points = ext_points)
                     
                     title = 'Check extended centreline...'
-                    msg = 'Are you happy with the extended centreline/ribbon created?! \n If so, select  -OK-, else select  -Cancel- and redefine extended centreline.'
+                    msg = 'Are you happy with the extended centreline/ribbon created?! If so, select  -OK-, else select  -Cancel- and redefine extended centreline.'
                     prompt = Prompt_ok_cancel(title, msg, parent=controller.main_win)
                     prompt.exec()
                     print('output:', prompt.output)

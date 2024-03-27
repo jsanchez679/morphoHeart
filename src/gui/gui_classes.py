@@ -191,18 +191,33 @@ class AboutScreen(QDialog):
             self.button_txt.setText('')
 
 class Prompt_ok_cancel(QDialog):
-    def __init__(self, title:str, msg:str, parent=None):
+    def __init__(self, title:str, msg, win_size=None, wdg_size=None, parent=None):
         super().__init__(parent)
         uic.loadUi(str(mH_config.path_ui / 'prompt_ok_cancel.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
-        self.textEdit.setHtml(html_txt[0]+html_txt[1]+msg+html_txt[2])
+        if isinstance(msg, list): 
+            for n, txtE, mg in zip(count(), ['textEdit', 'textEdit1'], msg): 
+                getattr(self, txtE).setHtml(html_txt[0]+html_txt[1]+mg+html_txt[2])
+        else: 
+            self.textEdit.setHtml(html_txt[0]+html_txt[1]+msg+html_txt[2])
+            self.textEdit1.setVisible(False)
         self.output = None
 
         self.buttonBox.accepted.connect(lambda: self.accepted())
         self.buttonBox.rejected.connect(lambda: self.rejected())
         self.setModal(True)
+
+        if wdg_size != None: 
+            for n, sz, txtE in zip(count(), wdg_size, ['textEdit', 'textEdit1']):
+                if len(sz)==2: 
+                    sw, hw = sz
+                    getattr(self, txtE).resize(sw,hw)
+        
+        if win_size != None: 
+            ww, hh = win_size
+            self.resize(ww, hh)
         self.show()
 
     def accepted(self): 
@@ -216,18 +231,28 @@ class Prompt_ok_cancel(QDialog):
         self.close()
 
 class Prompt_ok(QDialog):
-    def __init__(self, title:str, msg:str, parent=None):
+    def __init__(self, title:str, msg, win_size=None, parent=None):
         super().__init__(parent)
         uic.loadUi(str(mH_config.path_ui / 'prompt_ok.ui'), self)
         self.setWindowTitle(title)
         self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
         self.setWindowIcon(QIcon(mH_icon))
-        self.textEdit.setHtml(html_txt[0]+html_txt[1]+msg+html_txt[2])
+        if isinstance(msg, list): 
+            for n, txtE, mg in zip(count(), ['textEdit', 'textEdit1'], msg): 
+                getattr(self, txtE).setHtml(html_txt[0]+html_txt[1]+mg+html_txt[2])
+        else: 
+            self.textEdit.setHtml(html_txt[0]+html_txt[1]+msg+html_txt[2])
+            self.textEdit1.setVisible(False)
         self.output = None
 
         self.ok_button.clicked.connect(lambda: self.accepted())
     
         self.setModal(True)
+
+        if win_size != None: 
+            ww, hh = win_size
+            self.resize(ww, hh)
+
         self.show()
 
     def accepted(self): 
@@ -449,7 +474,7 @@ class Prompt_ok_cancel_checkbox(QDialog):
         self.close()
 
 class Prompt_user_input(QDialog):
-    def __init__(self, msg:str, title:str, info:Union[str, tuple, list], parent=None):
+    def __init__(self, msg:str, title:str, info:Union[str, tuple, list], win_size=None, parent=None):
         super().__init__()
         uic.loadUi(str(mH_config.path_ui / 'prompt_user_input.ui'), self)
         self.setWindowTitle(title)
@@ -483,6 +508,11 @@ class Prompt_user_input(QDialog):
         input_validator = QRegularExpressionValidator(reg_ex, self.lineEdit)
         self.lineEdit.setValidator(input_validator)
         self.setModal(True)
+
+        if win_size != None: 
+            ww, hh = win_size
+            self.resize(ww, hh)
+
         self.show()
 
     def rejected(self):
@@ -10304,6 +10334,11 @@ class MainWindow(QMainWindow):
                 getattr(self, 'segm_centreline2use').setEnabled(True)
             else: 
                 getattr(self, 'segm_use_centreline').setChecked(False)
+            
+            try: 
+                getattr(self, 'segm_save_all').setChecked(wf_info['segments']['save_all'])
+            except: 
+                pass
 
             segm_setup = self.organ.mH_settings['setup']['segm']
             no_cuts = [key for key in segm_setup.keys() if 'Cut' in key]
@@ -10334,14 +10369,25 @@ class MainWindow(QMainWindow):
                 except: 
                     print('Incomplete workflow? - ', cut, ch, cont)
                     alert('connection')
-                if wf_info['segments']['setup'][cut]['ch_info'][ch][cont] == 'ext-ext':
+                method = wf_info['segments']['setup'][cut]['ch_info'][ch][cont]
+                if method == 'ext-ext' or method == 'indep-ext':
                     #If ext-ext cut has been made then enable other buttons 
                     try: 
                         if get_by_path(wf, [cut, ch, cont, 'Status']) == 'DONE':
                             for sgmt in self.segm_btns.keys():
                                 if sgmt != name: 
-                                    play_btn = self.segm_btns[sgmt]['play']
-                                    play_btn.setEnabled(True)
+                                    #Get names and methods for each button
+                                    ccut, cch_cont = sgmt.split(':')
+                                    cch, ccont = cch_cont.split('_')
+                                    cmethod = wf_info['segments']['setup'][ccut]['ch_info'][cch][ccont]
+                                    if method == 'ext-ext': 
+                                        if cmethod == 'cut_with_ext-ext' or cmethod == 'cut_with_other_ext-ext':
+                                            play_btn = self.segm_btns[sgmt]['play']
+                                            play_btn.setEnabled(True)
+                                    else: # method == 'indep-ext'
+                                        if cmethod == 'cut_with_ext-indep':
+                                            play_btn = self.segm_btns[sgmt]['play']
+                                            play_btn.setEnabled(True)
                     except:
                         print('ditto')
                         alert('bubble')
@@ -11062,6 +11108,8 @@ class MainWindow(QMainWindow):
                 return None
         else: 
             gui_segm['use_centreline'] = use_cl
+        
+        gui_segm['save_all'] = self.segm_save_all.isChecked()
 
         segm_set = self.organ.mH_settings['setup']['segm']
         segments = {}; measure = {}
@@ -11111,7 +11159,7 @@ class MainWindow(QMainWindow):
                             segments[cut]['ch_info'][ch][cont] = txt
                             segments[cut]['measure'][ch][cont] = {}
                             segments[cut]['dirs'][ch][cont] = {}
-                            
+
         else: 
             for cut in [key for key in segm_set.keys() if 'Cut' in key]:
                 segments[cut] = {'ch_info': {}}
@@ -13845,7 +13893,6 @@ class MainWindow(QMainWindow):
                         submesh = self.organ.obj_subm[submesh_name]
                         meshes[sect][segm] = submesh.get_sect_segm_mesh(seg_cut ='Cut'+scut[-1])
                 list_btns[key2cut]['meshes'] = meshes
-
             else: 
                 #Get submesh from organ
                 cut, subm_info = key2cut.split(':')
@@ -13856,7 +13903,7 @@ class MainWindow(QMainWindow):
                     submesh_name = cut.title()+'_'+ch+'_'+cont+'_'+subm
                     submesh = self.organ.obj_subm[submesh_name]
                     if 'segm' in subm: 
-                        meshes[subm] = submesh.get_segm_mesh()
+                        meshes[subm] = submesh.get_segm_mesh(win=self, key2cut=key2cut)
                     else: #'sect' in segm
                         meshes[subm] = submesh.get_sect_mesh()
                 list_btns[key2cut]['meshes'] = meshes

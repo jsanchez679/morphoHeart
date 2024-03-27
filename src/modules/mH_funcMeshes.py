@@ -1282,7 +1282,7 @@ def segm_ext_ext(organ, mesh, cut, segm_names, palette, win):
     else: 
         return None, None
 
-def get_segments(organ, mesh, cut, segm_names, palette, ext_subsgm, win): 
+def get_segments(organ, mesh, cut, segm_names, palette, ext_subsgm, win=None): 
         
     #Mask the s3_stack to create segments
     cut_masked = mesh.mask_segments(cut = cut)
@@ -1295,19 +1295,19 @@ def get_segments(organ, mesh, cut, segm_names, palette, ext_subsgm, win):
         sp_dict_segm = classify_segments_from_ext(meshes = cut_masked, 
                                                     dict_segm = dict_segm[segm],
                                                     ext_sub = ext_subsgm[segm])
-        print('dict_segm after classif: ', sp_dict_segm)
+        # print('dict_segm after classif: ', sp_dict_segm)
         #Create submesh - segment
         subsgm = mesh.create_segment(name = segm, cut = cut, color = color)
         final_segm_mesh = create_subsegment(organ, subsgm, cut, cut_masked, 
                                                     'segm', sp_dict_segm, color)
-        save_submesh(organ, subsgm, final_segm_mesh, win)
+        if organ.mH_settings['wf_info']['segments']['save_all']:
+            save_submesh(organ, subsgm, final_segm_mesh, win)
         meshes_segm[segm] = final_segm_mesh
         
-    print('\n\n FINAL! mH_settings[measure]: ', organ.mH_settings['measure'], '\n\n')
-
-    print('wf_info (segm)-after: ', get_by_path(organ.mH_settings, ['wf_info', 'segments']))
-    print('organ.submeshes:', organ.submeshes)
-    print('organ.obj_temp:', organ.obj_temp)
+    # print('\n\n FINAL! mH_settings[measure]: ', organ.mH_settings['measure'], '\n\n')
+    # print('wf_info (segm)-after: ', get_by_path(organ.mH_settings, ['wf_info', 'segments']))
+    # print('organ.submeshes:', organ.submeshes)
+    # print('organ.obj_temp:', organ.obj_temp)
 
     return meshes_segm
 
@@ -1767,7 +1767,8 @@ def save_submesh(organ, submesh, mesh, win, ext='.vtk'):
 
     print('wf_info (segm)-after: ', get_by_path(organ.mH_settings, ['wf_info', 'segments']))
     print('>> Mesh '+mesh_name+' has been saved!')
-    win.win_msg('Mesh '+mesh_name+' has been saved!')
+    if win != None: 
+        win.win_msg('Mesh '+mesh_name+' has been saved!')
     alert('countdown')        
 
 def create_subsegment(organ, subsgm, cut, cut_masked, stype, sp_dict_segm, color):#
@@ -2317,7 +2318,7 @@ def kspl_chamber_cut(organ, mesh, kspl_CLnew, segm_cuts_info, cut, ordered_segm=
 
     if init: 
         ordered_segm = order_segms(organ, kspl_CLnew, list_num_pts, cut)
-        print('ordered_segm:', ordered_segm)
+        # print('ordered_segm:', ordered_segm)
     else: 
         colors = ['tomato','darkblue','yellow','chocolate','purple','gray']
         kspl_list = []

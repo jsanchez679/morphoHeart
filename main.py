@@ -515,6 +515,9 @@ class Controller:
         self.main_win.cut2_play_segm11.clicked.connect(lambda: self.run_segments(btn='Cut2_11'))
         self.main_win.cut2_play_segm12.clicked.connect(lambda: self.run_segments(btn='Cut2_12'))
 
+        #Reduce space  
+        self.main_win.segm_reduce_space.clicked.connect(lambda: mA.reduce_space(controller=self, info='segm'))
+
         #Angles segments
         self.main_win.play_angle_dir1_cut1.clicked.connect(lambda: self.run_angles(btn= 'dir1_cut1'))
         self.main_win.play_angle_dir2_cut1.clicked.connect(lambda: self.run_angles(btn= 'dir2_cut1'))
