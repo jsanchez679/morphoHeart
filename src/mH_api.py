@@ -1360,6 +1360,7 @@ def run_heatmaps3D(controller, btn):
                 fcM.extract_ballooning(organ = controller.organ, name = (ch, cont),
                                     name_cl = (cl_ch, cl_cont), setup = setup)
 
+            controller.main_win.hm_btns[hmitem]['play'].setChecked(True)  
             #Enable buttons to plot heatmaps
             controller.main_win.hm_btns[hmitem]['plot'].setEnabled(True)
             hm2d_btn = controller.main_win.hm_btns[hmitem]['play2d']
@@ -1584,7 +1585,8 @@ def run_heatmaps2D(controller, btn):
                     
                     #Update dirs to check if things have been made
                     controller.main_win.gui_thickness_ballooning[hmitem]['hm2d_dirs'] = dirs
-                                
+
+                controller.main_win.hm_btns[hmitem]['play2d'].setChecked(True)  
                 #Enable buttons to plot heatmaps
                 plot_btn = controller.main_win.hm_btns[hmitem]['plot2d']
                 plot_btn.setEnabled(True)

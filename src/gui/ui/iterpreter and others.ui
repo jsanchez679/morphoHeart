@@ -136,6 +136,154 @@ background-color: rgb(255, 255, 255);</string>
     <string>CheckBox</string>
    </property>
   </widget>
+  <widget class="QComboBox" name="hm2d_ext">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>795</x>
+     <y>505</y>
+     <width>60</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>60</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>60</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QComboBox {
+    border: 1px solid gray;
+	font: 25 10pt &quot;Calibri Light&quot;;
+}
+
+QComboBox:editable {
+    background: white;
+}
+
+QComboBox:!editable, QComboBox::drop-down:editable {
+     background: rgb(255, 255, 255);
+}
+
+/* QComboBox gets the &quot;on&quot; state when the popup is open */
+QComboBox:!editable:on, QComboBox::drop-down:editable:on {
+    background:rgba(170, 0, 127, 100);
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid darkgray;
+    selection-background-color:  rgba(162, 0, 122,180);
+	font: 25 10pt &quot;Calibri Light&quot;;
+}
+</string>
+   </property>
+   <item>
+    <property name="text">
+     <string>.png</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>.tiff</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="lab_hm2d_ext">
+   <property name="geometry">
+    <rect>
+     <x>755</x>
+     <y>505</y>
+     <width>35</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>35</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>35</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;
+background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>ext:</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="all_d3d2">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>665</x>
+     <y>240</y>
+     <width>147</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;</string>
+   </property>
+   <property name="text">
+    <string>Create binary heatmaps</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="tristate">
+    <bool>false</bool>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

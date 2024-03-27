@@ -9128,6 +9128,16 @@ class MainWindow(QMainWindow):
 
         self.plot_planes.stateChanged.connect(lambda: self.plot_plane_cuts())
         self.update_div(self.organ)
+        
+        #Binary Heatmaps
+        self.cb_binaryhm.stateChanged.connect(lambda: self.binary_hm(cb = 'cb_binaryhm', wdg = 'widget_bihm'))
+        self.widget_bihm.setVisible(False)
+        self.cb_binaryhm.setEnabled(False)
+        self.bi_3Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_3Dhm', wdg = 'widget_bi3D'))
+        self.bi_2Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_2Dhm', wdg = 'widget_bi2D'))
+        self.widget_bi3D.setVisible(False)
+        self.widget_bi2D.setVisible(False)
+        self.line_bihm.setVisible(False)
 
         #Filter heatmaps
         self.filter_2dhm.clicked.connect(lambda: self.filter2DHM())
@@ -10289,6 +10299,11 @@ class MainWindow(QMainWindow):
                     self.sect_tol_hm2d.setValue(wf_info['heatmaps']['heatmaps2D']['tol'])
                     self.plot_planes.setChecked(wf_info['heatmaps']['heatmaps2D']['plot']['plot_planes'])
                     self.every_planes.setValue(wf_info['heatmaps']['heatmaps2D']['plot']['every_planes'])
+                    try: 
+                        self.hm2d_ext.setCurrentText(wf_info['heatmaps']['heatmaps2D']['extension'])
+                    except: 
+                        pass
+                    
                 except: 
                     self.win_msg('Unable to load 2D Heatmap settings, please reset them.')
                     error_load = True
@@ -10299,8 +10314,12 @@ class MainWindow(QMainWindow):
             #Update Status in GUI
             if all(done_all): 
                 self.update_status(None, 'DONE', self.heatmaps_status, override=True)
+                self.cb_binaryhm.setEnabled(True)
+                self.bi_3Dhm.setEnabled(True)
             elif any(done_all) or at_least_one: 
                 self.update_status(None, 'Initialised', self.heatmaps_status, override=True)
+                self.cb_binaryhm.setEnabled(True)
+                self.bi_3Dhm.setEnabled(True)
             else: 
                 pass
 
@@ -11009,7 +11028,7 @@ class MainWindow(QMainWindow):
             every_planes = self.every_planes.value()
             gui_hm2D['plot'] = {'plot_planes': plot_planes, 
                                 'every_planes': every_planes}
-            
+            gui_hm2D['extension'] = self.hm2d_ext.currentText()
             self.cl_ext_hm2d.setEnabled(True)
             return gui_hm2D, list(gui_hm2D['div'].keys())
         else: 
@@ -11051,6 +11070,8 @@ class MainWindow(QMainWindow):
                     self.hm_btns[item]['play2d'].setEnabled(True)
                 else: 
                     pass
+        #Acaaa
+        print('aa')
 
         if hasattr(self, 'cl4hm'):
             ch4cl, cont4cl = self.cl4hm.split('_')
@@ -13245,6 +13266,26 @@ class MainWindow(QMainWindow):
         getattr(self, 'lab_plot_planes0').setEnabled(state)
         getattr(self, 'every_planes').setEnabled(state)
         getattr(self, 'lab_plot_planes1').setEnabled(state)
+
+    def binary_hm(self, cb, wdg): 
+
+        cb_btn = getattr(self, cb)
+        wdg_f = getattr(self, wdg)
+        if cb_btn.isChecked(): 
+            wdg_f.setVisible(True)
+        else: 
+            wdg_f.setVisible(False)
+        
+        if '2D' in wdg or '3D' in wdg:
+            at_least_one = False
+            for ww in ['widget_bi3D', 'widget_bi2D']:
+                if getattr(self, ww).isVisible():
+                    at_least_one = True
+
+            if at_least_one: 
+                self.line_bihm.setVisible(True)
+            else: 
+                self.line_bihm.setVisible(False)
 
     def default_range(self, btn_num):
         btn = getattr(self, 'def'+btn_num)

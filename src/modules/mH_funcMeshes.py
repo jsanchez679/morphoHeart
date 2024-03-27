@@ -2697,7 +2697,8 @@ def heatmap_unlooped(organ, kspl_data, df_unloopedf, hmitem, ch, gui_thball):
     #Get all saving settings
     organ_name = organ.user_organName
     title_df = organ_name+'_hmUnloop_'+hmitem+'_'+kspl_data['name']+'.csv'
-    title_hm = organ_name+'_hmUnloop_'+hmitem+'_'+kspl_data['name']+'.png'
+    extension = gui_thball['heatmaps2D']['extension']
+    title_hm = organ_name+'_hmUnloop_'+hmitem+'_'+kspl_data['name']+extension
     dir_df = organ.dir_res(dir='csv_all') / title_df
     dir_hm = organ.dir_res(dir='imgs_videos') / title_hm
     print(dir_df, '\n', dir_hm)
