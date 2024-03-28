@@ -1403,6 +1403,9 @@ def run_heatmaps3D(controller, btn):
         proc_set = ['wf_info']
         update = controller.main_win.gui_thickness_ballooning
         controller.organ.update_settings(proc_set, update, 'mH', add='heatmaps')
+        controller.main_win.bi_3Dhm.setVisible(True)
+        controller.main_win.bi_3Dhm.setEnabled(True)
+        controller.main_win.update_binary_combobox(htype='3D')
 
         #Update Status in GUI
         if all(flag == 'DONE' for flag in all_all_done): 
@@ -1592,6 +1595,10 @@ def run_heatmaps2D(controller, btn):
                 plot_btn.setEnabled(True)
                 #Enable button to filter heatmaps
                 controller.main_win.filter_2dhm.setEnabled(True)
+
+            controller.main_win.bi_2Dhm.setVisible(True)
+            controller.main_win.bi_2Dhm.setEnabled(True)
+            controller.main_win.update_binary_combobox(htype='2D')
 
             print('\nEND Heatmaps')
             print('organ.mH_settings:', controller.organ.mH_settings)

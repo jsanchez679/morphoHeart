@@ -6173,6 +6173,21 @@ class MainWindow(QMainWindow):
                     self.slider_changed(name, 'value', divider = 10)
                 else: 
                     self.slider_changed(name, 'value')
+            elif 'cut_' in widget_name: 
+                #Get range and analyse if value is within it
+                if '2D' in widget_name: 
+                    cbox_txt = getattr(self, 'hm2D_2bi').currentText()
+                    rangev = getattr(self, 'hm2D_range').text()
+                else: 
+                    cbox_txt = getattr(self, 'hm3D_2bi').currentText()
+                    rangev = getattr(self, 'hm3D_range').text()
+                
+                if cbox_txt != '--select--': 
+                    minv, maxv = rangev.split(' - ')
+                    if float(widget.text())> float(maxv) or float(widget.text())<float(minv):
+                        self.win_msg('!Note: The cut value entered is not within the heatmap range.')
+                    else:
+                        pass
 
         elif (event.type() == QtCore.QEvent.Type.KeyPress and isinstance(widget, QLineEdit)):
             key = event.key()
@@ -9128,22 +9143,54 @@ class MainWindow(QMainWindow):
 
         self.plot_planes.stateChanged.connect(lambda: self.plot_plane_cuts())
         self.update_div(self.organ)
-        
+
         #Binary Heatmaps
-        self.cb_binaryhm.stateChanged.connect(lambda: self.binary_hm(cb = 'cb_binaryhm', wdg = 'widget_bihm'))
         self.widget_bihm.setVisible(False)
         self.cb_binaryhm.setEnabled(False)
-        self.bi_3Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_3Dhm', wdg = 'widget_bi3D'))
-        self.bi_2Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_2Dhm', wdg = 'widget_bi2D'))
+        self.bi_3Dhm.setVisible(True)
+        self.bi_2Dhm.setVisible(True)
         self.widget_bi3D.setVisible(False)
         self.widget_bi2D.setVisible(False)
         self.line_bihm.setVisible(False)
+        bi_colors = ['crimson', 'midnightblue']
+        for dim in ['3', '2']: 
+            for u, num, color in zip(count(), ['1', '2'], bi_colors):
+                btn_color = getattr(self, 'fillcolor_hm'+dim+'Dbi'+num)
+                color_btn(btn = btn_color, color = color)
+        
+        self.fillcolor_hm3Dbi1.clicked.connect(lambda: self.color_picker(name = 'hm3Dbi1'))
+        self.fillcolor_hm3Dbi2.clicked.connect(lambda: self.color_picker(name = 'hm3Dbi2'))
+        self.fillcolor_hm2Dbi1.clicked.connect(lambda: self.color_picker(name = 'hm2Dbi1'))
+        self.fillcolor_hm2Dbi2.clicked.connect(lambda: self.color_picker(name = 'hm2Dbi2'))
+
+        self.cb_binaryhm.stateChanged.connect(lambda: self.binary_hm(cb = 'cb_binaryhm', wdg = 'widget_bihm'))
+        self.bi_3Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_3Dhm', wdg = 'widget_bi3D'))
+        self.bi_2Dhm.stateChanged.connect(lambda: self.binary_hm(cb = 'bi_2Dhm', wdg = 'widget_bi2D'))
+
+        # - Regular expression for cut value
+        reg_ex_dec6 = QRegularExpression(r"\d{1,6}+\.\d") #6 digit number with decimal
+        cut_val1 = self.cut_3Dbi
+        cut_valid1 = QRegularExpressionValidator(reg_ex_dec6, cut_val1)
+        cut_val1.setValidator(cut_valid1)
+        cut_val2 = self.cut_2Dbi
+        cut_valid2 = QRegularExpressionValidator(reg_ex_dec6, cut_val2)
+        cut_val2.setValidator(cut_valid2)
+
+        self.cut_3Dbi.installEventFilter(self)
+        self.cut_2Dbi.installEventFilter(self)
+
+        self.plot_hm3D_bi.clicked.connect(lambda: self.plot_binary3D())
+        self.plot_hm2D_bi.clicked.connect(lambda: self.plot_binary2D())
 
         #Filter heatmaps
         self.filter_2dhm.clicked.connect(lambda: self.filter2DHM())
 
         #Initialise with user settings, if they exist!
         self.user_heatmaps()
+
+        #Binary Heatmaps
+        self.hm3D_2bi.currentTextChanged.connect(lambda: self.update_bihm_range(htype='3D'))
+        self.hm2D_2bi.currentTextChanged.connect(lambda: self.update_bihm_range(htype='2D'))
 
     def init_segments(self):
         #Buttons
@@ -10315,10 +10362,12 @@ class MainWindow(QMainWindow):
             if all(done_all): 
                 self.update_status(None, 'DONE', self.heatmaps_status, override=True)
                 self.cb_binaryhm.setEnabled(True)
+                self.bi_3Dhm.setVisible(True)
                 self.bi_3Dhm.setEnabled(True)
             elif any(done_all) or at_least_one: 
                 self.update_status(None, 'Initialised', self.heatmaps_status, override=True)
                 self.cb_binaryhm.setEnabled(True)
+                self.bi_3Dhm.setVisible(True)
                 self.bi_3Dhm.setEnabled(True)
             else: 
                 pass
@@ -11039,6 +11088,7 @@ class MainWindow(QMainWindow):
     def update_3d2d(self): 
 
         wf = self.organ.workflow['morphoHeart']['MeshesProc']
+        at_least_one = False
         for item in self.hm_btns: 
             if 'th' in item: #'th_i2e[ch1-tiss]'
                 if 'i2e' in item: 
@@ -11068,10 +11118,16 @@ class MainWindow(QMainWindow):
                 proc4cl = ['C-Centreline', 'buildCL', ch4cl, cont4cl, 'Status']
                 if get_by_path(wf, proc) == 'DONE' and get_by_path(wf, proc4cl) == 'DONE' and 'heatmaps2D' in self.organ.mH_settings['wf_info']['heatmaps'].keys():
                     self.hm_btns[item]['play2d'].setEnabled(True)
+                    at_least_one = True
                 else: 
                     pass
-        #Acaaa
-        print('aa')
+
+        if at_least_one: 
+            self.bi_2Dhm.setVisible(True)
+            self.bi_2Dhm.setEnabled(True)
+            self.update_binary_combobox(htype = '2D')
+        
+        self.update_binary_combobox(htype = '3D')
 
         if hasattr(self, 'cl4hm'):
             ch4cl, cont4cl = self.cl4hm.split('_')
@@ -11080,6 +11136,57 @@ class MainWindow(QMainWindow):
             if get_by_path(wf, proc4cl):
                 self.update_status(None, 'DONE', self.hm_centreline_status, override=True)
    
+    def update_binary_combobox(self, htype): 
+
+        if htype == '2D': 
+            btn_name = 'plot2d'
+            cbox = getattr(self, 'hm2D_2bi')
+        else: 
+            btn_name = 'plot'
+            cbox = getattr(self, 'hm3D_2bi')
+        cbox.clear()
+
+        list_items = ['--select--']
+        for item in self.hm_btns:
+            if self.hm_btns[item][btn_name].isEnabled():
+                list_items.append(self.hm_btns[item]['name'])
+        cbox.addItems(list_items)
+
+    def update_bihm_range(self, htype): 
+        
+        if htype == '2D': 
+            cbox = getattr(self, 'hm2D_2bi')
+            range_box = getattr(self, 'hm2D_range')
+        else: 
+            cbox = getattr(self, 'hm3D_2bi')
+            range_box = getattr(self, 'hm3D_range')
+
+        hm_selected = cbox.currentText()
+        if hm_selected != '--select--': 
+            for key in self.hm_btns.keys(): 
+                if self.hm_btns[key]['name'] == hm_selected: 
+                    hmget = key
+                    break
+            
+            proc, name_ch_cont = hmget.split('[')
+            if 'th' in hmget: 
+                ch, cont = name_ch_cont[:-1].split('-')
+                namef = ch+'_'+cont+'_whole'
+            else: 
+                ch_cont, cl_ch_cont = name_ch_cont[:-1].split('(CL.')
+                ch, cont = ch_cont.split('-')
+                cl_ch, cl_cont = cl_ch_cont[:-1].split('-')
+                namef = ch+'_'+cont+'_('+cl_ch+'_'+cl_cont+')'
+
+            min_val = self.organ.mH_settings['measure'][proc][namef]['range_o']['min_val']
+            max_val = self.organ.mH_settings['measure'][proc][namef]['range_o']['max_val']
+
+            min_txt = float("{:.2f}".format(min_val))
+            max_txt = float("{:.2f}".format(max_val))
+            range_box.setText(str(min_txt)+' - '+str(max_txt))
+        else: 
+            range_box.setText('')
+
     def set_segments(self, init=False):
         wf_info = self.organ.mH_settings['wf_info']
         current_gui_segm = self.gui_segments_n()
@@ -12465,6 +12572,7 @@ class MainWindow(QMainWindow):
         alert('countdown') 
         self.win_msg('Results file  -'+ filename + '  was succesfully saved!')
 
+    ############################################################################################
     #Functions specific to gui functionality
     def open_section(self, name, ch_name=None): 
         #Get button
@@ -12512,7 +12620,8 @@ class MainWindow(QMainWindow):
             #Update colour in mH_settings
             if name in ['chA', 'chB', 'chC', 'chD']: 
                 self.organ.mC_settings['setup']['color_chs'][name] = [red, green, blue]
-
+            elif 'bi' in name: 
+                print('update')
             else: 
                 if 'cell' in name: 
                     name_split = name.split('_')
@@ -12870,6 +12979,7 @@ class MainWindow(QMainWindow):
                 self.win_msg('!Remember to re-set the settings for this '+cut+' to make sure all the changes are applied.')
                 alert('bubble')
 
+    ############################################################################################
     #Workflow functions   
     #>> Init Ch Progress Table
     def init_ch_progress(self): 
@@ -13161,6 +13271,7 @@ class MainWindow(QMainWindow):
                 print('---False:', final_key)
                 alert('error_beep')
 
+    ############################################################################################
     #Results functions
     def fill_results(self): 
 
@@ -13246,6 +13357,7 @@ class MainWindow(QMainWindow):
         df_res = self.organ.mH_settings['df_res']
         self.index_param = set([param for (param, _, _) in df_res.index])
             
+    ############################################################################################
     #Other analysis tab
     def improve_2DHM_segm(self):
         cB = getattr(self, 'improve_hm2D')
@@ -13328,7 +13440,6 @@ class MainWindow(QMainWindow):
         else: 
             segm_combo.setEnabled(False)
             
-
     def select_extension_plane(self, cut): 
         #Section names
         sect_settings = self.organ.mH_settings['setup']['sect']
@@ -13614,6 +13725,7 @@ class MainWindow(QMainWindow):
             error_txt = '*Please make sure you have already acquired the centreline you have selected to be able to continue.'
             self.win_msg(error_txt, getattr(self, 'set_angles_initial'))
        
+    ############################################################################################
     #Plot 2D functions (Heatmaps 2D)    
     def plot_heatmap2d(self, btn): 
         print('Plotting heatmap2d: ', btn)
@@ -13722,6 +13834,10 @@ class MainWindow(QMainWindow):
         self.plot_win.canvas.draw()
         # self.plot_win.exec()
         self.plot_win.show()
+
+    def plot_binary2D(self): 
+
+        print('')
 
     #Plot 3D functions
     def plot_meshes(self, ch, chNS=False):
@@ -13848,8 +13964,14 @@ class MainWindow(QMainWindow):
     def set_scalebar(self, mesh, name, proc, title):
         if self.gui_thickness_ballooning[name]['default']: 
             _, name_ch_cont = name.split('[')
-            ch, cont = name_ch_cont[:-1].split('-')
-            namef = ch+'_'+cont+'_whole'
+            if 'th' in proc: 
+                ch, cont = name_ch_cont[:-1].split('-')
+                namef = ch+'_'+cont+'_whole'
+            else: 
+                ch_cont, cl_ch_cont = name_ch_cont[:-1].split('(CL.')
+                ch, cont = ch_cont.split('-')
+                cl_ch, cl_cont = cl_ch_cont[:-1].split('-')
+                namef = ch+'_'+cont+'_('+cl_ch+'_'+cl_cont+')'
             min_val = self.organ.mH_settings['measure'][proc][namef]['range_o']['min_val']
             max_val = self.organ.mH_settings['measure'][proc][namef]['range_o']['max_val']
         else: 
@@ -13863,6 +13985,75 @@ class MainWindow(QMainWindow):
 
         return mesh
 
+    def plot_binary3D(self): 
+
+        cbox = getattr(self, 'hm3D_2bi')
+        hm_selected = cbox.currentText()
+        if hm_selected != '--select--': 
+            for key in self.hm_btns.keys(): 
+                if self.hm_btns[key]['name'] == hm_selected: 
+                    hmget = key
+                    break
+        cut_val = getattr(self, 'cut_3Dbi').text()
+        range_val = getattr(self, 'hm3D_range').text()
+        alpha_val = 1.0
+        
+        titlef = self.organ.user_organName + ' Binarized Heatmap \n'+'\t- '+hm_selected+'\n\t- Heatmap range: '+range_val+'um\n\t- Cut value: '+cut_val+'um'
+        txt = [(0, titlef)]
+        proc, name_ch_cont = hmget.split('[')
+        if 'th' in hmget: 
+            ch, cont = name_ch_cont[:-1].split('-')
+            if 'i2e' in hmget: 
+                mtype = 'thck(intTOext)'
+                short = 'th_i2e'
+                from_name = 'int>ext'
+            else: 
+                mtype = 'thck(extTOint)'
+                short = 'th_e2i'
+                from_name = 'ext>int'
+
+            mesh_tiss = self.organ.obj_meshes[ch+'_tiss']
+            title = mesh_tiss.mesh.name+'\nThickness [um]\n('+from_name+')'
+            mesh_thck = mesh_tiss.mesh_meas[mtype].clone()
+
+            mesh_base = mesh_tiss; mesh2bi = mesh_thck
+
+        else: 
+            ch_cont, cl_info = name_ch_cont.split('(CL.')
+            ch, cont = ch_cont.split('-')
+            from_cl, from_cl_type = cl_info[:-2].split('-')
+            mtype = 'ballCL('+from_cl+'_'+from_cl_type+')'
+            short = 'ball'
+            mesh2ball = self.organ.obj_meshes[ch+'_'+cont]
+            mesh_ball = mesh2ball.mesh_meas[mtype].clone()
+
+            title = mesh2ball.legend+'\nCL to Tissue [um]\nCL:'+from_cl+'_'+from_cl_type
+
+            mesh_base = mesh2ball; mesh2bi = mesh_ball
+
+        mesh2bi = self.set_bi_scalebar(mesh = mesh_base, mesh2bi = mesh2bi, proc = short, 
+                                             mtype = mtype, cut_val = float(cut_val), alpha_val = alpha_val, title = title)
+        obj = [(mesh2bi)]
+        plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(self.organ.get_maj_bounds()))
+        print()
+    
+    def set_bi_scalebar(self, mesh, mesh2bi, proc, mtype, cut_val, alpha_val, title): 
+        if 'th' in proc: 
+            npy_name = str(mesh.dirs['arrays'][mtype])+'.npy'
+            dir_npy = self.organ.dir_res(dir='csv_all') / npy_name
+        else: 
+            npy_name = str(mesh.dirs['arrays'][mtype])+'.npy'
+            dir_npy = self.organ.dir_res(dir='csv_all') / npy_name
+
+        npy_colour = np.load(dir_npy)
+        bi_npy_colour = (npy_colour > cut_val).astype(np.int_)
+        mycmap = ["darkblue", "magenta"]
+        alphas = [alpha_val]*len(mycmap)
+        mesh2bi.cmap(mycmap, bi_npy_colour, alpha=alphas, n_colors=2)
+        mesh2bi.add_scalarbar(title=title, pos=(0.7, 0.05))
+        
+        return mesh2bi
+    
     def plot_segm_sect(self, btn):
         #btn = cut1_segm1 / cut1_sect1 / 'scut1_cut1_plot_sect1'
 
