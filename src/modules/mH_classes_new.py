@@ -2147,7 +2147,7 @@ class Organ():
                         print('file2rem exists:',file2rem.is_file())
                         file2rem.unlink(missing_ok=True)
                         if not file2rem.is_file(): 
-                            win.win_msg('Segment '+btn+' was succesfully removed!')
+                            win.win_msg('Segment '+btn+' was successfully removed!')
                             n+=1
                     except: 
                         pass #print('empty - ', cut, ch, cont, segm)

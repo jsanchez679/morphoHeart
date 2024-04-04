@@ -826,7 +826,7 @@ def run_cleanup(controller):
         controller.main_win.reset_cleaned_s3s.setEnabled(True)
         # Create prompt window to ask user to check resulting meshes
         title = 'Check resulting meshes...'
-        msg = ['All selected meshes have been succesfully cleaned! Please check the resulting meshes before continuing with the next process. If you would like to set new cleaning settings, click  -Reset Cleaned Meshes-  and re-run the process.',
+        msg = ['All selected meshes have been successfully cleaned! Please check the resulting meshes before continuing with the next process. If you would like to set new cleaning settings, click  -Reset Cleaned Meshes-  and re-run the process.',
                '[Note: Resetting the cleaned meshes is only possible after and within the same session of running the cleaning process].']
         prompt = Prompt_ok(title, msg, win_size=[425, 300], parent=controller.main_win)
         prompt.exec()
@@ -859,7 +859,7 @@ def run_trimming(controller):
         controller.main_win.reset_trimmed_s3s.setEnabled(True)
         #Create prompt window to ask user to check resulting meshes
         title = 'Check resulting meshes...'
-        msg = ['All selected meshes have been succesfully trimmed! Please check the resulting meshes before continuing with the next process. If you would like to set new trimming planes, click  -Reset Trimmed Meshes-  and re-run the process.',
+        msg = ['All selected meshes have been successfully trimmed! Please check the resulting meshes before continuing with the next process. If you would like to set new trimming planes, click  -Reset Trimmed Meshes-  and re-run the process.',
                '[Note: Resetting the trimmed meshes is only possible after and within the same session of running the trimming process].'] 
         prompt = Prompt_ok(title, msg, win_size=[425, 300], parent=controller.main_win)
         prompt.exec()

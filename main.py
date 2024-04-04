@@ -196,7 +196,6 @@ class Controller:
             self.main_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
             self.init_main_win()
         win.close()
-        setattr(self, parent_win, None)
         self.main_win.show()
 
     def show_analysis_window(self, parent_win:str, single_proj:bool): 
@@ -637,7 +636,7 @@ class Controller:
     def init_multip_analysis_win(self): 
 
         self.multip_analysis_win.button_see_proj_settings.clicked.connect(lambda: self.show_proj_settings(parent_win=self.main_win))
-
+        self.multip_analysis_win.actionAbout_morphoHeart.triggered.connect(self.show_about)
         #Action buttons
         
     #Functions related to API  
@@ -794,7 +793,7 @@ class Controller:
     def load_organ(self, proj, organ_to_load, single_organ=True):
         loaded_organ = proj.load_organ(organ_to_load = organ_to_load)
         if not hasattr(loaded_organ, 'obj_temp'):
-                loaded_organ.obj_temp = {}
+            loaded_organ.obj_temp = {}
         if single_organ: 
             self.organ = loaded_organ
             print('-------------Loaded Organ:-------------')

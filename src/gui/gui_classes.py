@@ -32,6 +32,7 @@ import pandas as pd
 import pickle as pl
 import glob
 import json
+import math
 
 import matplotlib
 #print('matplotlib:',matplotlib.__version__)
@@ -743,7 +744,7 @@ class Process_ongoing(QDialog):
         self.prog_bar_all.setValue(len(flat_hm2filt))
 
         self.ok_button.setEnabled(True)
-        self.win_msg('All heatmaps have been succesfully filtered!')
+        self.win_msg('All heatmaps have been successfully filtered!')
 
 class CreateNewProj(QDialog):
 
@@ -4462,12 +4463,16 @@ class LoadProj(QDialog):
     def set_filter_table(self): 
         filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False, 'morphoHeart':True}
         self.filter_cB = Checkable_ComboBox()
+        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+        self.filter_cB.setStyleSheet(styleSheet)
         self.filter_cB.addItems(filter_opt)
         self.hlayout_filter.addWidget(self.filter_cB)
 
     def set_filter_table_comb(self): 
         filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False, 'morphoHeart':True}
         self.filter_cB_comb = Checkable_ComboBox()
+        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+        self.filter_cB_comb.setStyleSheet(styleSheet)
         self.filter_cB_comb.addItems(filter_opt)
         self.hlayout_filter_comb.addWidget(self.filter_cB_comb)
 
@@ -5009,7 +5014,7 @@ class Load_MultiProj(QDialog):
         if self.button_load_organs_comb.isChecked(): 
             load_proj_organs_comb(win=self, proj=self.proj)
             fill_table_selected_organs(win=self, table = self.tabW_organs_final, 
-                                        blind_cB=self.cB_blind_comb,  notes_cB=win.cB_notes, 
+                                        blind_cB=self.cB_blind_comb,  notes_cB=self.cB_notes, 
                                         single_proj=False)
 
 class Load_S3s(QDialog): 
@@ -5173,7 +5178,7 @@ class Load_S3s(QDialog):
             proj.add_organ(organ)
             proj.save_project()
             print('organ.__dict__:', organ.__dict__)
-            self.win_msg('Project  -'+ proj.user_projName + 'and Organ  -'+ organ.user_organName +'-  were saved succesfully!')
+            self.win_msg('Project  -'+ proj.user_projName + 'and Organ  -'+ organ.user_organName +'-  were saved successfully!')
             self.close()
             parent_win.win_msg('All closed channels have been successfully imported in this organ!')
 
@@ -6184,10 +6189,13 @@ class MainWindow(QMainWindow):
                 
                 if cbox_txt != '--select--': 
                     minv, maxv = rangev.split(' - ')
-                    if float(widget.text())> float(maxv) or float(widget.text())<float(minv):
-                        self.win_msg('!Note: The cut value entered is not within the heatmap range.')
-                    else:
-                        pass
+                    if widget.text() != '': 
+                        if float(widget.text())> float(maxv) or float(widget.text())<float(minv):
+                            self.win_msg('!Note: The cut value entered is not within the heatmap range.')
+                        else:
+                            pass
+                    else: 
+                        self.win_msg('*Please introduce a valid cut value.')
 
         elif (event.type() == QtCore.QEvent.Type.KeyPress and isinstance(widget, QLineEdit)):
             key = event.key()
@@ -9152,11 +9160,6 @@ class MainWindow(QMainWindow):
         self.widget_bi3D.setVisible(False)
         self.widget_bi2D.setVisible(False)
         self.line_bihm.setVisible(False)
-        bi_colors = ['crimson', 'midnightblue']
-        for dim in ['3', '2']: 
-            for u, num, color in zip(count(), ['1', '2'], bi_colors):
-                btn_color = getattr(self, 'fillcolor_hm'+dim+'Dbi'+num)
-                color_btn(btn = btn_color, color = color)
         
         self.fillcolor_hm3Dbi1.clicked.connect(lambda: self.color_picker(name = 'hm3Dbi1'))
         self.fillcolor_hm3Dbi2.clicked.connect(lambda: self.color_picker(name = 'hm3Dbi2'))
@@ -9181,6 +9184,7 @@ class MainWindow(QMainWindow):
 
         self.plot_hm3D_bi.clicked.connect(lambda: self.plot_binary3D())
         self.plot_hm2D_bi.clicked.connect(lambda: self.plot_binary2D())
+        self.save_hm2dbi.clicked.connect(lambda: self.save_binary2Dhm())
 
         #Filter heatmaps
         self.filter_2dhm.clicked.connect(lambda: self.filter2DHM())
@@ -10381,7 +10385,22 @@ class MainWindow(QMainWindow):
                 self.set_thickness2D(init=True)
         else: 
             pass
-
+        
+        if 'bi_heatmaps' not in wf_info.keys(): 
+            bi_colors = ['crimson', 'midnightblue']
+            wf_info['bi_heatmaps'] = {'3D':{'color1': bi_colors[0],
+                                            'color2': bi_colors[1]}, 
+                                      '2D':{'color1': bi_colors[0],
+                                            'color2': bi_colors[1]}}
+        else: 
+            pass
+    
+        for dim in ['3', '2']: 
+            for u, num in enumerate(['1', '2']):
+                btn_color = getattr(self, 'fillcolor_hm'+dim+'Dbi'+num)
+                color = wf_info['bi_heatmaps'][dim+'D']['color'+num]
+                color_btn(btn = btn_color, color = color)
+                
         #Update status of hm_cl if centreline has been already obtained
         if hasattr(self, 'cl4hm'):
             ch4cl, cont4cl = self.cl4hm.split('_')
@@ -10561,7 +10580,7 @@ class MainWindow(QMainWindow):
                             play_btn.setEnabled(True)
 
             try: 
-                same_extCL = gui_sect['same_extCL']
+                same_extCL = wf_info['sections']['same_extCL']
                 self.reg_same_centreline.setChecked(same_extCL)
             except: 
                 pass
@@ -12570,7 +12589,7 @@ class MainWindow(QMainWindow):
                     df.to_excel(writer, sheet_name=name)
 
         alert('countdown') 
-        self.win_msg('Results file  -'+ filename + '  was succesfully saved!')
+        self.win_msg('Results file  -'+ filename + '  was successfully saved!')
 
     ############################################################################################
     #Functions specific to gui functionality
@@ -12621,7 +12640,11 @@ class MainWindow(QMainWindow):
             if name in ['chA', 'chB', 'chC', 'chD']: 
                 self.organ.mC_settings['setup']['color_chs'][name] = [red, green, blue]
             elif 'bi' in name: 
-                print('update')
+                if '3D' in name: 
+                    self.organ.mH_settings['wf_info']['bi_heatmaps']['3D']['color'+name[-1]] = [red, green, blue]
+                elif '2D' in name: 
+                    self.organ.mH_settings['wf_info']['bi_heatmaps']['2D']['color'+name[-1]] = [red, green, blue]
+
             else: 
                 if 'cell' in name: 
                     name_split = name.split('_')
@@ -13728,6 +13751,7 @@ class MainWindow(QMainWindow):
     ############################################################################################
     #Plot 2D functions (Heatmaps 2D)    
     def plot_heatmap2d(self, btn): 
+
         print('Plotting heatmap2d: ', btn)
 
         btn_num = int(btn)-1
@@ -13837,8 +13861,250 @@ class MainWindow(QMainWindow):
 
     def plot_binary2D(self): 
 
-        print('')
+        cbox = getattr(self, 'hm2D_2bi')
+        hm_selected = cbox.currentText()
+        cut_val = getattr(self, 'cut_2Dbi').text()
 
+        if hm_selected == '--select--':
+            self.win_msg('*Please select a 3D heatmap to binarise...')
+            return 
+        elif cut_val == '': 
+            self.win_msg('*Please select a valid cut value to binarise the selected 3D heatmap...')
+            return 
+        else: 
+            for key in self.hm_btns.keys(): 
+                if self.hm_btns[key]['name'] == hm_selected: 
+                    hmget = key
+                    break
+            
+            range_val = getattr(self, 'hm2D_range').text()
+            alpha_val = 1.0
+
+            title = self.organ.user_organName + ' - Binary Heatmap: '+hm_selected
+            titlef = title+'\n(Heatmap range: '+range_val+'um, - Cut value: '+cut_val+'um)'
+            color1 = self.organ.mH_settings['wf_info']['bi_heatmaps']['2D']['color1']  #getattr(self, 'fillcolor_hm3Dbi1').text()
+            color2 = self.organ.mH_settings['wf_info']['bi_heatmaps']['2D']['color2'] 
+            bi_colors = []
+            for color in [color1, color2]: 
+                if isinstance(color, list): 
+                    colorn = [val/255 for val in color]
+                else: 
+                    colorn = color
+                bi_colors.append(colorn)
+            mycmap = matplotlib.colors.ListedColormap(bi_colors)
+
+            gui_thball = self.gui_thickness_ballooning[hmget]
+            dirs_df = gui_thball['hm2d_dirs']
+
+            # Make figure
+            self.plot_win = PlotWindow(title= title, width = 8, height = 8, dpi = 300, parent = self)
+            self.plot_win.lab_title.setText(titlef)
+            fontsize = 2.5; labelsize = 10; width = 0.1; length = 2
+            n_subs = len(dirs_df)
+
+            fig11 = self.plot_win.figure
+            fig11.clear()
+
+            #Gridspec
+            outer_grid = fig11.add_gridspec(nrows=n_subs, ncols=2, width_ratios =[1,0.035])
+            outer_grid.update(left=0.1,right=0.9,top=0.95,bottom=0.05,wspace=0,hspace=0)
+
+            divs = sorted(list(dirs_df.keys()))
+
+            n=0
+            for div in divs:
+                if 'whole' in str(dirs_df[div]): 
+                    name = ''
+                else: 
+                    name = self.ordered_kspl[div]['name']
+                print('name:', name)
+
+                #Get heatmap specific for that segm
+                dir_df = self.organ.dir_res(dir='csv_all') / dirs_df[div]
+                heatmap = get_unlooped_heatmap(hmget, dir_df)
+                # hm2f = heatmap.copy()
+                # columns = heatmap.columns
+                # indexes = heatmap.index
+                # max_max = heatmap.max().max()
+                # min_min = heatmap.min().min()-1000
+
+                # np2f = hm2f.to_numpy()
+                # np2f[np2f > float(cut_val)] = max_max
+                # np2f[np2f <= float(cut_val)] = min_min
+
+                # np2f[np2f == max_max] = 1
+                # np2f[np2f == min_min] = 0
+
+                # filt_hm = pd.DataFrame(np2f, columns = columns, index = indexes)
+
+                ax = fig11.add_subplot(outer_grid[n])
+                bounds = [heatmap.min().min(), float(cut_val), heatmap.max().max()]
+                norm = matplotlib.colors.BoundaryNorm(bounds, mycmap.N)
+                c = ax.pcolor(heatmap, cmap=mycmap, norm=norm)
+                ax.invert_yaxis()
+
+                y_pos = ax.get_yticks()
+                ylabels=np.linspace(heatmap.index.min(), heatmap.index.max(), len(y_pos)).round(2)
+                ax.set_yticks(ticks=y_pos, labels=ylabels)
+                ax.set_yticklabels(ylabels, rotation=0, fontsize=fontsize)#, fontname='Arial')
+                ax.yaxis.set_tick_params(labelsize=fontsize, width = width, length = length, 
+                                        labelrotation = 0, labelcolor='#696969', direction='out', which='major')
+                # print('params:', ax.yaxis.get_tick_params(which='major'))
+                # print('ylabels:', ylabels)
+                x_pos = ax.get_xticks()
+                x_pos_new = np.linspace(x_pos[0], x_pos[-1], 7)
+                ax.set_xticks(x_pos_new) 
+                x_lab_new = np.arange(-180,200,60)
+                ax.set_xticklabels(x_lab_new, rotation=30, fontsize=fontsize)#, fontname='Arial')
+                ax.xaxis.set_tick_params(labelsize=fontsize, width = width, length = length, 
+                                        labelcolor='#696969', direction='out', which='major')
+                # print('params:', ax.xaxis.get_tick_params(which='major'))
+
+                for pos in ['top', 'right']:
+                    ax.spines[pos].set_visible(False)
+                for pos in ['bottom', 'left']:
+                    ax.spines[pos].set_linewidth(0.1)
+                if name != '':
+                    ax.set_ylabel(ylabel = name.title(), fontsize=fontsize)
+
+                #Colorbar 
+                axc = fig11.add_subplot(outer_grid[n+1])
+                axc.set_axis_off()
+                cb = self.plot_win.figure.colorbar(c, ax=axc, fraction = 1)#, orientation='horizontal')
+                cb.ax.tick_params(width = 0.1, length = 2, labelsize=fontsize)
+                # cb.set_label(label, fontsize=fontsize)
+                cb.outline.set_visible(False)
+
+                n+=2
+
+            #Draw and show window
+            self.plot_win.canvas.draw()
+            # self.plot_win.exec()
+            self.plot_win.show()
+
+    def save_binary2Dhm(self): 
+
+        filename = self.bihm_name.text()
+        ext = self.hm2dbi_ext.currentText()
+
+        if filename == '': 
+            self.win_msg('*Please provide a filename to the binary 2D heatmap to continue.')
+        elif len(filename) < 5: 
+            self.win_msg('*The filename provided needs to have at least 5 characters. Modify it to continue.')
+        else: 
+            cbox = getattr(self, 'hm2D_2bi')
+            hm_selected = cbox.currentText()
+            cut_val = getattr(self, 'cut_2Dbi').text()
+
+            if hm_selected == '--select--':
+                self.win_msg('*Please select a 3D heatmap to binarise...')
+                return 
+            elif cut_val == '': 
+                self.win_msg('*Please select a valid cut value to binarise the selected 3D heatmap...')
+                return 
+            else: 
+                for key in self.hm_btns.keys(): 
+                    if self.hm_btns[key]['name'] == hm_selected: 
+                        hmget = key
+                        break
+                
+                range_val = getattr(self, 'hm2D_range').text()
+                alpha_val = 1.0
+
+                title = self.organ.user_organName + ' - Binary Heatmap: '+hm_selected
+                titlef = title+'\n(Heatmap range: '+range_val+'um, - Cut value: '+cut_val+'um)'
+                color1 = self.organ.mH_settings['wf_info']['bi_heatmaps']['2D']['color1']  #getattr(self, 'fillcolor_hm3Dbi1').text()
+                color2 = self.organ.mH_settings['wf_info']['bi_heatmaps']['2D']['color2'] 
+                bi_colors = []
+                for color in [color1, color2]: 
+                    if isinstance(color, list): 
+                        colorn = [val/255 for val in color]
+                    else: 
+                        colorn = color
+                    bi_colors.append(colorn)
+                mycmap = matplotlib.colors.ListedColormap(bi_colors)
+
+                gui_thball = self.gui_thickness_ballooning[hmget]
+                dirs_df = gui_thball['hm2d_dirs']
+
+                # Make figure
+                n_subs = len(dirs_df)
+                divs = sorted(list(dirs_df.keys()))
+
+                n=0
+                for div in divs:
+                    if 'whole' in str(dirs_df[div]): 
+                        name = ''
+                        segm = 'whole'
+                    else: 
+                        name = self.ordered_kspl[div]['name']
+                        segm = name
+                    print('name:', name)
+
+                    #Get heatmap specific for that segm
+                    dir_df = self.organ.dir_res(dir='csv_all') / dirs_df[div]
+                    heatmap = get_unlooped_heatmap(hmget, dir_df)
+                    # hm2f = heatmap.copy()
+                    # columns = heatmap.columns
+                    # indexes = heatmap.index
+                    # max_max = heatmap.max().max()
+                    # min_min = heatmap.min().min()-1000
+
+                    # np2f = hm2f.to_numpy()
+                    # np2f[np2f > float(cut_val)] = max_max
+                    # np2f[np2f <= float(cut_val)] = min_min
+
+                    # np2f[np2f == max_max] = 1
+                    # np2f[np2f == min_min] = 0
+
+                    # filt_hm = pd.DataFrame(np2f, columns = columns, index = indexes)
+                    title_hm = filename+'_'+segm+ext
+                    dir_hm = self.organ.dir_res(dir='imgs_videos') / title_hm
+                    if dir_hm.is_file(): 
+                        self.win_msg('*The file "'+ str(dir_hm.name) +'" already exists. Please provide a new name to save this binary heatmap.')
+                        return
+                        
+                    fig, ax = plt.subplots(figsize=(16, 10))
+                    bounds = [heatmap.min().min(), float(cut_val), heatmap.max().max()]
+                    norm = matplotlib.colors.BoundaryNorm(bounds, mycmap.N)
+                    c = ax.pcolor(heatmap, cmap=mycmap, norm=norm)
+                    cb = fig.colorbar(c, ax=ax)
+                    cb.outline.set_visible(False)
+                    cb.ax.tick_params(labelsize=10)
+                    ax.invert_yaxis()
+
+                    # set the xticks
+                    x_pos = ax.get_xticks()
+                    x_pos_new = np.linspace(x_pos[0], x_pos[-1], 19)
+                    x_lab_new = np.arange(-180,200,20)
+                    ax.set_xticks(x_pos_new) 
+                    ax.set_xticklabels(x_lab_new, rotation=30, fontsize=10)#, fontname='Arial')
+                    
+                    xlabels=np.linspace(heatmap.columns.min(), heatmap.columns.max(), len(x_pos)).round(3)
+                    print('xlabels:', xlabels)
+
+                    # set the yticks
+                    y_pos = ax.get_yticks()
+                    ylabels=np.linspace(heatmap.index.min(), heatmap.index.max(), len(y_pos)).round(2)
+                    ax.set_yticks(ticks=y_pos, labels=ylabels)
+                    ax.set_yticklabels(ylabels, rotation=0, fontsize=10)#, fontname='Arial')
+                    print('ylabels:', ylabels)
+                    
+                    kspl_data = self.organ.mH_settings['wf_info']['heatmaps']['heatmaps2D']['div'][div]
+                    y_text = 'Centreline Position ['+kspl_data['name'].title()+']'
+                    plt.ylabel(y_text, fontsize=10)
+                    plt.xlabel('Angle (\N{DEGREE SIGN})', fontsize=10)
+                    plt.title(titlef, fontsize = 12)
+
+                    for pos in ['top', 'right', 'bottom', 'left']:
+                        ax.spines[pos].set_visible(False)
+
+                    #Save figure and heatmap dataframe
+                    plt.savefig(dir_hm, dpi=300, bbox_inches='tight', transparent=True)
+
+                alert('clown')
+
+    
     #Plot 3D functions
     def plot_meshes(self, ch, chNS=False):
         self.win_msg('Plotting meshes ('+ch+')')
@@ -13986,58 +14252,69 @@ class MainWindow(QMainWindow):
         return mesh
 
     def plot_binary3D(self): 
-
         cbox = getattr(self, 'hm3D_2bi')
         hm_selected = cbox.currentText()
-        if hm_selected != '--select--': 
+        cut_val = getattr(self, 'cut_3Dbi').text()
+
+        if hm_selected == '--select--':
+            self.win_msg('*Please select a 3D heatmap to binarise...')
+            return 
+        elif cut_val == '': 
+            self.win_msg('*Please select a valid cut value to binarise the selected 3D heatmap...')
+            return 
+        else: 
             for key in self.hm_btns.keys(): 
                 if self.hm_btns[key]['name'] == hm_selected: 
                     hmget = key
                     break
-        cut_val = getattr(self, 'cut_3Dbi').text()
-        range_val = getattr(self, 'hm3D_range').text()
-        alpha_val = 1.0
-        
-        titlef = self.organ.user_organName + ' Binarized Heatmap \n'+'\t- '+hm_selected+'\n\t- Heatmap range: '+range_val+'um\n\t- Cut value: '+cut_val+'um'
-        txt = [(0, titlef)]
-        proc, name_ch_cont = hmget.split('[')
-        if 'th' in hmget: 
-            ch, cont = name_ch_cont[:-1].split('-')
-            if 'i2e' in hmget: 
-                mtype = 'thck(intTOext)'
-                short = 'th_i2e'
-                from_name = 'int>ext'
+            
+            range_val = getattr(self, 'hm3D_range').text()
+            alpha_val = 1.0
+            
+            titlef = self.organ.user_organName + ' - Binary Heatmap \n'+'\t- '+hm_selected+'\n\t- Heatmap range: '+range_val+'um\n\t- Cut value: '+cut_val+'um'
+            color1 = self.organ.mH_settings['wf_info']['bi_heatmaps']['3D']['color1']  #getattr(self, 'fillcolor_hm3Dbi1').
+            color2 = self.organ.mH_settings['wf_info']['bi_heatmaps']['3D']['color2'] 
+            mycmap = [color1, color2]
+            # color([red, green, blue])
+            txt = [(0, titlef)]
+            proc, name_ch_cont = hmget.split('[')
+            if 'th' in hmget: 
+                ch, cont = name_ch_cont[:-1].split('-')
+                if 'i2e' in hmget: 
+                    mtype = 'thck(intTOext)'
+                    short = 'th_i2e'
+                    from_name = 'int>ext'
+                else: 
+                    mtype = 'thck(extTOint)'
+                    short = 'th_e2i'
+                    from_name = 'ext>int'
+
+                mesh_tiss = self.organ.obj_meshes[ch+'_tiss']
+                title = mesh_tiss.mesh.name+'\nThickness [um]\n('+from_name+')'
+                mesh_thck = mesh_tiss.mesh_meas[mtype].clone()
+
+                mesh_base = mesh_tiss; mesh2bi = mesh_thck
+
             else: 
-                mtype = 'thck(extTOint)'
-                short = 'th_e2i'
-                from_name = 'ext>int'
+                ch_cont, cl_info = name_ch_cont.split('(CL.')
+                ch, cont = ch_cont.split('-')
+                from_cl, from_cl_type = cl_info[:-2].split('-')
+                mtype = 'ballCL('+from_cl+'_'+from_cl_type+')'
+                short = 'ball'
+                mesh2ball = self.organ.obj_meshes[ch+'_'+cont]
+                mesh_ball = mesh2ball.mesh_meas[mtype].clone()
 
-            mesh_tiss = self.organ.obj_meshes[ch+'_tiss']
-            title = mesh_tiss.mesh.name+'\nThickness [um]\n('+from_name+')'
-            mesh_thck = mesh_tiss.mesh_meas[mtype].clone()
+                title = mesh2ball.legend+'\nCL to Tissue [um]\nCL:'+from_cl+'_'+from_cl_type
 
-            mesh_base = mesh_tiss; mesh2bi = mesh_thck
+                mesh_base = mesh2ball; mesh2bi = mesh_ball
 
-        else: 
-            ch_cont, cl_info = name_ch_cont.split('(CL.')
-            ch, cont = ch_cont.split('-')
-            from_cl, from_cl_type = cl_info[:-2].split('-')
-            mtype = 'ballCL('+from_cl+'_'+from_cl_type+')'
-            short = 'ball'
-            mesh2ball = self.organ.obj_meshes[ch+'_'+cont]
-            mesh_ball = mesh2ball.mesh_meas[mtype].clone()
+            mesh2bi = self.set_bi_scalebar(mesh = mesh_base, mesh2bi = mesh2bi, proc = short, 
+                                                mtype = mtype, cut_val = float(cut_val), 
+                                                alpha_val = alpha_val, mycmap= mycmap, title = title)
+            obj = [(mesh2bi)]
+            plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(self.organ.get_maj_bounds()))
 
-            title = mesh2ball.legend+'\nCL to Tissue [um]\nCL:'+from_cl+'_'+from_cl_type
-
-            mesh_base = mesh2ball; mesh2bi = mesh_ball
-
-        mesh2bi = self.set_bi_scalebar(mesh = mesh_base, mesh2bi = mesh2bi, proc = short, 
-                                             mtype = mtype, cut_val = float(cut_val), alpha_val = alpha_val, title = title)
-        obj = [(mesh2bi)]
-        plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(self.organ.get_maj_bounds()))
-        print()
-    
-    def set_bi_scalebar(self, mesh, mesh2bi, proc, mtype, cut_val, alpha_val, title): 
+    def set_bi_scalebar(self, mesh, mesh2bi, proc, mtype, cut_val, alpha_val, mycmap, title): 
         if 'th' in proc: 
             npy_name = str(mesh.dirs['arrays'][mtype])+'.npy'
             dir_npy = self.organ.dir_res(dir='csv_all') / npy_name
@@ -14047,7 +14324,7 @@ class MainWindow(QMainWindow):
 
         npy_colour = np.load(dir_npy)
         bi_npy_colour = (npy_colour > cut_val).astype(np.int_)
-        mycmap = ["darkblue", "magenta"]
+        
         alphas = [alpha_val]*len(mycmap)
         mesh2bi.cmap(mycmap, bi_npy_colour, alpha=alphas, n_colors=2)
         mesh2bi.add_scalarbar(title=title, pos=(0.7, 0.05))
@@ -14907,7 +15184,7 @@ class MainWindow(QMainWindow):
         elif ext == '.xlsx':
             df_out.to_excel(df_dir) 
         alert('countdown') 
-        self.win_msg('Results file  -'+ filename + '  was succesfully saved!')
+        self.win_msg('Results file  -'+ filename + '  was successfully saved!')
 
     #Functions for all tabs
     #Menu functions / Saving functions
@@ -14932,7 +15209,7 @@ class MainWindow(QMainWindow):
         if ch in self.im_proc.keys():
             im_ch.save_channel(im_proc=self.im_proc[ch])
             if print_txt: 
-                self.win_msg('Channel '+ch[-1]+' was succesfully saved!')
+                self.win_msg('Channel '+ch[-1]+' was successfully saved!')
         self.organ.add_channel(imChannel=im_ch)
 
     def save_project_and_organ_pressed(self, alert_on=True):
@@ -14941,7 +15218,7 @@ class MainWindow(QMainWindow):
         self.proj.add_organ(self.organ)
         self.proj.save_project(alert_on)
         if alert_on: 
-            self.win_msg('Project  -'+ self.proj.user_projName + '-  and Organ  -'+ self.organ.user_organName +'-  were succesfully saved!')
+            self.win_msg('Project  -'+ self.proj.user_projName + '-  and Organ  -'+ self.organ.user_organName +'-  were successfully saved!')
 
     def go_to_welcome_pressed(self): 
         print('Go to Welcome was pressed')
@@ -15101,6 +15378,8 @@ class MultipAnalysisWindow(QMainWindow):
                                                                          df_pando = self.df_pando, single_proj = True))
         filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False}
         self.filter_cB = Checkable_ComboBox()
+        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+        self.filter_cB.setStyleSheet(styleSheet)
         self.filter_cB.addItems(filter_opt)
         self.hlayout_filter.addWidget(self.filter_cB)
         self.filter_cB.model().dataChanged.connect(lambda: self.reload_table())
@@ -15117,6 +15396,10 @@ class MultipAnalysisWindow(QMainWindow):
         self.organs_analysis_open.clicked.connect(lambda: self.open_section(name='organs_analysis'))
         self.plot_open.clicked.connect(lambda: self.open_section(name='plot'))
         self.average_heatmaps_open.clicked.connect(lambda: self.open_section(name='average_heatmaps'))
+
+        #About menu
+        self.actionDocs_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2docs))
+        self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
 
         #Sounds
         layout = self.hL_sound_on_off 
@@ -15216,12 +15499,15 @@ class MultipAnalysisWindow(QMainWindow):
 
     def init_aveHM(self): 
 
+        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+        
         #Initialise comboBoxes
         strain = list(set(self.df_pando['strain']))
         strain_opt = {}
         for st in strain: 
             strain_opt[st] = False
         self.comboBox_strain = Checkable_ComboBox()
+        self.comboBox_strain.setStyleSheet(styleSheet)
         self.comboBox_strain.addItems(strain_opt)
         self.hL_strain.addWidget(self.comboBox_strain)
         self.num_strain.setText('/'+str(len(strain)))
@@ -15233,6 +15519,7 @@ class MultipAnalysisWindow(QMainWindow):
         for sg in stage: 
             stage_opt[sg] = False
         self.comboBox_stage = Checkable_ComboBox()
+        self.comboBox_stage.setStyleSheet(styleSheet)
         self.comboBox_stage.addItems(stage_opt)
         self.hL_stage.addWidget(self.comboBox_stage)
         self.num_stage.setText('/'+str(len(stage)))
@@ -15244,6 +15531,7 @@ class MultipAnalysisWindow(QMainWindow):
         for gt in genot: 
             genot_opt[gt] = False
         self.comboBox_genotype = Checkable_ComboBox()
+        self.comboBox_genotype.setStyleSheet(styleSheet)
         self.comboBox_genotype.addItems(genot_opt)
         self.hL_genot.addWidget(self.comboBox_genotype) 
         self.num_genot.setText('/'+str(len(genot)))
@@ -15255,17 +15543,23 @@ class MultipAnalysisWindow(QMainWindow):
         for mp in manip: 
             manip_opt[mp] = False
         self.comboBox_manipulation = Checkable_ComboBox()
+        self.comboBox_manipulation.setStyleSheet(styleSheet)
         self.comboBox_manipulation.addItems(manip_opt)
         self.hL_manip.addWidget(self.comboBox_manipulation) 
         self.num_manip.setText('/'+str(len(manip)))
         self.comboBox_manipulation.model().dataChanged.connect(lambda: self.comboBox_manipulation.updateLineEditField())
         self.comboBox_manipulation.setEnabled(False)
 
-        cmaps = ['turbo','viridis','jet','magma','inferno','plasma']
+        cmaps = ['turbo','viridis','jet','magma','inferno','plasma', 'binary']
         self.colormap.clear()
         self.colormap.addItems(cmaps)
         self.colormap.currentIndexChanged.connect(lambda: set_colormap(win=self))
+        self.frame_binary.setVisible(False)
+        self.frame_cmap.setVisible(False)
         set_colormap(win=self)
+
+        self.fillcolor_hm2Dbi1.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi1'))
+        self.fillcolor_hm2Dbi2.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi2'))
 
         #Get all the heatmaps that should have been created in all the organs added
         setup_hm2d = {'th_i2e': {'name': 'Thickness (int>ext)'}, 
@@ -15306,8 +15600,17 @@ class MultipAnalysisWindow(QMainWindow):
         self.comboBox_hm2d_all.currentTextChanged.connect(lambda: update_div(win=self))
         self.set_filters.clicked.connect(lambda: set_aveHM(win=self))
         self.create_avehm.clicked.connect(lambda: create_average_hm(win=self))
-        self.select_avehm_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs))
+        self.select_avehm_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=False))
         self.btn_save_avehm.clicked.connect(lambda: save_avehm(win=self))
+
+        self.cB_image.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'image'))
+        self.cB_data.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'data'))
+
+        self.select_avehmdata_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=True))
+        self.btn_save_avehmdata.clicked.connect(lambda: save_avehm_data(win=self))
+
+        self.save_image.setVisible(False)
+        self.save_data.setVisible(False)
 
         #Initialise div
         update_div(win=self)
@@ -15363,7 +15666,7 @@ class MultipAnalysisWindow(QMainWindow):
         print('Go to Welcome was pressed')
         title = 'Go to Welcome Page...'
         msg = 'Are you sure you want to close the Analysis Window and go to the Welcome Page?' 
-        prompt = Prompt_ok_cancel(title, msg, parent=self)
+        prompt = Prompt_ok_cancel(title, msg, parent=self, win_size = (450, 150))
         prompt.exec()
         print('output:',prompt.output, '\n')
         if prompt.output: 
@@ -15636,6 +15939,14 @@ def color_picker(win, name):
         fill = getattr(win, 'fillcolor_'+name)
         color_btn(btn = fill, color = color.name())
 
+        if 'hm2Dbi' in name: 
+            if '1' in name: 
+                win.bi_colors[0] = [red/255, green/255, blue/255]
+            else: 
+                win.bi_colors[1] = [red/255, green/255, blue/255]
+        
+            print('win.bi_colors:', win.bi_colors)
+
 def create_user_plot(win): #needs work because all meshes were being added from segm_btns which cant be used here
     if len(win.plot_meshes_user) < 1: 
         win.win_msg('*No meshes have been added to the table.')
@@ -15742,12 +16053,24 @@ def update_div(win):
 
 def set_colormap(win): 
     value = getattr(win, 'colormap').currentText()
-    pix_name =  'cm_'+value+'.png'
-    dir_pix = str(mH_config.path_mHImages / pix_name)
-    pixmap = QPixmap(dir_pix)
     cm_eg = win.cm_eg
-    cm_eg.setPixmap(pixmap)
-    cm_eg.setScaledContents(True)
+    if value != 'binary': 
+        pix_name =  'cm_'+value+'.png'
+        dir_pix = str(mH_config.path_mHImages / pix_name)
+        pixmap = QPixmap(dir_pix)
+        cm_eg.setVisible(True)
+        cm_eg.setPixmap(pixmap)
+        cm_eg.setScaledContents(True)
+        win.frame_binary.setVisible(False)
+        win.frame_cmap.setVisible(True)
+    else: 
+        cm_eg.setVisible(False)
+        win.frame_cmap.setVisible(False)
+        win.frame_binary.setVisible(True)
+        bi_colors = ['crimson', 'midnightblue']
+        color_btn(btn = win.fillcolor_hm2Dbi1, color = bi_colors[0])
+        color_btn(btn = win.fillcolor_hm2Dbi2, color = bi_colors[1])
+        win.bi_colors = bi_colors
 
 def set_aveHM(win): 
 
@@ -15772,25 +16095,42 @@ def set_aveHM(win):
     win.create_avehm.setEnabled(True)
 
 def create_average_hm(win): 
+    #Check all values have been entered or selected
+    check = check_avehm(win)
+    if check: 
+        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
+        win.win_msg('Creating average heatmap...')
+        if len(win.projs)==1: 
+            obj_proj = win.projs[0]['proj']
+            rtype, ch_cont = hm_sel.split(': ')
+            if 'Ball' in rtype:
+                ch_cont, cl = ch_cont.split('(')
+                ch, cont = ch_cont.split('-')
+                name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
+                cl = cl.replace('.',':')
+                opt_sel = name_ch+'_'+cont+' - '+cl[:-1]+' - '+opt_sel
+            else: 
+                ch, cont = ch_cont.split('-')
+                name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
+                opt_sel = name_ch+'_'+cont+' - '+opt_sel
 
-    df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
-    win.win_msg('Creating average heatmap...')
-    if len(win.projs)==1: 
-        obj_proj = win.projs[0]['proj']
-        rtype, ch_cont = hm_sel.split(': ')
-        if 'Ball' in rtype:
-            ch_cont, cl = ch_cont.split('(')
-            ch, cont = ch_cont.split('-')
-            name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
-            cl = cl.replace('.',':')
-            opt_sel = name_ch+'_'+cont+' - '+cl[:-1]+' - '+opt_sel
-        else: 
-            ch, cont = ch_cont.split('-')
-            name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
-            opt_sel = name_ch+'_'+cont+' - '+opt_sel
+        plot_average_heatmap(win, df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap)
+        win.create_avehm.setChecked(True)
 
-    plot_average_heatmap(win, df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap)
-    win.create_avehm.setChecked(True)
+def check_avehm(win): 
+    for param in ['strain', 'stage', 'genotype', 'manipulation']: 
+        if getattr(win, 'cB_'+param).isChecked():
+            if getattr(win, 'comboBox_'+param).currentText() == '': 
+                win.win_msg('*Please select at least one '+param.upper()+' to use as filter.')
+                return False
+    
+    cmap = win.colormap.currentText()
+    if cmap == 'binary':
+        if win.cut_2Dbi.text() == '':
+            win.win_msg('*Please provide a valid cut value to create a binary average heatmap.')
+            return False
+    
+    return True
 
 def set_avehm(win):
     #Get values selected for each filter
@@ -15799,9 +16139,13 @@ def set_avehm(win):
                     'genotype': win.comboBox_genotype.currentText(),
                     'manipulation': win.comboBox_manipulation.currentText()}
     
-    min_val = win.min_hm2d.value()
-    max_val = win.max_hm2d.value()
     cmap = win.colormap.currentText()
+    if cmap != 'binary': 
+        min_val = win.min_hm2d.value()
+        max_val = win.max_hm2d.value()
+    else: 
+        cut_val = float(win.cut_2Dbi.text())
+
     hm_sel = win.comboBox_hm2d_all.currentText()
 
     for divs in ['div1', 'div2', 'div3', 'div4', 'div5']: 
@@ -15828,11 +16172,13 @@ def set_avehm(win):
         all_tuples = [(x,y,z) for x in group[0] for y in group[1] for z in group[2]]
     elif len(group) == 4: 
         all_tuples = [(x,y,z,a) for x in group[0] for y in group[1] for z in group[2] for a in group[3]]
+    try:
+        print('\n >> hm: ', hm_sel,' - Tuples: ', all_tuples, '- max:', max_val)
+    except: 
+        print('\n >> hm: ', hm_sel,' - Tuples: ', all_tuples, '- cut_val:', cut_val)
 
-    print('\n >> hm: ', hm_sel,' - Tuples: ', all_tuples, '- max:', max_val)
     organs_out = filter_df(df_input = win.df_pando, filters = filters, all_tuples = all_tuples)
-    all_organs = list(organs_out['user_organName'])
-    
+    all_organs = list(organs_out['user_organName']) 
 
     hm2d_sel = copy.deepcopy(win.hm2d[hm_sel])
     to_remove = []
@@ -15877,7 +16223,19 @@ def set_avehm(win):
     win.win_msg('Averaging heatmaps...')
     df_concat = pd.concat(filt_hm_all).groupby(level=0).mean()
 
-    return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, (min_val, max_val), cmap
+    if cmap != 'binary': 
+        return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, (min_val, max_val), cmap
+    else: 
+        return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, cut_val, cmap
+
+def save_hm_settings(win, cb): 
+
+    cbox = getattr(win, 'cB_'+cb)
+    wdg = getattr(win, 'save_'+cb)
+    if cbox.isChecked():
+        wdg.setVisible(True)
+    else: 
+        wdg.setVisible(False)
 
 def save_avehm(win):
 
@@ -15919,7 +16277,10 @@ def save_avehm(win):
         print('- title:', title)
 
         #Get all construction settings
-        vmin, vmax = min_max
+        if cmap != 'binary': 
+            vmin, vmax = min_max
+        else: 
+            cut_val = min_max
 
         # Make figure
         gridkw = dict(height_ratios=[1,0.2])
@@ -15927,7 +16288,14 @@ def save_avehm(win):
         axes_fl = axes.flatten()
         for n, ax in enumerate(axes):
             if n == 0:
-                c = ax.pcolor(df_concat, cmap=cmap, vmin = vmin, vmax = vmax)
+                if cmap != 'binary': 
+                    c = ax.pcolor(df_concat, cmap=cmap, vmin = vmin, vmax = vmax)
+                else: 
+                    mycmap = matplotlib.colors.ListedColormap(win.bi_colors)
+                    bounds = [df_concat.min().min(), cut_val, df_concat.max().max()]
+                    norm = matplotlib.colors.BoundaryNorm(bounds, mycmap.N)
+                    c = ax.pcolor(df_concat, cmap=mycmap, norm=norm)
+
                 cb = fig.colorbar(c, ax=ax)
                 cb.outline.set_visible(False)
                 cb.ax.tick_params(labelsize=10)
@@ -15983,12 +16351,34 @@ def save_avehm(win):
 
         #Save figure and heatmap dataframe
         plt.savefig(dir_hm, dpi=dpi, bbox_inches='tight', transparent=True)
-        win.win_msg('Average Heatmap "'+filenamef+'" was succesfully saved!')
+        win.win_msg('Average Heatmap "'+filenamef+'" was successfully saved!')
         alert('clown')
     
     else: 
         win.win_msg('*Please select a directory where to save the average heatmap created.', win.btn_save_avehm)
     
+def save_avehm_data(win):
+
+    #Check details have been filled 
+    if win.select_avehmdata_path.isChecked() and hasattr(win, 'aveHMdata_dir'): 
+        #Get Filename
+        filename = win.ave_hmdata_filename.text()
+        if len(filename)<8:
+            win.win_msg('*The filename of the average heatmap needs to have at least 8 characters.')
+            return
+        if not win.create_avehm.isChecked():
+            win.win_msg('*Please create an average heatmap first to then proceed and save it.')
+            return
+        
+        ext = win.cB_avehmdata_extension.currentText()
+        filenamef = filename+ext
+        dir_hm = win.aveHMdata_dir / filenamef
+
+        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
+        df_concat.to_csv(dir_hm)
+        win.win_msg('Average Heatmap Dataset "'+filenamef +'" was successfully saved!')
+        alert('woohoo')
+
 def get_all_filtered_hms(win, hm2d_sel, hm_sel, div_sel, opt_sel):
     
     setup_hm2d = {'Thickness (int>ext)': 'th_i2e', 
@@ -16124,8 +16514,16 @@ def plot_average_heatmap(win, df_concat, num_ave, hm_name, div, opt, min_max, cm
     outer_grid.update(left=0.1,right=0.9,top=0.95,bottom=0.05,wspace=0,hspace=0)
 
     ax = fig11.add_subplot(outer_grid[0])
-    vmin, vmax = min_max
-    c = ax.pcolor(df_concat, cmap=cmap, vmin=vmin, vmax=vmax)
+    if cmap != 'binary': 
+        vmin, vmax = min_max
+        c = ax.pcolor(df_concat, cmap=cmap, vmin=vmin, vmax=vmax)
+    else: 
+        cut_val = min_max
+        mycmap = matplotlib.colors.ListedColormap(win.bi_colors)
+        bounds = [df_concat.min().min(), cut_val, df_concat.max().max()]
+        norm = matplotlib.colors.BoundaryNorm(bounds, mycmap.N)
+        c = ax.pcolor(df_concat, cmap=mycmap, norm=norm)
+
     ax.invert_yaxis()
 
     y_pos = ax.get_yticks()
@@ -16161,19 +16559,33 @@ def plot_average_heatmap(win, df_concat, num_ave, hm_name, div, opt, min_max, cm
     #Draw and show window
     win.canvas_plot.draw()
 
-def select_path_avehm(win, proj=None):
+def select_path_avehm(win, proj=None, data=False):
 
     if proj != None and len(proj)==1: 
         cwd = str(proj[0]['proj_path'])
     else: 
         cwd = str(Path().absolute().home())
-
-    path_folder = QFileDialog.getExistingDirectory(win, directory=cwd, caption="Select the directory where you would like to save the created Average Heatmap")
-    if Path(path_folder).is_dir():
-        win.lineEdit_avehm_dir.setText(str(path_folder))
-        win.aveHM_dir = Path(path_folder)
+    
+    if data: 
+        lineEdit = win.lineEdit_avehmdata_dir
+        caption = "Select the directory where you would like to save the created Average Heatmap Dataset"
+        error = '*Something happened when selecting the directory to save the average dataset. Please select it again.'
+        btn = win.select_avehm_path
     else: 
-        win.win_msg('*Something happened when selecting the directory to save the average heatmap. Please select it again.', win.select_avehm_path)
+        lineEdit = win.lineEdit_avehm_dir
+        caption = "Select the directory where you would like to save the created Average Heatmap Image"
+        error = '*Something happened when selecting the directory to save the average heatmap image. Please select it again.'
+        btn = win.select_avehm_path
+
+    path_folder = QFileDialog.getExistingDirectory(win, directory=cwd, caption=caption)
+    if Path(path_folder).is_dir():
+        lineEdit.setText(str(path_folder))
+        if data: 
+            win.aveHMdata_dir = Path(path_folder)
+        else: 
+            win.aveHM_dir = Path(path_folder)
+    else: 
+        win.win_msg(error, btn)
         return 
 
 class PlotWindow(QDialog):
