@@ -1306,6 +1306,20 @@ def prompt_meshLab(controller, msg_add=None):
     prompt.exec()
     print('output:',prompt.output, '\n')
 
+def check_status_all(controller, proc): 
+    workflow = controller.organ.workflow['morphoHeart']['MeshesProc']
+    if proc == 'heatmaps': 
+        processes = ['D-Thickness_int>ext', 'D-Thickness_ext>int', 'D-Ballooning']
+        all_done = []
+        for pp in processes:
+            all_done.append(workflow[pp]['Status'] == 'DONE')
+        if all(all_done): 
+            return True
+        else: 
+            return False
+    else: 
+        return workflow[proc]['Status'] == 'DONE'
+
 # > HEATMAPS
 def run_heatmaps3D(controller, btn):
     set_process(controller, 'heatmaps')
@@ -1329,115 +1343,146 @@ def run_heatmaps3D(controller, btn):
                     break
             hm3d_set = [hm3get] #[segm_list[int(num)-1]]
         else: 
-            hm3d_set = hm3d_list
+            hm3d_set = []
+            for btn in hm3d_list: 
+                if controller.main_win.hm_btns[btn]['play'].isEnabled():
+                    hm3d_set.append(btn)
         print('hm3d_set:',hm3d_set)
 
+        at_least_one = False
         for hmitem in hm3d_set:
-            short, ch_info = hmitem.split('[') #short = th_i2e, th_e2i, ball
-            ch_info = ch_info[:-1]
-            if 'th' in short: 
-                _, th_val = short.split('_')
-                ch, cont = ch_info.split('-')
-                method = thck_values[th_val]['method']
-                mesh_tiss = controller.organ.obj_meshes[ch+'_tiss'].legend
-                print('\n>> Extracting thickness information for '+mesh_tiss+'... \nNOTE: it takes about 5min to process each mesh... just be patient :) ')
-                controller.main_win.win_msg('Extracting thickness information for '+mesh_tiss+'... NOTE: it takes about 5min to process each mesh... just be patient :)')
-                setup = controller.main_win.gui_thickness_ballooning[hmitem]
-                fcM.get_thickness(organ = controller.organ, name = (ch, cont), 
-                                    thck_dict = thck_values[th_val], 
-                                    setup = setup)
-
-            else: # if 'ball' in short
-                ch_cont, cl_info = ch_info.split('(')
-                ch, cont = ch_cont.split('-')
-
-                cl_info = cl_info[:-1].split('.')[1]
-                cl_ch, cl_cont = cl_info.split('-')
-                mesh2ball = controller.organ.obj_meshes[ch+'_'+cont].legend
-                controller.main_win.win_msg('Extracting centreline>tissue information for '+mesh2ball+'... NOTE: it takes about 10-15 to process each mesh... just be patient :)')
-                setup = controller.main_win.gui_thickness_ballooning[hmitem]
-
-                fcM.extract_ballooning(organ = controller.organ, name = (ch, cont),
-                                    name_cl = (cl_ch, cl_cont), setup = setup)
-
-            controller.main_win.hm_btns[hmitem]['play'].setChecked(True)  
-            #Enable buttons to plot heatmaps
-            controller.main_win.hm_btns[hmitem]['plot'].setEnabled(True)
-            hm2d_btn = controller.main_win.hm_btns[hmitem]['play2d']
-            num = controller.main_win.hm_btns[hmitem]['num']
-            d3d2_btn = getattr(controller.main_win, 'd3d2_'+str(num))
-            #Hereee!
-            if d3d2_btn.isChecked() and controller.main_win.thickness2D_set.isChecked(): 
-                hm2d_btn.setEnabled(True)
-
-            # controller.main_win.prog_bar_update(nn)
-            #Update progress in main_win
-            controller.main_win.update_workflow_progress()
-
-        # Update organ workflow
-        all_all_done = []
-        processes = ['D-Thickness_int>ext', 'D-Thickness_ext>int', 'D-Ballooning']
-        for proc in processes:
-            all_done = []
-            if len(workflow['MeshesProc'][proc].keys())>0: 
-                for ch in workflow['MeshesProc'][proc].keys():
-                    if ch != 'Status':
-                        for cont in workflow['MeshesProc'][proc][ch].keys():
-                            print(proc, ch, cont, workflow['MeshesProc'][proc][ch][cont]['Status'])
-                            all_done.append(workflow['MeshesProc'][proc][ch][cont]['Status'])
-
-                if all(flag == 'DONE' for flag in all_done): 
-                    proc_wft = ['MeshesProc', proc, 'Status']
-                    controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
-                    all_all_done.append('DONE')
-                elif any(flag == 'DONE' for flag in all_done):
-                    proc_wft = ['MeshesProc', proc, 'Status']
-                    controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
-                    all_all_done.append('Initialised')
+            if controller.main_win.hm_btns[hmitem]['plot'].isEnabled(): 
+                if len(hm3d_set)>1:
+                    run = False
                 else: 
-                    pass
+                    title = 'Re-run this 3D heatmap?' 
+                    msg = 'Are you sure you want to re-run "'+controller.main_win.hm_btns[hmitem]['name']+' 3D Heatmap"? If so, select  -OK-, else select  -Cancel-.'
+                    prompt = Prompt_ok_cancel(title, msg, win_size=[450, 150], parent=controller.main_win)
+                    prompt.exec()
+                    print('output:', prompt.output)
+                    if prompt.output: 
+                        run = True
+                    else: 
+                        run = False
             else: 
-                all_all_done.append(True)
+                run = True
 
-        # Update mH_settings
-        proc_set = ['wf_info']
-        update = controller.main_win.gui_thickness_ballooning
-        controller.organ.update_settings(proc_set, update, 'mH', add='heatmaps')
-        controller.main_win.bi_3Dhm.setVisible(True)
-        controller.main_win.bi_3Dhm.setEnabled(True)
-        controller.main_win.update_binary_combobox(htype='3D')
+            if run: 
+                at_least_one = True
+                short, ch_info = hmitem.split('[') #short = th_i2e, th_e2i, ball
+                ch_info = ch_info[:-1]
+                if 'chNS' in ch_info: 
+                    if not controller.main_win.chNS_play.isChecked():
+                        continue
 
-        #Update Status in GUI
-        if all(flag == 'DONE' for flag in all_all_done): 
-            process = ['MeshesProc', processes[0], 'Status']
-            toggle = True
-        elif any(flag == 'DONE' for flag in all_all_done):
-            for proc in processes: 
-                test_proc = ['MeshesProc', proc, 'Status']
-                if get_by_path(workflow, test_proc) == 'Initialised' or get_by_path(workflow, test_proc) == 'NI': 
-                    process = test_proc
-                    break
-            toggle = False
+                if 'th' in short: 
+                    _, th_val = short.split('_')
+                    ch, cont = ch_info.split('-')
+                    method = thck_values[th_val]['method']
+                    mesh_tiss = controller.organ.obj_meshes[ch+'_tiss'].legend
+                    print('\n>> Extracting thickness information for '+mesh_tiss+'... \nNOTE: it takes about 5min to process each mesh... just be patient :) ')
+                    controller.main_win.win_msg('Extracting thickness information for '+mesh_tiss+'... NOTE: it takes about 5min to process each mesh... just be patient :)')
+                    setup = controller.main_win.gui_thickness_ballooning[hmitem]
+                    fcM.get_thickness(organ = controller.organ, name = (ch, cont), 
+                                        thck_dict = thck_values[th_val], 
+                                        setup = setup)
+
+                else: # if 'ball' in short
+                    ch_cont, cl_info = ch_info.split('(')
+                    ch, cont = ch_cont.split('-')
+
+                    cl_info = cl_info[:-1].split('.')[1]
+                    cl_ch, cl_cont = cl_info.split('-')
+                    mesh2ball = controller.organ.obj_meshes[ch+'_'+cont].legend
+                    controller.main_win.win_msg('Extracting centreline>tissue information for '+mesh2ball+'... NOTE: it takes about 10-15 to process each mesh... just be patient :)')
+                    setup = controller.main_win.gui_thickness_ballooning[hmitem]
+
+                    fcM.extract_ballooning(organ = controller.organ, name = (ch, cont),
+                                        name_cl = (cl_ch, cl_cont), setup = setup)
+
+                controller.main_win.hm_btns[hmitem]['play'].setChecked(True)  
+                #Enable buttons to plot heatmaps
+                controller.main_win.hm_btns[hmitem]['plot'].setEnabled(True)
+                hm2d_btn = controller.main_win.hm_btns[hmitem]['play2d']
+                num = controller.main_win.hm_btns[hmitem]['num']
+                d3d2_btn = getattr(controller.main_win, 'd3d2_'+str(num))
+                #Hereee!
+                if d3d2_btn.isChecked() and controller.main_win.thickness2D_set.isChecked(): 
+                    hm2d_btn.setEnabled(True)
+
+                # controller.main_win.prog_bar_update(nn)
+                #Update progress in main_win
+                controller.main_win.update_workflow_progress()
+
+        if at_least_one: 
+            # Update organ workflow
+            all_all_done = []
+            processes = ['D-Thickness_int>ext', 'D-Thickness_ext>int', 'D-Ballooning']
+            for proc in processes:
+                all_done = []
+                if len(workflow['MeshesProc'][proc].keys())>0: 
+                    for ch in workflow['MeshesProc'][proc].keys():
+                        if ch != 'Status':
+                            for cont in workflow['MeshesProc'][proc][ch].keys():
+                                print(proc, ch, cont, workflow['MeshesProc'][proc][ch][cont]['Status'])
+                                all_done.append(workflow['MeshesProc'][proc][ch][cont]['Status'])
+
+                    if all(flag == 'DONE' for flag in all_done): 
+                        proc_wft = ['MeshesProc', proc, 'Status']
+                        controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
+                        all_all_done.append('DONE')
+                    elif any(flag == 'DONE' for flag in all_done):
+                        proc_wft = ['MeshesProc', proc, 'Status']
+                        controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+                        all_all_done.append('Initialised')
+                    else: 
+                        pass
+                else: 
+                    all_all_done.append(True)
+
+            # Update mH_settings
+            proc_set = ['wf_info']
+            update = controller.main_win.gui_thickness_ballooning
+            controller.organ.update_settings(proc_set, update, 'mH', add='heatmaps')
+            controller.main_win.bi_3Dhm.setVisible(True)
+            controller.main_win.bi_3Dhm.setEnabled(True)
+            controller.main_win.update_binary_combobox(htype='3D')
+
+            #Update Status in GUI
+            if all(flag == 'DONE' for flag in all_all_done): 
+                process = ['MeshesProc', processes[0], 'Status']
+                toggle = True
+            elif any(flag == 'DONE' for flag in all_all_done):
+                for proc in processes: 
+                    test_proc = ['MeshesProc', proc, 'Status']
+                    if get_by_path(workflow, test_proc) == 'Initialised' or get_by_path(workflow, test_proc) == 'NI': 
+                        process = test_proc
+                        break
+                toggle = False
+            else: 
+                process = ['MeshesProc', processes[0], 'Status']
+                toggle = False
+            controller.main_win.update_status(workflow, process, controller.main_win.heatmaps_status)
+                    
+            #Toggle button
+            if toggle: 
+                getattr(controller.main_win, 'heatmaps3D_play').setChecked(True)
+            else: 
+                getattr(controller.main_win, 'heatmaps3D_play').setChecked(False)
+
+            print('\nEND Heatmaps')
+            print('organ.mH_settings:', controller.organ.mH_settings)
+            print('organ.workflow:', workflow)
+
+            #Add meshes to plot_user
+            controller.main_win.fill_comboBox_all_meshes()
+            controller.main_win.win_msg('All Done - 3D Heatmaps (N='+str(len(hm3d_set))+')')
         else: 
-            process = ['MeshesProc', processes[0], 'Status']
-            toggle = False
-        controller.main_win.update_status(workflow, process, controller.main_win.heatmaps_status)
-                
-        #Toggle button
-        if toggle: 
-            getattr(controller.main_win, 'heatmaps3D_play').setChecked(True)
-        else: 
-            getattr(controller.main_win, 'heatmaps3D_play').setChecked(False)
-
-        print('\nEND Heatmaps')
-        print('organ.mH_settings:', controller.organ.mH_settings)
-        print('organ.workflow:', workflow)
-
-        #Add meshes to plot_user
-        controller.main_win.fill_comboBox_all_meshes()
-
+            controller.main_win.win_msg('All possible 3D heatmaps have already been obtained. If you wish to re-create one of them, re-run it using its individual button.')
+            controller.main_win.heatmaps3D_play.setChecked(check_status_all(controller, 'heatmaps'))
     else: 
-        controller.main_win.win_msg('*To extract the thickness meshes make sure you have at least run the  -Keep Largest-  section.')
+        controller.main_win.win_msg('*To extract the thickness meshes make sure you have at least run the -Keep Largest- section.')
+        controller.main_win.heatmaps3D_play.setChecked(check_status_all(controller, 'heatmaps'))
 
 def run_heatmaps2D(controller, btn):
     set_process(controller, 'heatmaps')
@@ -1611,195 +1656,230 @@ def run_heatmaps2D(controller, btn):
 
 # > SEGMENTS
 def run_segments(controller, btn): 
-    set_process(controller, 'segments')
-    workflow = controller.organ.workflow['morphoHeart']
-    segm_list = list(controller.main_win.segm_btns.keys())
-    if btn != None: 
-        cut, num = btn.split('_')
-        for key in segm_list: 
-            cut_key = key.split(':')[0]
-            num_key = controller.main_win.segm_btns[key]['num']
-            if cut_key == cut and int(num_key) == int(num): 
-                segm2cut = key
-                break
-        segm_set = [segm2cut] 
-    else: 
-        segm_set = segm_list
-    print('segm_set:',segm_set)
-
-    #Setup everything to cut
-    if controller.main_win.gui_segm['use_centreline']: 
-        cl_name = controller.main_win.gui_segm['centreline'].split('(')[1][:-1]
-        cl_ch, cl_cont = cl_name.split('_')
-        if workflow['MeshesProc']['C-Centreline']['buildCL'][cl_ch][cl_cont]['Status'] != 'DONE':
-            controller.main_win.win_msg('*Finish obtaining the centreline ('+cl_name+') to continue running this section!')
-            controller.main_win.segm_btns[segm_set[0]]['play'].setChecked(False)
-            return 
-        else: 
-            #Get centreline
-            nPoints = controller.organ.mH_settings['wf_info']['centreline']['buildCL']['nPoints']
-            cl = controller.organ.obj_meshes[cl_name].get_centreline(nPoints = nPoints)
-            spheres_spl = fcM.sphs_in_spline(kspl = cl, colour = True)
-            cl_spheres = {'centreline': cl, 
-                        'spheres': spheres_spl, 
-                        'nPoints' : nPoints}
-    else: 
-        cl_spheres = None
-
-    print('organ.obj_temp:', controller.organ.obj_temp)
-
-    #Loop through all the tissues that are going to be segmented
-    for segm in segm_set: 
-        print('Cutting segm:', segm)
-        #Find cut
-        cut, ch_cont = segm.split(':')
-        ch, cont = ch_cont.split('_')
-        #Extract info for cut
-        colors_all = controller.organ.mH_settings['setup']['segm'][cut]['colors']
-        palette = [colors_all[key] for key in colors_all.keys()]
-        segm_names = controller.organ.mH_settings['setup']['segm'][cut]['name_segments']
-        
-        #Find method to cut
-        method = controller.organ.mH_settings['wf_info']['segments']['setup'][cut]['ch_info'][ch][cont]
-        mesh2cut = controller.organ.obj_meshes[ch+'_'+cont]
-        print('Cutting into segments:', mesh2cut.name, '- method: ', method)
-
-        #Get usernames string
-        user_names = '('+', '.join([segm_names[val] for val in segm_names])+')'
-        print('\n- Dividing '+mesh2cut.legend+' into segments '+user_names)
-        controller.main_win.win_msg('Dividing '+mesh2cut.legend+' into segments '+user_names)
-        
-        if method == 'ext-ext' or method == 'indep-ext': 
-            # -> Get the discs that are going to be used to cut
-            get_segm_discs(controller.organ, 
-                            cut = cut, ch=ch, cont=cont, 
-                            cl_spheres=cl_spheres, win=controller.main_win)
-            # -> Create masks of discs
-            # Get s3 dimensions
-            mesh2cut.imChannel.load_chS3s([cont])
-            s3_shape = getattr(mesh2cut.imChannel, 's3_'+cont).shape_s3
-            fcM.create_disc_mask(controller.organ, cut = cut, s3_shape = s3_shape, h_min = 0.1125)
-            ext_subsgm, meshes_segm = fcM.segm_ext_ext(controller.organ, mesh2cut, cut, 
-                                                      segm_names, palette, win=controller.main_win)
-            if ext_subsgm == None and meshes_segm == None: 
-                btn2uncheck = controller.main_win.segm_btns[segm]['play']
-                controller.main_win.win_msg('!Dividing '+mesh2cut.legend+' resulted in less segments than expected. Please re-run this process and make sure the defined disc(s) is(are) splitting the mesh into the expected number of segments.', btn2uncheck)
-                title = 'Something went wrong when cutting the '+mesh2cut.legend+' into segments...'
-                msg = 'Dividing '+mesh2cut.legend+' resulted in less segments than expected. Please re-run this process and make sure the defined disc(s) is(are) splitting the mesh into the expected number of segments.' 
-                prompt = Prompt_ok(title, msg, parent=controller.main_win)
-                prompt.exec()
-                print('output:',prompt.output, '\n')
-                return
-            else: 
-                #Add submeshes of ext_ext as attribute to organ
-                controller.organ.ext_subsgm = ext_subsgm
-
-                #Enable Plot Buttons
-                controller.main_win.segm_btns[segm]['plot'].setEnabled(True)
-                print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
-
-                #Enable play buttons of meshes with other methods
-                for sgmt in segm_list:
-                    if sgmt != segm: 
-                        #Get names and methods for each button
-                        ccut, cch_cont = sgmt.split(':')
-                        cch, ccont = cch_cont.split('_')
-                        cmethod = controller.organ.mH_settings['wf_info']['segments']['setup'][ccut]['ch_info'][cch][ccont]
-                        if method == 'ext-ext': 
-                            if cmethod == 'cut_with_ext-ext' or cmethod == 'cut_with_other_ext-ext':
-                                play_btn = controller.main_win.segm_btns[sgmt]['play']
-                                play_btn.setEnabled(True)
-                        else: # method == 'indep-ext'
-                            if cmethod == 'cut_with_ext-indep':
-                                play_btn = controller.main_win.segm_btns[sgmt]['play']
-                                play_btn.setEnabled(True)
-            
-        elif method == 'cut_with_ext-ext' or method == 'cut_with_other_ext-ext':
-            #Loading external subsegments 
-            try: 
-                ext_subsgm = controller.organ.ext_subsgm
-                print('try ext_subsgm')
-            except: 
-                ext_subsgm = controller.organ.get_ext_subsgm(cut)
-                print('except ext_subsgm')
-            print('ext_subsgm: ',ext_subsgm)
-
-            # -> Get segments using ext segments
-            meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
-                                            segm_names, palette, ext_subsgm, win=controller.main_win)
-            
-            #Enable Plot Buttons
-            btn = controller.main_win.segm_btns[segm]['plot']
-            btn.setEnabled(True)
-            print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
-
-        else: #method == 'cut_with_ext-indep'
-            #Loading external subsegments of the ext-indep 
-            ext_subsgm = {}
-            for ssi in segm_names.keys(): 
-                name_ext_ind = cut+'_'+ch+'_ext_'+ssi
-                print(name_ext_ind)
-                ext_subsgm[ssi] = controller.organ.obj_subm[name_ext_ind]
-
-            # -> Get segments using ext segments
-            meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
-                                            segm_names, palette, ext_subsgm, win=controller.main_win)
-            
-            #Enable Plot Buttons
-            btn = controller.main_win.segm_btns[segm]['plot']
-            btn.setEnabled(True)
-            print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
-
-        #Save meshes temporarily within segment buttons
-        controller.main_win.segm_btns[segm]['meshes'] = meshes_segm
-        print(controller.main_win.segm_btns)
-        print('meshes_segm: ',meshes_segm)
-        print(controller.main_win.segm_btns[segm])
-
-        #Update progress in main_win
-        controller.main_win.update_workflow_progress()
-        #Fill-up results table
-        controller.main_win.fill_results()
-        #Check button 
-        controller.main_win.segm_btns[segm]['play'].setChecked(True)
-        #Check segm-sections
-        if hasattr(controller.main_win, 'segm_sect_btns'):
-            btn_final = 'NA'
-            for btn_ss in controller.main_win.segm_sect_btns:
-                if 's'+cut.title() in btn_ss and ch_cont in btn_ss:
-                    btn_final = btn_ss
+    if controller.main_win.segments_set.isChecked(): 
+        set_process(controller, 'segments')
+        workflow = controller.organ.workflow['morphoHeart']
+        segm_list = list(controller.main_win.segm_btns.keys())
+        if btn != None: 
+            cut, num = btn.split('_')
+            for key in segm_list: 
+                cut_key = key.split(':')[0]
+                num_key = controller.main_win.segm_btns[key]['num']
+                if cut_key == cut and int(num_key) == int(num): 
+                    segm2cut = key
                     break
-            if btn_final != 'NA': 
-                reg_cut = btn_final.split(':')[0].split('_o_')[1]
-                reg_btn = reg_cut+':'+ch_cont
-                if controller.main_win.sect_btns[reg_btn]['plot'].isEnabled(): 
-                    controller.main_win.segm_sect_btns[btn_final]['play'].setEnabled(True)
-        
-        if controller.organ.analysis['morphoCell']: 
-            if controller.organ.mC_settings['setup']['segm_mC'] != False: 
-                if controller.organ.mC_settings['setup']['segm_mC'][cut]['use_mH_settings']:
-                    controller.main_win.update_status(None, 'DONE', getattr(controller.main_win, 'mH_segm_'+cut.lower()+'_done'), override=True)
-        
-    # Update organ workflow and GUI Status
-    flat_semg_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Segments']))
-    all_done = []
-    for key in flat_semg_wf.keys(): 
-        key_split = key.split(':')
-        if len(key_split) > 1: 
-            all_done.append(flat_semg_wf[key])
+            segm_set = [segm2cut] 
+        else: 
+            segm_set = []
+            for btn in segm_list: 
+                if controller.main_win.segm_btns[btn]['play'].isEnabled():
+                    segm_set.append(btn)
+        print('segm_set:',segm_set)
 
-    proc_wft = ['MeshesProc', 'E-Segments', 'Status']
-    if all(flag == 'DONE' for flag in all_done): 
-        controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
-    elif any(flag == 'DONE' for flag in all_done): 
-        controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+        #Setup everything to cut
+        if controller.main_win.gui_segm['use_centreline']: 
+            cl_name = controller.main_win.gui_segm['centreline'].split('(')[1][:-1]
+            cl_ch, cl_cont = cl_name.split('_')
+            if workflow['MeshesProc']['C-Centreline']['buildCL'][cl_ch][cl_cont]['Status'] != 'DONE':
+                controller.main_win.win_msg('*Finish obtaining the centreline ('+cl_name+') to continue running this section!')
+                controller.main_win.segm_btns[segm_set[0]]['play'].setChecked(False)
+                return 
+            else: 
+                #Get centreline
+                nPoints = controller.organ.mH_settings['wf_info']['centreline']['buildCL']['nPoints']
+                cl = controller.organ.obj_meshes[cl_name].get_centreline(nPoints = nPoints)
+                spheres_spl = fcM.sphs_in_spline(kspl = cl, colour = True)
+                cl_spheres = {'centreline': cl, 
+                            'spheres': spheres_spl, 
+                            'nPoints' : nPoints}
+        else: 
+            cl_spheres = None
+
+        print('organ.obj_temp:', controller.organ.obj_temp)
+
+        #Loop through all the tissues that are going to be segmented
+        at_least_one = False
+        for segm in segm_set: 
+            if controller.main_win.segm_btns[segm]['plot'].isEnabled(): 
+                if len(segm_set)>1:
+                    run = False
+                else: 
+                    title = 'Re-run this Segment?' 
+                    msg = 'Are you sure you want to re-run "'+segm+'" segment? If so, select  -OK-, else select  -Cancel-.'
+                    prompt = Prompt_ok_cancel(title, msg, win_size=[450, 150], parent=controller.main_win)
+                    prompt.exec()
+                    print('output:', prompt.output)
+                    if prompt.output: 
+                        run = True
+                    else: 
+                        run = False
+            else: 
+                run = True
+
+            if run: 
+                at_least_one = True
+                controller.main_win.win_msg('Cutting Segment: ' + segm)
+                #Find cut
+                cut, ch_cont = segm.split(':')
+                ch, cont = ch_cont.split('_')
+                if 'chNS' in ch_cont: 
+                    if not controller.main_win.chNS_play.isChecked():
+                        continue
+
+                #Extract info for cut
+                colors_all = controller.organ.mH_settings['setup']['segm'][cut]['colors']
+                palette = [colors_all[key] for key in colors_all.keys()]
+                segm_names = controller.organ.mH_settings['setup']['segm'][cut]['name_segments']
+                
+                #Find method to cut
+                method = controller.organ.mH_settings['wf_info']['segments']['setup'][cut]['ch_info'][ch][cont]
+                mesh2cut = controller.organ.obj_meshes[ch+'_'+cont]
+                print('Cutting into segments:', mesh2cut.name, '- method: ', method)
+
+                #Get usernames string
+                user_names = '('+', '.join([segm_names[val] for val in segm_names])+')'
+                print('\n- Dividing '+mesh2cut.legend+' into segments '+user_names)
+                controller.main_win.win_msg('Dividing '+mesh2cut.legend+' into segments '+user_names)
+                
+                if method == 'ext-ext' or method == 'indep-ext': 
+                    # -> Get the discs that are going to be used to cut
+                    get_segm_discs(controller.organ, 
+                                    cut = cut, ch=ch, cont=cont, 
+                                    cl_spheres=cl_spheres, win=controller.main_win)
+                    # -> Create masks of discs
+                    # Get s3 dimensions
+                    mesh2cut.imChannel.load_chS3s([cont])
+                    s3_shape = getattr(mesh2cut.imChannel, 's3_'+cont).shape_s3
+                    fcM.create_disc_mask(controller.organ, cut = cut, s3_shape = s3_shape, h_min = 0.1125)
+                    ext_subsgm, meshes_segm = fcM.segm_ext_ext(controller.organ, mesh2cut, cut, 
+                                                            segm_names, palette, win=controller.main_win)
+                    if ext_subsgm == None and meshes_segm == None: 
+                        btn2uncheck = controller.main_win.segm_btns[segm]['play']
+                        controller.main_win.win_msg('!Dividing '+mesh2cut.legend+' resulted in less segments than expected. Please re-run this process and make sure the defined disc(s) is(are) splitting the mesh into the expected number of segments.', btn2uncheck)
+                        title = 'Something went wrong when cutting the '+mesh2cut.legend+' into segments...'
+                        msg = 'Dividing '+mesh2cut.legend+' resulted in less segments than expected. Please re-run this process and make sure the defined disc(s) is(are) splitting the mesh into the expected number of segments.' 
+                        prompt = Prompt_ok(title, msg, parent=controller.main_win)
+                        prompt.exec()
+                        print('output:',prompt.output, '\n')
+                        return
+                    else: 
+                        #Add submeshes of ext_ext as attribute to organ
+                        controller.organ.ext_subsgm = ext_subsgm
+
+                        #Enable Plot Buttons
+                        controller.main_win.segm_btns[segm]['plot'].setEnabled(True)
+                        print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+
+                        #Enable play buttons of meshes with other methods
+                        for sgmt in segm_list:
+                            if sgmt != segm: 
+                                #Get names and methods for each button
+                                ccut, cch_cont = sgmt.split(':')
+                                cch, ccont = cch_cont.split('_')
+                                cmethod = controller.organ.mH_settings['wf_info']['segments']['setup'][ccut]['ch_info'][cch][ccont]
+                                if method == 'ext-ext': 
+                                    if cmethod == 'cut_with_ext-ext' or cmethod == 'cut_with_other_ext-ext':
+                                        play_btn = controller.main_win.segm_btns[sgmt]['play']
+                                        play_btn.setEnabled(True)
+                                else: # method == 'indep-ext'
+                                    if cmethod == 'cut_with_ext-indep':
+                                        play_btn = controller.main_win.segm_btns[sgmt]['play']
+                                        play_btn.setEnabled(True)
+                    
+                elif method == 'cut_with_ext-ext' or method == 'cut_with_other_ext-ext':
+                    #Loading external subsegments 
+                    try: 
+                        ext_subsgm = controller.organ.ext_subsgm
+                        print('try ext_subsgm')
+                    except: 
+                        ext_subsgm = controller.organ.get_ext_subsgm(cut)
+                        print('except ext_subsgm')
+                    print('ext_subsgm: ',ext_subsgm)
+
+                    # -> Get segments using ext segments
+                    meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
+                                                    segm_names, palette, ext_subsgm, win=controller.main_win)
+                    
+                    #Enable Plot Buttons
+                    btn = controller.main_win.segm_btns[segm]['plot']
+                    btn.setEnabled(True)
+                    print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+
+                else: #method == 'cut_with_ext-indep'
+                    #Loading external subsegments of the ext-indep 
+                    ext_subsgm = {}
+                    for ssi in segm_names.keys(): 
+                        name_ext_ind = cut+'_'+ch+'_ext_'+ssi
+                        print(name_ext_ind)
+                        ext_subsgm[ssi] = controller.organ.obj_subm[name_ext_ind]
+
+                    # -> Get segments using ext segments
+                    meshes_segm = fcM.get_segments(controller.organ, mesh2cut, cut, 
+                                                    segm_names, palette, ext_subsgm, win=controller.main_win)
+                    
+                    #Enable Plot Buttons
+                    btn = controller.main_win.segm_btns[segm]['plot']
+                    btn.setEnabled(True)
+                    print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+
+                #Save meshes temporarily within segment buttons
+                controller.main_win.segm_btns[segm]['meshes'] = meshes_segm
+                print(controller.main_win.segm_btns)
+                print('meshes_segm: ',meshes_segm)
+                print(controller.main_win.segm_btns[segm])
+
+                #Update progress in main_win
+                controller.main_win.update_workflow_progress()
+                #Fill-up results table
+                controller.main_win.fill_results()
+                #Check button 
+                controller.main_win.segm_btns[segm]['play'].setChecked(True)
+                #Check segm-sections
+                if hasattr(controller.main_win, 'segm_sect_btns'):
+                    btn_final = 'NA'
+                    for btn_ss in controller.main_win.segm_sect_btns:
+                        if 's'+cut.title() in btn_ss and ch_cont in btn_ss:
+                            btn_final = btn_ss
+                            break
+                    if btn_final != 'NA': 
+                        reg_cut = btn_final.split(':')[0].split('_o_')[1]
+                        reg_btn = reg_cut+':'+ch_cont
+                        if controller.main_win.sect_btns[reg_btn]['plot'].isEnabled(): 
+                            controller.main_win.segm_sect_btns[btn_final]['play'].setEnabled(True)
+                
+                if controller.organ.analysis['morphoCell']: 
+                    if controller.organ.mC_settings['setup']['segm_mC'] != False: 
+                        if controller.organ.mC_settings['setup']['segm_mC'][cut]['use_mH_settings']:
+                            controller.main_win.update_status(None, 'DONE', getattr(controller.main_win, 'mH_segm_'+cut.lower()+'_done'), override=True)
+                
+        if at_least_one:
+            # Update organ workflow and GUI Status
+            flat_semg_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Segments']))
+            all_done = []
+            for key in flat_semg_wf.keys(): 
+                key_split = key.split(':')
+                if len(key_split) > 1: 
+                    all_done.append(flat_semg_wf[key])
+
+            proc_wft = ['MeshesProc', 'E-Segments', 'Status']
+            if all(flag == 'DONE' for flag in all_done): 
+                controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
+                controller.main_win.segments_play.setChecked(True)
+            elif any(flag == 'DONE' for flag in all_done): 
+                controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+            else: 
+                pass
+            controller.main_win.update_status(workflow, proc_wft, controller.main_win.segments_status)
+            
+            #Add meshes to plot_user
+            controller.main_win.fill_comboBox_all_meshes()
+            print('organ.obj_temp:', controller.organ.obj_temp)
+            controller.main_win.win_msg('All Done - Cutting Segments (N='+str(len(segm_set))+')')
+        else: 
+            controller.main_win.win_msg('All possible segments have already been obtained. If you wish to re-create one of them, re-run it using its individual button.')
+            controller.main_win.segments_play.setChecked(check_status_all(controller, 'E-Segments'))
     else: 
-        pass
-    controller.main_win.update_status(workflow, proc_wft, controller.main_win.segments_status)
-    
-    #Add meshes to plot_user
-    controller.main_win.fill_comboBox_all_meshes()
-    print('organ.obj_temp:', controller.organ.obj_temp)
+        controller.main_win.win_msg('*You need to set the settings of the segments to be able to run this process.')
 
 def get_segm_discs(organ, cut, ch, cont, cl_spheres, win): 
 
@@ -1957,7 +2037,7 @@ def reduce_space(controller, info):
     title = 'Are you sure you want to reduce space in disk...' 
     if info == 'segm':
         msg = ['Are you sure you want to reduce organ size by removing all unnecessary segments (*.vtk files) from disk? If so, select  -OK-, else select  -Cancel-.',
-                '[Note: This process will delete all the saved segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
+                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
     
     prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), wdg_size=[[433,50],[433,100]],
                               parent=controller.main_win)
@@ -2183,7 +2263,10 @@ def run_sections(controller, btn):
                     break
             sect_set = [sect2cut] 
         else: 
-            sect_set = sect_list
+            sect_set = []
+            for btn in sect_list: 
+                if controller.main_win.sect_btns[btn]['play'].isEnabled():
+                    sect_set.append(btn)
         print('sect_set:',sect_set)
 
         #Setup everything to cut
@@ -2191,187 +2274,214 @@ def run_sections(controller, btn):
         sect_settings = controller.organ.mH_settings['wf_info']['sections']
 
         #Loop through all the tissues that are going to be sectioned
+        at_least_one = False
         for sect in sect_set: 
-            #Find cut
-            cut, ch_cont = sect.split(':')
-            ch, cont = ch_cont.split('_')
-            #Extract info for cut
-            colors_all = controller.organ.mH_settings['setup']['sect'][cut]['colors']
-            palette = [colors_all[key] for key in colors_all.keys()]
-            sect_names = controller.organ.mH_settings['setup']['sect'][cut]['name_sections']
-            
-            #Find mesh to cut
-            mesh2cut = controller.organ.obj_meshes[ch+'_'+cont]
-
-            #Check if the mask has already been saved
-            if 'mask_name' in sect_settings[cut.title()].keys(): 
-                #Add mask_name as attribute to organ in case it is not
-                mask_name = sect_settings[cut.title()]['mask_name']
-                if not hasattr(controller.organ, 'mask_sect_'+cut.lower()): 
-                    setattr(controller.organ, 'mask_sect_'+cut.lower(), mask_name)
-            else: 
-                #Find centreline and settings to cut
-                cl_name = controller.main_win.gui_sect[cut]['centreline'].split('(')[1][:-1]
-                nPoints = controller.main_win.gui_sect[cut]['nPoints']
-                mesh_cl = controller.organ.obj_meshes[cl_name]
-                nRes = controller.main_win.gui_sect[cut]['nRes']
-                filling_method = controller.main_win.gui_sect[cut]['filling_method']
-
-                #Create mask_cube and save
-                ext_plane = getattr(controller.main_win, 'extend_dir_'+cut.lower())['plane_normal']
-                # -> Create ribbon
-                if controller.main_win.reg_same_centreline.isChecked(): 
-                    #Find if the othe KSpline extended has already been created
-                    if cut == 'Cut1':
-                        cuto = 'Cut2'
+            if controller.main_win.sect_btns[sect]['plot'].isEnabled(): 
+                if len(sect_set)>1:
+                    run = False
+                else: 
+                    title = 'Re-run this Region?' 
+                    msg = 'Are you sure you want to re-run "'+sect+'" region? If so, select  -OK-, else select  -Cancel-.'
+                    prompt = Prompt_ok_cancel(title, msg, win_size=[450, 150], parent=controller.main_win)
+                    prompt.exec()
+                    print('output:', prompt.output)
+                    if prompt.output: 
+                        run = True
                     else: 
-                        cuto = 'Cut1'
-                    if 'ext_nPoints' in controller.main_win.gui_sect[cuto].keys(): 
-                        ext_points = controller.main_win.gui_sect[cuto]['ext_pts']
-                        use_prev = True
+                        run = False
+            else: 
+                run = True
+
+            if run: 
+                at_least_one = True
+                controller.main_win.win_msg('Cutting Region: ' + sect)
+                #Find cut
+                cut, ch_cont = sect.split(':')
+                ch, cont = ch_cont.split('_')
+                #Extract info for cut
+                colors_all = controller.organ.mH_settings['setup']['sect'][cut]['colors']
+                palette = [colors_all[key] for key in colors_all.keys()]
+                sect_names = controller.organ.mH_settings['setup']['sect'][cut]['name_sections']
+                
+                #Find mesh to cut
+                mesh2cut = controller.organ.obj_meshes[ch+'_'+cont]
+
+                #Check if the mask has already been saved
+                if 'mask_name' in sect_settings[cut.title()].keys(): 
+                    #Add mask_name as attribute to organ in case it is not
+                    mask_name = sect_settings[cut.title()]['mask_name']
+                    if not hasattr(controller.organ, 'mask_sect_'+cut.lower()): 
+                        setattr(controller.organ, 'mask_sect_'+cut.lower(), mask_name)
+                else: 
+                    #Find centreline and settings to cut
+                    cl_name = controller.main_win.gui_sect[cut]['centreline'].split('(')[1][:-1]
+                    nPoints = controller.main_win.gui_sect[cut]['nPoints']
+                    mesh_cl = controller.organ.obj_meshes[cl_name]
+                    nRes = controller.main_win.gui_sect[cut]['nRes']
+                    filling_method = controller.main_win.gui_sect[cut]['filling_method']
+
+                    #Create mask_cube and save
+                    ext_plane = getattr(controller.main_win, 'extend_dir_'+cut.lower())['plane_normal']
+                    # -> Create ribbon
+                    if controller.main_win.reg_same_centreline.isChecked(): 
+                        #Find if the othe KSpline extended has already been created
+                        if cut == 'Cut1':
+                            cuto = 'Cut2'
+                        else: 
+                            cuto = 'Cut1'
+                        if 'ext_nPoints' in controller.main_win.gui_sect[cuto].keys(): 
+                            ext_points = controller.main_win.gui_sect[cuto]['ext_pts']
+                            use_prev = True
+                        else: 
+                            ext_points = None
+                            use_prev = False
                     else: 
                         ext_points = None
                         use_prev = False
-                else: 
-                    ext_points = None
-                    use_prev = False
+                        
+                    #test this for a case in which the same centreline is used for both cuts
+                    #  (is it asking for happy the second time around?)
+                    happy = False
+                    while not happy: 
+                        cl_ribbon, kspl_ext = mesh_cl.get_clRibbon(nPoints=nPoints, nRes=nRes, 
+                                                                    pl_normal=ext_plane, clRib_type=clRib_type, 
+                                                                    use_prev=use_prev, ext_points = ext_points)
+                        
+                        title = 'Check extended centreline...'
+                        msg = 'Are you happy with the extended centreline/ribbon created?! If so, select  -OK-, else select  -Cancel- and redefine extended centreline.'
+                        prompt = Prompt_ok_cancel(title, msg, parent=controller.main_win)
+                        prompt.exec()
+                        print('output:', prompt.output)
+                        happy = prompt.output
                     
-                #test this for a case in which the same centreline is used for both cuts
-                #  (is it asking for happy the second time around?)
-                happy = False
-                while not happy: 
-                    cl_ribbon, kspl_ext = mesh_cl.get_clRibbon(nPoints=nPoints, nRes=nRes, 
-                                                                pl_normal=ext_plane, clRib_type=clRib_type, 
-                                                                use_prev=use_prev, ext_points = ext_points)
+                    controller.main_win.gui_sect[cut]['ext_pts'] = kspl_ext.points()
+                    # proc_kspl_ext = ['wf_info', 'sections', cut, 'ext_pts']
+                    # controller.organ.update_settings(proc_kspl_ext, kspl_ext.points(), 'mH')
+
+                    # obj = [(mesh2cut.mesh, cl_ribbon)]
+                    # txt = [(0, controller.organ.user_organName+'- Extended Centreline Ribbon to cut organ into sections')]
+                    # plot_grid(obj=obj, txt=txt, axes=8, sc_side=max(controller.organ.get_maj_bounds()))
                     
-                    title = 'Check extended centreline...'
-                    msg = 'Are you happy with the extended centreline/ribbon created?! If so, select  -OK-, else select  -Cancel- and redefine extended centreline.'
-                    prompt = Prompt_ok_cancel(title, msg, parent=controller.main_win)
-                    prompt.exec()
-                    print('output:', prompt.output)
-                    happy = prompt.output
-                
-                controller.main_win.gui_sect[cut]['ext_pts'] = kspl_ext.points()
-                # proc_kspl_ext = ['wf_info', 'sections', cut, 'ext_pts']
-                # controller.organ.update_settings(proc_kspl_ext, kspl_ext.points(), 'mH')
-
-                # obj = [(mesh2cut.mesh, cl_ribbon)]
-                # txt = [(0, controller.organ.user_organName+'- Extended Centreline Ribbon to cut organ into sections')]
-                # plot_grid(obj=obj, txt=txt, axes=8, sc_side=max(controller.organ.get_maj_bounds()))
-                
-                # -> Create high resolution ribbon
-                controller.main_win.win_msg('Creating high resolution centreline ribbon for '+cut.title())
-                controller.organ.obj_imChannels[ch].load_chS3s([cont])
-                s3_shape = getattr(controller.organ.obj_imChannels[ch], 's3_'+cont).shape_s3
-                s3_filledCube, test_rib = fcM.get_stack_clRibbon(organ = controller.organ,
-                                                                    s3_shape = s3_shape, 
-                                                                    mesh_cl = mesh_cl, 
-                                                                    cl_ribbon = cl_ribbon, 
-                                                                    win=controller.main_win)
-                
-                # obj = [(test_rib, mesh_cl.mesh)]
-                # txt = [(0, controller.organ.user_organName)]
-                # plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(controller.organ.get_maj_bounds()))
-
-                # -> Create cube of ribbon and mask one side
-                print('Creating cube sections for masking ('+cut.title()+')')
-                controller.main_win.win_msg('Creating cube sections for masking ('+cut.title()+')')
-                mask_cube_split, s3_filledCubes = fcM.get_cube_clRibbon(organ = controller.organ,
+                    # -> Create high resolution ribbon
+                    controller.main_win.win_msg('Creating high resolution centreline ribbon for '+cut.title())
+                    controller.organ.obj_imChannels[ch].load_chS3s([cont])
+                    s3_shape = getattr(controller.organ.obj_imChannels[ch], 's3_'+cont).shape_s3
+                    s3_filledCube, test_rib = fcM.get_stack_clRibbon(organ = controller.organ,
                                                                         s3_shape = s3_shape, 
-                                                                        cut = cut,  
-                                                                        s3_filledCube = s3_filledCube,
-                                                                        res = mesh_cl.resolution,  
-                                                                        pl_normal = ext_plane, 
-                                                                        filling_method = filling_method)
-                
-                # obj = [(mask_cube_split[0], mask_cube_split[1], test_rib, mesh_cl.mesh)]
-                # txt = [(0, controller.organ.user_organName)]
-                # plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(controller.organ.get_maj_bounds()))
-                
-                #Select the side of the ribbon that corresponds to section 1
-                selected_side = fcM.select_ribMask(controller.organ, cut, mask_cube_split, mesh_cl.mesh, kspl_ext)
-                
-                if selected_side['name'] == 'NS': 
-                    name_sect1 = controller.organ.mH_settings['setup']['sect'][cut.title()]['name_sections']['sect1']
-                    title = name_sect1.title()+' section not selected!' 
-                    msg = 'Select the mesh that corresponds to Section No.1 ('+name_sect1.upper()+'):'
-                    items = {0: {'opt':'dark blue mesh (A)'}, 1: {'opt':'light blue mesh (B)'}}
-                    prompt = Prompt_ok_cancel_radio(title, msg, items, parent=controller.main_win)
-                    prompt.exec()
-                    print('output:', prompt.output, '\n')  
-                    if prompt.output[0] == 0: 
-                        selected_side = {'name': 'Filled CLRibbon SideA'}
-                    else: #prompt.output[0] == 1: 
-                        selected_side = {'name': 'Filled CLRibbon SideB'}
-
-                else: 
-                    pass
-                print('final selected_mesh:', selected_side)
-
-                fcM.save_ribMask_side(organ = controller.organ, 
-                                        cut = cut, 
-                                        selected_side=selected_side, 
-                                        s3_filledCubes = s3_filledCubes)
+                                                                        mesh_cl = mesh_cl, 
+                                                                        cl_ribbon = cl_ribbon, 
+                                                                        win=controller.main_win)
                     
-                #Enable plot button for centreline extension
-                cl_ext_btn = getattr(controller.main_win, 'cl_ext_'+cut.lower()).setEnabled(True)
-            
-            #Cut input tissue into sections
-            print(type(mesh2cut))
-            meshes_sect = fcM.get_sections(controller.organ, mesh2cut, cut, 
-                                            sect_names, palette, win=controller.main_win)
-            
-            #Save meshes temporarily within section buttons
-            controller.main_win.sect_btns[sect]['meshes'] = meshes_sect
-            print(controller.main_win.sect_btns)
-            print('meshes_sect: ',meshes_sect)
-            print(controller.main_win.sect_btns[sect])
+                    # obj = [(test_rib, mesh_cl.mesh)]
+                    # txt = [(0, controller.organ.user_organName)]
+                    # plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(controller.organ.get_maj_bounds()))
 
-            #Enable Plot Buttons
-            btn = controller.main_win.sect_btns[sect]['plot']
-            btn.setEnabled(True)
-            print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+                    # -> Create cube of ribbon and mask one side
+                    print('Creating cube sections for masking ('+cut.title()+')')
+                    controller.main_win.win_msg('Creating cube sections for masking ('+cut.title()+')')
+                    mask_cube_split, s3_filledCubes = fcM.get_cube_clRibbon(organ = controller.organ,
+                                                                            s3_shape = s3_shape, 
+                                                                            cut = cut,  
+                                                                            s3_filledCube = s3_filledCube,
+                                                                            res = mesh_cl.resolution,  
+                                                                            pl_normal = ext_plane, 
+                                                                            filling_method = filling_method)
+                    
+                    # obj = [(mask_cube_split[0], mask_cube_split[1], test_rib, mesh_cl.mesh)]
+                    # txt = [(0, controller.organ.user_organName)]
+                    # plot_grid(obj=obj, txt=txt, axes=5, sc_side=max(controller.organ.get_maj_bounds()))
+                    
+                    #Select the side of the ribbon that corresponds to section 1
+                    selected_side = fcM.select_ribMask(controller.organ, cut, mask_cube_split, mesh_cl.mesh, kspl_ext)
+                    
+                    if selected_side['name'] == 'NS': 
+                        name_sect1 = controller.organ.mH_settings['setup']['sect'][cut.title()]['name_sections']['sect1']
+                        title = name_sect1.title()+' section not selected!' 
+                        msg = 'Select the mesh that corresponds to Section No.1 ('+name_sect1.upper()+'):'
+                        items = {0: {'opt':'dark blue mesh (A)'}, 1: {'opt':'light blue mesh (B)'}}
+                        prompt = Prompt_ok_cancel_radio(title, msg, items, parent=controller.main_win)
+                        prompt.exec()
+                        print('output:', prompt.output, '\n')  
+                        if prompt.output[0] == 0: 
+                            selected_side = {'name': 'Filled CLRibbon SideA'}
+                        else: #prompt.output[0] == 1: 
+                            selected_side = {'name': 'Filled CLRibbon SideB'}
 
-            #Update progress in main_win
-            controller.main_win.update_workflow_progress()
-            #Fill-up results table
-            controller.main_win.fill_results()
-            #Check button 
-            controller.main_win.sect_btns[sect]['play'].setChecked(True)
-            #Check segm-sections
-            if hasattr(controller.main_win, 'segm_sect_btns'):
-                btn_final = 'NA'
-                for btn_ss in controller.main_win.segm_sect_btns:
-                    if '_o_'+cut.title() in btn_ss and ch_cont in btn_ss:
-                        btn_final = btn_ss
-                        break
-                if btn_final != 'NA': 
-                    seg_cut = btn_final.split('_o_')[0][1:]
-                    seg_btn = seg_cut+':'+ch_cont
-                    if controller.main_win.segm_btns[seg_btn]['plot'].isEnabled(): 
-                        controller.main_win.segm_sect_btns[btn_final]['play'].setEnabled(True)
+                    else: 
+                        pass
+                    print('final selected_mesh:', selected_side)
+
+                    fcM.save_ribMask_side(organ = controller.organ, 
+                                            cut = cut, 
+                                            selected_side=selected_side, 
+                                            s3_filledCubes = s3_filledCubes)
+                        
+                    #Enable plot button for centreline extension
+                    cl_ext_btn = getattr(controller.main_win, 'cl_ext_'+cut.lower()).setEnabled(True)
+                
+                #Cut input tissue into sections
+                print(type(mesh2cut))
+                meshes_sect = fcM.get_sections(controller.organ, mesh2cut, cut, 
+                                                sect_names, palette, win=controller.main_win)
+                
+                #Save meshes temporarily within section buttons
+                controller.main_win.sect_btns[sect]['meshes'] = meshes_sect
+                print(controller.main_win.sect_btns)
+                print('meshes_sect: ',meshes_sect)
+                print(controller.main_win.sect_btns[sect])
+
+                #Enable Plot Buttons
+                btn = controller.main_win.sect_btns[sect]['plot']
+                btn.setEnabled(True)
+                print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+
+                #Update progress in main_win
+                controller.main_win.update_workflow_progress()
+                #Fill-up results table
+                controller.main_win.fill_results()
+                #Check button 
+                controller.main_win.sect_btns[sect]['play'].setChecked(True)
+                #Check segm-sections
+                if hasattr(controller.main_win, 'segm_sect_btns'):
+                    btn_final = 'NA'
+                    for btn_ss in controller.main_win.segm_sect_btns:
+                        if '_o_'+cut.title() in btn_ss and ch_cont in btn_ss:
+                            btn_final = btn_ss
+                            break
+                    if btn_final != 'NA': 
+                        seg_cut = btn_final.split('_o_')[0][1:]
+                        seg_btn = seg_cut+':'+ch_cont
+                        if controller.main_win.segm_btns[seg_btn]['plot'].isEnabled(): 
+                            controller.main_win.segm_sect_btns[btn_final]['play'].setEnabled(True)
         
-        # Update organ workflow and GUI Status
-        flat_sect_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Sections']))
-        all_done = []
-        for key in flat_sect_wf.keys(): 
-            key_split = key.split(':')
-            if len(key_split) > 1: 
-                all_done.append(flat_sect_wf[key])
 
-        proc_wft = ['MeshesProc', 'E-Sections', 'Status']
-        if all(flag == 'DONE' for flag in all_done): 
-            controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
-        elif any(flag == 'DONE' for flag in all_done): 
-            controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+        if at_least_one: 
+            # Update organ workflow and GUI Status
+            flat_sect_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Sections']))
+            all_done = []
+            for key in flat_sect_wf.keys(): 
+                key_split = key.split(':')
+                if len(key_split) > 1: 
+                    all_done.append(flat_sect_wf[key])
+
+            proc_wft = ['MeshesProc', 'E-Sections', 'Status']
+            if all(flag == 'DONE' for flag in all_done): 
+                controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
+                controller.main_win.sections_play.setChecked(True)
+            elif any(flag == 'DONE' for flag in all_done): 
+                controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+            else: 
+                pass
+            controller.main_win.update_status(workflow, proc_wft, controller.main_win.sections_status)
+
+            #Add meshes to plot_user
+            controller.main_win.fill_comboBox_all_meshes()
+            controller.main_win.win_msg('All Done - Cutting Regions (N='+str(len(sect_set))+')')
         else: 
-            pass
-        controller.main_win.update_status(workflow, proc_wft, controller.main_win.sections_status)
-
-        #Add meshes to plot_user
-        controller.main_win.fill_comboBox_all_meshes()
+            controller.main_win.win_msg('All possible regions have already been obtained. If you wish to re-create one of them, re-run it using its individual button.')
+            controller.main_win.sections_play.setChecked(check_status_all(controller, 'E-Sections'))
     else: 
-        controller.main_win.win_msg('*You need to re-set the settings of the regions to be able to run this process.')
+        controller.main_win.win_msg('*You need to set the settings of the regions to be able to run this process.')
 
 # > SEGM-SECT
 def run_segm_sect(controller, btn): 
@@ -2392,76 +2502,107 @@ def run_segm_sect(controller, btn):
                 break
         segm_sect_set = [segmsect2cut] 
     else: 
-        segm_sect_set = segm_sect_list
+        segm_sect_set = []
+        for btn in segm_sect_list: 
+            if controller.main_win.segm_sect_btns[btn]['play'].isEnabled():
+                segm_sect_set.append(btn)
     print('segm_sect_set:',segm_sect_set)
 
     #Loop through all the tissues that are going to be sectioned
+    at_least_one = False
     for segm_sect in segm_sect_set: 
-        ch_cont = segm_sect.split(':')[1]
-        ch, cont = ch_cont.split('_')
-        seg_cut = segm_sect.split('_o_')[0][1:]
-        reg_cut = segm_sect.split(':')[0].split('_o_')[1]
-        print(ch, cont, seg_cut, reg_cut)
-
-        #Extract info for cut
-        colors_all = controller.organ.mH_settings['setup']['segm-sect']['s'+seg_cut][reg_cut]['colors']
-        segm_names = controller.organ.mH_settings['setup']['segm'][seg_cut]['name_segments']
-        sect_names = controller.organ.mH_settings['setup']['sect'][reg_cut]['name_sections']
-        print(colors_all, '\n', segm_names, '\n', sect_names)
-
-        #Get mask to use
-        sect_settings = controller.organ.mH_settings['wf_info']['sections']
-        if 'mask_name' in sect_settings[reg_cut.title()].keys(): 
-            #Add mask_name as attribute to organ in case it is not
-            mask_name = sect_settings[reg_cut.title()]['mask_name']
-            if not hasattr(controller.organ, 'mask_sect_'+reg_cut.lower()): 
-                setattr(controller.organ, 'mask_sect_'+reg_cut.lower(), mask_name)
+        if controller.main_win.segm_sect_btns[segm_sect]['plot'].isEnabled(): 
+            if len(segm_sect_set)>1:
+                run = False
+            else: 
+                title = 'Re-run this Segment-Region?' 
+                msg = 'Are you sure you want to re-run "'+segm_sect+'" segment-region? If so, select  -OK-, else select  -Cancel-.'
+                prompt = Prompt_ok_cancel(title, msg, win_size=[450, 150], parent=controller.main_win)
+                prompt.exec()
+                print('output:', prompt.output)
+                if prompt.output: 
+                    run = True
+                else: 
+                    run = False
         else: 
-            print('error no mask? ')
+            run = True
 
-        # Cut input tissue into sections
-        meshes_segm_sect = fcM.get_segm_sects(controller.organ, 
-                                                ch_cont = ch_cont, 
-                                                cuts = (seg_cut, reg_cut), 
-                                                names = (segm_names, sect_names), 
-                                                palette=colors_all,
-                                                win=controller.main_win)
-        
-        #Save meshes temporarily within section buttons
-        controller.main_win.segm_sect_btns[segm_sect]['meshes'] = meshes_segm_sect
-        print('meshes_segm_sect: ',meshes_segm_sect)
-        print(controller.main_win.segm_sect_btns[segm_sect])
+        if run: 
+            at_least_one = True
+            controller.main_win.win_msg('Cutting Segment-Region: ' + segm_sect)
+            ch_cont = segm_sect.split(':')[1]
+            ch, cont = ch_cont.split('_')
+            seg_cut = segm_sect.split('_o_')[0][1:]
+            reg_cut = segm_sect.split(':')[0].split('_o_')[1]
+            print(ch, cont, seg_cut, reg_cut)
 
-        #Enable Plot Buttons
-        btn = controller.main_win.segm_sect_btns[segm_sect]['plot']
-        btn.setEnabled(True)
-        print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
+            #Extract info for cut
+            colors_all = controller.organ.mH_settings['setup']['segm-sect']['s'+seg_cut][reg_cut]['colors']
+            segm_names = controller.organ.mH_settings['setup']['segm'][seg_cut]['name_segments']
+            sect_names = controller.organ.mH_settings['setup']['sect'][reg_cut]['name_sections']
+            print(colors_all, '\n', segm_names, '\n', sect_names)
 
-    #Update progress in main_win
-    controller.main_win.update_workflow_progress()
+            #Get mask to use
+            sect_settings = controller.organ.mH_settings['wf_info']['sections']
+            if 'mask_name' in sect_settings[reg_cut.title()].keys(): 
+                #Add mask_name as attribute to organ in case it is not
+                mask_name = sect_settings[reg_cut.title()]['mask_name']
+                if not hasattr(controller.organ, 'mask_sect_'+reg_cut.lower()): 
+                    setattr(controller.organ, 'mask_sect_'+reg_cut.lower(), mask_name)
+            else: 
+                print('error no mask? ')
 
-    #Fill-up results table
-    controller.main_win.fill_results()
+            # Cut input tissue into sections
+            meshes_segm_sect = fcM.get_segm_sects(controller.organ, 
+                                                    ch_cont = ch_cont, 
+                                                    cuts = (seg_cut, reg_cut), 
+                                                    names = (segm_names, sect_names), 
+                                                    palette=colors_all,
+                                                    win=controller.main_win)
+            
+            #Save meshes temporarily within section buttons
+            controller.main_win.segm_sect_btns[segm_sect]['meshes'] = meshes_segm_sect
+            print('meshes_segm_sect: ',meshes_segm_sect)
+            print(controller.main_win.segm_sect_btns[segm_sect])
 
-    # Update organ workflow and GUI Status
-    flat_sect_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Segments_Sections']))
-    all_done = []
-    for key in flat_sect_wf.keys(): 
-        key_split = key.split(':')
-        if len(key_split) > 1: 
-            all_done.append(flat_sect_wf[key])
-
-    proc_wft = ['MeshesProc', 'E-Segments_Sections', 'Status']
-    if all(flag == 'DONE' for flag in all_done): 
-        controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
-    elif any(flag == 'DONE' for flag in all_done): 
-        controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
-    else: 
-        pass
-    controller.main_win.update_status(workflow, proc_wft, controller.main_win.segm_sect_status)
+            #Enable Plot Buttons
+            btn = controller.main_win.segm_sect_btns[segm_sect]['plot']
+            btn.setEnabled(True)
+            #Check button 
+            controller.main_win.segm_sect_btns[segm_sect]['play'].setChecked(True)
+            # print('wf:', controller.organ.workflow['morphoHeart']['MeshesProc'])
     
-    #Add meshes to plot_user
-    controller.main_win.fill_comboBox_all_meshes()
+    if at_least_one:
+        #Update progress in main_win
+        controller.main_win.update_workflow_progress()
+
+        #Fill-up results table
+        controller.main_win.fill_results()
+
+        # Update organ workflow and GUI Status
+        flat_sect_wf = flatdict.FlatDict(copy.deepcopy(workflow['MeshesProc']['E-Segments_Sections']))
+        all_done = []
+        for key in flat_sect_wf.keys(): 
+            key_split = key.split(':')
+            if len(key_split) > 1: 
+                all_done.append(flat_sect_wf[key])
+
+        proc_wft = ['MeshesProc', 'E-Segments_Sections', 'Status']
+        if all(flag == 'DONE' for flag in all_done): 
+            controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
+            controller.main_win.segm_sect_play.setChecked(True)
+        elif any(flag == 'DONE' for flag in all_done): 
+            controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
+        else: 
+            pass
+        controller.main_win.update_status(workflow, proc_wft, controller.main_win.segm_sect_status)
+        
+        #Add meshes to plot_user
+        controller.main_win.fill_comboBox_all_meshes()
+        controller.main_win.win_msg('All Done - Cutting Segment-Regions (N='+str(len(segm_sect_set))+')')
+    else: 
+        controller.main_win.win_msg('All possible segment-regions have already been obtained. If you wish to re-create one of them, re-run it using its individual button.')
+        controller.main_win.segm_sect_play.setChecked(check_status_all(controller, 'E-Segments_Sections'))
 
 #> MEASURE
 def run_measure(controller): 
@@ -2523,7 +2664,6 @@ def run_measure(controller):
         df_res = fcB.df_reset_index(df=df_res, mult_index= ['Parameter', 'Tissue-Contour', 'User (Tissue-Contour)'])
         organ.mH_settings['df_res'] = df_res
         controller.main_win.fill_results()
-    
     else: 
         controller.main_win.win_msg('*To measure whole tissue make sure you have at least run the  -Keep Largest-  section.')
 

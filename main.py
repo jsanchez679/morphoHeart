@@ -453,10 +453,9 @@ class Controller:
         self.main_win.centreline_ML_play.clicked.connect(lambda: self.run_centreline_ML())
         self.main_win.centreline_vmtk_play.clicked.connect(lambda: self.run_centreline_vmtk())
         self.main_win.centreline_select.clicked.connect(lambda: self.run_centreline_select())
-        # self.main_win.centreline_play.clicked.connect(lambda: self.run_centreline())
 
         #HEATMAPS
-        # self.main_win.heatmaps3D_play.clicked.connect(lambda: self.run_heatmaps3D())
+        self.main_win.heatmaps3D_play.clicked.connect(lambda: self.run_heatmaps3D())
         #Heatmap Indiv Play buttons
         self.main_win.hm_play1.clicked.connect(lambda: self.run_heatmaps3D(btn=1))
         self.main_win.hm_play2.clicked.connect(lambda: self.run_heatmaps3D(btn=2))
@@ -485,7 +484,7 @@ class Controller:
         self.main_win.hm2d_play12.clicked.connect(lambda: self.run_heatmaps2D(btn=12))
 
         # SEGMENTS
-        # self.main_win.segments_play.clicked.connect(lambda: self.run_segments())
+        self.main_win.segments_play.clicked.connect(lambda: self.run_segments())
         #Segments Indiv Play buttons
         #Cut 1
         self.main_win.cut1_play_segm1.clicked.connect(lambda: self.run_segments(btn='Cut1_1'))
@@ -530,7 +529,7 @@ class Controller:
         self.main_win.ellipsoids_play.clicked.connect(lambda: self.run_ellipsoids())
 
         # SECTIONS
-        # self.main_win.sections_play.clicked.connect(lambda: self.run_sections())
+        self.main_win.sections_play.clicked.connect(lambda: self.run_sections())
         #Cut 1
         self.main_win.cut1_play_sect1.clicked.connect(lambda: self.run_sections(btn='Cut1_1'))
         self.main_win.cut1_play_sect2.clicked.connect(lambda: self.run_sections(btn='Cut1_2'))
@@ -559,7 +558,7 @@ class Controller:
         self.main_win.cut2_play_sect12.clicked.connect(lambda: self.run_sections(btn='Cut2_12'))
 
         # SEGMENTS-SECTIONS
-        # self.main_win.segm_sect_play.clicked.connect(lambda: self.run_segm_sect())
+        self.main_win.segm_sect_play.clicked.connect(lambda: self.run_segm_sect())
         #sCut1 - Cut1
         self.main_win.scut1_cut1_play_sect1.clicked.connect(lambda: self.run_segm_sect(btn='sCut1_o_Cut1_1'))
         self.main_win.scut1_cut1_play_sect2.clicked.connect(lambda: self.run_segm_sect(btn='sCut1_o_Cut1_2'))
@@ -847,138 +846,160 @@ class Controller:
 
     #Channel segmentation related
     def mask_ch(self, ch_name): 
+        self.main_win.win_msg(' ') 
         mA.mask_channel(controller=self, ch_name=ch_name)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def mask_npy(self, ch_name): 
+        self.main_win.win_msg(' ') 
         mA.mask_npy_channel(controller=self, ch_name=ch_name)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def autom_close_contours(self, ch_name):
+        self.main_win.win_msg(' ') 
         mA.autom_close_contours(controller=self, ch_name=ch_name)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def manual_close_contours(self, ch_name):
+        self.main_win.win_msg(' ') 
         mA.manual_close_contours(controller=self, ch_name=ch_name)
     
     def select_contours(self, ch_name): 
+        self.main_win.win_msg(' ') 
         mA.select_contours(controller=self, ch_name=ch_name)
 
     #Analysis related
     def run_keeplargest(self):
+        self.main_win.win_msg(' ')
         mA.run_keeplargest(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_cleanup(self):
+        self.main_win.win_msg(' ')
         mA.run_cleanup(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
     
     def run_trimming(self):
+        self.main_win.win_msg(' ')
         mA.run_trimming(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
     
     def reset_meshes(self, option): 
+        self.main_win.win_msg(' ')
         mA.reset_meshes(controller=self, option=option)
 
     def run_axis_orientation(self):
+        self.main_win.win_msg(' ')
         mA.run_axis_orientation(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_chNS(self):
+        self.main_win.win_msg(' ')
         mA.run_chNS(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_measure_whole(self): 
+        self.main_win.win_msg(' ')
         mA.run_measure(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_centreline_clean(self):
+        self.main_win.win_msg(' ')
         mA.run_centreline_clean(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_centreline_ML(self):
+        self.main_win.win_msg(' ')
         mA.run_centreline_ML(controller=self)
 
     def run_centreline_vmtk(self): 
+        self.main_win.win_msg(' ')
         mA.run_centreline_vmtk(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
     
     def run_centreline_select(self): 
+        self.main_win.win_msg(' ')
         mA.run_centreline_select(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
-    # def run_centreline(self):
-    #     mA.run_centreline(controller=self)
-
     def run_heatmaps3D(self, btn=None):
+        self.main_win.win_msg(' ')
         mA.run_heatmaps3D(controller=self, btn = btn)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_heatmaps2D(self, btn=None):
+        self.main_win.win_msg(' ')
         mA.run_heatmaps2D(controller=self, btn = btn)
-        # if not mH_config.dev:
-        #     self.main_win.save_project_and_organ_pressed(alert_on = False)
-
-    # def run_heatmaps2D(self):
-    #     mA.run_heatmaps2D(controller=self)
+        if not mH_config.dev:
+            self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_segments(self, btn=None):
+        self.main_win.win_msg(' ')
         mA.run_segments(controller=self, btn=btn)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_angles(self, btn=None): 
+        self.main_win.win_msg(' ')
         done = mA.run_angles(controller=self, btn=btn)
         if not mH_config.dev and done:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_ellipsoids(self): 
+        self.main_win.win_msg(' ')
         mA.run_ellipsoids(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False) 
     
     def run_sections(self, btn=None):
+        self.main_win.win_msg(' ')
         mA.run_sections(controller=self, btn=btn)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
     
     def run_segm_sect(self, btn=None): 
+        self.main_win.win_msg(' ')
         mA.run_segm_sect(controller=self, btn=btn)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_isosurface(self, btn): 
+        self.main_win.win_msg(' ')
         mA.run_isosurface(controller=self, btn=btn)
 
-    def run_remove_cells(self): 
+    def run_remove_cells(self):
+        self.main_win.win_msg(' ') 
         mA.run_remove_cells(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
-    def run_segments_mC(self, btn): 
+    def run_segments_mC(self, btn):
+        self.main_win.win_msg(' ') 
         mA.run_segments_mC(controller=self, btn=btn)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_IND_segm(self): 
+        self.main_win.win_msg(' ') 
         mA.run_IND_segm(controller=self)
         if not mH_config.dev:
             self.main_win.save_project_and_organ_pressed(alert_on = False)
 
     def run_zones(self, zone):
+        self.main_win.win_msg(' ') 
         res = mA.run_zones(controller=self, zone=zone)
         if not mH_config.dev and res != None:
             self.main_win.save_project_and_organ_pressed(alert_on = False)

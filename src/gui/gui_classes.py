@@ -8899,8 +8899,6 @@ class MainWindow(QMainWindow):
     def init_centreline(self):
         #Buttons
         self.centreline_open.clicked.connect(lambda: self.open_section(name='centreline'))
-        # self.centreline_play.setStyleSheet(style_play)
-        self.centreline_play.setEnabled(False)
         # self.centreline_clean_play.setStyleSheet(style_play)
         self.centreline_clean_play.setEnabled(False)
         # self.centreline_ML_play.setStyleSheet(style_play)
@@ -8954,10 +8952,8 @@ class MainWindow(QMainWindow):
     def init_thickness_ballooning(self):
         #Buttons
         self.heatmaps_open.clicked.connect(lambda: self.open_section(name='heatmaps'))
-        # self.heatmaps2D_play.setStyleSheet(style_play)
-        self.heatmaps2D_play.setEnabled(False)
         # self.heatmaps3D_play.setStyleSheet(style_play)
-        self.heatmaps3D_play.setEnabled(False)
+        # self.heatmaps3D_play.setEnabled(False)
         self.thickness_set.clicked.connect(lambda: self.set_thickness())
         self.thickness2D_set.clicked.connect(lambda: self.set_thickness2D())
         self.q_heatmaps.clicked.connect(lambda: self.help('heatmaps'))
@@ -9137,7 +9133,6 @@ class MainWindow(QMainWindow):
         if hide: 
             self.all_d3d2.setVisible(False)
             self.lab_hm2d.setVisible(False)
-            self.heatmaps2D_play.setVisible(False)
             self.lab_3d2d.setVisible(False)
             self.lab_2d.setVisible(False)
             self.lab_plot2d.setVisible(False)
@@ -9542,7 +9537,6 @@ class MainWindow(QMainWindow):
         #Buttons
         self.segm_sect_open.clicked.connect(lambda: self.open_section(name='segm_sect'))
         # self.segm_sect_play.setStyleSheet(style_play)
-        self.segm_sect_play.setEnabled(False)
         self.q_segm_sect.clicked.connect(lambda: self.help('segm_sect'))
         self.update_segm_sect.clicked.connect(lambda: self.update_segm_sect_play())
         # self.segm_sect_set.clicked.connect(lambda: self.set_segm_sect())
@@ -10260,6 +10254,7 @@ class MainWindow(QMainWindow):
         at_least_one = False
         error_load = False
         done_all = []
+        done_3D = []
         if 'heatmaps' in wf_info.keys():
             print('wf_info[heatmaps]:', wf_info['heatmaps'])
 
@@ -10309,6 +10304,7 @@ class MainWindow(QMainWindow):
                     else: 
                         pass
                     at_least_one = True
+                    done_3D.append(True)
                 else: 
                     # print('not done')
                     if 'th' in item:
@@ -10321,6 +10317,7 @@ class MainWindow(QMainWindow):
                         # print(wf_cl, cl_done)
                         if cl_done == 'DONE': 
                             self.hm_btns[item]['play'].setEnabled(True)
+                    done_3D.append(False)
 
             if 'hm3Dto2D' in self.organ.mH_settings['measure'].keys():
                 try: 
@@ -10368,6 +10365,9 @@ class MainWindow(QMainWindow):
                 self.cb_binaryhm.setEnabled(True)
                 self.bi_3Dhm.setVisible(True)
                 self.bi_3Dhm.setEnabled(True)
+                #Close Widget
+                self.heatmaps_open.setChecked(True)
+                self.open_section(name = 'heatmaps')
             elif any(done_all) or at_least_one: 
                 self.update_status(None, 'Initialised', self.heatmaps_status, override=True)
                 self.cb_binaryhm.setEnabled(True)
@@ -10375,6 +10375,9 @@ class MainWindow(QMainWindow):
                 self.bi_3Dhm.setEnabled(True)
             else: 
                 pass
+
+            if all(done_3D): 
+                self.heatmaps3D_play.setChecked(True)
 
             if error_load: 
                 self.update_status(None, 're-run', self.heatmaps_status, override=True)
@@ -10481,7 +10484,11 @@ class MainWindow(QMainWindow):
 
             #Update Status in GUI
             self.update_status(wf, ['Status'], self.segments_status)
-
+            if wf['Status'] == 'DONE': 
+                self.segments_play.setChecked(True)
+                #Close Widget
+                self.segments_open.setChecked(True)
+                self.open_section(name = 'segments')
             #Run Set Function 
             self.set_segments(init=True)
         
@@ -10596,7 +10603,11 @@ class MainWindow(QMainWindow):
 
             #Update Status in GUI
             self.update_status(wf, ['Status'], self.sections_status)
-
+            if wf['Status'] == 'DONE': 
+                self.sections_play.setChecked(True)
+                #Close Widget
+                self.sections_open.setChecked(True)
+                self.open_section(name = 'sections')
             #Run Set Function 
             self.set_sections(init=True)
         else: 
@@ -10621,6 +10632,12 @@ class MainWindow(QMainWindow):
 
             #Update Status in GUI
             self.update_status(wf, ['Status'], self.segm_sect_status)
+            if wf['Status'] == 'DONE': 
+                self.segm_sect_play.setChecked(True)
+                #Close Widget
+                self.segm_sect_open.setChecked(True)
+                self.open_section(name = 'segm_sect')
+
             
     def user_user_params(self): 
 

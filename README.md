@@ -12,4 +12,8 @@ The user manual includes:
 - A section explaining `morphoHeart's` capabilities and its morphological analysis library
 - A final section with tips, specifically for those wishing to analyse *zebrafish* hearts using `morphoHeart`
 
+Don't forget to cite morphoHeart's [paper](https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2) when you publish your results using the software!
+
+Sánchez-Posada, J. & Noël, E. S. morphoHeart: a novel quantitative tool to perform integrated 3D morphometric analyses of heart and ECM morphology during embryonic development. Preprint (2024).
+
 ### Happy *morphoHeart-ing* 🤓!
