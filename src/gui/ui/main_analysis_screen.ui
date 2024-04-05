@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1477</width>
+    <width>1375</width>
     <height>909</height>
    </rect>
   </property>
@@ -1013,6 +1013,9 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <item row="1" column="1">
                     <widget class="QComboBox" name="comboBox_all_meshes">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -1116,6 +1119,9 @@ color: rgb(125, 125, 125);
                    </item>
                    <item row="0" column="1">
                     <widget class="QComboBox" name="comboBox_all_organs">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -1796,7 +1802,7 @@ QScrollBar::handle:horizontal:hover {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>582</width>
+                    <width>587</width>
                     <height>422</height>
                    </rect>
                   </property>
@@ -5510,12 +5516,7 @@ background-color: rgb(232, 232, 232);
 border-color: rgb(158, 158, 158);
 color: rgb(125, 125, 125);
 }
-
-QPushButton:checked{
-background-color: rgb(107, 0, 80);
-border-color: rgb(76, 0, 57);
-color: rgb(234, 234, 234);
-}</string>
+</string>
                    </property>
                    <property name="text">
                     <string>Clear all</string>
@@ -5618,12 +5619,7 @@ background-color: rgb(232, 232, 232);
 border-color: rgb(158, 158, 158);
 color: rgb(125, 125, 125);
 }
-
-QPushButton:checked{
-background-color: rgb(107, 0, 80);
-border-color: rgb(76, 0, 57);
-color: rgb(234, 234, 234);
-}</string>
+</string>
                    </property>
                    <property name="text">
                     <string>Plot</string>
@@ -5885,12 +5881,6 @@ QPushButton:disabled{
 background-color: rgb(232, 232, 232);
 border-color: rgb(158, 158, 158);
 color: rgb(125, 125, 125);
-}
-
-QPushButton:checked{
-background-color: rgb(107, 0, 80);
-border-color: rgb(76, 0, 57);
-color: rgb(234, 234, 234);
 }</string>
                    </property>
                    <property name="text">
@@ -8471,7 +8461,7 @@ background-color: rgb(250, 250, 250);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1477</width>
+     <width>1375</width>
      <height>21</height>
     </rect>
    </property>

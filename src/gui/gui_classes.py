@@ -15433,7 +15433,8 @@ class MultipAnalysisWindow(QMainWindow):
         names_organs = ['----']
         self.all_meshes = {}
         self.plot_meshes_user = {}
-        self.plot_palette = palette_rbg('Set2', 15, False)
+        plot_palette = palette_rbg('Set2', 15, False)
+        self.plot_palette = [(val[0]*255, val[1]*255, val[2]*255) for val in plot_palette]
         for key in self.organs.keys():
             organ_name = self.organs[key]['organ_name']
             names_organs.append(organ_name)
@@ -15644,10 +15645,11 @@ class MultipAnalysisWindow(QMainWindow):
     def update_meshes(self):
         organ_selected = self.comboBox_all_organs.currentText()
         self.comboBox_all_meshes.clear()
-        if len(self.all_meshes[organ_selected].keys()) == 0: 
-            self.comboBox_all_meshes.addItems(['----'])
-        else: 
-            self.comboBox_all_meshes.addItems(self.all_meshes[organ_selected].keys())
+        if organ_selected != '----': 
+            if len(self.all_meshes[organ_selected].keys()) == 0: 
+                self.comboBox_all_meshes.addItems(['----'])
+            else: 
+                self.comboBox_all_meshes.addItems(self.all_meshes[organ_selected].keys())
 
     def fill_proj_info(self, projs):
 
@@ -15792,16 +15794,19 @@ def set_plot_settings(win):
         getattr(win, 'plotno'+str(nn)).addItems(list_plots_str)
     
     print('win.plot_settings:', win.plot_settings)
+    win.comboBox_all_organs.setEnabled(True)
+    win.comboBox_all_meshes.setEnabled(True)
     win.add_organ_mesh.setEnabled(True)
     win.set_plot.setChecked(True)
 
 def fill_organ_all_meshes(win, organ_name): 
 
-    for key, org in win.organs.items():
-        print(key, org)
-        if org['organ_name'] == organ_name:
-            organ = win.organs[key]['organ'] 
-            break
+    # for key, org in win.organs.items():
+    #     print(key, org)
+    #     if org['organ_name'] == organ_name:
+    #         organ = win.organs[key]['organ'] 
+    #         break
+    organ = return_organ(win, organ_name)
 
     for mesh in organ.obj_meshes.keys(): 
         mesh_obj = organ.obj_meshes[mesh]
@@ -15830,7 +15835,7 @@ def fill_organ_all_meshes(win, organ_name):
                     name = proc+'['+ch+'-'+cont+'(CL.'+cl_ch+'-'+cl_cont+']'
                     title = mesh_name+'\nBallooning [um]\nCL('+cl_ch+'_'+cl_cont
 
-                win.all_meshes[mesh_name+': '+meas_name] = {'obj_dir': 'mesh_meas', 
+                win.all_meshes[organ_name][mesh_name+': '+meas_name] = {'obj_dir': 'mesh_meas', 
                                                             'obj_name': mesh,
                                                             'mtype': m_meas, 
                                                             'name': name, 
@@ -15845,6 +15850,15 @@ def fill_organ_all_meshes(win, organ_name):
         organ.obj_subm = {}
         
         print('win.all_meshes:', win.all_meshes)
+
+def return_organ(win, organ_name): 
+    for key, org in win.organs.items():
+        print(key, org)
+        if org['organ_name'] == organ_name:
+            organ = win.organs[key]['organ'] 
+            break
+
+    return organ
 
 def add_organ_mesh_to_plot(win): 
     organ2add = win.comboBox_all_organs.currentText()
@@ -15870,7 +15884,7 @@ def add_organ_mesh_to_plot(win):
         if n_pos+1 < 15: 
             win.plot_meshes_user[new_key] = {'organ': organ2add, 
                                                 'mesh': mesh2add, 
-                                                'color': win.plot_palette[int(new_key)],
+                                                'color': win.plot_palette[int(new_key)-1],
                                                 'alpha': 0.1, 
                                                 'plot_no': 1}
             # print('self.plot_meshes_user:', self.plot_meshes_user)
@@ -15912,8 +15926,9 @@ def update_plot_list(win):
     
     keys_mesh = list(win.plot_meshes_user.keys())
     # print('keys_mesh:', keys_mesh)
+    style = 'QPushButton{border-width: 1px; border-style: outset; border-color: rgb(66, 66, 66); background-color: rgb(211, 211, 211);} QPushButton:hover{border-color: rgb(255, 255, 255)}'
     nn = 0
-    for n_pos in range(1,11,1): 
+    for n_pos in range(1,16,1): 
         organ_name = getattr(win, 'organ_no'+str(n_pos))
         mesh_name = getattr(win, 'mesh_no'+str(n_pos))
         opacity = getattr(win,'alpha'+str(n_pos))
@@ -15940,7 +15955,7 @@ def update_plot_list(win):
             mesh_name.setText('object name')
             mesh_name.setEnabled(False)
             colorfill.setEnabled(False)
-            # colorfill.set background rgb(211, 211, 211)
+            colorfill.setStyleSheet(style)
             opacity.setEnabled(False)
             plot_no.setEnabled(False)
             del_mesh.setEnabled(False)
@@ -15980,13 +15995,14 @@ def create_user_plot(win): #needs work because all meshes were being added from 
         print('win.plot_meshes_user:', win.plot_meshes_user)
         for num, item in win.plot_meshes_user.items(): 
             # print('item:',  item)
-            method = win.all_meshes[item['mesh']]['obj_dir']
-            mesh_name = win.all_meshes[item['mesh']]['obj_name']
+            sp_organ = return_organ(win, item['organ'])
+            method = win.all_meshes[item['organ']][item['mesh']]['obj_dir']
+            mesh_name = win.all_meshes[item['organ']][item['mesh']]['obj_name']
             plot_no = item['plot_no']
             if method == 'obj_meshes': 
-                mesh2add = win.organ.obj_meshes[mesh_name].mesh.clone()
+                mesh2add = sp_organ.obj_meshes[mesh_name].mesh.clone()
             elif method == 'obj_subm': 
-                submesh = win.organ.obj_subm[mesh_name]
+                submesh = sp_organ.obj_subm[mesh_name]
                 print('mesh_name:',mesh_name)
                 if 'sCut' in mesh_name: 
                     scut, rcut, ch, cont, segm, sect = mesh_name.split('_')
@@ -16035,12 +16051,16 @@ def create_user_plot(win): #needs work because all meshes were being added from 
         zoom = win.plot_settings['zoom']
         elev = win.plot_settings['elev']
         azim = win.plot_settings['azim']
-        txt = [(0, win.organ.user_organName)]
+        txt = [(0,'Multip')]#[(0, win.organ.user_organName)]
 
-        plot_grid(obj=obj, txt=txt, axes=axes, sc_side=max(win.organ.get_maj_bounds()), 
+        plot_grid(obj=obj, txt=txt, axes=axes, sc_side=all_organs_maj_bounds(win), 
                     zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
 
     win.btn_user_plot.setChecked(False)
+
+def all_organs_maj_bounds(win): 
+    
+    return 350
 
 def update_div(win):
 
@@ -16820,7 +16840,7 @@ def update_status(root_dict, items, fillcolor, override=False):
 # Button general functions
 def color_btn(btn, color, small=True): 
 
-    if isinstance(color, list): 
+    if isinstance(color, list) or isinstance(color, tuple): 
         color = 'rgb'+str(tuple(color))
     elif isinstance(color, str) and '[' in color:
         color_nop = color[1:-1]

@@ -842,6 +842,7 @@ class Controller:
                                   'organ': organ}
         df_pando['proj_num'] = proj_num
 
+        print('df_pando:', df_pando)
         return df_pando, dict_projs, dict_organs
 
     #Channel segmentation related
