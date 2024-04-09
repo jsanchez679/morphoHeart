@@ -205,7 +205,6 @@ class Controller:
         if len(win.multi_organs_added) > 0:
             win.win_msg('Loading Organs in Analysis Window...')
             df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj)
-            # win.close()
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
             win.win_msg(error_txt, win.go_to_analysis_window)
@@ -213,16 +212,11 @@ class Controller:
         
         #Create Main Project Window and show
         if self.multip_analysis_win == None:
-            if single_proj: 
-                self.multip_analysis_win = MultipAnalysisWindow(projs = dict_projs, organs = dict_organs, df_pando= df_pando, controller=self) 
-                self.init_multip_analysis_win()
-                win.close()
-                self.multip_analysis_win.show()
-            else:
-                pass 
-                # self.multip_analysis_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
-                # self.init_multip_analysis_win()
-                # self.multip_analysis_win.show()
+            self.multip_analysis_win = MultipAnalysisWindow(projs = dict_projs, organs = dict_organs, 
+                                                            df_pando= df_pando, controller=self, single_proj=single_proj) 
+            self.init_multip_analysis_win()
+            win.close()
+            self.multip_analysis_win.show()
     
     def show_load_closed_stacks(self):
         if self.load_s3s == None:
@@ -790,7 +784,7 @@ class Controller:
             return 
     
     def load_organ(self, proj, organ_to_load, single_organ=True):
-        loaded_organ = proj.load_organ(organ_to_load = organ_to_load)
+        loaded_organ = proj.load_organ(organ_to_load = organ_to_load, single_organ=single_organ)
         if not hasattr(loaded_organ, 'obj_temp'):
             loaded_organ.obj_temp = {}
         if single_organ: 
@@ -840,6 +834,10 @@ class Controller:
             organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, single_organ=False)
             dict_organs[index] = {'organ_name': org_name, 
                                   'organ': organ}
+            if not single_proj: 
+                dict_organs[index]['proj_name'] = row['user_projName']
+                dict_organs[index]['proj_num'] = nk
+
         df_pando['proj_num'] = proj_num
 
         print('df_pando:', df_pando)

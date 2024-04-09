@@ -2037,7 +2037,7 @@ def reduce_space(controller, info):
     title = 'Are you sure you want to reduce space in disk...' 
     if info == 'segm':
         msg = ['Are you sure you want to reduce organ size by removing all unnecessary segments (*.vtk files) from disk? If so, select  -OK-, else select  -Cancel-.',
-                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
+                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layer segments from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
     
     prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), wdg_size=[[433,50],[433,100]],
                               parent=controller.main_win)

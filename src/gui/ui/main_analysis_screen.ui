@@ -54,7 +54,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QGroupBox" name="groupBox_3">
+          <widget class="QGroupBox" name="single_proj_info">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -477,13 +477,13 @@ color: rgb(234, 234, 234);
              <property name="minimumSize">
               <size>
                <width>50</width>
-               <height>45</height>
+               <height>20</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
                <width>50</width>
-               <height>45</height>
+               <height>20</height>
               </size>
              </property>
              <property name="layoutDirection">
@@ -1653,6 +1653,9 @@ QComboBox QAbstractItemView {
                      <property name="text">
                       <string>Reorient?</string>
                      </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
                     </widget>
                    </item>
                    <item row="2" column="3">
@@ -1801,7 +1804,7 @@ QScrollBar::handle:horizontal:hover {
                   <property name="geometry">
                    <rect>
                     <x>0</x>
-                    <y>0</y>
+                    <y>-165</y>
                     <width>587</width>
                     <height>422</height>
                    </rect>
@@ -5540,12 +5543,40 @@ color: rgb(125, 125, 125);
                   </spacer>
                  </item>
                  <item>
+                  <widget class="QCheckBox" name="check_default_colors">
+                   <property name="minimumSize">
+                    <size>
+                     <width>140</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>150</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;</string>
+                   </property>
+                   <property name="text">
+                    <string>Use original colors</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QCheckBox" name="check_scalecube_plot">
                    <property name="styleSheet">
                     <string notr="true">font: 25 10pt &quot;Calibri Light&quot;;</string>
                    </property>
                    <property name="text">
                     <string>Scale Cube</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -5600,26 +5631,23 @@ border-color: #672146
                     <bool>false</bool>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">QPushButton{border-radius:10px;
+                    <string notr="true">QPushButton{
 border-width: 1px;
 border-style: outset;
-border-color: rgb(66, 66, 66);
-background-color: rgb(211, 211, 211);
-color: rgb(39, 39, 39);
-font: 10pt &quot;Calibri Light&quot;;}
+border-color: rgb(0, 170, 255);
+background-color:  rgb(0, 255, 255);
+color: rgb(0, 0, 127);
+font: 25 10pt &quot;Calibri Light&quot;;
+}
 
 QPushButton:hover{
-background-color: rgba(167, 0, 125, 200);
-border-color: #672146;
-color: rgb(234, 234, 234);
+background-color: rgb(0, 85, 127);
+	color: rgb(255, 255, 255);
 }
 
-QPushButton:disabled{
-background-color: rgb(232, 232, 232);
-border-color: rgb(158, 158, 158);
-color: rgb(125, 125, 125);
-}
-</string>
+QPushButton:disabled {
+background-color:rgb(203, 203, 203);
+}</string>
                    </property>
                    <property name="text">
                     <string>Plot</string>

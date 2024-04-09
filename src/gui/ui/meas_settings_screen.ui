@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>830</width>
-    <height>598</height>
+    <height>673</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -191,7 +191,7 @@ QScrollBar::handle:vertical:hover {
            <x>0</x>
            <y>0</y>
            <width>793</width>
-           <height>645</height>
+           <height>639</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">

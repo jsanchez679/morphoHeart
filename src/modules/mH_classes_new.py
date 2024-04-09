@@ -917,7 +917,7 @@ class Project():
         self.organs = organs
         self.save_project()
 
-    def load_organ(self, organ_to_load:str):#
+    def load_organ(self, organ_to_load:str, single_organ=True):#
 
         organ_folder = self.organs[organ_to_load]['user_organName']
         dir_res = Path(self.dir_proj) / organ_folder
