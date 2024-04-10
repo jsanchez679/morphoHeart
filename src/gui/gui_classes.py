@@ -731,13 +731,13 @@ class Process_ongoing(QDialog):
             organ_name = organ.user_organName
             title_df = organ_name+'_hmUnloop_'+mtype+'_'+opt_sel+'.csv'
             dir_df = organ.dir_res(dir='csv_all') / title_df
-            # if dir_df.is_file():
-            #     print('File already exists: ', str(title_df))
-            # else:
-            win.win_msg('Creating filtered heatmap -'+name_hm+'- for '+organ_name+'...')
-            filt_hm = get_filtered_hms(self, hm2d_sel, hm_sel, div_sel, opt_sel)
-            filt_hm.to_csv(dir_df)
-            alert('woohoo')
+            if dir_df.is_file():
+                print('File already exists: ', str(title_df))
+            else:
+                win.win_msg('Creating filtered heatmap -'+name_hm+'- for '+organ_name+'...')
+                filt_hm = get_filtered_hms(self, hm2d_sel, hm_sel, div_sel, opt_sel)
+                filt_hm.to_csv(dir_df)
+                alert('woohoo')
             n += 1
             self.prog_bar_all.setValue(n)
         
@@ -14969,6 +14969,7 @@ class MainWindow(QMainWindow):
                 del_mesh.setEnabled(False)
             
     def create_user_plot(self, video=False): 
+
         if len(self.plot_meshes_user) < 1: 
             self.win_msg('*No meshes have been added to the table.')
         else:
@@ -15073,7 +15074,7 @@ class MainWindow(QMainWindow):
                         zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
 
             else: 
-                return obj
+                return obj, txt
 
         self.btn_user_plot.setChecked(False)
 
@@ -15347,14 +15348,19 @@ class MultipAnalysisWindow(QMainWindow):
         self.mH_logo_XS.setPixmap(mH_logoXS)
         self.setWindowIcon(QIcon(mH_icon))
         self.setStyleSheet("background-color:  rgb(255, 255, 255);")
-        self.label_version.setText('v'+mH_config.version+'  ')
-        self.label_version.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
 
         self.projs = projs
         self.organs = organs
         self.df_pando = df_pando
         self.controller = controller
         self.single_proj = single_proj
+
+        if self.single_proj:
+            self.label_version_single.setText('v'+mH_config.version+'  ')
+            self.label_version_single.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
+        else:
+            self.label_version_multip.setText('v'+mH_config.version+'  ')
+            self.label_version_multip.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
 
         #General Init
         self.init_analysis_win()
@@ -15368,7 +15374,10 @@ class MultipAnalysisWindow(QMainWindow):
         self.init_plot_widget()
 
         # Theme 
-        self.theme = self.cB_theme.currentText()
+        if self.single_proj:
+            self.theme = self.cB_theme_single.currentText()
+        else:
+            self.theme = self.cB_theme_multip.currentText()
         self.on_cB_theme_currentIndexChanged(0)
 
         #Window Message
@@ -15409,8 +15418,16 @@ class MultipAnalysisWindow(QMainWindow):
         if self.single_proj: 
             #Fill Proj and Organ Data
             self.fill_proj_info(self.projs)
+            self.frame_single.setVisible(True)
+            self.frame_multip.setVisible(False)
+            self.label_version_single.setVisible(True)
+            self.label_version_single.setVisible(False)
         else: 
             self.single_proj_info.setVisible(False)
+            self.frame_single.setVisible(False)
+            self.frame_multip.setVisible(True)
+            self.label_version_multip.setVisible(True)
+            self.label_version_single.setVisible(False)
 
         #Blind analysis
         self.cB_blind.stateChanged.connect(lambda: fill_organs_table(win = self, table = self.organs_analysis_widget, 
@@ -15440,7 +15457,10 @@ class MultipAnalysisWindow(QMainWindow):
         self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
 
         #Sounds
-        layout = self.hL_sound_on_off 
+        if self.single_proj:
+            layout = self.hL_sound_on_off_single
+        else:
+            layout = self.hL_sound_on_off_multip
         add_sound_bar(self, layout)
         sound_toggled(win=self)
     
@@ -16079,6 +16099,7 @@ def create_user_plot(win):
                 proc = win.all_meshes[item['organ']][item['mesh']]['proc']
                 title = win.all_meshes[item['organ']][item['mesh']]['title']
                 mesh2add = set_scalebar(organ = sp_organ, mesh=mesh2add, name = name, proc = proc, title = title)
+                mesh_name = mesh_name+' - '+mtype
 
             #Update alpha and add it to the list
             mesh2add.alpha(item['alpha'])
