@@ -63,6 +63,13 @@ from .config import mH_config
 path_mHImages = mH_config.path_mHImages
 # Load logo
 path_logo = path_mHImages / 'logo-07.jpg'
+path_bkgd = path_mHImages / 'white_background.png'
+# path_bkgd2 = path_mHImages / 'white_background2.png'
+# path_bkgd3 = path_mHImages / 'white_background3.png'
+# path_bkgd4 = path_mHImages / 'white_background4.png'
+# path_bkgd5 = path_mHImages / 'white_background5.png'
+# path_bkgd6 = path_mHImages / 'white_background6.png'
+
 logo = vedo.Picture(str(path_logo))
 
 #%% Set default fonts and sizes for plots
@@ -14905,8 +14912,12 @@ class MainWindow(QMainWindow):
             new_key = str(int(list(self.plot_meshes_user.keys())[-1])+1)
         # print('new_key:', new_key)
         if n_pos+1 < 10: 
+            if '(' not in mesh2add: 
+                alpha = 0.1
+            else: 
+                alpha = 1
             self.plot_meshes_user[new_key] = {'mesh': mesh2add, 
-                                            'alpha': 0.1, 
+                                            'alpha': alpha, 
                                             'plot_no': 1}
             # print('self.plot_meshes_user:', self.plot_meshes_user)
             self.update_plot_list()
@@ -15062,13 +15073,13 @@ class MainWindow(QMainWindow):
                 obj.append(tuple_list)
                 delattr(self, 'items_plot'+str(plot))
             print('obj:', obj)
+            txt = [(0, self.organ.user_organName)]
 
             if not video: 
                 axes = self.plot_settings['axes']
                 zoom = self.plot_settings['zoom']
                 elev = self.plot_settings['elev']
                 azim = self.plot_settings['azim']
-                txt = [(0, self.organ.user_organName)]
 
                 plot_grid(obj=obj, txt=txt, axes=axes, sc_side=max(self.organ.get_maj_bounds()), 
                         zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
@@ -15080,88 +15091,106 @@ class MainWindow(QMainWindow):
 
     def create_user_video(self): 
 
-        self.win_msg('!Code under development!')
-        alert('error_beep')
-        return
-
         if self.video_filename.text() != '': 
-
-            if self.check_scalecube_plot.isChecked():
-                add_scale_cube = True
-            else: 
-                add_scale_cube = False
-
-            axes = self.plot_settings['axes']
-            zoom = self.plot_settings['zoom']
-            txt = [(0, self.organ.user_organName)]
-            
-            obj = self.create_user_plot(video=True)
-
-            #Scale cube
-            if add_scale_cube: 
-                sc_side = max(self.organ.get_maj_bounds())
-                if isinstance(obj[0], tuple):
-                    scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
-                else: 
-                    scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
-            else: 
-                scale_cube = []
-
-            n_obj = len(obj)
-            # Create tuples for text
-            post = [tup[0] for tup in txt]; txt_out = []; n = 0
-            for num in range(n_obj):
-                if num in post:
-                    txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
-                    n += 1
-                else: 
-                    txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
-
-            # Add scale_cube to last plot
-            if isinstance(obj[n_obj-1], tuple):
-                obj_list = list(obj[n_obj-1])
-                obj_list.append(scale_cube)
-                obj_f = tuple(obj_list)
-            else: #vedo.mesh.Mesh
-                obj_f = (obj[n_obj-1], scale_cube)
-            obj[n_obj-1] = obj_f
-
-            # Set logo position
-            if len(obj)>5:
-                pos = (0.1,3)
-            elif len(obj)>3:
-                pos = (0.1,2)
-            else:
-                pos = (0.1,1)
 
             #Video info
             video_name =  self.video_filename.text()+".mp4"
             duration = self.spin_video_duration.value()
             video_path = self.organ.dir_res('imgs_videos') / video_name
-            print(video_path)
+            print('video_path:',video_path)
 
-            # Now plot
-            lbox = []
-            vp = vedo.Plotter(N=len(obj), axes=axes, offscreen=True)
-            # vp.add_icon(logo, pos=pos, size=0.25)
-            for num in range(len(obj)):
-                if isinstance(obj[num], tuple):
-                    try: 
-                        lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
-                    except: 
-                        lbox.append('')
-                else:
-                    lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
-                if num != len(obj)-1:
-                    vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
-                else: # num == len(obj)-1
-                    vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+            run = False
+            if video_path.is_file(): 
+                title = 'Video already exists...' 
+                msg = '"'+video_name + '" already exists in the imgs_videos folder of the current organ. Do you want to replace it? Press  -OK-  if you want to replace it, else press  -Cancel-  and provide a new name.'
+                prompt = Prompt_ok_cancel(title, msg, win_size = (400, 200), parent=self)
+                prompt.exec()
+                print('output:', prompt.output)
+                if prompt.output: 
+                    run = True
+                else: 
+                    run = False
+            else: 
+                run = True
 
-            video = vedo.Video(video_name, duration=duration, backend='opencv')
-            for i in range(180):
-                vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
-                video.addFrame()
-            video.close()
+            if run: 
+                self.win_msg('Creating video...')
+                if self.check_scalecube_plot.isChecked():
+                    add_scale_cube = True
+                else: 
+                    add_scale_cube = False
+
+                axes = self.plot_settings['axes']
+                zoom = self.plot_settings['zoom']
+                
+                obj, txt = self.create_user_plot(video=True)
+
+                #Scale cube
+                if add_scale_cube: 
+                    sc_side = max(self.organ.get_maj_bounds())
+                    if isinstance(obj[0], tuple):
+                        scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+                    else: 
+                        scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+                else: 
+                    scale_cube = []
+
+                n_obj = len(obj)
+                # Create tuples for text
+                post = [tup[0] for tup in txt]; txt_out = []; n = 0
+                for num in range(n_obj):
+                    if num in post:
+                        txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
+                        n += 1
+                    else: 
+                        txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
+
+                # Add scale_cube to last plot
+                if isinstance(obj[n_obj-1], tuple):
+                    obj_list = list(obj[n_obj-1])
+                    obj_list.append(scale_cube)
+                    obj_f = tuple(obj_list)
+                else: #vedo.mesh.Mesh
+                    obj_f = (obj[n_obj-1], scale_cube)
+                obj[n_obj-1] = obj_f
+
+                # if n_obj == 1: 
+                bg = str(path_bkgd)
+                # elif n_obj == 2: 
+                #     bg = str(path_bkgd2)
+                # elif n_obj == 3: 
+                #     bg = str(path_bkgd3)
+                # elif n_obj == 4: 
+                #     bg = str(path_bkgd4)
+                # elif n_obj == 5: 
+                #     bg = str(path_bkgd5)
+                # elif n_obj == 6: 
+                #     bg = str(path_bkgd6)
+
+                # Now plot
+                lbox = []
+                vp = vedo.Plotter(bg=bg, bg2="white", N=len(obj), axes=axes, offscreen=True)
+                # vp.add_icon(logo, pos=pos, size=0.25)
+                for num in range(len(obj)):
+                    if isinstance(obj[num], tuple):
+                        try: 
+                            lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
+                        except: 
+                            lbox.append('')
+                    else:
+                        lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
+                    if num != len(obj)-1:
+                        vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+                    else: # num == len(obj)-1
+                        vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+
+                video = vedo.Video(str(video_path), duration=duration, backend='imageio')
+                for i in range(180):
+                    vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
+                    video.add_frame()
+                video.close()
+                self.win_msg('Video "'+video_name+'" has been successfully saved!')
+                alert('woohoo')
         
         else: 
             self.win_msg('*Please provide a name to save the video.')
@@ -15496,6 +15525,8 @@ class MultipAnalysisWindow(QMainWindow):
         self.add_organ_mesh.clicked.connect(lambda: add_organ_mesh_to_plot(win=self))
         self.set_plot.clicked.connect(lambda: set_plot_settings(win=self))
         self.btn_user_plot.clicked.connect(lambda: create_user_plot(win=self))
+        self.btn_save_video.clicked.connect(lambda: create_user_video(win=self))
+        self.btn_browse_folder.clicked.connect(lambda: select_video_path(win=self))
         self.plot_clear_All.clicked.connect(lambda: update_plot(win=self, key='del', num='all'))
         self.combo_axes.setCurrentText('13')
 
@@ -15855,11 +15886,6 @@ def set_plot_settings(win):
 
 def fill_organ_all_meshes(win, organ_name): 
 
-    # for key, org in win.organs.items():
-    #     print(key, org)
-    #     if org['organ_name'] == organ_name:
-    #         organ = win.organs[key]['organ'] 
-    #         break
     organ = return_organ(win, organ_name)
 
     for mesh in organ.obj_meshes.keys(): 
@@ -15909,7 +15935,7 @@ def return_organ(win, organ_name):
 
     if win.single_proj: 
         for key, org in win.organs.items():
-            print(key, org)
+            # print(key, org)
             if org['organ_name'] == organ_name:
                 organ = win.organs[key]['organ'] 
                 break
@@ -15917,7 +15943,7 @@ def return_organ(win, organ_name):
     else: 
         organ_name, proj_name = organ_name.split('_o_')
         for key, org in win.organs.items():
-            print(key, org)
+            # print(key, org)
             if org['organ_name'] == organ_name and org['proj_name'] == proj_name:
                 organ = win.organs[key]['organ'] 
                 break
@@ -16051,7 +16077,7 @@ def color_picker(win, name):
         
             print('win.bi_colors:', win.bi_colors)
 
-def create_user_plot(win): 
+def create_user_plot(win, video=False): 
     if len(win.plot_meshes_user) < 1: 
         win.win_msg('*No meshes have been added to the table.')
     else:
@@ -16064,11 +16090,11 @@ def create_user_plot(win):
             setattr(win, 'items_plot'+str(plot), [])
             setattr(win, 'txt_plot'+str(plot), [])
 
-        print('win.all_meshes:', win.all_meshes)
-        print('win.plot_meshes_user:', win.plot_meshes_user)
+        # print('win.all_meshes:', win.all_meshes)
+        # print('win.plot_meshes_user:', win.plot_meshes_user)
         all_organs = []
         for num, item in win.plot_meshes_user.items(): 
-            # print('item:',  item)
+            print('item:',  item)
             sp_organ = return_organ(win, item['organ'])
             all_organs.append(item['organ'])
             if win.plot_settings['reorient']: 
@@ -16076,12 +16102,13 @@ def create_user_plot(win):
 
             method = win.all_meshes[item['organ']][item['mesh']]['obj_dir']
             mesh_name = win.all_meshes[item['organ']][item['mesh']]['obj_name']
+            user_name = item['mesh']
             plot_no = item['plot_no']
             if method == 'obj_meshes': 
                 mesh2add = sp_organ.obj_meshes[mesh_name].mesh.clone()
             elif method == 'obj_subm': 
                 submesh = sp_organ.obj_subm[mesh_name]
-                print('mesh_name:',mesh_name)
+                # print('mesh_name:',mesh_name)
                 if 'sCut' in mesh_name: 
                     seg_cut = mesh_name[1:5]
                     mesh2add = submesh.get_sect_segm_mesh(seg_cut = seg_cut)
@@ -16092,25 +16119,26 @@ def create_user_plot(win):
                         mesh2add = submesh.get_sect_mesh()
 
             else: #method == 'mesh_meas':
-                print(item)
+                # print(item)
                 mtype = win.all_meshes[item['organ']][item['mesh']]['mtype']
                 mesh2add = sp_organ.obj_meshes[mesh_name].mesh_meas[mtype].clone()
                 name = win.all_meshes[item['organ']][item['mesh']]['name']
                 proc = win.all_meshes[item['organ']][item['mesh']]['proc']
                 title = win.all_meshes[item['organ']][item['mesh']]['title']
                 mesh2add = set_scalebar(organ = sp_organ, mesh=mesh2add, name = name, proc = proc, title = title)
-                mesh_name = mesh_name+' - '+mtype
+                user_name = user_name+' - '+mtype
 
             #Update alpha and add it to the list
             mesh2add.alpha(item['alpha'])
-            if not win.check_default_colors.isChecked():
+            if not win.check_default_colors.isChecked() and method != 'mesh_meas':
                 mesh2add.color(item['color'])
+
             if win.plot_settings['reorient']: 
                 mesh2add.rotate_x(-rotX+90)
                 mesh2add.rotate_y(-rotY)
                 mesh2add.rotate_z(-rotZ)
             getattr(win, 'items_plot'+str(plot_no)).append(mesh2add)
-            txt_all = ' - ' +sp_organ.user_organName + ': ' + mesh_name + '\n'
+            txt_all = ' - ' +sp_organ.user_organName + ': ' + user_name + '\n'
             getattr(win, 'txt_plot'+str(plot_no)).append(txt_all)
         
         obj = []; txt=[]
@@ -16121,18 +16149,130 @@ def create_user_plot(win):
             txt.append((plot-1,txt_list))
             delattr(win, 'items_plot'+str(plot))
         print('obj:', obj, '- txt:', txt)
+        all_organs = list(set(all_organs))
+
+        if not video: 
+            axes = win.plot_settings['axes']
+            zoom = win.plot_settings['zoom']
+            elev = win.plot_settings['elev']
+            azim = win.plot_settings['azim']
+
+            plot_grid(obj=obj, txt=txt, axes=axes, sc_side=all_organs_maj_bounds(win, all_organs), 
+                        zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
+
+        else: 
+            return obj, txt, all_organs
+        
+    win.btn_user_plot.setChecked(False)
+
+def create_user_video(win): 
+    run =False
+    if win.video_filename.text() != '': 
+        video_name =  win.video_filename.text()+".mp4"
+        duration = win.spin_video_duration.value()
+        if win.btn_browse_folder.isChecked(): 
+            video_path = win.video_path / video_name
+            print('video_path:',video_path)
+            pass
+        else: 
+            win.win_msg('*Please select a directory to save the video...')
+            return
+    else: 
+        win.win_msg('*Please provide a filename to save the video.')
+        return    
+
+    if video_path.is_file(): 
+        title = 'Video already exists...' 
+        msg = '"'+video_name + '" already exists in the imgs_videos folder of the current organ. Do you want to replace it? Press  -OK-  if you want to replace it, else press  -Cancel-  and provide a new name.'
+        prompt = Prompt_ok_cancel(title, msg, win_size = (400, 200), parent=win)
+        prompt.exec()
+        print('output:', prompt.output)
+        if prompt.output: 
+            run = True
+        else: 
+            run = False
+    else: 
+        run = True
+
+    if run: 
+        win.win_msg('Creating video...')
+        if win.check_scalecube_plot.isChecked():
+            add_scale_cube = True
+        else: 
+            add_scale_cube = False
 
         axes = win.plot_settings['axes']
         zoom = win.plot_settings['zoom']
-        elev = win.plot_settings['elev']
-        azim = win.plot_settings['azim']
-        all_organs = list(set(all_organs))
+        
+        obj, txt, all_organs = create_user_plot(win, video=True)
 
-        plot_grid(obj=obj, txt=txt, axes=axes, sc_side=all_organs_maj_bounds(win, all_organs), 
-                    zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
+        #Scale cube
+        if add_scale_cube: 
+            sc_side = all_organs_maj_bounds(win, all_organs)
+            if isinstance(obj[0], tuple):
+                scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+            else: 
+                scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+        else: 
+            scale_cube = []
 
-    win.btn_user_plot.setChecked(False)
+        n_obj = len(obj)
+        # Create tuples for text
+        post = [tup[0] for tup in txt]; txt_out = []; n = 0
+        for num in range(n_obj):
+            if num in post:
+                txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
+                n += 1
+            else: 
+                txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
 
+        # Add scale_cube to last plot
+        if isinstance(obj[n_obj-1], tuple):
+            obj_list = list(obj[n_obj-1])
+            obj_list.append(scale_cube)
+            obj_f = tuple(obj_list)
+        else: #vedo.mesh.Mesh
+            obj_f = (obj[n_obj-1], scale_cube)
+        obj[n_obj-1] = obj_f
+
+        # if n_obj == 1: 
+        bg = str(path_bkgd)
+        # elif n_obj == 2: 
+        #     bg = str(path_bkgd2)
+        # elif n_obj == 3: 
+        #     bg = str(path_bkgd3)
+        # elif n_obj == 4: 
+        #     bg = str(path_bkgd4)
+        # elif n_obj == 5: 
+        #     bg = str(path_bkgd5)
+        # elif n_obj == 6: 
+        #     bg = str(path_bkgd6)
+
+        # Now plot
+        lbox = []
+        vp = vedo.Plotter(bg=bg, bg2="white", N=len(obj), axes=axes, offscreen=True)
+        # vp.add_icon(logo, pos=pos, size=0.25)
+        for num in range(len(obj)):
+            if isinstance(obj[num], tuple):
+                try: 
+                    lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
+                except: 
+                    lbox.append('')
+            else:
+                lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
+            if num != len(obj)-1:
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+            else: # num == len(obj)-1
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+
+        video = vedo.Video(str(video_path), duration=duration, backend='imageio')
+        for i in range(180):
+            vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
+            video.add_frame()
+        video.close()
+        win.win_msg('Video "'+video_name+'" has been successfully saved!')
+        alert('woohoo')
+    
 def organ_reorient(organ): 
 
     rotX = 0; rotY = 0; rotZ = 0
@@ -16540,7 +16680,7 @@ def save_avehm(win):
         alert('clown')
     
     else: 
-        win.win_msg('*Please select a directory where to save the average heatmap created.', win.btn_save_avehm)
+        win.win_msg('*Please select a directory to save the average heatmap created.', win.btn_save_avehm)
     
 def save_avehm_data(win):
 
@@ -16771,7 +16911,20 @@ def select_path_avehm(win, proj=None, data=False):
             win.aveHM_dir = Path(path_folder)
     else: 
         win.win_msg(error, btn)
-        return 
+        return
+    
+def select_video_path(win): 
+
+    cwd = str(Path().absolute().home())
+    caption = "Select the directory where you would like to save the video"
+    btn = win.btn_browse_folder
+    path_folder = QFileDialog.getExistingDirectory(win, directory=cwd, caption=caption)
+    if Path(path_folder).is_dir():
+        win.video_path = Path(path_folder)
+        btn.setChecked(True)
+    else: 
+        btn.setChecked(False)
+
 
 class PlotWindow(QDialog):
 

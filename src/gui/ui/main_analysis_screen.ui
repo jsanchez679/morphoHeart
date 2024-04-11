@@ -1556,7 +1556,7 @@ background-color: rgb(255, 255, 255);</string>
                       <number>1</number>
                      </property>
                      <property name="maximum">
-                      <number>4</number>
+                      <number>6</number>
                      </property>
                     </widget>
                    </item>
@@ -2040,7 +2040,7 @@ QScrollBar::handle:horizontal:hover {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>583</width>
+                    <width>589</width>
                     <height>422</height>
                    </rect>
                   </property>
@@ -6038,9 +6038,15 @@ color: rgb(234, 234, 234);
                  </item>
                  <item>
                   <widget class="QLabel" name="label_40">
-                   <property name="maximumSize">
+                   <property name="minimumSize">
                     <size>
                      <width>60</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -6049,6 +6055,9 @@ color: rgb(234, 234, 234);
                    </property>
                    <property name="text">
                     <string>Duration: </string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>

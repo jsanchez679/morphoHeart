@@ -41,6 +41,7 @@ from .mH_funcBasics import get_by_path, alert, df_reset_index, df_add_value, pal
 path_mHImages = mH_config.path_mHImages
 # Load logo
 path_logo = path_mHImages / 'logo-07.jpg'
+# path_bkgd = path_mHImages / 'white_background400.png'
 logo = vedo.Picture(str(path_logo))
 
 #%% Set default fonts and sizes for plots
