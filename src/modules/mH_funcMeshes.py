@@ -1818,11 +1818,11 @@ def create_iso_volume(organ, ch, plot=True):
     alpha = organ.mC_settings['wf_info']['isosurface'][ch]['alpha']
 
     # Invert stack
+    res_copy = copy.deepcopy(res)
     if organ.mC_settings['wf_info']['isosurface']['invert']: 
-        res_copy = copy.deepcopy(res)
         if res_copy[1] > 0:
             res_copy[1] = -res_copy[1]
-        print('res_copy:', res_copy)
+    print('res:', res, '- res_copyf:', res_copy)
 
     try: 
         vol = vedo.Volume(str(img_dir), spacing = res_copy).isosurface(int(threshold)).alpha(float(alpha))
@@ -3791,6 +3791,9 @@ def get_segm_mean_sph(controller, organ, cut, sphs_mean, color_segm):
 
 def modify_cell_class(organ, cells, cut, cells_class): 
 
+    txA = 'Instructions: \n- Reclassify cells as part of another segment by clicking the cells that are misclassified.\n- Its class/color will change to the next segment class. \n- Keep clicking up until you reach the correct classification. \n- Close the window when done.'
+    txt0 = vedo.Text2D(txA, c=txt_color, font=txt_font, s=txt_size)
+
     segm_names = organ.mC_settings['setup']['segm_mC'][cut]['name_segments']
     segm_colors = organ.mC_settings['setup']['segm_mC'][cut]['colors']
 
@@ -3859,7 +3862,7 @@ def modify_cell_class(organ, cells, cut, cells_class):
                title='Opacity\n'+ vol_settings['name'][2].title(), title_size=txt_slider_size2)
         
     plt.addCallback('mouse click', classify_cells_into_chambers)
-    plt.show(cells, iso_vols, msg, zoom=1.2)
+    plt.show(cells, iso_vols, msg, txt0, zoom=1.2)
 
     return cells, cells_class
 
@@ -4328,7 +4331,7 @@ def create_zone(organ, zone, df_zone):
         for ind, row in df_zone.iterrows():
             cell_no = row['Index_CentralCell']
             zone = row['Zone'].strip()
-            print(ind, cell_no, zone)
+            # print(ind, cell_no, zone)
             #Find cell within sphs
             found = False
             for sph in sphs_zones: 

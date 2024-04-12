@@ -2707,7 +2707,10 @@ def run_remove_cells(controller):
     getattr(controller.main_win, 'remove_cells_play').setChecked(True)
     proc_wft = ['A-CleanCells', 'Status']
     controller.organ.update_mCworkflow(process = proc_wft, update = 'DONE')
-    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)    
+    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)   
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
 
 def run_segments_mC(controller, btn): 
 
@@ -2800,6 +2803,8 @@ def run_segments_mC(controller, btn):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_segments_status)
+    #Update Table
+    controller.main_win.fill_cell_results() 
             
 def get_segm_planes(organ, cut, win): 
 
@@ -2905,6 +2910,9 @@ def run_IND_segm(controller, plot=True):
             
             #Enable plot button
             getattr(controller.main_win, cut.lower()+'_IND_'+ss+'_plot').setEnabled(True)
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
 
 def run_zones(controller, zone): 
     
@@ -3030,4 +3038,6 @@ def run_zones(controller, zone):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_zones_status)
-            
+    
+    #Update Table
+    controller.main_win.fill_cell_results() 

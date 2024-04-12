@@ -630,7 +630,6 @@ class Controller:
 
         self.multip_analysis_win.button_see_proj_settings.clicked.connect(lambda: self.show_proj_settings(parent_win=self.main_win))
         self.multip_analysis_win.actionAbout_morphoHeart.triggered.connect(self.show_about)
-        #Action buttons
         
     #Functions related to API  
     # Project Related  
