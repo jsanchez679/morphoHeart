@@ -4014,32 +4014,35 @@ class NewOrgan(QDialog):
         if proj.analysis['morphoCell']: 
             #-mC
             mC_channels = proj.mC_channels
-            mH_ch = proj.mC_settings['setup']['mH_channel']
-            print('mH_ch:', mH_ch)
-            for ch in ['chA', 'chB', 'chC', 'chD']: 
-                label = getattr(self, 'lab_'+ch) 
-                name = getattr(self, 'lab_filled_name_'+ch)
-                brw_ch = getattr(self, 'browse_'+ch)
-                dir_ch = getattr(self, 'lab_filled_dir_'+ch)
-                check_ch = getattr(self, 'check_'+ch)
+            if len(mC_channels) != 0 and len(proj.mC_settings['setup']) != 0:
+                mH_ch = proj.mC_settings['setup']['mC_channel']
+                print('mH_ch:', mH_ch)
+                for ch in ['chA', 'chB', 'chC', 'chD']: 
+                    label = getattr(self, 'lab_'+ch) 
+                    name = getattr(self, 'lab_filled_name_'+ch)
+                    brw_ch = getattr(self, 'browse_'+ch)
+                    dir_ch = getattr(self, 'lab_filled_dir_'+ch)
+                    check_ch = getattr(self, 'check_'+ch)
 
-                if ch not in mC_channels.keys():
-                    label.setVisible(False)
-                    name.setVisible(False)
-                    brw_ch.setVisible(False)
-                    dir_ch.setVisible(False)
-                    check_ch.setVisible(False)
-                else: 
-                    if ch != 'chA':
-                        if mH_ch[ch] != False: #ABC
-                            label.setEnabled(False)
-                            brw_ch.setEnabled(False)
-                            dir_ch.setEnabled(False)
-                            dir_ch.setText('Channel loaded from Morphological Analysis (morphoHeart)\t\t\t')
-                            check_ch.setEnabled(False)
+                    if ch not in mC_channels.keys():
+                        label.setVisible(False)
+                        name.setVisible(False)
+                        brw_ch.setVisible(False)
+                        dir_ch.setVisible(False)
+                        check_ch.setVisible(False)
+                    else: 
+                        if ch != 'chA':
+                            if mH_ch[ch] != False: #ABC
+                                label.setEnabled(False)
+                                brw_ch.setEnabled(False)
+                                dir_ch.setEnabled(False)
+                                dir_ch.setText('Channel loaded from Morphological Analysis (morphoHeart)\t\t\t')
+                                check_ch.setEnabled(False)
 
-                    name.setText(proj.mC_channels[ch])
-                    self.img_dirs[ch] = {}
+                        name.setText(proj.mC_channels[ch])
+                        self.img_dirs[ch] = {}
+            else:
+                print('mC analysis selected in old project (no mC settings found!)')
         print('self.img_dirs:',self.img_dirs)
         
     def init_tabs(self, proj): 
