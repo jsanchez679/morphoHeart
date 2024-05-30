@@ -4014,9 +4014,7 @@ class NewOrgan(QDialog):
         if proj.analysis['morphoCell']: 
             #-mC
             mC_channels = proj.mC_channels
-            if len(mC_channels) != 0 and len(proj.mC_settings['setup']) != 0:
-                mH_ch = proj.mC_settings['setup']['mC_channel']
-                print('mH_ch:', mH_ch)
+            if len(mC_channels)>0:
                 for ch in ['chA', 'chB', 'chC', 'chD']: 
                     label = getattr(self, 'lab_'+ch) 
                     name = getattr(self, 'lab_filled_name_'+ch)
@@ -4032,7 +4030,7 @@ class NewOrgan(QDialog):
                         check_ch.setVisible(False)
                     else: 
                         if ch != 'chA':
-                            if mH_ch[ch] != False: #ABC
+                            if proj.mC_settings['setup']['mC_channel'][ch] != False: #ABC
                                 label.setEnabled(False)
                                 brw_ch.setEnabled(False)
                                 dir_ch.setEnabled(False)
@@ -4042,7 +4040,8 @@ class NewOrgan(QDialog):
                         name.setText(proj.mC_channels[ch])
                         self.img_dirs[ch] = {}
             else:
-                print('mC analysis selected in old project (no mC settings found!)')
+                self.tabWidget.setTabVisible(1, False)
+        
         print('self.img_dirs:',self.img_dirs)
         
     def init_tabs(self, proj): 
@@ -5278,38 +5277,42 @@ class ProjSettings(QDialog):
 
         # #- morphoCell
         if self.proj.analysis['morphoCell']: 
-            #Cells and Visualisation Channels
-            self.init_cells()
-            #Segments
-            if isinstance(self.proj.mC_settings['setup']['segm_mC'], dict):
-                self.init_segments_group_mC()
-            else: 
-                self.set_segm_mC.setVisible(False)
-                self.tick_segm_mC.setChecked(False)
-            #Regions
-            self.tick_sect_mC.setVisible(False)
-            self.tick_sect_mC.setChecked(False)
-            self.set_sect_mC.setVisible(False)
-            # if isinstance(self.proj.mC_settings['setup']['sect'], dict):
-            #     self.init_sections_group_mC()
-            # else: 
-            #     self.set_sect_mC.setVisible(False)
-            #     self.tick_sect_mC.setChecked(False)
-            #Segments-Regions 
-            self.tick_segm_sect_mC.setVisible(False)
-            self.tick_segm_sect_mC.setChecked(False)
-            self.set_segm_sect_mC.setVisible(False)
-            # if isinstance(self.proj.mC_settings['setup']['segm-sect'], dict):
-            #     self.init_segm_sect_group_mC()
-            # else: 
-            #     self.set_segm_sect_mC.setVisible(False)
-            #     self.tick_segm_sect_mC.setChecked(False)
-            #Zones
-            if isinstance(self.proj.mC_settings['setup']['zone_mC'], dict):
-                self.init_zones_group_mC()
-            else: 
-                self.set_zone_mC.setVisible(False)
-                self.tick_zone_mC.setChecked(False)
+            if len(self.proj.mC_channels)>0:
+                #Cells and Visualisation Channels
+                self.init_cells()
+                #Segments
+                if isinstance(self.proj.mC_settings['setup']['segm_mC'], dict):
+                    self.init_segments_group_mC()
+                else: 
+                    self.set_segm_mC.setVisible(False)
+                    self.tick_segm_mC.setChecked(False)
+                #Regions
+                self.tick_sect_mC.setVisible(False)
+                self.tick_sect_mC.setChecked(False)
+                self.set_sect_mC.setVisible(False)
+                # if isinstance(self.proj.mC_settings['setup']['sect'], dict):
+                #     self.init_sections_group_mC()
+                # else: 
+                #     self.set_sect_mC.setVisible(False)
+                #     self.tick_sect_mC.setChecked(False)
+                #Segments-Regions 
+                self.tick_segm_sect_mC.setVisible(False)
+                self.tick_segm_sect_mC.setChecked(False)
+                self.set_segm_sect_mC.setVisible(False)
+                # if isinstance(self.proj.mC_settings['setup']['segm-sect'], dict):
+                #     self.init_segm_sect_group_mC()
+                # else: 
+                #     self.set_segm_sect_mC.setVisible(False)
+                #     self.tick_segm_sect_mC.setChecked(False)
+                #Zones
+                if isinstance(self.proj.mC_settings['setup']['zone_mC'], dict):
+                    self.init_zones_group_mC()
+                else: 
+                    self.set_zone_mC.setVisible(False)
+                    self.tick_zone_mC.setChecked(False)
+            else:
+                print('Hiding mC tab!')
+                self.tabWidget.setTabVisible(1, False)
 
         #Measurement Parameters 
         self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
