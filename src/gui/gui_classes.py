@@ -4268,7 +4268,6 @@ class NewOrgan(QDialog):
                         error_txt = "*Please load the images (and masks) for all the organ's channels (morphoHeart)."
                         self.win_msg(error_txt, self.button_create_new_organ)
                         return False
-                    
 
                     paths_chs.append(self.img_dirs[ch]['image']['dir'])
                     paths.append(self.img_dirs[ch]['image']['dir'])
@@ -4277,38 +4276,40 @@ class NewOrgan(QDialog):
 
         
         if proj.analysis['morphoCell']: 
-            mH_ch = proj.mC_settings['setup']['mH_channel']
-            for ch in proj.mC_channels.keys(): 
-                if len(self.img_dirs[ch]) < 1: 
-                    if ch != 'chA':
-                        if mH_ch[ch] != False:
-                            mH_ch2use = mH_ch[ch].split(' (')[0]
-                            dir2use = self.img_dirs[mH_ch2use]
-                            self.img_dirs[ch] = dir2use
+            mC_channels = proj.mC_channels
+            if len(mC_channels)>0:
+                mH_ch = proj.mC_settings['setup']['mC_channel']
+                for ch in proj.mC_channels.keys(): 
+                    if len(self.img_dirs[ch]) < 1: 
+                        if ch != 'chA':
+                            if mH_ch[ch] != False:
+                                mH_ch2use = mH_ch[ch].split(' (')[0]
+                                dir2use = self.img_dirs[mH_ch2use]
+                                self.img_dirs[ch] = dir2use
+                            else: 
+                                error_txt = "*Please load the images (and masks) for all the organ's channels (morphoCell)."
+                                self.win_msg(error_txt, self.button_create_new_organ)
+                                return False
                         else: 
-                            error_txt = "*Please load the images (and masks) for all the organ's channels (morphoCell)."
+                            error_txt = "*Please load the cell positions data file for chA (morphoCell)."
                             self.win_msg(error_txt, self.button_create_new_organ)
                             return False
-                    else: 
-                        error_txt = "*Please load the cell positions data file for chA (morphoCell)."
-                        self.win_msg(error_txt, self.button_create_new_organ)
-                        return False
-                
-                if 'morphoCell' not in txt: 
-                    if len(txt) > 1: 
-                        txt = txt + ' & morphoCell)'
-                    else: 
-                        txt = txt + 'morphoCell'
+                    
+                    if 'morphoCell' not in txt: 
+                        if len(txt) > 1: 
+                            txt = txt + ' & morphoCell'
+                        else: 
+                            txt = txt + 'morphoCell'
 
-                if ch != 'chA':
-                    if mH_ch[ch] != False: #ABC
-                        pass
-                    else:  # == False
+                    if ch != 'chA':
+                        if mH_ch[ch] != False: #ABC
+                            pass
+                        else:  # == False
+                            paths_chs.append(self.img_dirs[ch]['image']['dir'])
+                            paths.append(self.img_dirs[ch]['image']['dir'])
+                    else:  # ch == chA
                         paths_chs.append(self.img_dirs[ch]['image']['dir'])
                         paths.append(self.img_dirs[ch]['image']['dir'])
-                else:  # ch == chA
-                    paths_chs.append(self.img_dirs[ch]['image']['dir'])
-                    paths.append(self.img_dirs[ch]['image']['dir'])
 
         txt = txt + ').'
         valid = [val.is_file() for val in paths]

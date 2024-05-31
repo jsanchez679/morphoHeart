@@ -163,7 +163,6 @@ class Controller:
         win = getattr(self, parent_win)
         if parent_win == 'new_organ_win':
             if self.new_organ_win.button_create_new_organ.isChecked():
-
                 pass# self.new_organ_win.close()
             else: 
                 error_txt = '*You need to first create the organ to continue.'
