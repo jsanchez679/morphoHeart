@@ -5867,8 +5867,9 @@ class MainWindow(QMainWindow):
             self.init_segment_tab()
             self.init_pandq_tab()
         if self.organ.analysis['morphoCell']:
-            if len(self.organ.mC_settings['setup'])>0: 
-                self.init_morphoCell_tab()
+            if hasattr(self.organ, 'mC_settings'):
+                if len(self.organ.mC_settings['setup'])>0: 
+                    self.init_morphoCell_tab()
 
         # Init Tabs
         self.init_tabs()
@@ -5972,8 +5973,11 @@ class MainWindow(QMainWindow):
                 self.tabWidget.setCurrentIndex(2)
         
         if self.organ.analysis['morphoCell']:
-            if len(self.organ.mC_settings['setup'])>0: 
-                pass
+            if hasattr(self.organ, 'mC_settings'):
+                if len(self.organ.mC_settings['setup'])>0: 
+                    pass
+                else: 
+                    self.tabWidget.setTabVisible(2, False)
             else: 
                 self.tabWidget.setTabVisible(2, False)
         else: 

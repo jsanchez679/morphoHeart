@@ -972,10 +972,11 @@ class Organ():
                     self.objects['Spheres']['cut4cl'] = {'bottom': {}, 'top':{}}
                     self.objects['Centreline'] = {}
             if self.analysis['morphoCell']: #ABC 
-                self.mC_settings = copy.deepcopy(project.mC_settings)
-                self.imChannelsMC = {}
-                self.obj_imChannelsMC = {}
-                self.cellsMC = {}
+                if len(project.mC_settings['setup'])>0:
+                    self.mC_settings = copy.deepcopy(project.mC_settings)
+                    self.imChannelsMC = {}
+                    self.obj_imChannelsMC = {}
+                    self.cellsMC = {}
 
             self.workflow = copy.deepcopy(project.workflow) 
             self.create_folders(project.analysis) 
@@ -1068,34 +1069,36 @@ class Organ():
             
         if self.analysis['morphoCell']:
             # mC_Settings
-            self.mC_settings = load_dict['mC_settings']
-            try: 
-                zz_names = {}
-                for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
-                    zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
-                self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
-                print('Modified mC_settings - name_zones')
-            except:
-                pass
+            if 'mC_settings' in load_dict.keys():
+                if len(load_dict['mC_settings']['setup'])>0:
+                    self.mC_settings = load_dict['mC_settings']
+                    try: 
+                        zz_names = {}
+                        for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
+                            zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
+                        self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
+                        print('Modified mC_settings - name_zones')
+                    except:
+                        pass
 
-            if 'measure' not in self.mC_settings: 
-                self.mC_settings['measure'] = {} 
+                    if 'measure' not in self.mC_settings: 
+                        self.mC_settings['measure'] = {} 
 
-            if 'imChannelMC' in load_dict.keys():
-                self.imChannelsMC = load_dict['imChannelMC']
-                self.load_objImChannelMC()
-            if 'cells_MC' in load_dict.keys(): 
-                self.cellsMC = load_dict['cells_MC']
-                self.load_objCells()
+                    if 'imChannelMC' in load_dict.keys():
+                        self.imChannelsMC = load_dict['imChannelMC']
+                        self.load_objImChannelMC()
+                    if 'cells_MC' in load_dict.keys(): 
+                        self.cellsMC = load_dict['cells_MC']
+                        self.load_objCells()
 
-            if 'B-Zones' in self.workflow['morphoCell']: 
-                if len(self.workflow['morphoCell']['B-Zones']) == 1: 
-                    print('Adding wf to Zones')
-                    #Get all zones and add Status NI to all
-                    zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
-                    for zone in zone_all: 
-                        self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
-        
+                    if 'B-Zones' in self.workflow['morphoCell']: 
+                        if len(self.workflow['morphoCell']['B-Zones']) == 1: 
+                            print('Adding wf to Zones')
+                            #Get all zones and add Status NI to all
+                            zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
+                            for zone in zone_all: 
+                                self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
+
         if 'orientation' in self.mH_settings['wf_info'].keys():
             self.load_orient_cubes()
         
@@ -1603,36 +1606,37 @@ class Organ():
             all_info['obj_temp'] = obj_temp
             
         if self.analysis['morphoCell']:
-            #ABC what else is there to save from MC 
-            all_info['mC_settings'] = self.mC_settings
+            if 'mC_settings' in all_info.keys():
+                #ABC what else is there to save from MC 
+                all_info['mC_settings'] = self.mC_settings
 
-            image_dictMC = copy.deepcopy(self.imChannelsMC)
-            for chMC in image_dictMC.keys():
-                image_dictMC[chMC].pop('parent_organ', None)
-            all_info['imChannelMC'] = image_dictMC
+                image_dictMC = copy.deepcopy(self.imChannelsMC)
+                for chMC in image_dictMC.keys():
+                    image_dictMC[chMC].pop('parent_organ', None)
+                all_info['imChannelMC'] = image_dictMC
 
-            try: 
-                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
-                                    'channel_no': self.cellsMC['chA']['channel_no'], 
-                                    'user_chName': self.cellsMC['chA']['user_chName'],
-                                    'dir_cells': self.cellsMC['chA']['dir_cells'],
-                                    'dir_cho': self.cellsMC['chA']['dir_cho'],
-                                    'dir_img': self.cellsMC['chA']['dir_img'],
-                                    'resolution': self.cellsMC['chA']['resolution'], 
-                                    'shape': self.cellsMC['chA']['shape']}}
-                print('try saving cells')
-            except:
-                print('except saving cells')
-                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
-                                'channel_no': self.cellsMC['chA'].channel_no, 
-                                'user_chName': self.cellsMC['chA'].user_chName,
-                                'dir_cells': self.cellsMC['chA'].dir_cells,
-                                'dir_cho': self.cellsMC['chA'].dir_cho,
-                                'dir_img': self.cellsMC['chA'].dir_img,
-                                'resolution': self.cellsMC['chA'].resolution, 
-                                'shape': self.cellsMC['chA'].shape}}
+                try: 
+                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
+                                        'channel_no': self.cellsMC['chA']['channel_no'], 
+                                        'user_chName': self.cellsMC['chA']['user_chName'],
+                                        'dir_cells': self.cellsMC['chA']['dir_cells'],
+                                        'dir_cho': self.cellsMC['chA']['dir_cho'],
+                                        'dir_img': self.cellsMC['chA']['dir_img'],
+                                        'resolution': self.cellsMC['chA']['resolution'], 
+                                        'shape': self.cellsMC['chA']['shape']}}
+                    print('try saving cells')
+                except:
+                    print('except saving cells')
+                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
+                                    'channel_no': self.cellsMC['chA'].channel_no, 
+                                    'user_chName': self.cellsMC['chA'].user_chName,
+                                    'dir_cells': self.cellsMC['chA'].dir_cells,
+                                    'dir_cho': self.cellsMC['chA'].dir_cho,
+                                    'dir_img': self.cellsMC['chA'].dir_img,
+                                    'resolution': self.cellsMC['chA'].resolution, 
+                                    'shape': self.cellsMC['chA'].shape}}
 
-            all_info['cells_MC'] = cells_MC
+                all_info['cells_MC'] = cells_MC
 
         all_info['workflow'] = self.workflow
 
