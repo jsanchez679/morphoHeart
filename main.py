@@ -204,7 +204,7 @@ class Controller:
         if len(win.multi_organs_added) > 0:
             win.win_msg('Loading Organs...')
             ave_hm = win.cB_only_avehm.isChecked()
-            if len(win.multi_organs_added)>15 and not ave_hm: 
+            if len(win.multi_organs_added)>12 and not ave_hm: 
                 title = 'Loading these many organs take up too much space in disk...'
                 num = str(len(win.multi_organs_added))
                 msg = ["Loading these many organs (n="+num+") take up too much space in disk. If you want to create average heatmaps of all these organs make sure you have ticked the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system.",
