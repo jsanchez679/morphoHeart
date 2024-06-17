@@ -219,8 +219,17 @@ class Controller:
                     return 
 
             print('Loading '+str(len(win.multi_organs_added))+ ' organs...')
-            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
-                                                                                    ave_hm=ave_hm)
+            try: 
+                df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
+                                                                                        ave_hm=ave_hm)
+            except RuntimeError: 
+                title = 'RuntimeError...'
+                msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
+                prompt = Prompt_ok(title, msg, parent=self)
+                prompt.exec()
+                print('output:',prompt.output, '\n')
+                return
+            
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
             win.win_msg(error_txt, win.go_to_analysis_window)
