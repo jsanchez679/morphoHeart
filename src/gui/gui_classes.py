@@ -748,6 +748,52 @@ class Process_ongoing(QDialog):
         self.ok_button.setEnabled(True)
         self.win_msg('All heatmaps have been successfully filtered!')
 
+class Process_loading_organs(QDialog):
+    def __init__(self, title:str, parent=None):
+        super().__init__(parent)
+        uic.loadUi(str(mH_config.path_ui / 'loading_multi_organs.ui'), self)
+        self.setWindowTitle(title)
+        self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
+        self.setWindowIcon(QIcon(mH_icon))
+        self.output = None
+
+        self.prog_bar.setValue(0)
+        self.show()
+    
+    def load_organs(self, df_pando, dict_projs, single_proj, controller, ave_hm):
+
+        proj_num = []
+        dict_organs = {}
+        self.prog_bar.setRange(0,len(df_pando))
+        n=0
+        for index, row in df_pando.iterrows():
+            print(index, row)
+            #Get values from organ
+            org_proj_name = row['user_projName']
+            org_proj_path = row['proj_path']
+            for nk in dict_projs.keys(): 
+                pj_proj_name = dict_projs[nk]['proj_name']
+                pj_proj_path = dict_projs[nk]['proj_path']
+                if org_proj_name == pj_proj_name and str(org_proj_path) == str(pj_proj_path):
+                    proj_num.append(nk)
+                    break
+            org_name = row['user_organName']
+            self.organ_name.setText(org_name)
+            organ = controller.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
+                                            single_organ=False, ave_hm=ave_hm)
+            dict_organs[index] = {'organ_name': org_name, 
+                                  'organ': organ}
+            if not single_proj: 
+                dict_organs[index]['proj_name'] = row['user_projName']
+                dict_organs[index]['proj_num'] = nk
+            n += 1
+            self.prog_bar.setValue(n)
+
+        df_pando['proj_num'] = proj_num
+        print('All organs have been loaded!')
+
+        return df_pando, dict_projs, dict_organs
+
 class CreateNewProj(QDialog):
 
     def __init__(self, controller, parent=None, template=False):

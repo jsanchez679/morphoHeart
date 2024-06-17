@@ -3271,7 +3271,6 @@ class Mesh_mH():
             if dir_mesh.is_file() and dir_npy.is_file():
                 name = 'Thickness'
                 title = self.legend+'\n'+name+' [um]\n('+n_type.replace('TO','>')+')'
-                print('fix this!!! ')
                 if n_type == 'intTOext': 
                     short = 'th_i2e['+self.name.replace('_', '-')+']'
                 else:

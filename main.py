@@ -219,16 +219,16 @@ class Controller:
                     return 
 
             print('Loading '+str(len(win.multi_organs_added))+ ' organs...')
-            try: 
-                df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
-                                                                                        ave_hm=ave_hm)
-            except RuntimeError: 
-                title = 'RuntimeError...'
-                msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
-                prompt = Prompt_ok(title, msg, parent=self)
-                prompt.exec()
-                print('output:',prompt.output, '\n')
-                return
+            # try:
+            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
+                                                                                        ave_hm=ave_hm, parent_win=win)
+            # except: #RuntimeError: 
+            #     title = 'Runtime Error...'
+            #     msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
+            #     prompt = Prompt_ok(title, msg, parent=win)
+            #     prompt.exec()
+            #     print('output:',prompt.output, '\n')
+            #     return
             
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
@@ -824,7 +824,7 @@ class Controller:
         else: 
             return loaded_organ
 
-    def load_multip_proj_and_organs(self, proj_org, single_proj, ave_hm=False):
+    def load_multip_proj_and_organs(self, proj_org, single_proj, ave_hm=False, parent_win=None):
         
         #Transform the list of dictionaries into a dataframe
         df_pando = pd.DataFrame(proj_org) 
@@ -832,6 +832,7 @@ class Controller:
         proj_info = df_pando[['user_projName', 'proj_path']]
         unique_proj_info = proj_info.drop_duplicates()
         dict_projs = {}
+        
         for nn, row in unique_proj_info.iterrows(): 
             proj_name = row['user_projName']
             proj_path = row['proj_path']
@@ -843,30 +844,16 @@ class Controller:
                              'proj': proj}
         # print('dict_projs:', dict_projs)
 
-        dict_organs = {}
-        proj_num = []
-        for index, row in df_pando.iterrows():
-            # print(index, row)
-            #Get values from organ
-            org_proj_name = row['user_projName']
-            org_proj_path = row['proj_path']
-            for nk in dict_projs.keys(): 
-                pj_proj_name = dict_projs[nk]['proj_name']
-                pj_proj_path = dict_projs[nk]['proj_path']
-                if org_proj_name == pj_proj_name and str(org_proj_path) == str(pj_proj_path):
-                    proj_num.append(nk)
-                    break
-            org_name = row['user_organName']
-            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
-                                            single_organ=False, ave_hm=ave_hm)
-            dict_organs[index] = {'organ_name': org_name, 
-                                  'organ': organ}
-            if not single_proj: 
-                dict_organs[index]['proj_name'] = row['user_projName']
-                dict_organs[index]['proj_num'] = nk
+        title = 'Loading organs...'
+        proc_ong = Process_loading_organs(title=title, parent=parent_win)
 
-        df_pando['proj_num'] = proj_num
-
+        df_pando, dict_projs, dict_organs = proc_ong.load_organs(df_pando = df_pando, 
+                                                                 dict_projs = dict_projs,
+                                                                 single_proj = single_proj, 
+                                                                 controller=self, 
+                                                                 ave_hm=ave_hm)
+       
+        proc_ong.close()
         print('df_pando:', df_pando)
         return df_pando, dict_projs, dict_organs
 
