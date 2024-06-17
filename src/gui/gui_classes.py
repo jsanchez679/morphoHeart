@@ -15563,12 +15563,12 @@ class MultipAnalysisWindow(QMainWindow):
         self.controller = controller
         self.single_proj = single_proj
 
-        if self.single_proj:
-            self.label_version_single.setText('v'+mH_config.version+'  ')
-            self.label_version_single.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
-        else:
-            self.label_version_multip.setText('v'+mH_config.version+'  ')
-            self.label_version_multip.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
+        # if self.single_proj:
+        self.label_version_single.setText('v'+mH_config.version+'  ')
+        self.label_version_single.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
+        # else:
+        self.label_version_multip.setText('v'+mH_config.version+'  ')
+        self.label_version_multip.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
 
         #General Init
         self.init_analysis_win()
