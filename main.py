@@ -203,7 +203,23 @@ class Controller:
         print('win.multi_organs_added:', win.multi_organs_added, '\n', len(win.multi_organs_added))
         if len(win.multi_organs_added) > 0:
             win.win_msg('Loading Organs in Analysis Window...')
-            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj)
+            ave_hm = win.cB_only_avehm.isChecked()
+            if len(win.multi_organs_added)>15 and not ave_hm: 
+                title = 'Loading these many organs take up too much space in disk...' 
+                msg = ["Loading these many organs take up too much space in disk. If you want to create average heatmaps of all these organs make sure you have ticked the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system.",
+                       "If you want to create plots and videos, please try and load a smaller number of organs at once to reduce the load to your system. Select  -OK-  if you still want to try and load these many organs (if it fails, you might need to restart morphoHeart), else select  -Cancel-."]
+                
+                prompt = Prompt_ok_cancel(title, msg, win_size=[600, 300], 
+                                          wdg_size=[[500,70],[500,100]], parent=win)
+                prompt.textEdit1.setStyleSheet('QTextEdit {background-color: rgba(0,0,0,0); font: 25 11pt "Calibri Light"; font-family: "Calibri Light";}')
+                prompt.exec()
+                print('output:', prompt.output)
+                if not prompt.output:
+                    return 
+
+            print('Loading '+str(len(win.multi_organs_added))+ ' organs...')
+            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
+                                                                                    ave_hm=ave_hm)
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
             win.win_msg(error_txt, win.go_to_analysis_window)
@@ -212,10 +228,11 @@ class Controller:
         #Create Main Project Window and show
         if self.multip_analysis_win == None:
             self.multip_analysis_win = MultipAnalysisWindow(projs = dict_projs, organs = dict_organs, 
-                                                            df_pando= df_pando, controller=self, single_proj=single_proj) 
+                                                            df_pando= df_pando, controller=self, 
+                                                            single_proj=single_proj, ave_hm=ave_hm) 
             self.init_multip_analysis_win()
-            win.close()
-            self.multip_analysis_win.show()
+        win.close()
+        self.multip_analysis_win.show()
     
     def show_load_closed_stacks(self):
         if self.load_s3s == None:
@@ -781,8 +798,9 @@ class Controller:
             self.new_organ_win.button_create_new_organ.setChecked(False)
             return 
     
-    def load_organ(self, proj, organ_to_load, single_organ=True):
-        loaded_organ = proj.load_organ(organ_to_load = organ_to_load, single_organ=single_organ)
+    def load_organ(self, proj, organ_to_load, single_organ=True, ave_hm=False):
+        loaded_organ = proj.load_organ(organ_to_load = organ_to_load, 
+                                       single_organ=single_organ, ave_hm=ave_hm)
         if not hasattr(loaded_organ, 'obj_temp'):
             loaded_organ.obj_temp = {}
         if single_organ: 
@@ -796,7 +814,7 @@ class Controller:
         else: 
             return loaded_organ
 
-    def load_multip_proj_and_organs(self, proj_org, single_proj):
+    def load_multip_proj_and_organs(self, proj_org, single_proj, ave_hm=False):
         
         #Transform the list of dictionaries into a dataframe
         df_pando = pd.DataFrame(proj_org) 
@@ -829,7 +847,8 @@ class Controller:
                     proj_num.append(nk)
                     break
             org_name = row['user_organName']
-            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, single_organ=False)
+            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
+                                            single_organ=False, ave_hm=ave_hm)
             dict_organs[index] = {'organ_name': org_name, 
                                   'organ': organ}
             if not single_proj: 

@@ -917,7 +917,7 @@ class Project():
         self.organs = organs
         self.save_project()
 
-    def load_organ(self, organ_to_load:str, single_organ=True):#
+    def load_organ(self, organ_to_load:str, single_organ=True, ave_hm=False):#
 
         organ_folder = self.organs[organ_to_load]['user_organName']
         dir_res = Path(self.dir_proj) / organ_folder
@@ -928,7 +928,7 @@ class Project():
                 print(">> "+jsonDict_name+": Opening JSON encoded data")
                 dict_out = json.load(read_file)
             organ_dict = {'load_dict': dict_out}
-            organ = Organ(project=self, organ_dict=organ_dict, new=False)
+            organ = Organ(project=self, organ_dict=organ_dict, new=False, ave_hm=ave_hm)
         else: 
             organ = None
             print('>> Error: No organ name with name ',self.organs[organ_to_load]['user_organName'],' was found!\n Directory: ',str(json2open_dir))
@@ -939,7 +939,7 @@ class Project():
 class Organ():
     'Organ Class'
     
-    def __init__(self, project:Project, organ_dict:dict, new:bool):# 
+    def __init__(self, project:Project, organ_dict:dict, new:bool, ave_hm:bool):# 
         
         self.parent_project = project
         self.on_hold = False
@@ -984,7 +984,7 @@ class Organ():
         else: 
             print('\nLoading organ!')
             load_dict = organ_dict['load_dict']
-            self.load_organ(load_dict=load_dict)
+            self.load_organ(load_dict=load_dict, ave_hm=ave_hm)
 
     def create_mHName(self): #
         now_str = datetime.now().strftime('%Y%m%d%H%M')
@@ -1004,7 +1004,7 @@ class Organ():
                 else:
                     cells_ch = self.create_cells(ch_name=ch_nameMC)
 
-    def load_organ(self, load_dict:dict):#
+    def load_organ(self, load_dict:dict, ave_hm:bool):#
         load_dict = make_Paths(load_dict)
 
         self.info = load_dict['Organ']
@@ -1050,7 +1050,10 @@ class Organ():
             self.load_objImChannelNS()
             # meshes
             self.meshes = load_dict['meshes']
-            self.load_objMeshes()
+            if not ave_hm: 
+                self.load_objMeshes()
+            else: 
+                self.obj_meshes = {}
             # submeshes
             if 'submeshes' in load_dict.keys():
                 submeshes_dict = load_dict['submeshes']
@@ -1058,10 +1061,14 @@ class Organ():
                 list_colors = [key.split(':') for key in flat_subm_dict if 'color' in key]
                 submeshes_dict_new = make_tuples(submeshes_dict, list_colors)
                 self.submeshes = submeshes_dict_new
-                self.load_objSubmeshes(submeshes_dict)
+                if not ave_hm: 
+                    self.load_objSubmeshes(submeshes_dict)
+                    print('>>>> Loaded submeshes: ', self.submeshes)
+                else: 
+                    self.obj_subm = {}
             else: 
                 self.submeshes = {}
-            print('>>>> Loaded submeshes: ', self.submeshes)
+            
             #obj_temp
             if 'obj_temp' in load_dict.keys():
                 self.obj_temp = load_dict['obj_temp']

@@ -15495,7 +15495,7 @@ class MainWindow(QMainWindow):
             event.ignore()
 
 class MultipAnalysisWindow(QMainWindow): 
-    def __init__(self, projs, organs, df_pando, controller, single_proj = True):
+    def __init__(self, projs, organs, df_pando, controller, single_proj = True, ave_hm = False):
         super().__init__()
         uic.loadUi(str(mH_config.path_ui / 'main_analysis_screen.ui'), self)
         self.setWindowTitle('morphoHeart Analysis')
@@ -15526,7 +15526,10 @@ class MultipAnalysisWindow(QMainWindow):
         #Init Average Heatmaps
         self.init_aveHM()
         #Init Plot Widget
-        self.init_plot_widget()
+        if not ave_hm: 
+            self.init_plot_widget()
+        else: 
+            self.plot_widget.setEnabled(False)
 
         # Theme 
         if self.single_proj:
