@@ -2040,7 +2040,7 @@ QScrollBar::handle:horizontal:hover {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>589</width>
+                    <width>594</width>
                     <height>422</height>
                    </rect>
                   </property>
@@ -7760,6 +7760,9 @@ QScrollBar::handle:horizontal:hover {
                    </property>
                    <property name="horizontalScrollBarPolicy">
                     <enum>Qt::ScrollBarAlwaysOff</enum>
+                   </property>
+                   <property name="sizeAdjustPolicy">
+                    <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
                    </property>
                    <property name="html">
                     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;

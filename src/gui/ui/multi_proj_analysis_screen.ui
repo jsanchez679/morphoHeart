@@ -971,7 +971,7 @@ color: rgb(125, 125, 125);
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
-           <widget class="QLabel" name="lab_no_ch_11">
+           <widget class="QLabel" name="lab_organs_added">
             <property name="styleSheet">
              <string notr="true">font: 10pt &quot;Calibri&quot;;
 background-color: rgb(255, 255, 255);</string>

@@ -4796,6 +4796,7 @@ def fill_table_with_organs(win, proj, table, blind_cB, all_cB):#notes_cB, mH_cB=
     return cBs
 
 def add_organ_to_multi_analysis(win, proj, add, single_proj):
+    label = win.lab_organs_added
     if add: 
         print('Init win.multi_organ_checkboxes:',win.multi_organ_checkboxes)
         checked = []
@@ -4824,7 +4825,7 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
                             'user_organNotes': notes, 'strain': strain, 'stage': stage, 
                             'genotype': genotype, 'manipulation': manip, 'date_created': date_created}
                 win.multi_organs_added.append(org_proj)
-
+            label.setText('Organs Added to Analysis (n='+str(len(win.multi_organs_added))+')')
     else: #remove 
         print('Init win.added_organs_checkboxes:',win.added_organs_checkboxes)
         checked = []
@@ -4848,6 +4849,7 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
                         break
                 for item in n2del: 
                     win.multi_organs_added.remove(item)
+            label.setText('Organs Added to Analysis (n='+str(len(win.multi_organs_added))+')')
 
     all_cB = {'Strain': 'Strain' in win.filter_cB_comb.lineEdit().text(),
                 'Stage': 'Stage' in win.filter_cB_comb.lineEdit().text(),
