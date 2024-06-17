@@ -205,8 +205,9 @@ class Controller:
             win.win_msg('Loading Organs in Analysis Window...')
             ave_hm = win.cB_only_avehm.isChecked()
             if len(win.multi_organs_added)>15 and not ave_hm: 
-                title = 'Loading these many organs take up too much space in disk...' 
-                msg = ["Loading these many organs take up too much space in disk. If you want to create average heatmaps of all these organs make sure you have ticked the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system.",
+                title = 'Loading these many organs take up too much space in disk...'
+                num = str(len(win.multi_organs_added))
+                msg = ["Loading these many organs (n="+num+") take up too much space in disk. If you want to create average heatmaps of all these organs make sure you have ticked the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system.",
                        "If you want to create plots and videos, please try and load a smaller number of organs at once to reduce the load to your system. Select  -OK-  if you still want to try and load these many organs (if it fails, you might need to restart morphoHeart), else select  -Cancel-."]
                 
                 prompt = Prompt_ok_cancel(title, msg, win_size=[600, 300], 

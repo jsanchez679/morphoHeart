@@ -15522,14 +15522,14 @@ class MultipAnalysisWindow(QMainWindow):
         #Progress bar
         self.prog_bar.setValue(0)
         #Init Plots 
-        self.init_plot_meshes()
+        if not ave_hm: 
+            self.init_plot_meshes()
+        else: 
+            self.plot_widget.setEnabled(False)
         #Init Average Heatmaps
         self.init_aveHM()
         #Init Plot Widget
-        if not ave_hm: 
-            self.init_plot_widget()
-        else: 
-            self.plot_widget.setEnabled(False)
+        self.init_plot_widget()
 
         # Theme 
         if self.single_proj:
