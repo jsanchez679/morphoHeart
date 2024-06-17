@@ -757,14 +757,13 @@ class Process_loading_organs(QDialog):
         self.setWindowIcon(QIcon(mH_icon))
         self.output = None
 
-        self.prog_bar.setValue(0)
+        self.setModal(True)
         self.show()
     
     def load_organs(self, df_pando, dict_projs, single_proj, controller, ave_hm):
 
         proj_num = []
         dict_organs = {}
-        self.prog_bar.setRange(0,len(df_pando))
         n=0
         for index, row in df_pando.iterrows():
             print(index, row)
@@ -778,7 +777,7 @@ class Process_loading_organs(QDialog):
                     proj_num.append(nk)
                     break
             org_name = row['user_organName']
-            self.organ_name.setText(org_name)
+            # self.organ_name.setText(org_name)
             organ = controller.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
                                             single_organ=False, ave_hm=ave_hm)
             dict_organs[index] = {'organ_name': org_name, 
@@ -787,12 +786,15 @@ class Process_loading_organs(QDialog):
                 dict_organs[index]['proj_name'] = row['user_projName']
                 dict_organs[index]['proj_num'] = nk
             n += 1
-            self.prog_bar.setValue(n)
 
         df_pando['proj_num'] = proj_num
-        print('All organs have been loaded!')
+        self.win_msg('All organs have been loaded!')
+        self.ok_button.setEnabled(True)
 
         return df_pando, dict_projs, dict_organs
+
+    def win_msg(self, msg):
+        self.tE_validate.setText(msg) 
 
 class CreateNewProj(QDialog):
 
@@ -4432,6 +4434,7 @@ class LoadProj(QDialog):
         self.multi_organ_checkboxes = None
         self.multi_organs_added = []
         self.added_organs_checkboxes = None
+        self.prog_bar.setValue(0)
 
         #Buttons
         self.button_load_organs.clicked.connect(lambda: self.load_proj_organs(proj=self.proj))
@@ -5015,6 +5018,7 @@ class Load_MultiProj(QDialog):
         self.multi_organ_checkboxes = None
         self.multi_organs_added = []
         self.added_organs_checkboxes = None
+        self.prog_bar.setValue(0)
 
         #Buttons
         self.button_load_organs_comb.clicked.connect(lambda: load_proj_organs_comb(win=self, proj=self.proj))
@@ -15551,6 +15555,7 @@ class MultipAnalysisWindow(QMainWindow):
         self.mH_logo_XS.setPixmap(mH_logoXS)
         self.setWindowIcon(QIcon(mH_icon))
         self.setStyleSheet("background-color:  rgb(255, 255, 255);")
+        self.prog_bar.setVisible(False)
 
         self.projs = projs
         self.organs = organs

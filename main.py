@@ -202,7 +202,7 @@ class Controller:
         win = getattr(self, parent_win)
         print('win.multi_organs_added:', win.multi_organs_added, '\n', len(win.multi_organs_added))
         if len(win.multi_organs_added) > 0:
-            win.win_msg('Loading Organs in Analysis Window...')
+            win.win_msg('Loading Organs...')
             ave_hm = win.cB_only_avehm.isChecked()
             if len(win.multi_organs_added)>15 and not ave_hm: 
                 title = 'Loading these many organs take up too much space in disk...'
@@ -219,16 +219,16 @@ class Controller:
                     return 
 
             print('Loading '+str(len(win.multi_organs_added))+ ' organs...')
-            # try:
-            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
-                                                                                        ave_hm=ave_hm, parent_win=win)
-            # except: #RuntimeError: 
-            #     title = 'Runtime Error...'
-            #     msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
-            #     prompt = Prompt_ok(title, msg, parent=win)
-            #     prompt.exec()
-            #     print('output:',prompt.output, '\n')
-            #     return
+            try:
+                df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
+                                                                                        parent_win = win, ave_hm=ave_hm)
+            except: #RuntimeError: 
+                title = 'Runtime Error...'
+                msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
+                prompt = Prompt_ok(title, msg, parent=win)
+                prompt.exec()
+                print('output:',prompt.output, '\n')
+                return
             
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
@@ -824,7 +824,7 @@ class Controller:
         else: 
             return loaded_organ
 
-    def load_multip_proj_and_organs(self, proj_org, single_proj, ave_hm=False, parent_win=None):
+    def load_multip_proj_and_organs(self, proj_org, single_proj, parent_win, ave_hm=False):
         
         #Transform the list of dictionaries into a dataframe
         df_pando = pd.DataFrame(proj_org) 
@@ -844,16 +844,37 @@ class Controller:
                              'proj': proj}
         # print('dict_projs:', dict_projs)
 
-        title = 'Loading organs...'
-        proc_ong = Process_loading_organs(title=title, parent=parent_win)
-
-        df_pando, dict_projs, dict_organs = proc_ong.load_organs(df_pando = df_pando, 
-                                                                 dict_projs = dict_projs,
-                                                                 single_proj = single_proj, 
-                                                                 controller=self, 
-                                                                 ave_hm=ave_hm)
+        parent_win.prog_bar.setValue(0)
+        proj_num = []
+        dict_organs = {}
+        n=0
+        parent_win.prog_bar.setRange(0,len(df_pando))
+        for index, row in df_pando.iterrows():
+            print(index, row)
+            #Get values from organ
+            org_proj_name = row['user_projName']
+            org_proj_path = row['proj_path']
+            for nk in dict_projs.keys(): 
+                pj_proj_name = dict_projs[nk]['proj_name']
+                pj_proj_path = dict_projs[nk]['proj_path']
+                if org_proj_name == pj_proj_name and str(org_proj_path) == str(pj_proj_path):
+                    proj_num.append(nk)
+                    break
+            org_name = row['user_organName']
+            # self.organ_name.setText(org_name)
+            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
+                                            single_organ=False, ave_hm=ave_hm)
+            dict_organs[index] = {'organ_name': org_name, 
+                                  'organ': organ}
+            if not single_proj: 
+                dict_organs[index]['proj_name'] = row['user_projName']
+                dict_organs[index]['proj_num'] = nk
+            n += 1
+            parent_win.prog_bar.setValue(n)
+        
+        df_pando['proj_num'] = proj_num
+        parent_win.win_msg('All organs have been loaded!')
        
-        proc_ong.close()
         print('df_pando:', df_pando)
         return df_pando, dict_projs, dict_organs
 
