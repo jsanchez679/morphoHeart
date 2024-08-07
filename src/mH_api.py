@@ -885,6 +885,7 @@ def get_trimming_planes(organ, gui_trim, win):
             else: 
                 no_cut.append(ch+'_'+cont)
     print('settings:', settings)
+    settings['process'] = 'trimming'
 
     # User user input to select which meshes need to be cut
     cuts_names = {'top': {'heart_def': 'outflow tract','other': 'top'},
@@ -914,6 +915,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut bottom
         while not happy: 
+            settings['direction'] = 'bottom'
             plane_bott, pl_dict_bott = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['bottom'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)  
@@ -937,6 +939,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut top
         while not happy: 
+            settings['direction'] = 'top'
             plane_top, pl_dict_top = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['top'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)
