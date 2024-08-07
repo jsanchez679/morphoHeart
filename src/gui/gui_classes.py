@@ -8547,7 +8547,7 @@ class MainWindow(QMainWindow):
     #Plot 3D
     def plot_final_s3_meshes(self, ch_name):
 
-        colors = ['gold','light green','light sea green']
+        colors = self.organ.mH_settings['setup']['color_chs'][ch_name] #['gold','light green','light sea green']
         
         meshes_out = []
         im_ch = self.organ.obj_imChannels[ch_name]
@@ -8556,7 +8556,7 @@ class MainWindow(QMainWindow):
             im_ch.load_chS3s([cont])
             s3 = getattr(im_ch, 's3_'+cont).s3()
             mesh = create_submesh(s3, res, keep_largest=False, rotateZ_90=True)
-            mesh.color(colors[n]).alpha(0.1)
+            mesh.color(colors[cont]).alpha(0.1)
             mesh.legend(im_ch.channel_no+'_'+cont)
             meshes_out.append(mesh)
         
