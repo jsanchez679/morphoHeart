@@ -567,7 +567,7 @@ color: rgb(234, 234, 234);
 background-color: rgb(255, 255, 255);</string>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_load_create_delete_organ">
       <attribute name="title">

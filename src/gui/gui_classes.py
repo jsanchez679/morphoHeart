@@ -4651,8 +4651,28 @@ class LoadProj(QDialog):
 def get_proj_wf(proj): 
     flat_wf = flatdict.FlatDict(copy.deepcopy(proj.workflow))
     #Make sure keep keys works for morphoCell
-    keep_keys = [key for key in flat_wf.keys() if len(key.split(':'))== 4 and 'Status' in key and 'morphoHeart' in key]
-    keep_keys_mC = [key for key in flat_wf.keys() if len(key.split(':'))== 3 and 'morphoCell' in key]
+    proc_to_check_if_included = ['morphoHeart:MeshesProc:C-Centreline','morphoHeart:MeshesProc:D-Ballooning', 
+                                 'morphoHeart:MeshesProc:D-Thickness_int>ext','morphoHeart:MeshesProc:D-Thickness_ext>int', 
+                                 'morphoHeart:MeshesProc:E-Segments','morphoHeart:MeshesProc:E-Sections', 
+                                 'morphoHeart:MeshesProc:E-Segments_Sections']
+    flat_wf_keys = flat_wf.keys()
+    for proc in proc_to_check_if_included: 
+        matching = [s for s in flat_wf_keys if proc in s]
+        if proc == 'morphoHeart:MeshesProc:C-Centreline':
+            if len(proj.mH_settings['measure']['CL']) == 0:
+                for kk in matching: 
+                    # print(kk)
+                    flat_wf_keys.remove(kk)
+        else: 
+            if len(matching) > 1:
+                pass
+            else: 
+                print(proc,len(matching), matching)
+                if len(matching) == 1:
+                    flat_wf_keys.remove(matching[0])
+
+    keep_keys = [key for key in flat_wf_keys if len(key.split(':'))== 4 and 'Status' in key and 'morphoHeart' in key]
+    keep_keys_mC = [key for key in flat_wf_keys if len(key.split(':'))== 3 and 'morphoCell' in key]
     # print('flat_wf.keys():', flat_wf.keys())
     for key in flat_wf.keys(): 
         if key not in keep_keys+keep_keys_mC: 
@@ -13329,6 +13349,37 @@ class MainWindow(QMainWindow):
             keys_flat_filtered.remove('A-Set_Orientation:Status')
         except: 
             print('A-Set_Orientation:Status was not a key')
+        
+        #Remove processes that are were not included by the user
+        proc_to_check_if_included = ['C-Centreline','D-Ballooning', 
+                                    'D-Thickness_int>ext','D-Thickness_ext>int', 
+                                    'E-Segments','E-Sections', 
+                                    'E-Segments_Sections']
+        
+        for proc in proc_to_check_if_included: 
+            matching = [s for s in keys_flat_filtered if proc in s]
+            # print(matching)
+            if proc == 'C-Centreline':
+                if len(self.organ.mH_settings['measure']['CL']) == 0:
+                    for kk in matching: 
+                        # print('CL',kk)
+                        keys_flat_filtered.remove(kk)
+                    try: 
+                        main_titles.remove(proc)
+                    except: 
+                        pass
+            else: 
+                if len(matching) > 1:
+                    pass
+                else: 
+                    # print(proc,len(matching), matching)
+                    if len(matching) == 1:
+                        # print(matching[0])
+                        keys_flat_filtered.remove(matching[0])
+                    try: 
+                        main_titles.remove(proc)
+                    except: 
+                        pass
 
         print('keys_flat_filtered:', keys_flat_filtered)
         self.workflow_keys = keys_flat_filtered
