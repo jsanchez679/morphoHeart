@@ -10106,50 +10106,53 @@ class MainWindow(QMainWindow):
     def user_clean(self): 
         wf_info = self.organ.mH_settings['wf_info']
         if 'cleanup' in wf_info.keys():
-            done_all = []
-            for ch in wf_info['cleanup']:
-                if 'ch' in ch:
-                    done = []
-                    workflow_ch = self.organ.workflow['morphoHeart']['ImProc'][ch]['E-CleanCh']
-                    for cont in wf_info['cleanup'][ch]['cont']:
-                        cB = getattr(self, 'clean_'+ch+'_'+cont)
-                        cB.setChecked(True)
-                        done.append(workflow_ch['Info'][cont]['Status'])
-                    with_ch = getattr(self, 'clean_withch_'+ch)
-                    with_ch.setCurrentText(wf_info['cleanup'][ch]['with_ch'])
-                    with_cont = getattr(self, 'clean_withcont_'+ch)
-                    with_cont.setCurrentText(wf_info['cleanup'][ch]['with_cont'])
-                    inv = getattr(self, 'inverted_'+ch)
-                    inv.setChecked(wf_info['cleanup'][ch]['inverted'])
-                    
-                    if all(flag == 'DONE' for flag in done):
-                        plot_btn = getattr(self, 'cleanup_plot_'+ch)
-                        plot_btn.setEnabled(True)
-                        done_all.append(True)
-                    else: 
-                        done_all.append(False)
-        
-            if wf_info['cleanup']['plot2d']: 
-                self.clean_plot2d.setChecked(True)
-                self.clean_n_slices.setValue(wf_info['cleanup']['n_slices'])
-
-            if all(done_all):
-                #Toggle Button
-                self.cleanup_set.setChecked(True)
-                self.cleanup_play.setChecked(True)
-                self.reset_cleaned_s3s.setEnabled(True)
-                #Enable other buttons
-                self.clean_plot.setEnabled(True)
-                #Update Status in GUI
-                self.update_status(None, 'DONE', self.cleanup_status, override=True)
-                self.cleanup_open.setChecked(True)
-                self.open_section(name = 'cleanup')
-            elif any(done_all):
-                #Update Status in GUI
-                self.update_status(None, 'Initialised', self.cleanup_status, override=True)
+            if wf_info['cleanup'] != None: 
+                done_all = []
+                for ch in wf_info['cleanup']:
+                    if 'ch' in ch:
+                        done = []
+                        workflow_ch = self.organ.workflow['morphoHeart']['ImProc'][ch]['E-CleanCh']
+                        for cont in wf_info['cleanup'][ch]['cont']:
+                            cB = getattr(self, 'clean_'+ch+'_'+cont)
+                            cB.setChecked(True)
+                            done.append(workflow_ch['Info'][cont]['Status'])
+                        with_ch = getattr(self, 'clean_withch_'+ch)
+                        with_ch.setCurrentText(wf_info['cleanup'][ch]['with_ch'])
+                        with_cont = getattr(self, 'clean_withcont_'+ch)
+                        with_cont.setCurrentText(wf_info['cleanup'][ch]['with_cont'])
+                        inv = getattr(self, 'inverted_'+ch)
+                        inv.setChecked(wf_info['cleanup'][ch]['inverted'])
+                        
+                        if all(flag == 'DONE' for flag in done):
+                            plot_btn = getattr(self, 'cleanup_plot_'+ch)
+                            plot_btn.setEnabled(True)
+                            done_all.append(True)
+                        else: 
+                            done_all.append(False)
             
-            #Run Set Function 
-            self.set_clean() 
+                if wf_info['cleanup']['plot2d']: 
+                    self.clean_plot2d.setChecked(True)
+                    self.clean_n_slices.setValue(wf_info['cleanup']['n_slices'])
+
+                if all(done_all):
+                    #Toggle Button
+                    self.cleanup_set.setChecked(True)
+                    self.cleanup_play.setChecked(True)
+                    self.reset_cleaned_s3s.setEnabled(True)
+                    #Enable other buttons
+                    self.clean_plot.setEnabled(True)
+                    #Update Status in GUI
+                    self.update_status(None, 'DONE', self.cleanup_status, override=True)
+                    self.cleanup_open.setChecked(True)
+                    self.open_section(name = 'cleanup')
+                elif any(done_all):
+                    #Update Status in GUI
+                    self.update_status(None, 'Initialised', self.cleanup_status, override=True)
+                
+                #Run Set Function 
+                self.set_clean() 
+            else: 
+                pass
         else: 
             pass
 
