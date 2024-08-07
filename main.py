@@ -195,6 +195,7 @@ class Controller:
             self.main_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
             self.init_main_win()
         win.close()
+        setattr(self, parent_win, None)
         self.main_win.show()
 
     def show_analysis_window(self, parent_win:str, single_proj:bool): 
@@ -791,7 +792,7 @@ class Controller:
                     organ_dict = {'settings': organ_settings, 
                                 'img_dirs': self.new_organ_win.img_dirs}
 
-                    self.organ = mHC.Organ(project=self.proj, organ_dict=organ_dict, new = True)
+                    self.organ = mHC.Organ(project=self.proj, organ_dict=organ_dict, new = True, ave_hm=False)
                     self.new_organ_win.lab_filled_organ_dir.setText(str(self.organ.dir_res()))
 
                     self.proj.add_organ(self.organ)

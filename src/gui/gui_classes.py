@@ -13549,6 +13549,8 @@ class MainWindow(QMainWindow):
                 valuef = "%.2f" % value
             elif isinstance(value, str): 
                 valuef = value
+            elif isinstance(value, np.bool_):
+                valuef = 'TBO'
             else: 
                 print('Weird value in df_res: ', type(value))
                 valuef = value
