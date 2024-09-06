@@ -5543,6 +5543,7 @@ class ProjSettings(QDialog):
     def init_segm_sect_group(self):
         sp_set = self.proj.mH_settings['setup']['segm-sect']
         self.tick_segm_sect.setChecked(True)
+        self.set_segm_sect.setEnabled(True)
 
         for scut in ['sCut1', 'sCut2']: 
             if scut in sp_set.keys(): 
@@ -5552,11 +5553,11 @@ class ProjSettings(QDialog):
                             ch, cont = ch_cont.split('_')
                             getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont+'_2').setChecked(True)
                     else: 
-                        getattr(self, 'lab_segm'+scut[-1]+'sect'+rcut[-1]).setVisible(False)   
+                        getattr(self, 'lab_segm'+scut[-1]+'_sect'+rcut[-1]).setVisible(False)   
                         for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
                             for cont in ['int', 'tiss', 'ext']: 
-                                getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
-                        self.line_19.setVisible(False)
+                                getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont+'_2').setVisible(False)
+                        # self.line_19.setVisible(False)
             else: 
                 getattr(self, 'segm_reg_cut2_2').setVisible(False)
 

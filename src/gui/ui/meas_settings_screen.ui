@@ -189,7 +189,7 @@ QScrollBar::handle:vertical:hover {
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>0</y>
+           <y>-72</y>
            <width>793</width>
            <height>639</height>
           </rect>
@@ -10443,7 +10443,7 @@ border-color: #672146
               <item>
                <widget class="QTextEdit" name="hm_text">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="minimumSize">
                  <size>
@@ -10482,7 +10482,7 @@ p, li { white-space: pre-wrap; }
                 <item>
                  <widget class="QLabel" name="hm_lab_ch">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
