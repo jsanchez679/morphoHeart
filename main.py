@@ -195,7 +195,8 @@ class Controller:
             self.main_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
             self.init_main_win()
         win.close()
-        setattr(self, parent_win, None)
+        if parent_win == 'new_organ_win':
+            setattr(self, parent_win, None)
         self.main_win.show()
 
     def show_analysis_window(self, parent_win:str, single_proj:bool): 

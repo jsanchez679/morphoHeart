@@ -252,13 +252,23 @@ def make_Paths(load_dict):
     dir_keys = [key.split(':') for key in flat_dict.keys() if 'dir' in key and 'direction' not in key and 'extended_dir' not in key]
     # print(dir_keys)
     for key in dir_keys:
-        # print('key:', key)
         value = get_by_path(load_dict, key)
-        # print('value:', value)
-        if isinstance(value, dict) and len(value) == 0: 
+        # print('key:', key)
+        # # print('value:', value)
+        # if isinstance(value, dict) and len(value) == 0: 
+        #     pass
+        # elif value != None and value != 'NotAssigned' and not isinstance(value, bool):
+        #     set_by_path(load_dict, key, Path(value))
+        if isinstance(value, str):
+            if 'R_' in value or '\\' in value or '.tif' in value:
+                print('key:', key)
+                print('value:', value, '-', type(value))
+                set_by_path(load_dict, key, Path(value))
+                print('set_by_path: DONE')
+            else: 
+                pass
+        else: 
             pass
-        elif value != None and value != 'NotAssigned' and not isinstance(value, bool):
-            set_by_path(load_dict, key, Path(value))
     
     return load_dict
 
