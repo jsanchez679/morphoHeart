@@ -1434,10 +1434,12 @@ def run_heatmaps3D(controller, btn):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
                         all_all_done.append('DONE')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     elif any(flag == 'DONE' for flag in all_done):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
                         all_all_done.append('Initialised')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     else: 
                         pass
                 else: 
