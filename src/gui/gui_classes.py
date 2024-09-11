@@ -14721,12 +14721,15 @@ class MainWindow(QMainWindow):
         if isinstance(ext_ch, str) and ext_ch == 'independent':
             ext_ch = self.organ.obj_imChannels[list(self.organ.obj_imChannels.keys())[0]]
         
-        centreline = self.gui_orientation['roi']['centreline'].split('(')[1].split(')')[0]
-        ch, cont = centreline.split('_')
         if name == 'stack': 
             linLine = []
         else: 
-            linLine = self.organ.obj_meshes[ch+'_'+cont].get_linLine(color='gold')
+            if self.gui_orientation['roi']['method'] == 'Manual':
+                linLine = []
+            else: 
+                centreline = self.gui_orientation['roi']['centreline'].split('(')[1].split(')')[0]
+                ch, cont = centreline.split('_')
+                linLine = self.organ.obj_meshes[ch+'_'+cont].get_linLine(color='gold')
 
         mesh_ext = self.organ.obj_meshes[ext_ch.channel_no+'_tiss']
         cubes = getattr(self.organ, name+'_cube')
