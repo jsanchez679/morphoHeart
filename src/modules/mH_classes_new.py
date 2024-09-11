@@ -1917,6 +1917,8 @@ class Organ():
         angle = find_angle_btw_pts(pts, ref_vectF)
         if angle > 90: 
             angle = angle - 90
+            if angle > 45: 
+                angle = 90 - angle
         
         pos = cl_mesh.mesh.center_of_mass()
         side = max(self.get_maj_bounds())  
