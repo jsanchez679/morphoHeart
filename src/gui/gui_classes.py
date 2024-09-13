@@ -10023,6 +10023,7 @@ class MainWindow(QMainWindow):
         self.btn_save_video.clicked.connect(lambda: self.create_user_video())
         self.plot_clear_All.clicked.connect(lambda: self.update_plot('del', 'all'))
         self.combo_axes.setCurrentText('13')
+        self.q_axes.clicked.connect(lambda: webbrowser.open(mH_config.link2vedo_plotter))
 
         self.alpha1.valueChanged.connect(lambda: self.update_plot('alpha', '1'))
         self.alpha2.valueChanged.connect(lambda: self.update_plot('alpha', '2'))
@@ -13231,6 +13232,7 @@ class MainWindow(QMainWindow):
                 if changed: 
                     getattr(self, 'radio_'+cut.lower()+'_dir'+no).setChecked(True)
                     self.sections_set.setChecked(False)
+                    getattr(self, 'cl_ext_'+cut.lower()).setEnabled(False)
                     self.win_msg('!Remember to re-set the settings for this '+cut+' to make sure all the changes are applied.')
                     alert('bubble')
                 else:
@@ -15771,6 +15773,7 @@ class MultipAnalysisWindow(QMainWindow):
         self.btn_browse_folder.clicked.connect(lambda: select_video_path(win=self))
         self.plot_clear_All.clicked.connect(lambda: update_plot(win=self, key='del', num='all'))
         self.combo_axes.setCurrentText('13')
+        self.q_axes.clicked.connect(lambda: webbrowser.open(mH_config.link2vedo_plotter))
 
         self.fillcolor_no1.clicked.connect(lambda: color_picker(win=self, name = 'no1'))
         self.fillcolor_no2.clicked.connect(lambda: color_picker(win=self, name = 'no2'))

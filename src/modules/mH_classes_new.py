@@ -2974,7 +2974,7 @@ class Mesh_mH():
             print('>> Reload mesh - ', self.name)
             new = False
             self.reload_mesh(mesh_prop, new_set)
-            
+        
         self.mesh.color(self.color)
         self.mesh.alpha(self.alpha)
         if new or new_set: 
@@ -3028,11 +3028,20 @@ class Mesh_mH():
 
         if self.channel_no != 'chNS': 
             color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
         else:
             color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
         
+        if isinstance(alpha, list):
+            alpha = 0.05
+            if self.channel_no != 'chNS': 
+                self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type] = alpha
+            else:  
+                self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type] = alpha
+        self.alpha = alpha
+        
+        print('self.alpha:', self.alpha)
         if isinstance(color, str) and '[' in color: 
             rr,gg,bb = color[1:-1].split(',')
             color = [int(rr), int(gg), int(bb)]
@@ -3425,7 +3434,7 @@ class Mesh_mH():
         
         pl_linLine_unitNormal = unit_vector(pl_normal)
         maj_bound =(max(self.parent_organ.get_maj_bounds())/2)*2
-        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound
+        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound*2
 
         if clRib_type == 'ext2sides': # Names are switched but it works
             x_cl, y_cl, z_cl = pl_linLine_unitNormal120
@@ -3435,7 +3444,7 @@ class Mesh_mH():
             cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(2-sides)")
     
         elif clRib_type == 'ext1side':
-            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*15
+            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*maj_bound
             cl_ribbon = []
             for i in range(10):
                 kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)
