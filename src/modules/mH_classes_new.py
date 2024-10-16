@@ -917,7 +917,7 @@ class Project():
         self.organs = organs
         self.save_project()
 
-    def load_organ(self, organ_to_load:str):#
+    def load_organ(self, organ_to_load:str, single_organ=True, ave_hm=False):#
 
         organ_folder = self.organs[organ_to_load]['user_organName']
         dir_res = Path(self.dir_proj) / organ_folder
@@ -928,7 +928,7 @@ class Project():
                 print(">> "+jsonDict_name+": Opening JSON encoded data")
                 dict_out = json.load(read_file)
             organ_dict = {'load_dict': dict_out}
-            organ = Organ(project=self, organ_dict=organ_dict, new=False)
+            organ = Organ(project=self, organ_dict=organ_dict, new=False, ave_hm=ave_hm)
         else: 
             organ = None
             print('>> Error: No organ name with name ',self.organs[organ_to_load]['user_organName'],' was found!\n Directory: ',str(json2open_dir))
@@ -939,7 +939,7 @@ class Project():
 class Organ():
     'Organ Class'
     
-    def __init__(self, project:Project, organ_dict:dict, new:bool):# 
+    def __init__(self, project:Project, organ_dict:dict, new:bool, ave_hm:bool):# 
         
         self.parent_project = project
         self.on_hold = False
@@ -972,10 +972,11 @@ class Organ():
                     self.objects['Spheres']['cut4cl'] = {'bottom': {}, 'top':{}}
                     self.objects['Centreline'] = {}
             if self.analysis['morphoCell']: #ABC 
-                self.mC_settings = copy.deepcopy(project.mC_settings)
-                self.imChannelsMC = {}
-                self.obj_imChannelsMC = {}
-                self.cellsMC = {}
+                if len(project.mC_settings['setup'])>0:
+                    self.mC_settings = copy.deepcopy(project.mC_settings)
+                    self.imChannelsMC = {}
+                    self.obj_imChannelsMC = {}
+                    self.cellsMC = {}
 
             self.workflow = copy.deepcopy(project.workflow) 
             self.create_folders(project.analysis) 
@@ -983,7 +984,7 @@ class Organ():
         else: 
             print('\nLoading organ!')
             load_dict = organ_dict['load_dict']
-            self.load_organ(load_dict=load_dict)
+            self.load_organ(load_dict=load_dict, ave_hm=ave_hm)
 
     def create_mHName(self): #
         now_str = datetime.now().strftime('%Y%m%d%H%M')
@@ -1003,7 +1004,7 @@ class Organ():
                 else:
                     cells_ch = self.create_cells(ch_name=ch_nameMC)
 
-    def load_organ(self, load_dict:dict):#
+    def load_organ(self, load_dict:dict, ave_hm:bool):#
         load_dict = make_Paths(load_dict)
 
         self.info = load_dict['Organ']
@@ -1049,7 +1050,10 @@ class Organ():
             self.load_objImChannelNS()
             # meshes
             self.meshes = load_dict['meshes']
-            self.load_objMeshes()
+            if not ave_hm: 
+                self.load_objMeshes()
+            else: 
+                self.obj_meshes = {}
             # submeshes
             if 'submeshes' in load_dict.keys():
                 submeshes_dict = load_dict['submeshes']
@@ -1057,10 +1061,14 @@ class Organ():
                 list_colors = [key.split(':') for key in flat_subm_dict if 'color' in key]
                 submeshes_dict_new = make_tuples(submeshes_dict, list_colors)
                 self.submeshes = submeshes_dict_new
-                self.load_objSubmeshes(submeshes_dict)
+                if not ave_hm: 
+                    self.load_objSubmeshes(submeshes_dict)
+                    print('>>>> Loaded submeshes: ', self.submeshes)
+                else: 
+                    self.obj_subm = {}
             else: 
                 self.submeshes = {}
-            print('>>>> Loaded submeshes: ', self.submeshes)
+            
             #obj_temp
             if 'obj_temp' in load_dict.keys():
                 self.obj_temp = load_dict['obj_temp']
@@ -1068,34 +1076,36 @@ class Organ():
             
         if self.analysis['morphoCell']:
             # mC_Settings
-            self.mC_settings = load_dict['mC_settings']
-            try: 
-                zz_names = {}
-                for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
-                    zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
-                self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
-                print('Modified mC_settings - name_zones')
-            except:
-                pass
+            if 'mC_settings' in load_dict.keys():
+                if len(load_dict['mC_settings']['setup'])>0:
+                    self.mC_settings = load_dict['mC_settings']
+                    try: 
+                        zz_names = {}
+                        for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
+                            zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
+                        self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
+                        print('Modified mC_settings - name_zones')
+                    except:
+                        pass
 
-            if 'measure' not in self.mC_settings: 
-                self.mC_settings['measure'] = {} 
+                    if 'measure' not in self.mC_settings: 
+                        self.mC_settings['measure'] = {} 
 
-            if 'imChannelMC' in load_dict.keys():
-                self.imChannelsMC = load_dict['imChannelMC']
-                self.load_objImChannelMC()
-            if 'cells_MC' in load_dict.keys(): 
-                self.cellsMC = load_dict['cells_MC']
-                self.load_objCells()
+                    if 'imChannelMC' in load_dict.keys():
+                        self.imChannelsMC = load_dict['imChannelMC']
+                        self.load_objImChannelMC()
+                    if 'cells_MC' in load_dict.keys(): 
+                        self.cellsMC = load_dict['cells_MC']
+                        self.load_objCells()
 
-            if 'B-Zones' in self.workflow['morphoCell']: 
-                if len(self.workflow['morphoCell']['B-Zones']) == 1: 
-                    print('Adding wf to Zones')
-                    #Get all zones and add Status NI to all
-                    zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
-                    for zone in zone_all: 
-                        self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
-        
+                    if 'B-Zones' in self.workflow['morphoCell']: 
+                        if len(self.workflow['morphoCell']['B-Zones']) == 1: 
+                            print('Adding wf to Zones')
+                            #Get all zones and add Status NI to all
+                            zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
+                            for zone in zone_all: 
+                                self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
+
         if 'orientation' in self.mH_settings['wf_info'].keys():
             self.load_orient_cubes()
         
@@ -1603,36 +1613,37 @@ class Organ():
             all_info['obj_temp'] = obj_temp
             
         if self.analysis['morphoCell']:
-            #ABC what else is there to save from MC 
-            all_info['mC_settings'] = self.mC_settings
+            if 'mC_settings' in all_info.keys():
+                #ABC what else is there to save from MC 
+                all_info['mC_settings'] = self.mC_settings
 
-            image_dictMC = copy.deepcopy(self.imChannelsMC)
-            for chMC in image_dictMC.keys():
-                image_dictMC[chMC].pop('parent_organ', None)
-            all_info['imChannelMC'] = image_dictMC
+                image_dictMC = copy.deepcopy(self.imChannelsMC)
+                for chMC in image_dictMC.keys():
+                    image_dictMC[chMC].pop('parent_organ', None)
+                all_info['imChannelMC'] = image_dictMC
 
-            try: 
-                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
-                                    'channel_no': self.cellsMC['chA']['channel_no'], 
-                                    'user_chName': self.cellsMC['chA']['user_chName'],
-                                    'dir_cells': self.cellsMC['chA']['dir_cells'],
-                                    'dir_cho': self.cellsMC['chA']['dir_cho'],
-                                    'dir_img': self.cellsMC['chA']['dir_img'],
-                                    'resolution': self.cellsMC['chA']['resolution'], 
-                                    'shape': self.cellsMC['chA']['shape']}}
-                print('try saving cells')
-            except:
-                print('except saving cells')
-                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
-                                'channel_no': self.cellsMC['chA'].channel_no, 
-                                'user_chName': self.cellsMC['chA'].user_chName,
-                                'dir_cells': self.cellsMC['chA'].dir_cells,
-                                'dir_cho': self.cellsMC['chA'].dir_cho,
-                                'dir_img': self.cellsMC['chA'].dir_img,
-                                'resolution': self.cellsMC['chA'].resolution, 
-                                'shape': self.cellsMC['chA'].shape}}
+                try: 
+                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
+                                        'channel_no': self.cellsMC['chA']['channel_no'], 
+                                        'user_chName': self.cellsMC['chA']['user_chName'],
+                                        'dir_cells': self.cellsMC['chA']['dir_cells'],
+                                        'dir_cho': self.cellsMC['chA']['dir_cho'],
+                                        'dir_img': self.cellsMC['chA']['dir_img'],
+                                        'resolution': self.cellsMC['chA']['resolution'], 
+                                        'shape': self.cellsMC['chA']['shape']}}
+                    print('try saving cells')
+                except:
+                    print('except saving cells')
+                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
+                                    'channel_no': self.cellsMC['chA'].channel_no, 
+                                    'user_chName': self.cellsMC['chA'].user_chName,
+                                    'dir_cells': self.cellsMC['chA'].dir_cells,
+                                    'dir_cho': self.cellsMC['chA'].dir_cho,
+                                    'dir_img': self.cellsMC['chA'].dir_img,
+                                    'resolution': self.cellsMC['chA'].resolution, 
+                                    'shape': self.cellsMC['chA'].shape}}
 
-            all_info['cells_MC'] = cells_MC
+                all_info['cells_MC'] = cells_MC
 
         all_info['workflow'] = self.workflow
 
@@ -1906,6 +1917,8 @@ class Organ():
         angle = find_angle_btw_pts(pts, ref_vectF)
         if angle > 90: 
             angle = angle - 90
+            if angle > 45: 
+                angle = 90 - angle
         
         pos = cl_mesh.mesh.center_of_mass()
         side = max(self.get_maj_bounds())  
@@ -2961,7 +2974,7 @@ class Mesh_mH():
             print('>> Reload mesh - ', self.name)
             new = False
             self.reload_mesh(mesh_prop, new_set)
-            
+        
         self.mesh.color(self.color)
         self.mesh.alpha(self.alpha)
         if new or new_set: 
@@ -3015,11 +3028,20 @@ class Mesh_mH():
 
         if self.channel_no != 'chNS': 
             color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
         else:
             color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
         
+        if isinstance(alpha, list):
+            alpha = 0.05
+            if self.channel_no != 'chNS': 
+                self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type] = alpha
+            else:  
+                self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type] = alpha
+        self.alpha = alpha
+        
+        print('self.alpha:', self.alpha)
         if isinstance(color, str) and '[' in color: 
             rr,gg,bb = color[1:-1].split(',')
             color = [int(rr), int(gg), int(bb)]
@@ -3260,7 +3282,6 @@ class Mesh_mH():
             if dir_mesh.is_file() and dir_npy.is_file():
                 name = 'Thickness'
                 title = self.legend+'\n'+name+' [um]\n('+n_type.replace('TO','>')+')'
-                print('fix this!!! ')
                 if n_type == 'intTOext': 
                     short = 'th_i2e['+self.name.replace('_', '-')+']'
                 else:
@@ -3413,7 +3434,7 @@ class Mesh_mH():
         
         pl_linLine_unitNormal = unit_vector(pl_normal)
         maj_bound =(max(self.parent_organ.get_maj_bounds())/2)*2
-        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound
+        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound*2
 
         if clRib_type == 'ext2sides': # Names are switched but it works
             x_cl, y_cl, z_cl = pl_linLine_unitNormal120
@@ -3423,7 +3444,7 @@ class Mesh_mH():
             cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(2-sides)")
     
         elif clRib_type == 'ext1side':
-            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*15
+            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*maj_bound
             cl_ribbon = []
             for i in range(10):
                 kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)

@@ -1,4 +1,4 @@
-name: mH_gui
+name: morphoHeart
 channels:
   - conda-forge
   - defaults
@@ -154,6 +154,7 @@ dependencies:
       - guiqwt==4.4.1
       - idna==3.4
       - imageio==2.31.3
+      - imageio-ffmpeg==0.4.9
       - importlib-resources==6.0.1
       - kiwisolver==1.4.5
       - markdown==3.4.4
@@ -190,4 +191,4 @@ dependencies:
       - urllib3==2.0.4
       - vedo==2023.4.4
       - wrapt==1.15.0
-prefix: D:\Applications\Miniconda\envs\mH_gui
+prefix: D:\Applications\Miniconda\envs\morphoHeart

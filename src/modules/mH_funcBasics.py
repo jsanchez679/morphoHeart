@@ -180,17 +180,17 @@ def update_gui_set(loaded:dict, current:dict):
     flat_loaded = flatdict.FlatDict(loaded)
     flat_current = flatdict.FlatDict(current)
     current_keys = flat_current.keys()
+    loaded_keys = flat_loaded.keys()
 
     changed = False
     final_dict = copy.deepcopy(loaded)
     for key in current_keys: 
         # print('>>', key)
         value_current = get_by_path(current, key.split(':'))
-        # print('current:',value_current)
-        try: 
+        print('current:', value_current)
+        try: #The value already existed in the loaded dictionary
             value_loaded = get_by_path(loaded, key.split(':'))
-            # print('loaded:',value_loaded)
-
+            print('value_loaded:',value_loaded)
             if value_current != value_loaded:
                 print('value_current != value_loaded:', value_current, value_loaded, '- key: ', key)
                 if value_current == {} and isinstance(value_loaded, dict): 
@@ -199,8 +199,8 @@ def update_gui_set(loaded:dict, current:dict):
                 else: 
                     set_by_path(final_dict, key.split(':'),value_current)
                     changed = True
-        except: 
-            # print('add key to loaded!')
+        except: #The value doesn't exist in the loaded dictionary
+            print('add key to loaded!')
             changed = True
             try: 
                 set_by_path(final_dict, key.split(':'), value_current)
@@ -252,13 +252,23 @@ def make_Paths(load_dict):
     dir_keys = [key.split(':') for key in flat_dict.keys() if 'dir' in key and 'direction' not in key and 'extended_dir' not in key]
     # print(dir_keys)
     for key in dir_keys:
-        # print('key:', key)
         value = get_by_path(load_dict, key)
-        # print('value:', value)
-        if isinstance(value, dict) and len(value) == 0: 
+        # print('key:', key)
+        # # print('value:', value)
+        # if isinstance(value, dict) and len(value) == 0: 
+        #     pass
+        # elif value != None and value != 'NotAssigned' and not isinstance(value, bool):
+        #     set_by_path(load_dict, key, Path(value))
+        if isinstance(value, str):
+            if 'R_' in value or '\\' in value or '.tif' in value:
+                print('key:', key)
+                print('value:', value, '-', type(value))
+                set_by_path(load_dict, key, Path(value))
+                print('set_by_path: DONE')
+            else: 
+                pass
+        else: 
             pass
-        elif value != None and value != 'NotAssigned' and not isinstance(value, bool):
-            set_by_path(load_dict, key, Path(value))
     
     return load_dict
 

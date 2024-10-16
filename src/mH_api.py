@@ -885,6 +885,7 @@ def get_trimming_planes(organ, gui_trim, win):
             else: 
                 no_cut.append(ch+'_'+cont)
     print('settings:', settings)
+    settings['process'] = 'trimming'
 
     # User user input to select which meshes need to be cut
     cuts_names = {'top': {'heart_def': 'outflow tract','other': 'top'},
@@ -914,6 +915,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut bottom
         while not happy: 
+            settings['direction'] = 'bottom'
             plane_bott, pl_dict_bott = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['bottom'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)  
@@ -937,6 +939,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut top
         while not happy: 
+            settings['direction'] = 'top'
             plane_top, pl_dict_top = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['top'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)
@@ -1431,10 +1434,12 @@ def run_heatmaps3D(controller, btn):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
                         all_all_done.append('DONE')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     elif any(flag == 'DONE' for flag in all_done):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
                         all_all_done.append('Initialised')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     else: 
                         pass
                 else: 
@@ -2037,9 +2042,10 @@ def reduce_space(controller, info):
     title = 'Are you sure you want to reduce space in disk...' 
     if info == 'segm':
         msg = ['Are you sure you want to reduce organ size by removing all unnecessary segments (*.vtk files) from disk? If so, select  -OK-, else select  -Cancel-.',
-                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
+                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layer segments from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
     
-    prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), wdg_size=[[433,50],[433,100]],
+    prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), 
+                              wdg_size=[[433,50],[433,100]],
                               parent=controller.main_win)
     prompt.exec()
     print('output:', prompt.output)
@@ -2707,7 +2713,10 @@ def run_remove_cells(controller):
     getattr(controller.main_win, 'remove_cells_play').setChecked(True)
     proc_wft = ['A-CleanCells', 'Status']
     controller.organ.update_mCworkflow(process = proc_wft, update = 'DONE')
-    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)    
+    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)   
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
 
 def run_segments_mC(controller, btn): 
 
@@ -2800,6 +2809,8 @@ def run_segments_mC(controller, btn):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_segments_status)
+    #Update Table
+    controller.main_win.fill_cell_results() 
             
 def get_segm_planes(organ, cut, win): 
 
@@ -2905,6 +2916,9 @@ def run_IND_segm(controller, plot=True):
             
             #Enable plot button
             getattr(controller.main_win, cut.lower()+'_IND_'+ss+'_plot').setEnabled(True)
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
 
 def run_zones(controller, zone): 
     
@@ -3030,4 +3044,6 @@ def run_zones(controller, zone):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_zones_status)
-            
+    
+    #Update Table
+    controller.main_win.fill_cell_results() 

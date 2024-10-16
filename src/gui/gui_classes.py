@@ -7,7 +7,7 @@ morphoHeart_GUI_classes
 from PyQt6 import uic
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import (pyqtSlot, QDate, Qt, QRegularExpression, QRect, QSize, QAbstractTableModel, QEvent,
-                            QObject, QThread, pyqtSignal)
+                            QObject, QThread, pyqtSignal, QModelIndex)
 from PyQt6.QtWidgets import (QDialog, QApplication, QMainWindow, QWidget, QFileDialog, QTabWidget,
                               QGridLayout, QVBoxLayout, QHBoxLayout, QLayout, QLabel, QPushButton, QLineEdit,
                               QColorDialog, QTableWidgetItem, QCheckBox, QTreeWidgetItem, QSpacerItem, QSizePolicy, 
@@ -63,6 +63,8 @@ from .config import mH_config
 path_mHImages = mH_config.path_mHImages
 # Load logo
 path_logo = path_mHImages / 'logo-07.jpg'
+path_bkgd = path_mHImages / 'white_background.png'
+
 logo = vedo.Picture(str(path_logo))
 
 #%% Set default fonts and sizes for plots
@@ -737,7 +739,7 @@ class Process_ongoing(QDialog):
                 win.win_msg('Creating filtered heatmap -'+name_hm+'- for '+organ_name+'...')
                 filt_hm = get_filtered_hms(self, hm2d_sel, hm_sel, div_sel, opt_sel)
                 filt_hm.to_csv(dir_df)
-            alert('woohoo')
+                alert('woohoo')
             n += 1
             self.prog_bar_all.setValue(n)
         
@@ -745,6 +747,54 @@ class Process_ongoing(QDialog):
 
         self.ok_button.setEnabled(True)
         self.win_msg('All heatmaps have been successfully filtered!')
+
+class Process_loading_organs(QDialog):
+    def __init__(self, title:str, parent=None):
+        super().__init__(parent)
+        uic.loadUi(str(mH_config.path_ui / 'loading_multi_organs.ui'), self)
+        self.setWindowTitle(title)
+        self.mH_logo_XS.setPixmap(QPixmap(mH_top_corner))
+        self.setWindowIcon(QIcon(mH_icon))
+        self.output = None
+
+        self.setModal(True)
+        self.show()
+    
+    def load_organs(self, df_pando, dict_projs, single_proj, controller, ave_hm):
+
+        proj_num = []
+        dict_organs = {}
+        n=0
+        for index, row in df_pando.iterrows():
+            print(index, row)
+            #Get values from organ
+            org_proj_name = row['user_projName']
+            org_proj_path = row['proj_path']
+            for nk in dict_projs.keys(): 
+                pj_proj_name = dict_projs[nk]['proj_name']
+                pj_proj_path = dict_projs[nk]['proj_path']
+                if org_proj_name == pj_proj_name and str(org_proj_path) == str(pj_proj_path):
+                    proj_num.append(nk)
+                    break
+            org_name = row['user_organName']
+            # self.organ_name.setText(org_name)
+            organ = controller.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
+                                            single_organ=False, ave_hm=ave_hm)
+            dict_organs[index] = {'organ_name': org_name, 
+                                  'organ': organ}
+            if not single_proj: 
+                dict_organs[index]['proj_name'] = row['user_projName']
+                dict_organs[index]['proj_num'] = nk
+            n += 1
+
+        df_pando['proj_num'] = proj_num
+        self.win_msg('All organs have been loaded!')
+        self.ok_button.setEnabled(True)
+
+        return df_pando, dict_projs, dict_organs
+
+    def win_msg(self, msg):
+        self.tE_validate.setText(msg) 
 
 class CreateNewProj(QDialog):
 
@@ -4012,32 +4062,34 @@ class NewOrgan(QDialog):
         if proj.analysis['morphoCell']: 
             #-mC
             mC_channels = proj.mC_channels
-            mH_ch = proj.mC_settings['setup']['mH_channel']
-            print('mH_ch:', mH_ch)
-            for ch in ['chA', 'chB', 'chC', 'chD']: 
-                label = getattr(self, 'lab_'+ch) 
-                name = getattr(self, 'lab_filled_name_'+ch)
-                brw_ch = getattr(self, 'browse_'+ch)
-                dir_ch = getattr(self, 'lab_filled_dir_'+ch)
-                check_ch = getattr(self, 'check_'+ch)
+            if len(mC_channels)>0:
+                for ch in ['chA', 'chB', 'chC', 'chD']: 
+                    label = getattr(self, 'lab_'+ch) 
+                    name = getattr(self, 'lab_filled_name_'+ch)
+                    brw_ch = getattr(self, 'browse_'+ch)
+                    dir_ch = getattr(self, 'lab_filled_dir_'+ch)
+                    check_ch = getattr(self, 'check_'+ch)
 
-                if ch not in mC_channels.keys():
-                    label.setVisible(False)
-                    name.setVisible(False)
-                    brw_ch.setVisible(False)
-                    dir_ch.setVisible(False)
-                    check_ch.setVisible(False)
-                else: 
-                    if ch != 'chA':
-                        if mH_ch[ch] != False: #ABC
-                            label.setEnabled(False)
-                            brw_ch.setEnabled(False)
-                            dir_ch.setEnabled(False)
-                            dir_ch.setText('Channel loaded from Morphological Analysis (morphoHeart)\t\t\t')
-                            check_ch.setEnabled(False)
+                    if ch not in mC_channels.keys():
+                        label.setVisible(False)
+                        name.setVisible(False)
+                        brw_ch.setVisible(False)
+                        dir_ch.setVisible(False)
+                        check_ch.setVisible(False)
+                    else: 
+                        if ch != 'chA':
+                            if proj.mC_settings['setup']['mC_channel'][ch] != False: #ABC
+                                label.setEnabled(False)
+                                brw_ch.setEnabled(False)
+                                dir_ch.setEnabled(False)
+                                dir_ch.setText('Channel loaded from Morphological Analysis (morphoHeart)\t\t\t')
+                                check_ch.setEnabled(False)
 
-                    name.setText(proj.mC_channels[ch])
-                    self.img_dirs[ch] = {}
+                        name.setText(proj.mC_channels[ch])
+                        self.img_dirs[ch] = {}
+            else:
+                self.tabWidget.setTabVisible(1, False)
+        
         print('self.img_dirs:',self.img_dirs)
         
     def init_tabs(self, proj): 
@@ -4264,7 +4316,6 @@ class NewOrgan(QDialog):
                         error_txt = "*Please load the images (and masks) for all the organ's channels (morphoHeart)."
                         self.win_msg(error_txt, self.button_create_new_organ)
                         return False
-                    
 
                     paths_chs.append(self.img_dirs[ch]['image']['dir'])
                     paths.append(self.img_dirs[ch]['image']['dir'])
@@ -4273,38 +4324,40 @@ class NewOrgan(QDialog):
 
         
         if proj.analysis['morphoCell']: 
-            mH_ch = proj.mC_settings['setup']['mH_channel']
-            for ch in proj.mC_channels.keys(): 
-                if len(self.img_dirs[ch]) < 1: 
-                    if ch != 'chA':
-                        if mH_ch[ch] != False:
-                            mH_ch2use = mH_ch[ch].split(' (')[0]
-                            dir2use = self.img_dirs[mH_ch2use]
-                            self.img_dirs[ch] = dir2use
+            mC_channels = proj.mC_channels
+            if len(mC_channels)>0:
+                mH_ch = proj.mC_settings['setup']['mC_channel']
+                for ch in proj.mC_channels.keys(): 
+                    if len(self.img_dirs[ch]) < 1: 
+                        if ch != 'chA':
+                            if mH_ch[ch] != False:
+                                mH_ch2use = mH_ch[ch].split(' (')[0]
+                                dir2use = self.img_dirs[mH_ch2use]
+                                self.img_dirs[ch] = dir2use
+                            else: 
+                                error_txt = "*Please load the images (and masks) for all the organ's channels (morphoCell)."
+                                self.win_msg(error_txt, self.button_create_new_organ)
+                                return False
                         else: 
-                            error_txt = "*Please load the images (and masks) for all the organ's channels (morphoCell)."
+                            error_txt = "*Please load the cell positions data file for chA (morphoCell)."
                             self.win_msg(error_txt, self.button_create_new_organ)
                             return False
-                    else: 
-                        error_txt = "*Please load the cell positions data file for chA (morphoCell)."
-                        self.win_msg(error_txt, self.button_create_new_organ)
-                        return False
-                
-                if 'morphoCell' not in txt: 
-                    if len(txt) > 1: 
-                        txt = txt + ' & morphoCell)'
-                    else: 
-                        txt = txt + 'morphoCell'
+                    
+                    if 'morphoCell' not in txt: 
+                        if len(txt) > 1: 
+                            txt = txt + ' & morphoCell'
+                        else: 
+                            txt = txt + 'morphoCell'
 
-                if ch != 'chA':
-                    if mH_ch[ch] != False: #ABC
-                        pass
-                    else:  # == False
+                    if ch != 'chA':
+                        if mH_ch[ch] != False: #ABC
+                            pass
+                        else:  # == False
+                            paths_chs.append(self.img_dirs[ch]['image']['dir'])
+                            paths.append(self.img_dirs[ch]['image']['dir'])
+                    else:  # ch == chA
                         paths_chs.append(self.img_dirs[ch]['image']['dir'])
                         paths.append(self.img_dirs[ch]['image']['dir'])
-                else:  # ch == chA
-                    paths_chs.append(self.img_dirs[ch]['image']['dir'])
-                    paths.append(self.img_dirs[ch]['image']['dir'])
 
         txt = txt + ').'
         valid = [val.is_file() for val in paths]
@@ -4381,6 +4434,7 @@ class LoadProj(QDialog):
         self.multi_organ_checkboxes = None
         self.multi_organs_added = []
         self.added_organs_checkboxes = None
+        self.prog_bar.setValue(0)
 
         #Buttons
         self.button_load_organs.clicked.connect(lambda: self.load_proj_organs(proj=self.proj))
@@ -4402,29 +4456,11 @@ class LoadProj(QDialog):
         self.tab_select_organs.setCurrentIndex(0)
 
         self.set_filter_table()
-        self.filter_cB.model().dataChanged.connect(lambda: self.reload_data(obj = self.filter_cB, 
+        self.filter_cB.model().dataChanged.connect(lambda: reload_data(win = self, obj = self.filter_cB, 
                                                                                 atype = 'single'))
-        self.set_filter_table_comb()
-        self.filter_cB_comb.model().dataChanged.connect(lambda: self.reload_data(obj = self.filter_cB_comb, 
-                                                                                    atype = 'comb'))
-        
-    def reload_data(self, obj, atype): 
-        obj.updateLineEditField()
-        self.reload_table(atype = atype)
-
-        if atype == 'comb': 
-            all_cB = {'Strain': 'Strain' in self.filter_cB_comb.lineEdit().text(),
-                        'Stage': 'Stage' in self.filter_cB_comb.lineEdit().text(),
-                        'Date Created': 'Date Created' in self.filter_cB_comb.lineEdit().text(),
-                        'Notes': 'Notes' in self.filter_cB_comb.lineEdit().text()}
-
-            if len(self.multi_organs_added) > 0: 
-                fill_table_selected_organs(win=self, table = self.tabW_organs_final, 
-                                            blind_cB=self.cB_blind_comb, all_cB=all_cB, 
-                                            single_proj=True)
-            else: 
-                self.tabW_organs_final.clear()
-                self.tabW_organs_final.setRowCount(0)
+        set_filter_table_comb(win=self)
+        self.filter_cB_comb.model().dataChanged.connect(lambda: reload_data(win = self, obj = self.filter_cB_comb, 
+                                                                                atype = 'comb'))
 
     def win_msg(self, msg, btn=None): 
         if msg[0] == '*':
@@ -4468,13 +4504,13 @@ class LoadProj(QDialog):
         self.filter_cB.addItems(filter_opt)
         self.hlayout_filter.addWidget(self.filter_cB)
 
-    def set_filter_table_comb(self): 
-        filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False, 'morphoHeart':True}
-        self.filter_cB_comb = Checkable_ComboBox()
-        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
-        self.filter_cB_comb.setStyleSheet(styleSheet)
-        self.filter_cB_comb.addItems(filter_opt)
-        self.hlayout_filter_comb.addWidget(self.filter_cB_comb)
+    # def set_filter_table_comb(self): 
+    #     filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False, 'morphoHeart':True}
+    #     self.filter_cB_comb = Checkable_ComboBox()
+    #     styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+    #     self.filter_cB_comb.setStyleSheet(styleSheet)
+    #     self.filter_cB_comb.addItems(filter_opt)
+    #     self.hlayout_filter_comb.addWidget(self.filter_cB_comb)
 
     def init_tables(self, load):
         if load: 
@@ -4615,8 +4651,28 @@ class LoadProj(QDialog):
 def get_proj_wf(proj): 
     flat_wf = flatdict.FlatDict(copy.deepcopy(proj.workflow))
     #Make sure keep keys works for morphoCell
-    keep_keys = [key for key in flat_wf.keys() if len(key.split(':'))== 4 and 'Status' in key and 'morphoHeart' in key]
-    keep_keys_mC = [key for key in flat_wf.keys() if len(key.split(':'))== 3 and 'morphoCell' in key]
+    proc_to_check_if_included = ['morphoHeart:MeshesProc:C-Centreline','morphoHeart:MeshesProc:D-Ballooning', 
+                                 'morphoHeart:MeshesProc:D-Thickness_int>ext','morphoHeart:MeshesProc:D-Thickness_ext>int', 
+                                 'morphoHeart:MeshesProc:E-Segments','morphoHeart:MeshesProc:E-Sections', 
+                                 'morphoHeart:MeshesProc:E-Segments_Sections']
+    flat_wf_keys = flat_wf.keys()
+    for proc in proc_to_check_if_included: 
+        matching = [s for s in flat_wf_keys if proc in s]
+        if proc == 'morphoHeart:MeshesProc:C-Centreline':
+            if len(proj.mH_settings['measure']['CL']) == 0:
+                for kk in matching: 
+                    # print(kk)
+                    flat_wf_keys.remove(kk)
+        else: 
+            if len(matching) > 1:
+                pass
+            else: 
+                print(proc,len(matching), matching)
+                if len(matching) == 1:
+                    flat_wf_keys.remove(matching[0])
+
+    keep_keys = [key for key in flat_wf_keys if len(key.split(':'))== 4 and 'Status' in key and 'morphoHeart' in key]
+    keep_keys_mC = [key for key in flat_wf_keys if len(key.split(':'))== 3 and 'morphoCell' in key]
     # print('flat_wf.keys():', flat_wf.keys())
     for key in flat_wf.keys(): 
         if key not in keep_keys+keep_keys_mC: 
@@ -4627,6 +4683,32 @@ def get_proj_wf(proj):
             out_dict[keyi] = out_dict[keyi].as_dict()
 
     return flatdict.FlatDict(out_dict)
+
+def set_filter_table_comb(win): 
+    filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False, 'morphoHeart':True}
+    win.filter_cB_comb = Checkable_ComboBox()
+    styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+    win.filter_cB_comb.setStyleSheet(styleSheet)
+    win.filter_cB_comb.addItems(filter_opt)
+    win.hlayout_filter_comb.addWidget(win.filter_cB_comb)
+
+def reload_data(win, obj, atype): 
+        obj.updateLineEditField()
+        win.reload_table(atype = atype)
+
+        if atype == 'comb': 
+            all_cB = {'Strain': 'Strain' in win.filter_cB_comb.lineEdit().text(),
+                        'Stage': 'Stage' in win.filter_cB_comb.lineEdit().text(),
+                        'Date Created': 'Date Created' in win.filter_cB_comb.lineEdit().text(),
+                        'Notes': 'Notes' in win.filter_cB_comb.lineEdit().text()}
+
+            if len(win.multi_organs_added) > 0: 
+                fill_table_selected_organs(win=win, table = win.tabW_organs_final, 
+                                            blind_cB=win.cB_blind_comb, all_cB=all_cB, 
+                                            single_proj=True)
+            else: 
+                win.tabW_organs_final.clear()
+                win.tabW_organs_final.setRowCount(0)
 
 def load_proj_organs_comb(win, proj):
         #https://www.pythonguis.com/tutorials/pyqt6-qtableview-modelviews-numpy-pandas/
@@ -4783,6 +4865,7 @@ def fill_table_with_organs(win, proj, table, blind_cB, all_cB):#notes_cB, mH_cB=
     return cBs
 
 def add_organ_to_multi_analysis(win, proj, add, single_proj):
+    label = win.lab_organs_added
     if add: 
         print('Init win.multi_organ_checkboxes:',win.multi_organ_checkboxes)
         checked = []
@@ -4792,7 +4875,7 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
 
         if sum(checked) <= 0: 
             error_txt = '*Please select at least one organ to add to the combinatorial analysis.'
-            win.win_msg(error_txt, win.go_to_analysis_window)
+            win.win_msg(error_txt)
             return
         else: 
             index = [i for i, x in enumerate(checked) if x]
@@ -4811,7 +4894,7 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
                             'user_organNotes': notes, 'strain': strain, 'stage': stage, 
                             'genotype': genotype, 'manipulation': manip, 'date_created': date_created}
                 win.multi_organs_added.append(org_proj)
-
+            label.setText('Organs Added to Analysis (n='+str(len(win.multi_organs_added))+')')
     else: #remove 
         print('Init win.added_organs_checkboxes:',win.added_organs_checkboxes)
         checked = []
@@ -4821,13 +4904,13 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
 
         if sum(checked) <= 0: 
             error_txt = '*Please select at least one organ to remove from the combinatorial analysis.'
-            win.win_msg(error_txt, win.go_to_analysis_window)
+            win.win_msg(error_txt)
             return
         else: 
             index = [i for i, x in enumerate(checked) if x]
             for ind in index: 
                 org_proj = win.added_organs_checkboxes[ind].split('cB_')[1]
-                org, proj = org_proj.split('_o_')
+                org, proj = org_proj.split(' @')
                 n2del = []
                 for n, org_item in enumerate(win.multi_organs_added):
                     if org_item['user_organName'] == org and org_item['user_projName'] == proj:
@@ -4835,6 +4918,7 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
                         break
                 for item in n2del: 
                     win.multi_organs_added.remove(item)
+            label.setText('Organs Added to Analysis (n='+str(len(win.multi_organs_added))+')')
 
     all_cB = {'Strain': 'Strain' in win.filter_cB_comb.lineEdit().text(),
                 'Stage': 'Stage' in win.filter_cB_comb.lineEdit().text(),
@@ -4858,6 +4942,8 @@ def add_organ_to_multi_analysis(win, proj, add, single_proj):
 
     if len(win.added_organs_checkboxes)> 0: 
         win.go_to_analysis_window.setEnabled(True)
+    else: 
+        win.go_to_analysis_window.setEnabled(False)
 
 def fill_table_selected_organs(win, table, blind_cB, all_cB, single_proj): 
 
@@ -4905,7 +4991,7 @@ def fill_table_selected_organs(win, table, blind_cB, all_cB, single_proj):
         print(org_item)
         organ_name = org_item['user_organName']
         proj_name = org_item['user_projName']
-        cB_name = 'cB_'+organ_name+'_o_'+proj_name
+        cB_name = 'cB_'+organ_name+' @'+proj_name
         col = 0        
         for nn, key in all_labels.items(): 
             if len(key) == 1 and nn == '-': 
@@ -4952,6 +5038,7 @@ class Load_MultiProj(QDialog):
         self.multi_organ_checkboxes = None
         self.multi_organs_added = []
         self.added_organs_checkboxes = None
+        self.prog_bar.setValue(0)
 
         #Buttons
         self.button_load_organs_comb.clicked.connect(lambda: load_proj_organs_comb(win=self, proj=self.proj))
@@ -4962,6 +5049,10 @@ class Load_MultiProj(QDialog):
         #Multi-Organ Analysis
         self.add_organ.clicked.connect(lambda: add_organ_to_multi_analysis(win=self, proj=self.proj, add=True, single_proj=False))
         self.remove_organ.clicked.connect(lambda: add_organ_to_multi_analysis(win=self, proj=self.proj, add=False, single_proj=False))
+
+        set_filter_table_comb(win=self)
+        self.filter_cB_comb.model().dataChanged.connect(lambda: reload_data(win = self, obj = self.filter_cB_comb, 
+                                                                                atype = 'comb'))
 
     def win_msg(self, msg, btn=None): 
         if msg[0] == '*':
@@ -5010,12 +5101,18 @@ class Load_MultiProj(QDialog):
             self.button_load_organs_comb.setEnabled(False)
             self.button_load_organs_comb.setChecked(False)
 
-    def reload_table(self): 
+    def reload_table(self, atype): 
         if self.button_load_organs_comb.isChecked(): 
             load_proj_organs_comb(win=self, proj=self.proj)
+
+            all_cB = {'Strain': 'Strain' in self.filter_cB_comb.lineEdit().text(),
+                        'Stage': 'Stage' in self.filter_cB_comb.lineEdit().text(),
+                        'Date Created': 'Date Created' in self.filter_cB_comb.lineEdit().text(),
+                        'Notes': 'Notes' in self.filter_cB_comb.lineEdit().text(),
+                        'mH' : 'morphoHeart' in self.filter_cB_comb.lineEdit().text()}
+
             fill_table_selected_organs(win=self, table = self.tabW_organs_final, 
-                                        blind_cB=self.cB_blind_comb,  notes_cB=self.cB_notes, 
-                                        single_proj=False)
+                                            blind_cB=self.cB_blind_comb, all_cB=all_cB, single_proj=False)
 
 class Load_S3s(QDialog): 
     
@@ -5253,38 +5350,42 @@ class ProjSettings(QDialog):
 
         # #- morphoCell
         if self.proj.analysis['morphoCell']: 
-            #Cells and Visualisation Channels
-            self.init_cells()
-            #Segments
-            if isinstance(self.proj.mC_settings['setup']['segm_mC'], dict):
-                self.init_segments_group_mC()
-            else: 
-                self.set_segm_mC.setVisible(False)
-                self.tick_segm_mC.setChecked(False)
-            #Regions
-            self.tick_sect_mC.setVisible(False)
-            self.tick_sect_mC.setChecked(False)
-            self.set_sect_mC.setVisible(False)
-            # if isinstance(self.proj.mC_settings['setup']['sect'], dict):
-            #     self.init_sections_group_mC()
-            # else: 
-            #     self.set_sect_mC.setVisible(False)
-            #     self.tick_sect_mC.setChecked(False)
-            #Segments-Regions 
-            self.tick_segm_sect_mC.setVisible(False)
-            self.tick_segm_sect_mC.setChecked(False)
-            self.set_segm_sect_mC.setVisible(False)
-            # if isinstance(self.proj.mC_settings['setup']['segm-sect'], dict):
-            #     self.init_segm_sect_group_mC()
-            # else: 
-            #     self.set_segm_sect_mC.setVisible(False)
-            #     self.tick_segm_sect_mC.setChecked(False)
-            #Zones
-            if isinstance(self.proj.mC_settings['setup']['zone_mC'], dict):
-                self.init_zones_group_mC()
-            else: 
-                self.set_zone_mC.setVisible(False)
-                self.tick_zone_mC.setChecked(False)
+            if len(self.proj.mC_channels)>0:
+                #Cells and Visualisation Channels
+                self.init_cells()
+                #Segments
+                if isinstance(self.proj.mC_settings['setup']['segm_mC'], dict):
+                    self.init_segments_group_mC()
+                else: 
+                    self.set_segm_mC.setVisible(False)
+                    self.tick_segm_mC.setChecked(False)
+                #Regions
+                self.tick_sect_mC.setVisible(False)
+                self.tick_sect_mC.setChecked(False)
+                self.set_sect_mC.setVisible(False)
+                # if isinstance(self.proj.mC_settings['setup']['sect'], dict):
+                #     self.init_sections_group_mC()
+                # else: 
+                #     self.set_sect_mC.setVisible(False)
+                #     self.tick_sect_mC.setChecked(False)
+                #Segments-Regions 
+                self.tick_segm_sect_mC.setVisible(False)
+                self.tick_segm_sect_mC.setChecked(False)
+                self.set_segm_sect_mC.setVisible(False)
+                # if isinstance(self.proj.mC_settings['setup']['segm-sect'], dict):
+                #     self.init_segm_sect_group_mC()
+                # else: 
+                #     self.set_segm_sect_mC.setVisible(False)
+                #     self.tick_segm_sect_mC.setChecked(False)
+                #Zones
+                if isinstance(self.proj.mC_settings['setup']['zone_mC'], dict):
+                    self.init_zones_group_mC()
+                else: 
+                    self.set_zone_mC.setVisible(False)
+                    self.tick_zone_mC.setChecked(False)
+            else:
+                print('Hiding mC tab!')
+                self.tabWidget.setTabVisible(1, False)
 
         #Measurement Parameters 
         self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
@@ -5442,6 +5543,7 @@ class ProjSettings(QDialog):
     def init_segm_sect_group(self):
         sp_set = self.proj.mH_settings['setup']['segm-sect']
         self.tick_segm_sect.setChecked(True)
+        self.set_segm_sect.setEnabled(True)
 
         for scut in ['sCut1', 'sCut2']: 
             if scut in sp_set.keys(): 
@@ -5451,11 +5553,11 @@ class ProjSettings(QDialog):
                             ch, cont = ch_cont.split('_')
                             getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont+'_2').setChecked(True)
                     else: 
-                        getattr(self, 'lab_segm'+scut[-1]+'sect'+rcut[-1]).setVisible(False)   
+                        getattr(self, 'lab_segm'+scut[-1]+'_sect'+rcut[-1]).setVisible(False)   
                         for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']:
                             for cont in ['int', 'tiss', 'ext']: 
-                                getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont).setVisible(False)
-                        self.line_19.setVisible(False)
+                                getattr(self, 'cB_'+scut+'_'+rcut+'_'+ch+'_'+cont+'_2').setVisible(False)
+                        # self.line_19.setVisible(False)
             else: 
                 getattr(self, 'segm_reg_cut2_2').setVisible(False)
 
@@ -5614,23 +5716,17 @@ class MeasSettings(QDialog):
 
         #Ballooning Settings
         ball_meas = self.meas_sel['ball']
-
-        nn = 1
-        for item in ball_meas.keys(): 
-            ch_cont, cl = item.split('_(')
-            ch_to, cont_to = ch_cont.split('_')
-            ch_cl, cont_cl = cl.split('_')
-            label_name = self.ch_all[ch_to]+' ('+ch_to+')'+'-'+cont_to
-            getattr(self, 'cB_balto'+str(nn)).setText(label_name)
-            getattr(self, 'cB_ch_bal'+str(nn)).setText(ch_cl)
-            getattr(self, 'cB_cont_bal'+str(nn)).setText(cont_cl[:-1]+'ernal')
-            nn+=1
-
-        for num in range(nn,5,1):
-            getattr(self, 'label_bal'+str(num)).setVisible(False)
-            getattr(self, 'cB_balto'+str(num)).setVisible(False)
-            getattr(self, 'cB_ch_bal'+str(num)).setVisible(False)
-            getattr(self, 'cB_cont_bal'+str(num)).setVisible(False)
+        if len(ball_meas) > 0:
+            nn = 1
+            for item in ball_meas.keys(): 
+                ch_cont, cl = item.split('_(')
+                ch_to, cont_to = ch_cont.split('_')
+                ch_cl, cont_cl = cl.split('_')
+                label_name = self.ch_all[ch_to]+' ('+ch_to+')'+'-'+cont_to
+                getattr(self, 'cB_balto'+str(nn)).setText(label_name)
+                getattr(self, 'cB_ch_bal'+str(nn)).setText(ch_cl)
+                getattr(self, 'cB_cont_bal'+str(nn)).setText(cont_cl[:-1]+'ernal')
+                nn+=1
 
         #Centreline Settings
         getattr(self, 'cB_cl_LoopLen').setChecked(self.params['2']['measure']['looped_length'])
@@ -5638,11 +5734,14 @@ class MeasSettings(QDialog):
 
         #Heatmaps
         if 'hm3Dto2D' in self.proj.mH_settings['measure'].keys():
-            getattr(self, 'cB_hm3d2d').setChecked(True)
-            ch_cont = list(self.proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
-            chs, conts = ch_cont.split('_')
-            getattr(self, 'hm_cB_ch').setText(chs)
-            getattr(self, 'hm_cB_cont').setText(conts+'ernal')
+            if len(self.proj.mH_settings['measure']['hm3Dto2D'].keys())>0:
+                ch_cont = list(self.proj.mH_settings['measure']['hm3Dto2D'].keys())[0]
+                chs, conts = ch_cont.split('_')
+                getattr(self, 'cB_hm3d2d').setChecked(True)
+                getattr(self, 'hm_cB_ch').setText(chs)
+                getattr(self, 'hm_cB_cont').setText(conts+'ernal')
+            else: 
+                pass
         try: 
             getattr(self, 'improve_hm2D').setChecked(self.proj.mH_settings['setup']['segm']['improve_hm2d'])
         except: 
@@ -5757,6 +5856,52 @@ class OrganSettings(QDialog):
                             check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); color: rgb(255, 0, 0); font: 25 2pt 'Calibri Light'")
                             check_mk.setText('ERROR')
             
+        if self.proj.analysis['morphoCell']: 
+            #Change channels
+            #-mH
+            mC_channels = self.proj.mC_channels
+            for ch in ['chA', 'chB', 'chC', 'chD']: 
+                label = getattr(self, 'lab_'+ch) 
+                name = getattr(self, 'lab_filled_name_'+ch)
+                if ch == 'chA':
+                    brw_ch = getattr(self, 'browse_'+ch)
+                    dir_mk = getattr(self, 'lab_filled_dir_mask_'+ch)
+                    check_ch = getattr(self, 'check_mask_'+ch)
+                brw_mk = getattr(self, 'browse_mask_'+ch)
+                dir_ch = getattr(self, 'lab_filled_dir_'+ch)
+                check_mk = getattr(self, 'check_'+ch)
+
+                if ch not in mC_channels.keys():
+                    label.setVisible(False)
+                    name.setVisible(False)
+                    if ch == 'chA': 
+                        brw_ch.setVisible(False)
+                        dir_mk.setVisible(False)
+                        check_ch.setVisible(False)
+                    brw_mk.setVisible(False)
+                    dir_ch.setVisible(False)
+                    check_mk.setVisible(False)
+                else: 
+                    name.setText(self.proj.mC_channels[ch])
+                    path_ch = self.organ.img_dirs[ch]['image']['dir']
+                    dir_ch.setText(str(path_ch))
+                    if path_ch.is_file():
+                        check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(0, 255, 0); color: rgb(0, 255, 0); font: 25 2pt 'Calibri Light'")
+                        check_mk.setText('Done')
+                    else: 
+                        check_mk.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); color: rgb(255, 0, 0); font: 25 2pt 'Calibri Light'")
+                        check_mk.setText('ERROR')
+                    
+                    if ch == 'chA': 
+                        path_data = self.organ.img_dirs[ch]['data']['dir']
+                        dir_mk.setText(str(path_data))
+                        if path_data.is_file():
+                            check_ch.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(0, 255, 0); color: rgb(0, 255, 0); font: 25 2pt 'Calibri Light'")
+                            check_ch.setText('Done')
+                        else: 
+                            check_ch.setStyleSheet("border-color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); color: rgb(255, 0, 0); font: 25 2pt 'Calibri Light'")
+                            check_ch.setText('ERROR')
+
         self.lab_filled_organ_dir.setText(str(self.organ.dir_res()))
 
     def close_window(self):
@@ -5795,8 +5940,9 @@ class MainWindow(QMainWindow):
             self.init_segment_tab()
             self.init_pandq_tab()
         if self.organ.analysis['morphoCell']:
-            if len(self.organ.mC_settings['setup'])>0: 
-                self.init_morphoCell_tab()
+            if hasattr(self.organ, 'mC_settings'):
+                if len(self.organ.mC_settings['setup'])>0: 
+                    self.init_morphoCell_tab()
 
         # Init Tabs
         self.init_tabs()
@@ -5900,8 +6046,11 @@ class MainWindow(QMainWindow):
                 self.tabWidget.setCurrentIndex(2)
         
         if self.organ.analysis['morphoCell']:
-            if len(self.organ.mC_settings['setup'])>0: 
-                pass
+            if hasattr(self.organ, 'mC_settings'):
+                if len(self.organ.mC_settings['setup'])>0: 
+                    pass
+                else: 
+                    self.tabWidget.setTabVisible(2, False)
             else: 
                 self.tabWidget.setTabVisible(2, False)
         else: 
@@ -7058,7 +7207,7 @@ class MainWindow(QMainWindow):
             if save_chS3: 
                 for cont in ['int', 'tiss', 'ext']: 
                     im_cont = getattr(im_ch, 's3_'+cont)
-                    s32save = getattr(self, 's3_'+cont)
+                    s32save = self.s3_cont[ch_name][cont]
                     msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving s3_'+cont+'...'
                     self.win_msg(msg)
                     im_cont.s3_save(s32save)
@@ -7968,14 +8117,18 @@ class MainWindow(QMainWindow):
                 value = slider.minimum()
             
             wdg_txt = getattr(self, wdg_name+'_slider')
-            if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
-                for wdgn in ['level_'+ch_name+'_slider','manual_level_'+ch_name+'_slider', 'select_level_'+ch_name+'_slider']:
-                    wdg_txt = getattr(self, wdgn)
+            try:
+                if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
+                    for wdgn in ['level_'+ch_name+'_slider','manual_level_'+ch_name+'_slider', 'select_level_'+ch_name+'_slider']:
+                        wdg_txt = getattr(self, wdgn)
+                        wdg_txt.setValue(float(value)*divider)
+                else: 
+                    wdg_txt = getattr(self, wdg_name+'_slider')
                     wdg_txt.setValue(float(value)*divider)
-            else: 
+            except: 
                 wdg_txt = getattr(self, wdg_name+'_slider')
                 wdg_txt.setValue(float(value)*divider)
-
+            
         if info != None: 
             self.set_plot_contour_settings(ch_name=info)
 
@@ -8395,7 +8548,7 @@ class MainWindow(QMainWindow):
     #Plot 3D
     def plot_final_s3_meshes(self, ch_name):
 
-        colors = ['gold','light green','light sea green']
+        colors = self.organ.mH_settings['setup']['color_chs'][ch_name] #['gold','light green','light sea green']
         
         meshes_out = []
         im_ch = self.organ.obj_imChannels[ch_name]
@@ -8404,7 +8557,7 @@ class MainWindow(QMainWindow):
             im_ch.load_chS3s([cont])
             s3 = getattr(im_ch, 's3_'+cont).s3()
             mesh = create_submesh(s3, res, keep_largest=False, rotateZ_90=True)
-            mesh.color(colors[n]).alpha(0.1)
+            mesh.color(colors[cont]).alpha(0.1)
             mesh.legend(im_ch.channel_no+'_'+cont)
             meshes_out.append(mesh)
         
@@ -9870,6 +10023,7 @@ class MainWindow(QMainWindow):
         self.btn_save_video.clicked.connect(lambda: self.create_user_video())
         self.plot_clear_All.clicked.connect(lambda: self.update_plot('del', 'all'))
         self.combo_axes.setCurrentText('13')
+        self.q_axes.clicked.connect(lambda: webbrowser.open(mH_config.link2vedo_plotter))
 
         self.alpha1.valueChanged.connect(lambda: self.update_plot('alpha', '1'))
         self.alpha2.valueChanged.connect(lambda: self.update_plot('alpha', '2'))
@@ -9954,50 +10108,53 @@ class MainWindow(QMainWindow):
     def user_clean(self): 
         wf_info = self.organ.mH_settings['wf_info']
         if 'cleanup' in wf_info.keys():
-            done_all = []
-            for ch in wf_info['cleanup']:
-                if 'ch' in ch:
-                    done = []
-                    workflow_ch = self.organ.workflow['morphoHeart']['ImProc'][ch]['E-CleanCh']
-                    for cont in wf_info['cleanup'][ch]['cont']:
-                        cB = getattr(self, 'clean_'+ch+'_'+cont)
-                        cB.setChecked(True)
-                        done.append(workflow_ch['Info'][cont]['Status'])
-                    with_ch = getattr(self, 'clean_withch_'+ch)
-                    with_ch.setCurrentText(wf_info['cleanup'][ch]['with_ch'])
-                    with_cont = getattr(self, 'clean_withcont_'+ch)
-                    with_cont.setCurrentText(wf_info['cleanup'][ch]['with_cont'])
-                    inv = getattr(self, 'inverted_'+ch)
-                    inv.setChecked(wf_info['cleanup'][ch]['inverted'])
-                    
-                    if all(flag == 'DONE' for flag in done):
-                        plot_btn = getattr(self, 'cleanup_plot_'+ch)
-                        plot_btn.setEnabled(True)
-                        done_all.append(True)
-                    else: 
-                        done_all.append(False)
-        
-            if wf_info['cleanup']['plot2d']: 
-                self.clean_plot2d.setChecked(True)
-                self.clean_n_slices.setValue(wf_info['cleanup']['n_slices'])
-
-            if all(done_all):
-                #Toggle Button
-                self.cleanup_set.setChecked(True)
-                self.cleanup_play.setChecked(True)
-                self.reset_cleaned_s3s.setEnabled(True)
-                #Enable other buttons
-                self.clean_plot.setEnabled(True)
-                #Update Status in GUI
-                self.update_status(None, 'DONE', self.cleanup_status, override=True)
-                self.cleanup_open.setChecked(True)
-                self.open_section(name = 'cleanup')
-            elif any(done_all):
-                #Update Status in GUI
-                self.update_status(None, 'Initialised', self.cleanup_status, override=True)
+            if wf_info['cleanup'] != None: 
+                done_all = []
+                for ch in wf_info['cleanup']:
+                    if 'ch' in ch:
+                        done = []
+                        workflow_ch = self.organ.workflow['morphoHeart']['ImProc'][ch]['E-CleanCh']
+                        for cont in wf_info['cleanup'][ch]['cont']:
+                            cB = getattr(self, 'clean_'+ch+'_'+cont)
+                            cB.setChecked(True)
+                            done.append(workflow_ch['Info'][cont]['Status'])
+                        with_ch = getattr(self, 'clean_withch_'+ch)
+                        with_ch.setCurrentText(wf_info['cleanup'][ch]['with_ch'])
+                        with_cont = getattr(self, 'clean_withcont_'+ch)
+                        with_cont.setCurrentText(wf_info['cleanup'][ch]['with_cont'])
+                        inv = getattr(self, 'inverted_'+ch)
+                        inv.setChecked(wf_info['cleanup'][ch]['inverted'])
+                        
+                        if all(flag == 'DONE' for flag in done):
+                            plot_btn = getattr(self, 'cleanup_plot_'+ch)
+                            plot_btn.setEnabled(True)
+                            done_all.append(True)
+                        else: 
+                            done_all.append(False)
             
-            #Run Set Function 
-            self.set_clean() 
+                if wf_info['cleanup']['plot2d']: 
+                    self.clean_plot2d.setChecked(True)
+                    self.clean_n_slices.setValue(wf_info['cleanup']['n_slices'])
+
+                if all(done_all):
+                    #Toggle Button
+                    self.cleanup_set.setChecked(True)
+                    self.cleanup_play.setChecked(True)
+                    self.reset_cleaned_s3s.setEnabled(True)
+                    #Enable other buttons
+                    self.clean_plot.setEnabled(True)
+                    #Update Status in GUI
+                    self.update_status(None, 'DONE', self.cleanup_status, override=True)
+                    self.cleanup_open.setChecked(True)
+                    self.open_section(name = 'cleanup')
+                elif any(done_all):
+                    #Update Status in GUI
+                    self.update_status(None, 'Initialised', self.cleanup_status, override=True)
+                
+                #Run Set Function 
+                self.set_clean() 
+            else: 
+                pass
         else: 
             pass
 
@@ -10637,8 +10794,7 @@ class MainWindow(QMainWindow):
                 #Close Widget
                 self.segm_sect_open.setChecked(True)
                 self.open_section(name = 'segm_sect')
-
-            
+ 
     def user_user_params(self): 
 
         wf_info = self.organ.mH_settings['wf_info']
@@ -11733,7 +11889,8 @@ class MainWindow(QMainWindow):
         
         self.init_results_cell_table()
 
-        print()
+        self.widget_plot_cells.setVisible(False)
+        # self.plot_widget_cells.setEnabled(False)
 
     def init_isosurf_cells_ch(self): 
         #Buttons
@@ -12096,7 +12253,7 @@ class MainWindow(QMainWindow):
         self.results_cell_open.clicked.connect(lambda: self.open_section(name = 'results_cell'))
 
         #Setup results
-        # self.fill_results()
+        self.fill_cell_results(init=True)
         self.results_cell_save.clicked.connect(lambda: self.save_cell_results())
 
         # #Get variable names
@@ -12524,11 +12681,65 @@ class MainWindow(QMainWindow):
         return gui_zone_cells
 
     #Functions morphoCell
-    def save_cell_results(self): 
+    def fill_cell_results(self, init=False): 
 
-        ext = self.cB_cells_extension.currentText()
-        filename = self.organ.folder+'_cellCounts'+ext
-        df_dir = self.organ.dir_res() / filename
+        style = 'QScrollBar:horizontal {background-color: rgb(255, 255, 255); height: 12px;} QScrollBar::handle:horizontal {background-color: rgb(162, 0, 122); 	min-width: 30px; border-radius: 6px;} QScrollBar::handle:horizontal:hover {background-color:rgb(0, 0, 0);} QScrollBar:vertical {background-color: rgb(255, 255, 255); width: 12px;} QScrollBar::handle:vertical {background-color: rgb(162, 0, 122); min-height: 30px; border-radius: 6px;} QScrollBar::handle:vertical:hover {background-color:rgb(0, 0, 0);} QHeaderView::section {background-color: rgb(200, 200, 200); padding: 0px; font: bold 10pt "Calibri"; border-style: none; border-bottom: 1px solid #fffff8; border-right: 1px solid #fffff8;} QHeaderView::section:horizontal{border-top: 1px solid #fffff8;} QHeaderView::section:vertical{border-left: 1px solid #fffff8;} QTableView {font: 25 10pt "Calibri"; padding:0px; height: 20px;} QTableView::item:focus{border: 1px solid rgb(162, 0, 122); background-color: white; color: black;} '
+        df2save = self.save_cell_results(table=True)
+        df2save.pop(0, None)
+        tabs = self.tabWidget_cell_results # QTabWidget() 
+
+        if not init: 
+            try: 
+                for tt in reversed(list(range(tabs.count()))):
+                    tabs.removeTab(tt)
+            except: 
+                pass
+
+        for i, item in df2save.items():
+            name = item['name']
+            df = item['df']
+            df = df.reset_index()
+
+            tab = QtWidgets.QWidget()
+            tabs.addTab(tab, name)
+            tabs.setTabText(i, name)
+            tab.layout = QVBoxLayout()
+            
+            #Create the table
+            table = QtWidgets.QTableWidget()
+
+            table.setStyleSheet(style)
+
+            table.setRowCount(len(df.index))
+            table.setColumnCount(len(df.columns))
+            table.setHorizontalHeaderLabels(list(df.columns))
+
+            tab.layout.addWidget(table)
+            tab.setLayout(tab.layout)
+
+            for index, row in df.iterrows(): 
+                for ii, value in enumerate(row):
+                    if isinstance(value, float) or isinstance(value, np.float32): 
+                        valuef = "%.2f" % value
+                    else: # isinstance(value, str): 
+                        valuef = str(value)
+                    item = QTableWidgetItem(valuef)
+                    table.setItem(index, ii, item)
+                    item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter | QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+            headerc = table.horizontalHeader()  
+            num_col = len(df.columns)
+            for col in range(num_col):   
+                if col!= num_col-1:
+                    headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+                else: 
+                    headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
+
+        
+        if init:
+            tabs.removeTab(0)
+
+    def save_cell_results(self, table=False): 
 
         #First sheet contains info about organ
         #Add organ info
@@ -12560,23 +12771,26 @@ class MainWindow(QMainWindow):
             name = 'Segm'
             cells_position = self.organ.cellsMC['chA'].df_cells()
             #Get df_segm / segm
-            for cut in self.organ.mC_settings['measure']['mC_segm']: 
-                col_name = 'Segment-'+cut
-                for segm in self.organ.mC_settings['measure']['mC_segm'][cut]:
-                    df_filt = cells_position[cells_position[col_name] == segm]
-                    tab_name = name+'-'+cut+':'+segm.title()
-                    df2save[num] = {'name': tab_name.replace(':', '_'), 
-                                    'df': df_filt}
-                    num+=1
-            # Get IND
-            name = 'Segm_IND'
-            for cuti in self.organ.mC_settings['measure']['mC_segm']:
-                for ss in self.organ.mC_settings['measure']['mC_segm'][cuti]:
-                    df2add = self.organ.mC_settings['measure']['mC_segm'][cuti][ss]['IND']
-                    tab_name = name+'-'+cut+':'+ss.title()
-                    df2save[num] = {'name': tab_name.replace(':', '_'), 
-                                    'df': df2add}
-                    num+=1
+            if 'mC_segm' in self.organ.mC_settings['measure'].keys():
+                if 'mC_segm' in self.organ.mC_settings['measure'].keys():
+                    for cut in self.organ.mC_settings['measure']['mC_segm']: 
+                        col_name = 'Segment-'+cut
+                        for segm in self.organ.mC_settings['measure']['mC_segm'][cut]:
+                            df_filt = cells_position[cells_position[col_name] == segm]
+                            tab_name = name+'-'+cut+':'+segm.title()
+                            df2save[num] = {'name': tab_name.replace(':', '_'), 
+                                            'df': df_filt}
+                            num+=1
+                    # Get IND
+                    name = 'Segm_IND'
+                    for cuti in self.organ.mC_settings['measure']['mC_segm']:
+                        for ss in self.organ.mC_settings['measure']['mC_segm'][cuti]:
+                            if 'IND' in self.organ.mC_settings['measure']['mC_segm'][cuti][ss].keys(): 
+                                df2add = self.organ.mC_settings['measure']['mC_segm'][cuti][ss]['IND']
+                                tab_name = name+'-'+cut+':'+ss.title()
+                                df2save[num] = {'name': tab_name.replace(':', '_'), 
+                                                'df': df2add}
+                                num+=1
 
         # if isinstance(self.organ.mC_settings['setup']['sect_mC'], dict):
         #     names_df2save.append('Sect')
@@ -12587,26 +12801,35 @@ class MainWindow(QMainWindow):
                     
         #Zones and IND
         if isinstance(self.organ.mC_settings['setup']['zone_mC'], dict): 
-            for zz in self.organ.mC_settings['measure']['mC_zone']:
-                df2addz = self.organ.mC_settings['measure']['mC_zone'][zz]
-                tab_name = zz.title()
-                df2save[num] = {'name': tab_name.replace(':', '_'), 
-                                'df': df2addz}
-                num+=1
+            if 'mC_zone' in self.organ.mC_settings['measure'].keys():
+                for zz in self.organ.mC_settings['measure']['mC_zone']:
+                    df2addz = self.organ.mC_settings['measure']['mC_zone'][zz]
+                    tab_name = zz.title()
+                    df2save[num] = {'name': tab_name.replace(':', '_'), 
+                                    'df': df2addz}
+                    num+=1
 
-        #Write excel
-        for i, item in df2save.items():
-            name = item['name']
-            df = item['df']
-            if i == 0:
-                with pd.ExcelWriter(df_dir) as writer:  
-                    df.to_excel(writer, sheet_name=name)
-            else: 
-                with pd.ExcelWriter(df_dir, mode='a') as writer: 
-                    df.to_excel(writer, sheet_name=name)
+        if not table: 
+            #Write excel
+            ext = self.cB_cells_extension.currentText()
+            filename = self.organ.folder+'_cellCounts'+ext
+            df_dir = self.organ.dir_res() / filename
 
-        alert('countdown') 
-        self.win_msg('Results file  -'+ filename + '  was successfully saved!')
+            for i, item in df2save.items():
+                name = item['name']
+                df = item['df']
+                if i == 0:
+                    with pd.ExcelWriter(df_dir) as writer:  
+                        df.to_excel(writer, sheet_name=name)
+                else: 
+                    with pd.ExcelWriter(df_dir, mode='a') as writer: 
+                        df.to_excel(writer, sheet_name=name)
+
+            alert('countdown') 
+            self.win_msg('Results file  -'+ filename + '  was successfully saved!')
+        
+        else: 
+            return df2save
 
     ############################################################################################
     #Functions specific to gui functionality
@@ -13009,6 +13232,7 @@ class MainWindow(QMainWindow):
                 if changed: 
                     getattr(self, 'radio_'+cut.lower()+'_dir'+no).setChecked(True)
                     self.sections_set.setChecked(False)
+                    getattr(self, 'cl_ext_'+cut.lower()).setEnabled(False)
                     self.win_msg('!Remember to re-set the settings for this '+cut+' to make sure all the changes are applied.')
                     alert('bubble')
                 else:
@@ -13131,6 +13355,37 @@ class MainWindow(QMainWindow):
             keys_flat_filtered.remove('A-Set_Orientation:Status')
         except: 
             print('A-Set_Orientation:Status was not a key')
+        
+        #Remove processes that are were not included by the user
+        proc_to_check_if_included = ['C-Centreline','D-Ballooning', 
+                                    'D-Thickness_int>ext','D-Thickness_ext>int', 
+                                    'E-Segments','E-Sections', 
+                                    'E-Segments_Sections']
+        
+        for proc in proc_to_check_if_included: 
+            matching = [s for s in keys_flat_filtered if proc in s]
+            # print(matching)
+            if proc == 'C-Centreline':
+                if len(self.organ.mH_settings['measure']['CL']) == 0:
+                    for kk in matching: 
+                        # print('CL',kk)
+                        keys_flat_filtered.remove(kk)
+                    try: 
+                        main_titles.remove(proc)
+                    except: 
+                        pass
+            else: 
+                if len(matching) > 1:
+                    pass
+                else: 
+                    # print(proc,len(matching), matching)
+                    if len(matching) == 1:
+                        # print(matching[0])
+                        keys_flat_filtered.remove(matching[0])
+                    try: 
+                        main_titles.remove(proc)
+                    except: 
+                        pass
 
         print('keys_flat_filtered:', keys_flat_filtered)
         self.workflow_keys = keys_flat_filtered
@@ -13351,6 +13606,8 @@ class MainWindow(QMainWindow):
                 valuef = "%.2f" % value
             elif isinstance(value, str): 
                 valuef = value
+            elif isinstance(value, np.bool_):
+                valuef = 'TBO'
             else: 
                 print('Weird value in df_res: ', type(value))
                 valuef = value
@@ -13682,7 +13939,7 @@ class MainWindow(QMainWindow):
         #Prompt
         title = 'Filtering heatmaps...'
         msg = 'Filtering the 2D Heatmaps might take a while and the program might be unresponsive, are you sure you want to run it now? Press  -OK- if you want to continue, or  -Cancel- if you want to run it later.'
-        prompt = Prompt_ok_cancel(title, msg, parent=self)
+        prompt = Prompt_ok_cancel(title, msg, win_size=[450, 180], parent=self)
         prompt.exec()
         print('output:', prompt.output)
         run = prompt.output
@@ -14121,7 +14378,6 @@ class MainWindow(QMainWindow):
 
                 alert('clown')
 
-    
     #Plot 3D functions
     def plot_meshes(self, ch, chNS=False):
         self.win_msg('Plotting meshes ('+ch+')')
@@ -14467,12 +14723,15 @@ class MainWindow(QMainWindow):
         if isinstance(ext_ch, str) and ext_ch == 'independent':
             ext_ch = self.organ.obj_imChannels[list(self.organ.obj_imChannels.keys())[0]]
         
-        centreline = self.gui_orientation['roi']['centreline'].split('(')[1].split(')')[0]
-        ch, cont = centreline.split('_')
         if name == 'stack': 
             linLine = []
         else: 
-            linLine = self.organ.obj_meshes[ch+'_'+cont].get_linLine(color='gold')
+            if self.gui_orientation['roi']['method'] == 'Manual':
+                linLine = []
+            else: 
+                centreline = self.gui_orientation['roi']['centreline'].split('(')[1].split(')')[0]
+                ch, cont = centreline.split('_')
+                linLine = self.organ.obj_meshes[ch+'_'+cont].get_linLine(color='gold')
 
         mesh_ext = self.organ.obj_meshes[ext_ch.channel_no+'_tiss']
         cubes = getattr(self.organ, name+'_cube')
@@ -14710,7 +14969,12 @@ class MainWindow(QMainWindow):
 
     def plot_iso_ch(self, ch): 
 
-        vol = self.organ.vol_iso[ch]
+        try: 
+            vol = self.organ.vol_iso[ch]
+        except: 
+            res = create_iso_volume(self.organ, ch=ch, plot=False)
+            vol = self.organ.vol_iso[ch]
+
         color = self.organ.mC_settings['setup']['color_chs'][ch]
         vol.color(color)
 
@@ -14888,8 +15152,12 @@ class MainWindow(QMainWindow):
             new_key = str(int(list(self.plot_meshes_user.keys())[-1])+1)
         # print('new_key:', new_key)
         if n_pos+1 < 10: 
+            if '(' not in mesh2add: 
+                alpha = 0.1
+            else: 
+                alpha = 1
             self.plot_meshes_user[new_key] = {'mesh': mesh2add, 
-                                            'alpha': 0.1, 
+                                            'alpha': alpha, 
                                             'plot_no': 1}
             # print('self.plot_meshes_user:', self.plot_meshes_user)
             self.update_plot_list()
@@ -14952,6 +15220,7 @@ class MainWindow(QMainWindow):
                 del_mesh.setEnabled(False)
             
     def create_user_plot(self, video=False): 
+
         if len(self.plot_meshes_user) < 1: 
             self.win_msg('*No meshes have been added to the table.')
         else:
@@ -15044,106 +15313,124 @@ class MainWindow(QMainWindow):
                 obj.append(tuple_list)
                 delattr(self, 'items_plot'+str(plot))
             print('obj:', obj)
+            txt = [(0, self.organ.user_organName)]
 
             if not video: 
                 axes = self.plot_settings['axes']
                 zoom = self.plot_settings['zoom']
                 elev = self.plot_settings['elev']
                 azim = self.plot_settings['azim']
-                txt = [(0, self.organ.user_organName)]
 
                 plot_grid(obj=obj, txt=txt, axes=axes, sc_side=max(self.organ.get_maj_bounds()), 
                         zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
 
             else: 
-                return obj
+                return obj, txt
 
         self.btn_user_plot.setChecked(False)
 
     def create_user_video(self): 
 
-        self.win_msg('!Code under development!')
-        alert('error_beep')
-        return
-
         if self.video_filename.text() != '': 
-
-            if self.check_scalecube_plot.isChecked():
-                add_scale_cube = True
-            else: 
-                add_scale_cube = False
-
-            axes = self.plot_settings['axes']
-            zoom = self.plot_settings['zoom']
-            txt = [(0, self.organ.user_organName)]
-            
-            obj = self.create_user_plot(video=True)
-
-            #Scale cube
-            if add_scale_cube: 
-                sc_side = max(self.organ.get_maj_bounds())
-                if isinstance(obj[0], tuple):
-                    scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
-                else: 
-                    scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
-            else: 
-                scale_cube = []
-
-            n_obj = len(obj)
-            # Create tuples for text
-            post = [tup[0] for tup in txt]; txt_out = []; n = 0
-            for num in range(n_obj):
-                if num in post:
-                    txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
-                    n += 1
-                else: 
-                    txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
-
-            # Add scale_cube to last plot
-            if isinstance(obj[n_obj-1], tuple):
-                obj_list = list(obj[n_obj-1])
-                obj_list.append(scale_cube)
-                obj_f = tuple(obj_list)
-            else: #vedo.mesh.Mesh
-                obj_f = (obj[n_obj-1], scale_cube)
-            obj[n_obj-1] = obj_f
-
-            # Set logo position
-            if len(obj)>5:
-                pos = (0.1,3)
-            elif len(obj)>3:
-                pos = (0.1,2)
-            else:
-                pos = (0.1,1)
 
             #Video info
             video_name =  self.video_filename.text()+".mp4"
             duration = self.spin_video_duration.value()
             video_path = self.organ.dir_res('imgs_videos') / video_name
-            print(video_path)
+            print('video_path:',video_path)
 
-            # Now plot
-            lbox = []
-            vp = vedo.Plotter(N=len(obj), axes=axes, offscreen=True)
-            # vp.add_icon(logo, pos=pos, size=0.25)
-            for num in range(len(obj)):
-                if isinstance(obj[num], tuple):
-                    try: 
-                        lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
-                    except: 
-                        lbox.append('')
-                else:
-                    lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
-                if num != len(obj)-1:
-                    vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
-                else: # num == len(obj)-1
-                    vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+            run = False
+            if video_path.is_file(): 
+                title = 'Video already exists...' 
+                msg = '"'+video_name + '" already exists in the imgs_videos folder of the current organ. Do you want to replace it? Press  -OK-  if you want to replace it, else press  -Cancel-  and provide a new name.'
+                prompt = Prompt_ok_cancel(title, msg, win_size = (400, 200), parent=self)
+                prompt.exec()
+                print('output:', prompt.output)
+                if prompt.output: 
+                    run = True
+                else: 
+                    run = False
+            else: 
+                run = True
 
-            video = vedo.Video(video_name, duration=duration, backend='opencv')
-            for i in range(180):
-                vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
-                video.addFrame()
-            video.close()
+            if run: 
+                self.win_msg('Creating video...')
+                if self.check_scalecube_plot.isChecked():
+                    add_scale_cube = True
+                else: 
+                    add_scale_cube = False
+
+                axes = self.plot_settings['axes']
+                zoom = self.plot_settings['zoom']
+                
+                obj, txt = self.create_user_plot(video=True)
+
+                #Scale cube
+                if add_scale_cube: 
+                    sc_side = max(self.organ.get_maj_bounds())
+                    if isinstance(obj[0], tuple):
+                        scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+                    else: 
+                        scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+                else: 
+                    scale_cube = []
+
+                n_obj = len(obj)
+                # Create tuples for text
+                post = [tup[0] for tup in txt]; txt_out = []; n = 0
+                for num in range(n_obj):
+                    if num in post:
+                        txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
+                        n += 1
+                    else: 
+                        txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
+
+                # Add scale_cube to last plot
+                if isinstance(obj[n_obj-1], tuple):
+                    obj_list = list(obj[n_obj-1])
+                    obj_list.append(scale_cube)
+                    obj_f = tuple(obj_list)
+                else: #vedo.mesh.Mesh
+                    obj_f = (obj[n_obj-1], scale_cube)
+                obj[n_obj-1] = obj_f
+
+                # if n_obj == 1: 
+                bg = str(path_bkgd)
+                # elif n_obj == 2: 
+                #     bg = str(path_bkgd2)
+                # elif n_obj == 3: 
+                #     bg = str(path_bkgd3)
+                # elif n_obj == 4: 
+                #     bg = str(path_bkgd4)
+                # elif n_obj == 5: 
+                #     bg = str(path_bkgd5)
+                # elif n_obj == 6: 
+                #     bg = str(path_bkgd6)
+
+                # Now plot
+                lbox = []
+                vp = vedo.Plotter(bg=bg, bg2="white", N=len(obj), axes=axes, offscreen=True)
+                # vp.add_icon(logo, pos=pos, size=0.25)
+                for num in range(len(obj)):
+                    if isinstance(obj[num], tuple):
+                        try: 
+                            lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
+                        except: 
+                            lbox.append('')
+                    else:
+                        lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
+                    if num != len(obj)-1:
+                        vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+                    else: # num == len(obj)-1
+                        vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+
+                video = vedo.Video(str(video_path), duration=duration, backend='imageio')
+                for i in range(180):
+                    vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
+                    video.add_frame()
+                video.close()
+                self.win_msg('Video "'+video_name+'" has been successfully saved!')
+                alert('woohoo')
         
         else: 
             self.win_msg('*Please provide a name to save the video.')
@@ -15322,7 +15609,7 @@ class MainWindow(QMainWindow):
             event.ignore()
 
 class MultipAnalysisWindow(QMainWindow): 
-    def __init__(self, projs, organs, df_pando, controller):
+    def __init__(self, projs, organs, df_pando, controller, single_proj = True, ave_hm = False):
         super().__init__()
         uic.loadUi(str(mH_config.path_ui / 'main_analysis_screen.ui'), self)
         self.setWindowTitle('morphoHeart Analysis')
@@ -15330,27 +15617,40 @@ class MultipAnalysisWindow(QMainWindow):
         self.mH_logo_XS.setPixmap(mH_logoXS)
         self.setWindowIcon(QIcon(mH_icon))
         self.setStyleSheet("background-color:  rgb(255, 255, 255);")
-        self.label_version.setText('v'+mH_config.version+'  ')
-        self.label_version.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
+        self.prog_bar.setVisible(False)
 
         self.projs = projs
         self.organs = organs
         self.df_pando = df_pando
         self.controller = controller
+        self.single_proj = single_proj
+
+        # if self.single_proj:
+        self.label_version_single.setText('v'+mH_config.version+'  ')
+        self.label_version_single.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
+        # else:
+        self.label_version_multip.setText('v'+mH_config.version+'  ')
+        self.label_version_multip.setStyleSheet('color: rgb(116, 116, 116); font: bold 9pt "Calibri Light";')
 
         #General Init
         self.init_analysis_win()
         #Progress bar
         self.prog_bar.setValue(0)
         #Init Plots 
-        self.init_plot_meshes()
+        if not ave_hm: 
+            self.init_plot_meshes()
+        else: 
+            self.plot_widget.setEnabled(False)
         #Init Average Heatmaps
         self.init_aveHM()
         #Init Plot Widget
         self.init_plot_widget()
 
         # Theme 
-        self.theme = self.cB_theme.currentText()
+        if self.single_proj:
+            self.theme = self.cB_theme_single.currentText()
+        else:
+            self.theme = self.cB_theme_multip.currentText()
         self.on_cB_theme_currentIndexChanged(0)
 
         #Window Message
@@ -15388,11 +15688,23 @@ class MultipAnalysisWindow(QMainWindow):
             btn.setChecked(False)
 
     def init_analysis_win(self): 
-        #Fill Proj and Organ Data
-        self.fill_proj_info(self.projs)
+        if self.single_proj: 
+            #Fill Proj and Organ Data
+            self.fill_proj_info()
+            self.frame_single.setVisible(True)
+            self.frame_multip.setVisible(False)
+            self.label_version_single.setVisible(True)
+            self.label_version_single.setVisible(False)
+        else: 
+            self.single_proj_info.setVisible(False)
+            self.frame_single.setVisible(False)
+            self.frame_multip.setVisible(True)
+            self.label_version_multip.setVisible(True)
+            self.label_version_single.setVisible(False)
+
         #Blind analysis
         self.cB_blind.stateChanged.connect(lambda: fill_organs_table(win = self, table = self.organs_analysis_widget, 
-                                                                         df_pando = self.df_pando, single_proj = True))
+                                                                         df_pando = self.df_pando, single_proj = self.single_proj))
         filter_opt = {'Strain': True, 'Stage':True, 'Date Created':True, 'Notes':False}
         self.filter_cB = Checkable_ComboBox()
         styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
@@ -15403,11 +15715,10 @@ class MultipAnalysisWindow(QMainWindow):
 
         #Fill Organs Table
         fill_organs_table(win = self, table = self.organs_analysis_widget, 
-                          df_pando = self.df_pando, single_proj = True)
+                          df_pando = self.df_pando, single_proj = self.single_proj)
         #Menu options
-        # self.actionSave_Project_and_Organ.triggered.connect(self.save_project_and_organ_pressed)
         self.actionGo_to_Welcome_Page.triggered.connect(self.go_to_welcome_pressed)
-        # self.actionClose.triggered.connect(self.close_morphoHeart_pressed)
+        self.actionClose.triggered.connect(self.close_morphoHeart_pressed)
 
         #Open
         self.organs_analysis_open.clicked.connect(lambda: self.open_section(name='organs_analysis'))
@@ -15419,7 +15730,10 @@ class MultipAnalysisWindow(QMainWindow):
         self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
 
         #Sounds
-        layout = self.hL_sound_on_off 
+        if self.single_proj:
+            layout = self.hL_sound_on_off_single
+        else:
+            layout = self.hL_sound_on_off_multip
         add_sound_bar(self, layout)
         sound_toggled(win=self)
     
@@ -15433,12 +15747,20 @@ class MultipAnalysisWindow(QMainWindow):
         names_organs = ['----']
         self.all_meshes = {}
         self.plot_meshes_user = {}
-        self.plot_palette = palette_rbg('Set2', 15, False)
+        plot_palette = palette_rbg('tab10', 15, False)
+        plot_palette = [(val[0]*255, val[1]*255, val[2]*255) for val in plot_palette]
+        self.plot_palette = plot_palette[::-1]
         for key in self.organs.keys():
             organ_name = self.organs[key]['organ_name']
-            names_organs.append(organ_name)
-            self.all_meshes[organ_name] = {}
-            fill_organ_all_meshes(win = self, organ_name = organ_name)
+            if self.single_proj: 
+                names_organs.append(organ_name)
+                self.all_meshes[organ_name] = {}
+                fill_organ_all_meshes(win = self, organ_name = organ_name)
+            else: 
+                proj_name = self.organs[key]['proj_name']
+                names_organs.append(organ_name + ' @' + proj_name)
+                self.all_meshes[organ_name + ' @' + proj_name] = {}
+                fill_organ_all_meshes(win = self, organ_name = organ_name + ' @' + proj_name)
 
         self.comboBox_all_organs.addItems(names_organs)
         self.comboBox_all_meshes.addItems(['----'])
@@ -15447,8 +15769,11 @@ class MultipAnalysisWindow(QMainWindow):
         self.add_organ_mesh.clicked.connect(lambda: add_organ_mesh_to_plot(win=self))
         self.set_plot.clicked.connect(lambda: set_plot_settings(win=self))
         self.btn_user_plot.clicked.connect(lambda: create_user_plot(win=self))
+        self.btn_save_video.clicked.connect(lambda: create_user_video(win=self))
+        self.btn_browse_folder.clicked.connect(lambda: select_video_path(win=self))
         self.plot_clear_All.clicked.connect(lambda: update_plot(win=self, key='del', num='all'))
         self.combo_axes.setCurrentText('13')
+        self.q_axes.clicked.connect(lambda: webbrowser.open(mH_config.link2vedo_plotter))
 
         self.fillcolor_no1.clicked.connect(lambda: color_picker(win=self, name = 'no1'))
         self.fillcolor_no2.clicked.connect(lambda: color_picker(win=self, name = 'no2'))
@@ -15515,122 +15840,157 @@ class MultipAnalysisWindow(QMainWindow):
         self.del_mesh15.clicked.connect(lambda: update_plot(win=self, key='del',num='15'))
 
     def init_aveHM(self): 
-
-        styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
         
-        #Initialise comboBoxes
-        strain = list(set(self.df_pando['strain']))
-        strain_opt = {}
-        for st in strain: 
-            strain_opt[st] = False
-        self.comboBox_strain = Checkable_ComboBox()
-        self.comboBox_strain.setStyleSheet(styleSheet)
-        self.comboBox_strain.addItems(strain_opt)
-        self.hL_strain.addWidget(self.comboBox_strain)
-        self.num_strain.setText('/'+str(len(strain)))
-        self.comboBox_strain.model().dataChanged.connect(lambda: self.comboBox_strain.updateLineEditField())
-        self.comboBox_strain.setEnabled(False)
+        init = False
+        if self.single_proj: 
+            proj = self.projs[0]['proj']
+            if proj.analysis['morphoHeart']:
+                if 'hm3Dto2D' in proj.mH_settings['measure'].keys():
+                    if len(proj.mH_settings['measure']['hm3Dto2D']) > 0:
+                        init = True
+        else: 
+            for proj_num in self.projs.keys():
+                proj = self.projs[proj_num]['proj']
+                if proj.analysis['morphoHeart']:
+                    if 'hm3Dto2D' in proj.mH_settings['measure'].keys():
+                        if len(proj.mH_settings['measure']['hm3Dto2D']) > 0:
+                            init = True
+                            break
 
-        stage = list(set(self.df_pando['stage']))
-        stage_opt = {}
-        for sg in stage: 
-            stage_opt[sg] = False
-        self.comboBox_stage = Checkable_ComboBox()
-        self.comboBox_stage.setStyleSheet(styleSheet)
-        self.comboBox_stage.addItems(stage_opt)
-        self.hL_stage.addWidget(self.comboBox_stage)
-        self.num_stage.setText('/'+str(len(stage)))
-        self.comboBox_stage.model().dataChanged.connect(lambda: self.comboBox_stage.updateLineEditField())
-        self.comboBox_stage.setEnabled(False)
+        if init: 
 
-        genot = list(set(self.df_pando['genotype']))
-        genot_opt = {}
-        for gt in genot: 
-            genot_opt[gt] = False
-        self.comboBox_genotype = Checkable_ComboBox()
-        self.comboBox_genotype.setStyleSheet(styleSheet)
-        self.comboBox_genotype.addItems(genot_opt)
-        self.hL_genot.addWidget(self.comboBox_genotype) 
-        self.num_genot.setText('/'+str(len(genot)))
-        self.comboBox_genotype.model().dataChanged.connect(lambda: self.comboBox_genotype.updateLineEditField())
-        self.comboBox_genotype.setEnabled(False)
-        
-        manip = list(set(self.df_pando['manipulation']))
-        manip_opt = {}
-        for mp in manip: 
-            manip_opt[mp] = False
-        self.comboBox_manipulation = Checkable_ComboBox()
-        self.comboBox_manipulation.setStyleSheet(styleSheet)
-        self.comboBox_manipulation.addItems(manip_opt)
-        self.hL_manip.addWidget(self.comboBox_manipulation) 
-        self.num_manip.setText('/'+str(len(manip)))
-        self.comboBox_manipulation.model().dataChanged.connect(lambda: self.comboBox_manipulation.updateLineEditField())
-        self.comboBox_manipulation.setEnabled(False)
+            styleSheet = 'QComboBox {border: 1px solid gray; font: 25 9pt "Calibri Light";} QComboBox:editable {background: white;}; QComboBox:!editable, QComboBox::drop-down:editable {background: rgb(255, 255, 255);} QComboBox:!editable:on, QComboBox::drop-down:editable:on {background:rgba(170, 0, 127, 100);}; QComboBox QAbstractItemView {border: 1px solid darkgray; selection-background-color:  rgba(162, 0, 122,180); font: 25 9pt "Calibri Light";}'
+            
+            #Initialise comboBoxes
+            strain = list(set(self.df_pando['strain']))
+            strain_opt = {}
+            for st in strain: 
+                strain_opt[st] = False
+            self.comboBox_strain = Checkable_ComboBox()
+            self.comboBox_strain.setStyleSheet(styleSheet)
+            self.comboBox_strain.addItems(strain_opt)
+            self.hL_strain.addWidget(self.comboBox_strain)
+            self.num_strain.setText('/'+str(len(strain)))
+            self.comboBox_strain.model().dataChanged.connect(lambda: self.comboBox_strain.updateLineEditField())
+            self.comboBox_strain.setEnabled(False)
 
-        cmaps = ['turbo','viridis','jet','magma','inferno','plasma', 'binary']
-        self.colormap.clear()
-        self.colormap.addItems(cmaps)
-        self.colormap.currentIndexChanged.connect(lambda: set_colormap(win=self))
-        self.frame_binary.setVisible(False)
-        self.frame_cmap.setVisible(False)
-        set_colormap(win=self)
+            stage = list(set(self.df_pando['stage']))
+            stage_opt = {}
+            for sg in stage: 
+                stage_opt[sg] = False
+            self.comboBox_stage = Checkable_ComboBox()
+            self.comboBox_stage.setStyleSheet(styleSheet)
+            self.comboBox_stage.addItems(stage_opt)
+            self.hL_stage.addWidget(self.comboBox_stage)
+            self.num_stage.setText('/'+str(len(stage)))
+            self.comboBox_stage.model().dataChanged.connect(lambda: self.comboBox_stage.updateLineEditField())
+            self.comboBox_stage.setEnabled(False)
 
-        self.fillcolor_hm2Dbi1.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi1'))
-        self.fillcolor_hm2Dbi2.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi2'))
+            genot = list(set(self.df_pando['genotype']))
+            genot_opt = {}
+            for gt in genot: 
+                genot_opt[gt] = False
+            self.comboBox_genotype = Checkable_ComboBox()
+            self.comboBox_genotype.setStyleSheet(styleSheet)
+            self.comboBox_genotype.addItems(genot_opt)
+            self.hL_genot.addWidget(self.comboBox_genotype) 
+            self.num_genot.setText('/'+str(len(genot)))
+            self.comboBox_genotype.model().dataChanged.connect(lambda: self.comboBox_genotype.updateLineEditField())
+            self.comboBox_genotype.setEnabled(False)
+            
+            manip = list(set(self.df_pando['manipulation']))
+            manip_opt = {}
+            for mp in manip: 
+                manip_opt[mp] = False
+            self.comboBox_manipulation = Checkable_ComboBox()
+            self.comboBox_manipulation.setStyleSheet(styleSheet)
+            self.comboBox_manipulation.addItems(manip_opt)
+            self.hL_manip.addWidget(self.comboBox_manipulation) 
+            self.num_manip.setText('/'+str(len(manip)))
+            self.comboBox_manipulation.model().dataChanged.connect(lambda: self.comboBox_manipulation.updateLineEditField())
+            self.comboBox_manipulation.setEnabled(False)
 
-        #Get all the heatmaps that should have been created in all the organs added
-        setup_hm2d = {'th_i2e': {'name': 'Thickness (int>ext)'}, 
-                            'th_e2i': {'name': 'Thickness (ext>int)'},
-                            'ball': {'name': 'Ballooning'}}
-        
-        self.hm2d = {}; self.hm2d_opts = {}
-        for key in self.organs.keys(): 
-            organ = self.organs[key]['organ']
-            if 'heatmaps' in organ.mH_settings['wf_info'].keys(): 
-                if 'heatmaps2D' in organ.mH_settings['wf_info']['heatmaps'].keys(): 
-                    for hm in organ.mH_settings['wf_info']['heatmaps'].keys():
-                        if hm != 'heatmaps2D':
-                            proc, item = hm.split('[')
-                            name = setup_hm2d[proc]['name']
-                            name_hm = name+': '+item[:-1]
-                            if 'hm2d_dirs' in organ.mH_settings['wf_info']['heatmaps'][hm].keys(): 
-                                add = {'organ': organ.user_organName, 
-                                       'df_res': organ.dir_res(dir='csv_all'),
-                                       'hm2d_dirs': organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs']}
-                                opts = []
-                                for name in organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs'].keys(): 
-                                    dir_name = str(organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs'][name]).split('_')[-1]
-                                    opts.append(dir_name.split('.csv')[0])
-                                if name_hm not in self.hm2d.keys(): 
-                                    self.hm2d[name_hm] = [add]
-                                    self.hm2d_opts[name_hm] = [opts]
-                                else: 
-                                    self.hm2d[name_hm].append(add)
-                                    self.hm2d_opts[name_hm].append(opts)
+            cmaps = ['turbo','viridis','jet','magma','inferno','plasma', 'binary']
+            self.colormap.clear()
+            self.colormap.addItems(cmaps)
+            self.colormap.currentIndexChanged.connect(lambda: set_colormap(win=self))
+            self.frame_binary.setVisible(False)
+            self.frame_cmap.setVisible(False)
+            set_colormap(win=self)
 
-        for hmm in self.hm2d_opts: 
-            opt_lists = self.hm2d_opts[hmm]
-            opts_all = sum(opt_lists, [])
-            self.hm2d_opts[hmm] = list(set(opts_all))
+            self.fillcolor_hm2Dbi1.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi1'))
+            self.fillcolor_hm2Dbi2.clicked.connect(lambda: color_picker(win=self, name = 'hm2Dbi2'))
 
-        self.comboBox_hm2d_all.addItems(list(self.hm2d.keys()))
-        self.comboBox_hm2d_all.currentTextChanged.connect(lambda: update_div(win=self))
-        self.set_filters.clicked.connect(lambda: set_aveHM(win=self))
-        self.create_avehm.clicked.connect(lambda: create_average_hm(win=self))
-        self.select_avehm_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=False))
-        self.btn_save_avehm.clicked.connect(lambda: save_avehm(win=self))
+            #Get all the heatmaps that should have been created in all the organs added
+            setup_hm2d = {'th_i2e': {'name': 'Thickness (int>ext)'}, 
+                                'th_e2i': {'name': 'Thickness (ext>int)'},
+                                'ball': {'name': 'Ballooning'}}
+            
+            self.hm2d = {}; self.hm2d_opts = {}; at_least_one = False
+            for key in self.organs.keys(): 
+                organ = self.organs[key]['organ']
+                if 'heatmaps' in organ.mH_settings['wf_info'].keys(): 
+                    if 'heatmaps2D' in organ.mH_settings['wf_info']['heatmaps'].keys(): 
+                        for hm in organ.mH_settings['wf_info']['heatmaps'].keys():
+                            if hm != 'heatmaps2D':
+                                proc, item = hm.split('[')
+                                name = setup_hm2d[proc]['name']
+                                name_hm = name+': '+item[:-1]
+                                if 'hm2d_dirs' in organ.mH_settings['wf_info']['heatmaps'][hm].keys(): 
+                                    at_least_one = True
+                                    add = {'organ': organ.user_organName, 
+                                        'df_res': organ.dir_res(dir='csv_all'),
+                                        'hm2d_dirs': organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs']}
+                                    if not self.single_proj:
+                                        proj_name = self.organs[key]['proj_name']
+                                        proj_num = self.organs[key]['proj_num']
+                                        add['proj_name'] = proj_name
+                                        add['proj_num'] = proj_num
 
-        self.cB_image.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'image'))
-        self.cB_data.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'data'))
+                                    opts = []
+                                    for name in organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs'].keys(): 
+                                        dir_name = str(organ.mH_settings['wf_info']['heatmaps'][hm]['hm2d_dirs'][name]).split('_')[-1]
+                                        opts.append(dir_name.split('.csv')[0])
+                                    if name_hm not in self.hm2d.keys(): 
+                                        self.hm2d[name_hm] = [add]
+                                        self.hm2d_opts[name_hm] = [opts]
+                                    else: 
+                                        self.hm2d[name_hm].append(add)
+                                        self.hm2d_opts[name_hm].append(opts)
 
-        self.select_avehmdata_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=True))
-        self.btn_save_avehmdata.clicked.connect(lambda: save_avehm_data(win=self))
+            if at_least_one and len(self.hm2d)>0:
+                for hmm in self.hm2d_opts: 
+                    opt_lists = self.hm2d_opts[hmm]
+                    opts_all = sum(opt_lists, [])
+                    self.hm2d_opts[hmm] = list(set(opts_all))
 
-        self.save_image.setVisible(False)
-        self.save_data.setVisible(False)
+                self.comboBox_hm2d_all.addItems(list(self.hm2d.keys()))
+                self.comboBox_hm2d_all.currentTextChanged.connect(lambda: update_div(win=self))
+                self.set_filters.clicked.connect(lambda: set_aveHM(win=self))
+                self.create_avehm.clicked.connect(lambda: create_average_hm(win=self))
+                self.select_avehm_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=False))
+                self.btn_save_avehm.clicked.connect(lambda: save_avehm(win=self))
 
-        #Initialise div
-        update_div(win=self)
+                self.cB_image.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'image'))
+                self.cB_data.stateChanged.connect(lambda: save_hm_settings(win=self, cb = 'data'))
+
+                self.select_avehmdata_path.clicked.connect(lambda: select_path_avehm(win=self, proj=self.projs, data=True))
+                self.btn_save_avehmdata.clicked.connect(lambda: save_avehm_data(win=self))
+
+                self.save_image.setVisible(False)
+                self.save_data.setVisible(False)
+
+                #Initialise div
+                update_div(win=self)
+
+            else: 
+                self.average_heatmaps_widget.setEnabled(False)
+                self.frame_image.setEnabled(False)
+                print('aveHM not initialised!')
+        else: 
+            self.average_heatmaps_widget.setEnabled(False)
+            self.frame_image.setEnabled(False)
+            print('aveHM not initialised!')
 
     def init_plot_widget(self):
         #Central plot
@@ -15644,12 +16004,13 @@ class MultipAnalysisWindow(QMainWindow):
     def update_meshes(self):
         organ_selected = self.comboBox_all_organs.currentText()
         self.comboBox_all_meshes.clear()
-        if len(self.all_meshes[organ_selected].keys()) == 0: 
-            self.comboBox_all_meshes.addItems(['----'])
-        else: 
-            self.comboBox_all_meshes.addItems(self.all_meshes[organ_selected].keys())
+        if organ_selected != '----': 
+            if len(self.all_meshes[organ_selected].keys()) == 0: 
+                self.comboBox_all_meshes.addItems(['----'])
+            else: 
+                self.comboBox_all_meshes.addItems(self.all_meshes[organ_selected].keys())
 
-    def fill_proj_info(self, projs):
+    def fill_proj_info(self):
 
         proj = self.projs[0]['proj']
         self.lineEdit_proj_name.setText(proj.info['user_projName'])
@@ -15683,11 +16044,35 @@ class MultipAnalysisWindow(QMainWindow):
         print('Go to Welcome was pressed')
         title = 'Go to Welcome Page...'
         msg = 'Are you sure you want to close the Analysis Window and go to the Welcome Page?' 
-        prompt = Prompt_ok_cancel(title, msg, parent=self, win_size = (450, 150))
+        prompt = Prompt_ok_cancel(title, msg, parent=self, win_size = (350, 150))
         prompt.exec()
         print('output:',prompt.output, '\n')
         if prompt.output: 
             self.controller.show_welcome()
+        else: 
+            pass
+
+    def close_morphoHeart_pressed(self): 
+        print('Close Analysis Window was pressed')
+        title = 'Close Analysis Window?'
+        msg = 'Are you sure you want to close morphoHeart?' 
+        prompt = Prompt_ok_cancel(title, msg, parent=self, win_size = (350, 150))
+        prompt.exec()
+        print('output:',prompt.output, '\n')
+        if prompt.output: 
+            self.close()
+        else: 
+            pass
+    
+    def closeEvent(self, event):
+        print('User pressed X')
+        title = 'Close Analysis Window?'
+        msg = 'Are you sure you want to close the Analysis Window?' 
+        prompt = Prompt_ok_cancel(title, msg, parent=self, win_size = (350, 150))
+        prompt.exec()
+        print('output:',prompt.output, '\n')
+        if prompt.output: 
+            event.accept()
         else: 
             pass
 
@@ -15742,7 +16127,7 @@ def fill_organs_table(win, table, df_pando, single_proj):
         table.insertRow(row)
         organ_name = df_row['user_organName']
         proj_name = df_row['user_projName']
-        cB_name = 'cB_'+organ_name+'_o_'+proj_name
+        cB_name = 'cB_'+organ_name+' @'+proj_name
         col = 0        
         for nn, key in all_labels.items(): 
             if nn == '#': 
@@ -15792,16 +16177,14 @@ def set_plot_settings(win):
         getattr(win, 'plotno'+str(nn)).addItems(list_plots_str)
     
     print('win.plot_settings:', win.plot_settings)
+    win.comboBox_all_organs.setEnabled(True)
+    win.comboBox_all_meshes.setEnabled(True)
     win.add_organ_mesh.setEnabled(True)
     win.set_plot.setChecked(True)
 
 def fill_organ_all_meshes(win, organ_name): 
 
-    for key, org in win.organs.items():
-        print(key, org)
-        if org['organ_name'] == organ_name:
-            organ = win.organs[key]['organ'] 
-            break
+    organ = return_organ(win, organ_name)
 
     for mesh in organ.obj_meshes.keys(): 
         mesh_obj = organ.obj_meshes[mesh]
@@ -15830,7 +16213,7 @@ def fill_organ_all_meshes(win, organ_name):
                     name = proc+'['+ch+'-'+cont+'(CL.'+cl_ch+'-'+cl_cont+']'
                     title = mesh_name+'\nBallooning [um]\nCL('+cl_ch+'_'+cl_cont
 
-                win.all_meshes[mesh_name+': '+meas_name] = {'obj_dir': 'mesh_meas', 
+                win.all_meshes[organ_name][mesh_name+': '+meas_name] = {'obj_dir': 'mesh_meas', 
                                                             'obj_name': mesh,
                                                             'mtype': m_meas, 
                                                             'name': name, 
@@ -15845,6 +16228,25 @@ def fill_organ_all_meshes(win, organ_name):
         organ.obj_subm = {}
         
         print('win.all_meshes:', win.all_meshes)
+
+def return_organ(win, organ_name): 
+
+    if win.single_proj: 
+        for key, org in win.organs.items():
+            # print(key, org)
+            if org['organ_name'] == organ_name:
+                organ = win.organs[key]['organ'] 
+                break
+
+    else: 
+        organ_name, proj_name = organ_name.split(' @')
+        for key, org in win.organs.items():
+            # print(key, org)
+            if org['organ_name'] == organ_name and org['proj_name'] == proj_name:
+                organ = win.organs[key]['organ'] 
+                break
+
+    return organ
 
 def add_organ_mesh_to_plot(win): 
     organ2add = win.comboBox_all_organs.currentText()
@@ -15868,10 +16270,14 @@ def add_organ_mesh_to_plot(win):
 
         # print('new_key:', new_key)
         if n_pos+1 < 15: 
+            if '(' not in mesh2add: 
+                alpha = 0.1
+            else: 
+                alpha = 1
             win.plot_meshes_user[new_key] = {'organ': organ2add, 
                                                 'mesh': mesh2add, 
-                                                'color': win.plot_palette[int(new_key)],
-                                                'alpha': 0.1, 
+                                                'color': win.plot_palette[int(new_key)-1],
+                                                'alpha': alpha, 
                                                 'plot_no': 1}
             # print('self.plot_meshes_user:', self.plot_meshes_user)
             update_plot_list(win=win)
@@ -15912,8 +16318,9 @@ def update_plot_list(win):
     
     keys_mesh = list(win.plot_meshes_user.keys())
     # print('keys_mesh:', keys_mesh)
+    style = 'QPushButton{border-width: 1px; border-style: outset; border-color: rgb(66, 66, 66); background-color: rgb(211, 211, 211);} QPushButton:hover{border-color: rgb(255, 255, 255)}'
     nn = 0
-    for n_pos in range(1,11,1): 
+    for n_pos in range(1,16,1): 
         organ_name = getattr(win, 'organ_no'+str(n_pos))
         mesh_name = getattr(win, 'mesh_no'+str(n_pos))
         opacity = getattr(win,'alpha'+str(n_pos))
@@ -15926,8 +16333,12 @@ def update_plot_list(win):
             organ_name.setText(mesh_data['organ'])
             mesh_name.setEnabled(True)
             mesh_name.setText(mesh_data['mesh'])
-            colorfill.setEnabled(True)
-            color_btn(btn=colorfill, color=mesh_data['color'])
+            if '(' not in mesh_data['mesh']:
+                colorfill.setEnabled(True)
+                color_btn(btn=colorfill, color=mesh_data['color'])
+            else: 
+                colorfill.setEnabled(False)
+                color_btn(btn=colorfill, color='black')
             opacity.setValue(mesh_data['alpha'])
             opacity.setEnabled(True)
             plot_no.setCurrentText(str(mesh_data['plot_no']))
@@ -15940,7 +16351,7 @@ def update_plot_list(win):
             mesh_name.setText('object name')
             mesh_name.setEnabled(False)
             colorfill.setEnabled(False)
-            # colorfill.set background rgb(211, 211, 211)
+            colorfill.setStyleSheet(style)
             opacity.setEnabled(False)
             plot_no.setEnabled(False)
             del_mesh.setEnabled(False)
@@ -15964,7 +16375,7 @@ def color_picker(win, name):
         
             print('win.bi_colors:', win.bi_colors)
 
-def create_user_plot(win): #needs work because all meshes were being added from segm_btns which cant be used here
+def create_user_plot(win, video=False): 
     if len(win.plot_meshes_user) < 1: 
         win.win_msg('*No meshes have been added to the table.')
     else:
@@ -15975,72 +16386,250 @@ def create_user_plot(win): #needs work because all meshes were being added from 
 
         for plot in range(1,win.plot_settings['no_plots']+1,1): 
             setattr(win, 'items_plot'+str(plot), [])
+            setattr(win, 'txt_plot'+str(plot), [])
 
-        print('win.all_meshes:', win.all_meshes)
-        print('win.plot_meshes_user:', win.plot_meshes_user)
+        # print('win.all_meshes:', win.all_meshes)
+        # print('win.plot_meshes_user:', win.plot_meshes_user)
+        all_organs = []
         for num, item in win.plot_meshes_user.items(): 
-            # print('item:',  item)
-            method = win.all_meshes[item['mesh']]['obj_dir']
-            mesh_name = win.all_meshes[item['mesh']]['obj_name']
+            print('item:',  item)
+            sp_organ = return_organ(win, item['organ'])
+            all_organs.append(item['organ'])
+            if win.plot_settings['reorient']: 
+                rotX, rotY, rotZ = organ_reorient(sp_organ)
+
+            method = win.all_meshes[item['organ']][item['mesh']]['obj_dir']
+            mesh_name = win.all_meshes[item['organ']][item['mesh']]['obj_name']
+            user_name = item['mesh']
             plot_no = item['plot_no']
             if method == 'obj_meshes': 
-                mesh2add = win.organ.obj_meshes[mesh_name].mesh.clone()
+                mesh2add = sp_organ.obj_meshes[mesh_name].mesh.clone()
             elif method == 'obj_subm': 
-                submesh = win.organ.obj_subm[mesh_name]
-                print('mesh_name:',mesh_name)
+                submesh = sp_organ.obj_subm[mesh_name]
+                # print('mesh_name:',mesh_name)
                 if 'sCut' in mesh_name: 
-                    scut, rcut, ch, cont, segm, sect = mesh_name.split('_')
-                    name_btn = scut+'_o_'+rcut+':'+ch+'_'+cont
-                    if 'meshes' in win.segm_sect_btns[name_btn].keys(): 
-                        mesh2add = win.segm_sect_btns[name_btn]['meshes'][sect][segm]
-                    else: 
-                        seg_cut = mesh_name[1:5]
-                        mesh2add = submesh.get_sect_segm_mesh(seg_cut = seg_cut)
+                    seg_cut = mesh_name[1:5]
+                    mesh2add = submesh.get_sect_segm_mesh(seg_cut = seg_cut)
                 else: 
                     if 'segm' in mesh_name: 
-                        scut, ch, cont, segm = mesh_name.split('_')
-                        name_btn = scut+':'+ch+'_'+cont
-                        if 'meshes' in win.segm_btns[name_btn].keys(): 
-                            mesh2add = win.segm_btns[name_btn]['meshes'][segm]
-                        else: 
-                            mesh2add = submesh.get_segm_mesh()
+                        mesh2add = submesh.get_segm_mesh()
                     else: #'sect' in segm
-                        rcut, ch, cont, sect = mesh_name.split('_')
-                        name_btn = rcut+':'+ch+'_'+cont
-                        if 'meshes' in win.sect_btns[name_btn].keys(): 
-                            mesh2add = win.sect_btns[name_btn]['meshes'][sect]
-                        else: 
-                            mesh2add = submesh.get_sect_mesh()
+                        mesh2add = submesh.get_sect_mesh()
+
             else: #method == 'mesh_meas':
-                print(item)
-                mtype = win.all_meshes[item['mesh']]['mtype']
-                mesh2add = win.organ.obj_meshes[mesh_name].mesh_meas[mtype].clone()
-                name = win.all_meshes[item['mesh']]['name']
-                proc = win.all_meshes[item['mesh']]['proc']
-                title = win.all_meshes[item['mesh']]['title']
-                mesh2add = win.set_scalebar(mesh=mesh2add, name = name, proc = proc, title = title)
+                # print(item)
+                mtype = win.all_meshes[item['organ']][item['mesh']]['mtype']
+                mesh2add = sp_organ.obj_meshes[mesh_name].mesh_meas[mtype].clone()
+                name = win.all_meshes[item['organ']][item['mesh']]['name']
+                proc = win.all_meshes[item['organ']][item['mesh']]['proc']
+                title = win.all_meshes[item['organ']][item['mesh']]['title']
+                mesh2add = set_scalebar(organ = sp_organ, mesh=mesh2add, name = name, proc = proc, title = title)
+                user_name = user_name+' - '+mtype
 
             #Update alpha and add it to the list
             mesh2add.alpha(item['alpha'])
+            if not win.check_default_colors.isChecked() and method != 'mesh_meas':
+                mesh2add.color(item['color'])
+
+            if win.plot_settings['reorient']: 
+                mesh2add.rotate_x(-rotX+90)
+                mesh2add.rotate_y(-rotY)
+                mesh2add.rotate_z(-rotZ)
             getattr(win, 'items_plot'+str(plot_no)).append(mesh2add)
+            txt_all = ' - ' +sp_organ.user_organName + ': ' + user_name + '\n'
+            getattr(win, 'txt_plot'+str(plot_no)).append(txt_all)
         
-        obj = []
+        obj = []; txt=[]
         for plot in range(1,win.plot_settings['no_plots']+1,1): 
             tuple_list = tuple(getattr(win, 'items_plot'+str(plot)))
+            txt_list = ''.join(getattr(win, 'txt_plot'+str(plot)))
             obj.append(tuple_list)
+            txt.append((plot-1,txt_list))
             delattr(win, 'items_plot'+str(plot))
-        print('obj:', obj)
+        print('obj:', obj, '- txt:', txt)
+        all_organs = list(set(all_organs))
+
+        if not video: 
+            axes = win.plot_settings['axes']
+            zoom = win.plot_settings['zoom']
+            elev = win.plot_settings['elev']
+            azim = win.plot_settings['azim']
+
+            plot_grid(obj=obj, txt=txt, axes=axes, sc_side=all_organs_maj_bounds(win, all_organs), 
+                        zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
+
+        else: 
+            return obj, txt, all_organs
+        
+    win.btn_user_plot.setChecked(False)
+
+def create_user_video(win): 
+    run =False
+    if win.video_filename.text() != '': 
+        video_name =  win.video_filename.text()+".mp4"
+        duration = win.spin_video_duration.value()
+        if win.btn_browse_folder.isChecked(): 
+            video_path = win.video_path / video_name
+            print('video_path:',video_path)
+            pass
+        else: 
+            win.win_msg('*Please select a directory to save the video...')
+            return
+    else: 
+        win.win_msg('*Please provide a filename to save the video.')
+        return    
+
+    if video_path.is_file(): 
+        title = 'Video already exists...' 
+        msg = '"'+video_name + '" already exists in the imgs_videos folder of the current organ. Do you want to replace it? Press  -OK-  if you want to replace it, else press  -Cancel-  and provide a new name.'
+        prompt = Prompt_ok_cancel(title, msg, win_size = (400, 200), parent=win)
+        prompt.exec()
+        print('output:', prompt.output)
+        if prompt.output: 
+            run = True
+        else: 
+            run = False
+    else: 
+        run = True
+
+    if run: 
+        win.win_msg('Creating video...')
+        if win.check_scalecube_plot.isChecked():
+            add_scale_cube = True
+        else: 
+            add_scale_cube = False
 
         axes = win.plot_settings['axes']
         zoom = win.plot_settings['zoom']
-        elev = win.plot_settings['elev']
-        azim = win.plot_settings['azim']
-        txt = [(0, win.organ.user_organName)]
+        
+        obj, txt, all_organs = create_user_plot(win, video=True)
 
-        plot_grid(obj=obj, txt=txt, axes=axes, sc_side=max(win.organ.get_maj_bounds()), 
-                    zoom=zoom, azimuth = azim, elevation =elev, add_scale_cube=add_scale_cube)
+        #Scale cube
+        if add_scale_cube: 
+            sc_side = all_organs_maj_bounds(win, all_organs)
+            if isinstance(obj[0], tuple):
+                scale_cube = vedo.Cube(pos=obj[0][0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+            else: 
+                scale_cube = vedo.Cube(pos=obj[0].center_of_mass(), side=sc_side, c='white', alpha=0.01).legend('ScaleCube')
+        else: 
+            scale_cube = []
 
-    win.btn_user_plot.setChecked(False)
+        n_obj = len(obj)
+        # Create tuples for text
+        post = [tup[0] for tup in txt]; txt_out = []; n = 0
+        for num in range(n_obj):
+            if num in post:
+                txt_out.append(vedo.Text2D(txt[n][1], c=txt_color, font=txt_font, s=txt_size))
+                n += 1
+            else: 
+                txt_out.append(vedo.Text2D('', c=txt_color, font=txt_font, s=txt_size))
+
+        # Add scale_cube to last plot
+        if isinstance(obj[n_obj-1], tuple):
+            obj_list = list(obj[n_obj-1])
+            obj_list.append(scale_cube)
+            obj_f = tuple(obj_list)
+        else: #vedo.mesh.Mesh
+            obj_f = (obj[n_obj-1], scale_cube)
+        obj[n_obj-1] = obj_f
+
+        # if n_obj == 1: 
+        bg = str(path_bkgd)
+        # elif n_obj == 2: 
+        #     bg = str(path_bkgd2)
+        # elif n_obj == 3: 
+        #     bg = str(path_bkgd3)
+        # elif n_obj == 4: 
+        #     bg = str(path_bkgd4)
+        # elif n_obj == 5: 
+        #     bg = str(path_bkgd5)
+        # elif n_obj == 6: 
+        #     bg = str(path_bkgd6)
+
+        # Now plot
+        lbox = []
+        vp = vedo.Plotter(bg=bg, bg2="white", N=len(obj), axes=axes, offscreen=True)
+        # vp.add_icon(logo, pos=pos, size=0.25)
+        for num in range(len(obj)):
+            if isinstance(obj[num], tuple):
+                try: 
+                    lbox.append(vedo.LegendBox(list(obj[num]), font=leg_font, width=leg_width))
+                except: 
+                    lbox.append('')
+            else:
+                lbox.append(vedo.LegendBox([obj[num]], font=leg_font, width=leg_width))
+            if num != len(obj)-1:
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+            else: # num == len(obj)-1
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom)
+
+        video = vedo.Video(str(video_path), duration=duration, backend='imageio')
+        for i in range(180):
+            vp.show(elevation=0, azimuth=2, zoom = zoom)  # render the scene
+            video.add_frame()
+        video.close()
+        win.win_msg('Video "'+video_name+'" has been successfully saved!')
+        alert('woohoo')
+    
+def organ_reorient(organ): 
+
+    rotX = 0; rotY = 0; rotZ = 0
+    if 'orientation' not in organ.mH_settings['wf_info'].keys(): 
+        pass
+    else: 
+        try: 
+            roi_cube = organ.mH_settings['wf_info']['orientation']['roi']['roi_cube']
+            if 'rotate_x' in roi_cube.keys(): 
+                rotX = roi_cube['rotate_x']
+            if 'rotate_y' in roi_cube.keys(): 
+                rotY = roi_cube['rotate_y']
+            if 'rotate_z' in roi_cube.keys(): 
+                rotZ = roi_cube['rotate_z']
+            print(rotX, rotY, rotZ)
+            if 'rotate_user' in roi_cube.keys(): 
+                rotX = rotX + roi_cube['rotate_user']['rotX']
+                rotY = rotY + roi_cube['rotate_user']['rotY']
+                rotZ = rotZ + roi_cube['rotate_user']['rotZ']
+        except: 
+            pass
+    
+    return rotX, rotY, rotZ
+
+def all_organs_maj_bounds(win, all_organs): 
+
+    val = 0
+    for organ in all_organs: 
+        sp_organ = return_organ(win, organ)
+        sp_val = max(sp_organ.get_maj_bounds())
+        if sp_val > val: 
+            val = sp_val
+
+    return val
+
+def set_scalebar(organ, mesh, name, proc, title):
+
+    if organ.mH_settings['wf_info']['heatmaps'][name]['default']: 
+        _, name_ch_cont = name.split('[')
+        if 'th' in proc: 
+            ch, cont = name_ch_cont[:-1].split('-')
+            namef = ch+'_'+cont+'_whole'
+        else: 
+            ch_cont, cl_ch_cont = name_ch_cont[:-1].split('(CL.')
+            ch, cont = ch_cont.split('-')
+            cl_ch, cl_cont = cl_ch_cont[:-1].split('-')
+            namef = ch+'_'+cont+'_('+cl_ch+'_'+cl_cont+')'
+        min_val = organ.mH_settings['measure'][proc][namef]['range_o']['min_val']
+        max_val = organ.mH_settings['measure'][proc][namef]['range_o']['max_val']
+    else: 
+        min_val = organ.mH_settings['wf_info']['heatmaps'][name]['min_val']
+        max_val = organ.mH_settings['wf_info']['heatmaps'][name]['max_val']
+    color_map = organ.mH_settings['wf_info']['heatmaps'][name]['colormap']
+
+    mesh.cmap(color_map)
+    mesh.add_scalarbar(title=title, pos=(0.7, 0.05))
+    mesh.mapper().SetScalarRange(min_val,max_val)
+
+    return mesh
 
 def update_div(win):
 
@@ -16115,24 +16704,31 @@ def create_average_hm(win):
     #Check all values have been entered or selected
     check = check_avehm(win)
     if check: 
-        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
-        win.win_msg('Creating average heatmap...')
-        if len(win.projs)==1: 
-            obj_proj = win.projs[0]['proj']
-            rtype, ch_cont = hm_sel.split(': ')
-            if 'Ball' in rtype:
-                ch_cont, cl = ch_cont.split('(')
-                ch, cont = ch_cont.split('-')
-                name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
-                cl = cl.replace('.',':')
-                opt_sel = name_ch+'_'+cont+' - '+cl[:-1]+' - '+opt_sel
-            else: 
-                ch, cont = ch_cont.split('-')
-                name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
-                opt_sel = name_ch+'_'+cont+' - '+opt_sel
+        res_out = set_avehm(win)
+        if res_out != None:
+            df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = res_out
+            win.win_msg('Creating average heatmap...')
+            if len(win.projs)==1: 
+                obj_proj = win.projs[0]['proj']
+                rtype, ch_cont = hm_sel.split(': ')
+                if 'Ball' in rtype:
+                    ch_cont, cl = ch_cont.split('(')
+                    ch, cont = ch_cont.split('-')
+                    name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
+                    cl = cl.replace('.',':')
+                    opt_sel = name_ch+'_'+cont+' - '+cl[:-1]+' - '+opt_sel
+                else: 
+                    ch, cont = ch_cont.split('-')
+                    name_ch = obj_proj.mH_settings['setup']['name_chs'][ch]
+                    opt_sel = name_ch+'_'+cont+' - '+opt_sel
 
-        plot_average_heatmap(win, df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap)
-        win.create_avehm.setChecked(True)
+            plot_average_heatmap(win, df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap)
+            win.create_avehm.setChecked(True)
+        else: 
+            fig11 = win.figure
+            fig11.clear()
+            win.fig_title.setText('')
+            win.canvas_plot.draw()
 
 def check_avehm(win): 
     for param in ['strain', 'stage', 'genotype', 'manipulation']: 
@@ -16195,22 +16791,35 @@ def set_avehm(win):
         print('\n >> hm: ', hm_sel,' - Tuples: ', all_tuples, '- cut_val:', cut_val)
 
     organs_out = filter_df(df_input = win.df_pando, filters = filters, all_tuples = all_tuples)
-    all_organs = list(organs_out['user_organName']) 
+    if win.single_proj:
+        all_organs = list(organs_out['user_organName']) 
+    else: 
+        all_organs = []
+        for i, row in organs_out.iterrows(): 
+            sp_organ = row['user_organName']
+            sp_proj = row['user_projName']
+            print(sp_organ, sp_proj)
+            all_organs.append(sp_organ+' ('+sp_proj+')')
 
     hm2d_sel = copy.deepcopy(win.hm2d[hm_sel])
     to_remove = []
     organs_hm2d = []
     for org_info in hm2d_sel: 
         found = False
-        organ = org_info['organ']
-        if organ in all_organs:
+        name = org_info['organ']
+        if not win.single_proj: 
+            name = name+' ('+org_info['proj_name']+')'
+        if name in all_organs:
             for div in org_info['hm2d_dirs']:
                 dir_hm = org_info['hm2d_dirs'][div]
                 print(dir_hm)
                 if opt_sel in str(dir_hm): 
                     found = True
                     div_sel = div
-                    organs_hm2d.append(org_info['organ'])
+                    if win.single_proj:
+                        organs_hm2d.append(org_info['organ'])
+                    else: 
+                        organs_hm2d.append(name)
                     break
             if not found:
                 to_remove.append(org_info)
@@ -16221,29 +16830,37 @@ def set_avehm(win):
     organs_f = ', '.join(all_organsf)+' (N='+str(len(all_organsf))+')'
     win.organs_included_analysis.setHtml(html_txt[0]+html_txt[1]+organs_f+html_txt[2])# setText(organs_f)
     
-    #Clean organs_out
-    indx_to_remove = []
-    for index, row in organs_out.iterrows(): 
-        if row['user_organName'] not in all_organsf: 
-            indx_to_remove.append(index)
-    for idx in indx_to_remove: 
-        organs_out = organs_out.drop(index=idx)
+    if len(all_organsf)>0:
+        #Clean organs_out
+        indx_to_remove = []
+        for index, row in organs_out.iterrows(): 
+            if row['user_organName'] not in all_organsf: 
+                indx_to_remove.append(index)
+        for idx in indx_to_remove: 
+            organs_out = organs_out.drop(index=idx)
 
-    win.organs_included = organs_out
+        win.organs_included = organs_out
 
-    if len(to_remove)> 0:
-        for item in to_remove: 
-            hm2d_sel.remove(item)
+        if len(to_remove)> 0:
+            for item in to_remove: 
+                hm2d_sel.remove(item)
 
-    filt_hm_all = get_all_filtered_hms(win, hm2d_sel, hm_sel, div_sel, opt_sel)
-    # print(len(filt_hm_all)); print(hm2d_sel, hm_sel, div_sel, opt_sel)
-    win.win_msg('Averaging heatmaps...')
-    df_concat = pd.concat(filt_hm_all).groupby(level=0).mean()
+        filt_hm_all = get_all_filtered_hms(win, hm2d_sel, hm_sel, div_sel, opt_sel)
+        if len(filt_hm_all) >0 :
+            # print(len(filt_hm_all)); print(hm2d_sel, hm_sel, div_sel, opt_sel)
+            win.win_msg('Averaging heatmaps...')
+            df_concat = pd.concat(filt_hm_all).groupby(level=0).mean()
 
-    if cmap != 'binary': 
-        return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, (min_val, max_val), cmap
+            if cmap != 'binary': 
+                return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, (min_val, max_val), cmap
+            else: 
+                return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, cut_val, cmap
+        else: 
+            win.win_msg('*No heatmaps to concatenate using the defined filters!', win.create_avehm)
+            return None
     else: 
-        return  df_concat, len(filt_hm_all), hm_sel, div_sel, opt_sel, cut_val, cmap
+        win.win_msg('*No heatmaps to concatenate using the defined filters!', win.create_avehm)
+        return None
 
 def save_hm_settings(win, cb): 
 
@@ -16265,6 +16882,9 @@ def save_avehm(win):
             return
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
+            return
+        if len(win.organs_included.values) <=0: 
+            win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
             return
         
         dpi = int(win.combo_dpi.currentText())
@@ -16372,7 +16992,7 @@ def save_avehm(win):
         alert('clown')
     
     else: 
-        win.win_msg('*Please select a directory where to save the average heatmap created.', win.btn_save_avehm)
+        win.win_msg('*Please select a directory to save the average heatmap created.', win.btn_save_avehm)
     
 def save_avehm_data(win):
 
@@ -16385,6 +17005,9 @@ def save_avehm_data(win):
             return
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
+            return
+        if len(win.organs_included.values) <=0: 
+            win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
             return
         
         ext = win.cB_avehmdata_extension.currentText()
@@ -16504,15 +17127,6 @@ def filter_df(df_input, filters, all_tuples):
             df_out = df_pivot.get_group(all_tuples)
         else: 
             df_out = df_pivot.get_group(all_tuples[0])
-
-    # df_input.group_by(['strain','stage'])
-    # print(df_input.group_by(['strain','stage']).groups
-
-    # grp = df.groupby('Name')
-    # for name, group in grp:
-    #     print(name)
-    #     print(group)
-    #     print()
     
     return df_out
 
@@ -16582,12 +17196,12 @@ def select_path_avehm(win, proj=None, data=False):
         cwd = str(proj[0]['proj_path'])
     else: 
         cwd = str(Path().absolute().home())
-    
+
     if data: 
         lineEdit = win.lineEdit_avehmdata_dir
         caption = "Select the directory where you would like to save the created Average Heatmap Dataset"
         error = '*Something happened when selecting the directory to save the average dataset. Please select it again.'
-        btn = win.select_avehm_path
+        btn = win.select_avehmdata_path
     else: 
         lineEdit = win.lineEdit_avehm_dir
         caption = "Select the directory where you would like to save the created Average Heatmap Image"
@@ -16601,9 +17215,23 @@ def select_path_avehm(win, proj=None, data=False):
             win.aveHMdata_dir = Path(path_folder)
         else: 
             win.aveHM_dir = Path(path_folder)
+        btn.setChecked(True)
     else: 
         win.win_msg(error, btn)
-        return 
+        return
+    
+def select_video_path(win): 
+
+    cwd = str(Path().absolute().home())
+    caption = "Select the directory where you would like to save the video"
+    btn = win.btn_browse_folder
+    path_folder = QFileDialog.getExistingDirectory(win, directory=cwd, caption=caption)
+    if Path(path_folder).is_dir():
+        win.video_path = Path(path_folder)
+        btn.setChecked(True)
+    else: 
+        btn.setChecked(False)
+
 
 class PlotWindow(QDialog):
 
@@ -16626,8 +17254,6 @@ class PlotWindow(QDialog):
        #    Toolbars
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.hLayout.addWidget(self.toolbar)
-
-        # self.show()
     
 #%% Other classes GUI related - ########################################################
 class MyToggle(QtWidgets.QPushButton):
@@ -16820,7 +17446,7 @@ def update_status(root_dict, items, fillcolor, override=False):
 # Button general functions
 def color_btn(btn, color, small=True): 
 
-    if isinstance(color, list): 
+    if isinstance(color, list) or isinstance(color, tuple): 
         color = 'rgb'+str(tuple(color))
     elif isinstance(color, str) and '[' in color:
         color_nop = color[1:-1]

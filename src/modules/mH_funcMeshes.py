@@ -41,6 +41,7 @@ from .mH_funcBasics import get_by_path, alert, df_reset_index, df_add_value, pal
 path_mHImages = mH_config.path_mHImages
 # Load logo
 path_logo = path_mHImages / 'logo-07.jpg'
+# path_bkgd = path_mHImages / 'white_background400.png'
 logo = vedo.Picture(str(path_logo))
 
 #%% Set default fonts and sizes for plots
@@ -561,6 +562,8 @@ def proc_meshes4cl(organ, win):#
             else: 
                 pass
             print('settings:', settings)
+            settings['process'] = 'trimming'
+            settings['direction'] = pl_cut
 
             # Get planes for first mesh
             if n == 0 and same_planes: 
@@ -1352,7 +1355,7 @@ def classify_segments(meshes, dict_segm, colors_dict):
         mks.append(vedo.Marker('*').c(colors_dict[segm]).legend(dict_segm[segm]['user_name']))
     
     txA = 'Instructions: Click each segment mesh until it is coloured according to the segment it belongs to.'
-    txB = '\n[Note: Colours will loop for each mesh as you click it ]'
+    txB = '\n[Note: Colours will loop for each mesh as you click it ]\nClose the window [X] when done.'
     txt0 = vedo.Text2D(txA+txB, c=txt_color, font=txt_font, s=txt_size)
     lb = vedo.LegendBox(mks, markers=sym, font=txt_font, 
                         width=leg_width/1.5, height=leg_height/1.5)
@@ -1817,11 +1820,11 @@ def create_iso_volume(organ, ch, plot=True):
     alpha = organ.mC_settings['wf_info']['isosurface'][ch]['alpha']
 
     # Invert stack
+    res_copy = copy.deepcopy(res)
     if organ.mC_settings['wf_info']['isosurface']['invert']: 
-        res_copy = copy.deepcopy(res)
         if res_copy[1] > 0:
             res_copy[1] = -res_copy[1]
-        print('res_copy:', res_copy)
+    print('res:', res, '- res_copyf:', res_copy)
 
     try: 
         vol = vedo.Volume(str(img_dir), spacing = res_copy).isosurface(int(threshold)).alpha(float(alpha))
@@ -3250,15 +3253,34 @@ def get_plane(filename, txt:str, meshes:list, settings: dict, def_pl = None,
     sph_centre = vedo.Sphere(pos=pl_centre,r=2,c='black')
     # Build new plane to confirm
     plane_new = vedo.Plane(pos=pl_centre,normal=normal_corrected).color('green').alpha(1).legend('New Plane')
+    trimming = False
+    if 'process' in settings.keys():
+        if settings['process'] == 'trimming':
+            trimming = True
+            xmin, xmax, ymin, ymax, zmin, zmax = meshes_mesh[0].bounds()
+            x_size = xmax - xmin; y_size = ymax - ymin; z_size = zmax - zmin
+            box_size = max(x_size, y_size, z_size)
+            if settings['direction'] == 'bottom': 
+                end_pt = np.array(pl_centre) - np.array(normal_corrected)*box_size//3
+            else: 
+                end_pt = np.array(pl_centre) + np.array(normal_corrected)*box_size//3
+            vector_new = vedo.Arrow(start_pt=pl_centre, end_pt=end_pt)
+        else: 
+            vector_new = []
+    else: 
+        vector_new = []
 
     normal_txt = str([' {:.2f}'.format(i) for i in normal_corrected]).replace("'","")
     centre_txt = str([' {:.2f}'.format(i) for i in pl_centre]).replace("'","")
-    text = filename+'\n\nUser defined plane to '+ txt.upper() +'.\nPlane normal: '+normal_txt+' - Plane centre: '+centre_txt+'.\nClose the window when done.'
+    if trimming: 
+        text = filename+'\n\nUser defined plane to '+ txt.upper() +'.\nPlane normal: '+normal_txt+' - Plane centre: '+centre_txt+'. \nNote: The red arrow is pointing in the direction of the mesh section that will be trimmed (i.e. removed). \nClose the window when done'
+    else: 
+        text = filename+'\n\nUser defined plane to '+ txt.upper() +'.\nPlane normal: '+normal_txt+' - Plane centre: '+centre_txt+'.\nClose the window when done.'
     txt2D = vedo.Text2D(text, c=txt_color, font=txt_font, s=txt_size)
 
     vp = vedo.Plotter(N=1, axes=4)
     vp.add_icon(logo, pos=(0.8,0.05), size=0.25)
-    vp.show(meshes_mesh, plane, plane_new, sph_centre, txt2D, at=0, viewup='y', azimuth=0, elevation=0, interactive=True)
+    vp.show(meshes_mesh, plane, plane_new, sph_centre, vector_new, txt2D, at=0, viewup='y', azimuth=0, elevation=0, interactive=True)
 
     pl_dict = {'pl_normal': normal_corrected,
                     'pl_centre': pl_centre}
@@ -3290,33 +3312,50 @@ def get_plane_pos(filename, txt, meshes, settings, option,
 
     rotX = [0]; rotY = [0]; rotZ = [0]
 
+    trimming = False
+    if 'process' in settings.keys():
+        if settings['process'] == 'trimming':
+            trimming = True
+
     # Functions to move and rotate plane
     def sliderX(widget, event):
         valueX = widget.GetRepresentation().GetValue()
         plane.x(valueX)
+        if trimming:
+            n_vect.x(valueX)
 
     def sliderY(widget, event):
         valueY = widget.GetRepresentation().GetValue()
         plane.y(valueY)
+        if trimming:
+            n_vect.y(valueY)
 
     def sliderZ(widget, event):
         valueZ = widget.GetRepresentation().GetValue()
         plane.z(valueZ)
+        if trimming:
+            n_vect.z(valueZ)
 
     def sliderRotX(widget, event):
         valueRX = widget.GetRepresentation().GetValue()
         rotX.append(valueRX)
         plane.rotateX(valueRX, rad=False)
+        if trimming:
+            n_vect.rotateX(valueRX, rad=False)
 
     def sliderRotY(widget, event):
         valueRY = widget.GetRepresentation().GetValue()
         rotY.append(valueRY)
         plane.rotateY(valueRY, rad=False)
+        if trimming:
+            n_vect.rotateY(valueRY, rad=False)
 
     def sliderRotZ(widget, event):
         valueRZ = widget.GetRepresentation().GetValue()
         rotZ.append(valueRZ)
         plane.rotateZ(valueRZ, rad=False)
+        if trimming:
+            n_vect.rotateZ(valueRZ, rad=False)
 
     def sliderAlphaMeshOut(widget, event):
         valueAlpha = widget.GetRepresentation().GetValue()
@@ -3345,6 +3384,15 @@ def get_plane_pos(filename, txt, meshes, settings, option,
     vp.add_icon(logo, pos=(0.85,0.75), size=0.10)
     plane = vedo.Plane(pos=centre, normal=normal, 
                        s=(box_size*1.5, box_size*1.5)).color('dimgray').alpha(1)
+    if trimming: 
+        if settings['direction'] == 'bottom': 
+            end_pt = np.array(centre) - np.array(normal)*box_size//3
+        else: # settings['direction'] == 'top'
+            end_pt = np.array(centre) + np.array(normal)*box_size//3
+        n_vect = vedo.Arrow(start_pt=centre, end_pt=end_pt)
+    else: 
+        n_vect = []
+
     if option[0]: #sliderX
         vp.addSlider2D(sliderX, xval[0], xval[1], value=centre[0],
                     pos=[(0.1,0.15), (0.3,0.15)], title='- > x position > +', 
@@ -3386,10 +3434,13 @@ def get_plane_pos(filename, txt, meshes, settings, option,
         vp.addSlider2D(sliderAlphaMeshOut4, xmin=0, xmax=0.99, value=0.01,
                pos=[(0.72,0.40), (0.72,0.50)], c=settings['color'][3], 
                title='Opacity\n'+ settings['name'][3].title(), title_size=txt_slider_size2)
-        
-    text = filename+'\n\nDefine plane position to '+txt.upper()+'. \nClose the window when done'
+    
+    if trimming: 
+        text = filename+'\n\nDefine plane position to '+txt.upper()+'. \nNote: The red arrow is pointing in the direction of the mesh section that will be trimmed (i.e. removed). \nClose the window when done'
+    else: 
+        text = filename+'\n\nDefine plane position to '+txt.upper()+'. \nClose the window when done'
     txt = vedo.Text2D(text, c=txt_color, font=txt_font, s=txt_size)
-    vp.show(meshes, plane, lbox, txt, viewup='y', zoom=zoom, interactive=True)
+    vp.show(meshes, plane, n_vect, lbox, txt, viewup='y', zoom=zoom, interactive=True)
 
     return plane, normal, rotX, rotY, rotZ
 
@@ -3790,6 +3841,9 @@ def get_segm_mean_sph(controller, organ, cut, sphs_mean, color_segm):
 
 def modify_cell_class(organ, cells, cut, cells_class): 
 
+    txA = 'Instructions: \n- Reclassify cells as part of another segment by clicking the cells that are misclassified.\n- Its class/color will change to the next segment class. \n- Keep clicking up until you reach the correct classification. \n- Close the window when done.'
+    txt0 = vedo.Text2D(txA, c=txt_color, font=txt_font, s=txt_size)
+
     segm_names = organ.mC_settings['setup']['segm_mC'][cut]['name_segments']
     segm_colors = organ.mC_settings['setup']['segm_mC'][cut]['colors']
 
@@ -3858,7 +3912,7 @@ def modify_cell_class(organ, cells, cut, cells_class):
                title='Opacity\n'+ vol_settings['name'][2].title(), title_size=txt_slider_size2)
         
     plt.addCallback('mouse click', classify_cells_into_chambers)
-    plt.show(cells, iso_vols, msg, zoom=1.2)
+    plt.show(cells, iso_vols, msg, txt0, zoom=1.2)
 
     return cells, cells_class
 
@@ -4327,7 +4381,7 @@ def create_zone(organ, zone, df_zone):
         for ind, row in df_zone.iterrows():
             cell_no = row['Index_CentralCell']
             zone = row['Zone'].strip()
-            print(ind, cell_no, zone)
+            # print(ind, cell_no, zone)
             #Find cell within sphs
             found = False
             for sph in sphs_zones: 
