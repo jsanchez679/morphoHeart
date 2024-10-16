@@ -7207,7 +7207,7 @@ class MainWindow(QMainWindow):
             if save_chS3: 
                 for cont in ['int', 'tiss', 'ext']: 
                     im_cont = getattr(im_ch, 's3_'+cont)
-                    s32save = getattr(self, 's3_'+cont)
+                    s32save = self.s3_cont[ch_name][cont]
                     msg = 'Selecting the Contours of Channel '+str(ch_name[-1])+' has been successfully finished! Saving s3_'+cont+'...'
                     self.win_msg(msg)
                     im_cont.s3_save(s32save)
@@ -16883,6 +16883,9 @@ def save_avehm(win):
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
             return
+        if len(win.organs_included.values) <=0: 
+            win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
+            return
         
         dpi = int(win.combo_dpi.currentText())
         ext = win.cB_avehm_extension.currentText()
@@ -17002,6 +17005,9 @@ def save_avehm_data(win):
             return
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
+            return
+        if len(win.organs_included.values) <=0: 
+            win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
             return
         
         ext = win.cB_avehmdata_extension.currentText()
@@ -17190,12 +17196,12 @@ def select_path_avehm(win, proj=None, data=False):
         cwd = str(proj[0]['proj_path'])
     else: 
         cwd = str(Path().absolute().home())
-    
+
     if data: 
         lineEdit = win.lineEdit_avehmdata_dir
         caption = "Select the directory where you would like to save the created Average Heatmap Dataset"
         error = '*Something happened when selecting the directory to save the average dataset. Please select it again.'
-        btn = win.select_avehm_path
+        btn = win.select_avehmdata_path
     else: 
         lineEdit = win.lineEdit_avehm_dir
         caption = "Select the directory where you would like to save the created Average Heatmap Image"
@@ -17209,6 +17215,7 @@ def select_path_avehm(win, proj=None, data=False):
             win.aveHMdata_dir = Path(path_folder)
         else: 
             win.aveHM_dir = Path(path_folder)
+        btn.setChecked(True)
     else: 
         win.win_msg(error, btn)
         return
