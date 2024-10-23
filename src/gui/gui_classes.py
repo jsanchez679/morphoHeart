@@ -16173,8 +16173,11 @@ def set_plot_settings(win):
     list_plots = list(range(1,no_plots+1,1))
     list_plots_str = [str(item) for item in list_plots]
     for nn in range(1,16,1): 
+        plot_sel = getattr(win, 'plotno'+str(nn)).currentText()
         getattr(win, 'plotno'+str(nn)).clear()
         getattr(win, 'plotno'+str(nn)).addItems(list_plots_str)
+        if plot_sel != '1' and plot_sel in list_plots_str: 
+            getattr(win, 'plotno'+str(nn)).setCurrentText(plot_sel)
     
     print('win.plot_settings:', win.plot_settings)
     win.comboBox_all_organs.setEnabled(True)
@@ -16359,6 +16362,8 @@ def update_plot_list(win):
 def color_picker(win, name): 
 
     color = QColorDialog.getColor()
+    print('win.plot_meshes_user:', win.plot_meshes_user)
+
     if color.isValid():
         print('The selected color is: ', color.name())
         red, green, blue, _ = color.getRgb() #[red, green, blue]
@@ -16374,6 +16379,11 @@ def color_picker(win, name):
                 win.bi_colors[1] = [red/255, green/255, blue/255]
         
             print('win.bi_colors:', win.bi_colors)
+        
+        else: 
+            print('update')
+            plot_no = str(int(name.split('no')[1])-1)
+            win.plot_meshes_user[plot_no]['color'] = (red, green, blue)
 
 def create_user_plot(win, video=False): 
     if len(win.plot_meshes_user) < 1: 
@@ -16877,6 +16887,7 @@ def save_avehm(win):
     if win.select_avehm_path.isChecked() and hasattr(win, 'aveHM_dir'): 
         #Get Filename
         filename = win.ave_hm_filename.text()
+        print('win.organs_included.values: ', win.organs_included.values)
         if len(filename)<8:
             win.win_msg('*The filename of the average heatmap needs to have at least 8 characters.')
             return
@@ -17000,6 +17011,7 @@ def save_avehm_data(win):
     if win.select_avehmdata_path.isChecked() and hasattr(win, 'aveHMdata_dir'): 
         #Get Filename
         filename = win.ave_hmdata_filename.text()
+        print('win.organs_included.values: ', win.organs_included.values)
         if len(filename)<8:
             win.win_msg('*The filename of the average heatmap needs to have at least 8 characters.')
             return
