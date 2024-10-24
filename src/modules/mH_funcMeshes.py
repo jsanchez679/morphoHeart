@@ -2081,7 +2081,7 @@ def measure_ellipse(organ, mesh_segm, segm_no, planar_views, divs, cut, ref_vect
 
         obj = [m2]
         txt = [(0, organ.user_organName+' > Ellipsoid created for '+name)]
-        plot_grid(obj=obj, txt=txt, axes=1, sc_side=max(organ.get_maj_bounds()))
+        plot_grid(obj=obj, txt=txt, axes=1, sc_side=max(organ.get_maj_bounds()), viewup='y', zoom=0.5)
 
     else: 
         return dims
@@ -3089,7 +3089,7 @@ def get_plane_normals_to_proj_kspl(organ, no_planes, kspl, gui_heatmaps2d):
    
 #%% - Plotting functions
 def plot_grid(obj:list, txt=[], axes=1, zoom=1, lg_pos='top-left',
-              sc_side=350, azimuth = 0, elevation = 0, add_scale_cube=True):
+              sc_side=350, azimuth = 0, elevation = 0, add_scale_cube=True, viewup=None):
     
     # Create ScaleCube
     if add_scale_cube: 
@@ -3148,7 +3148,10 @@ def plot_grid(obj:list, txt=[], axes=1, zoom=1, lg_pos='top-left',
         if num != len(obj)-1:
             vp.show(obj[num], lbox[num], txt_out[num], at=num)
         else: # num == len(obj)-1
-            vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom, azimuth = azimuth, elevation = elevation, interactive=True)
+            if viewup != None: 
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom, interactive=True, viewup=viewup)
+            else: 
+                vp.show(obj[num], lbox[num], txt_out[num], at=num, zoom=zoom, azimuth = azimuth, elevation = elevation, interactive=True)
 
 def plot_all_organ(organ):
     
