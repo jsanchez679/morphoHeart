@@ -249,7 +249,7 @@ class Project():
             #Add attribute with info regarding segments
             if isinstance(mC_settings['segm_mC'], dict):
                 self.mC_segments = {}
-                for key in mC_settings['segm_mC']: 
+                for key in mC_settings['segm_mC'].keys(): 
                     if 'Cut' in key:
                         self.mC_segments[key]= mC_settings['segm_mC'][key]['name_segments']
             else: 
@@ -267,8 +267,8 @@ class Project():
             #Add attribute with info regarding zones
             if isinstance(mC_settings['zone_mC'], dict): 
                 self.mC_zones = {}
-                for key in mC_settings['zone_mC']: 
-                    if 'Cut' in key:
+                for key in mC_settings['zone_mC'].keys(): 
+                    if 'Zone' in key and not 'Zones' in key:
                         self.mC_zones[key]= mC_settings['zone_mC'][key]['name_zones']
             else: 
                 self.mC_zones = False
@@ -325,7 +325,7 @@ class Project():
         self.mH_methods = methods
 
     def set_mC_methods(self): 
-        methods = ['A-Set_Orientation', 'A-SetExtraChs', 'A-CleanCells']
+        methods = ['A-SetExtraChs', 'A-CleanCells']
         if self.mC_segments != None and self.mC_segments != False: 
             methods.append('B-Segments')
         if self.mC_sections != None and self.mC_sections != False: 
@@ -334,7 +334,7 @@ class Project():
             methods.append('B-Segments_Regions')
         if self.mC_zones != None: 
             methods.append('B-Zones')
-        methods.append('C-Measure')
+        # methods.append('C-Measure')
         
         self.mC_methods = methods
 

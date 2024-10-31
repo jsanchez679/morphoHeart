@@ -4078,7 +4078,7 @@ class NewOrgan(QDialog):
                         check_ch.setVisible(False)
                     else: 
                         if ch != 'chA':
-                            if proj.mC_settings['setup']['mC_channel'][ch] != False: #ABC
+                            if proj.mC_settings['setup']['mH_channel'][ch] != False: #ABC
                                 label.setEnabled(False)
                                 brw_ch.setEnabled(False)
                                 dir_ch.setEnabled(False)
@@ -4326,7 +4326,7 @@ class NewOrgan(QDialog):
         if proj.analysis['morphoCell']: 
             mC_channels = proj.mC_channels
             if len(mC_channels)>0:
-                mH_ch = proj.mC_settings['setup']['mC_channel']
+                mH_ch = proj.mC_settings['setup']['mH_channel']
                 for ch in proj.mC_channels.keys(): 
                     if len(self.img_dirs[ch]) < 1: 
                         if ch != 'chA':
@@ -5595,7 +5595,10 @@ class ProjSettings(QDialog):
         if len(sp_set['mH_channel'].keys())>0: 
             for key in sp_set['mH_channel'].keys():
                 getattr(self, 'cB_use_mH_tiss_'+key).setChecked(True)
-                getattr(self, key+'_select').setText(sp_set['mH_channel'][key])
+                if isinstance(sp_set['mH_channel'][key], str): 
+                    getattr(self, key+'_select').setText(sp_set['mH_channel'][key])
+                else: 
+                    getattr(self, 'cB_use_mH_tiss_'+key).setChecked(sp_set['mH_channel'][key])
 
     def init_segments_group_mC(self):
 
@@ -12180,7 +12183,7 @@ class MainWindow(QMainWindow):
 
         cell_zone_setup = self.organ.mC_settings['setup']['zone_mC']
         no_cuts = [key for key in cell_zone_setup.keys() if 'In2Zone' not in key]
-        palettes = []; palette_names = ['Accent','Dark2', 'Set1']
+        palettes = []; palette_names = ['Accent','Dark2', 'Set1', 'Set2','Accent','Dark2', 'Set1', 'Set2']
         for n, cuts in enumerate(no_cuts): 
             palettes.append(palette_rbg(palette_names[n], 15))
         self.cell_zone_btns = {}
@@ -12197,7 +12200,7 @@ class MainWindow(QMainWindow):
                             cut_opt.append(cut+':'+name)
                         cut_opt.append(cut+':'+', '.join(names))
 
-        for num, optcut in enumerate(['1','2', '3']):
+        for num, optcut in enumerate(['1','2','3']):
             cutl = 'zone'+optcut
             cutb = 'Zone'+optcut
             if cutb in no_cuts: 
@@ -12224,7 +12227,7 @@ class MainWindow(QMainWindow):
                         getattr(self, 'fillcolor_'+cutl+'_no'+str(nn)).setVisible(False)
                     else: 
                         if not colors_initialised: 
-                            color = list(palettes[num][15*(int(optcut)-1)+(nn-1)])
+                            color = list(palettes[num][nn])
                             cell_zone_setup[cutb]['colors']['zone'+str(nn)] = color
                         else: 
                             color = cell_zone_setup[cutb]['colors']['zone'+str(nn)]
