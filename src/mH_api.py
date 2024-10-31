@@ -2708,7 +2708,7 @@ def run_remove_cells(controller):
     #set_process(controller, 'remove_cells_mC')
     workflow = controller.organ.workflow['morphoCell']
     # Check which channels want to be seen
-    controller.organ.cellsMC['chA'].remove_cells()
+    controller.organ.mC_obj['chA'].remove_cells()
     
     getattr(controller.main_win, 'remove_cells_play').setChecked(True)
     proc_wft = ['A-CleanCells', 'Status']
@@ -2740,7 +2740,7 @@ def run_segments_mC(controller, btn):
         print('\n- Dividing Cells into segments '+user_names)
         controller.main_win.win_msg('Dividing Cells into segments '+user_names)
         
-        cells_position = controller.organ.cellsMC['chA'].df_cells()
+        cells_position = controller.organ.mC_obj['chA'].df_cells()
         column_name = 'Segment-'+cut
         run_all = False; run_reclass = False; cells_out = None
         if len(controller.organ.mC_settings['wf_info']['segments_cells'][cut]['cut_info']) > 0: 
@@ -2773,17 +2773,17 @@ def run_segments_mC(controller, btn):
         if run_all or run_reclass: 
             if cells_out == None: 
                 segm_class = cells_position['Segment-'+cut]
-                color_class = controller.organ.cellsMC['chA'].get_colour_class(cut, mtype='segm')
-                cells_out = controller.organ.cellsMC['chA'].colour_cells(sphs_pos = cells_position, 
+                color_class = controller.organ.mC_obj['chA'].get_colour_class(cut, mtype='segm')
+                cells_out = controller.organ.mC_obj['chA'].colour_cells(sphs_pos = cells_position, 
                                                                         color_class = color_class)
             
             cells_out, segm_classf = fcM.modify_cell_class(organ = controller.organ, 
                                                             cells = cells_out, cut=cut, 
                                                             cells_class = segm_class)
             
-            controller.organ.cellsMC['chA'].cells = cells_out
-            cells_position = controller.organ.cellsMC['chA'].assign_class(cells_position, segm_classf, col_name = 'Segment-'+cut)
-            controller.organ.cellsMC['chA'].save_cells(cells_position)
+            controller.organ.mC_obj['chA'].cells = cells_out
+            cells_position = controller.organ.mC_obj['chA'].assign_class(cells_position, segm_classf, col_name = 'Segment-'+cut)
+            controller.organ.mC_obj['chA'].save_cells(cells_position)
 
             fcM.count_cells(controller.organ, cells_position, cut, mtype = 'segm', col_name = 'Segment-'+cut)
 
@@ -2831,7 +2831,7 @@ def get_segm_planes(organ, cut, win):
             try: 
                 pl_centre = iso_vols[0].center_of_mass()
             except: # this except doesn't work - find the boundaries of the spheres in get_plane?
-                cells_position = organ.cellsMC['chA'].df_cells()
+                cells_position = organ.mC_obj['chA'].df_cells()
                 filt_segm = cells_position[["Position X", "Position Y", "Position Z"]]
                 pl_centre = list(filt_segm.mean())
 
@@ -2882,6 +2882,8 @@ def run_IND_segm(controller, plot=True):
             #Add prompt that asks which option to select
             if len(df_clusters_ALL) > 1:
                 items = {}
+                if len(df_clusters_ALL)>6:
+                    df_clusters_ALL = df_clusters_ALL[0:6]
                 for opt in range(len(df_clusters_ALL)): 
                     items[opt] = {'opt': 'Option '+str(opt+1)}
                 title = 'Clustering Options for '+cut+'-'+segm.title()
@@ -2919,6 +2921,7 @@ def run_IND_segm(controller, plot=True):
 
     #Update Table
     controller.main_win.fill_cell_results() 
+    controller.main_win.ind_segments_play.setChecked(True)
 
 def run_zones(controller, zone): 
     

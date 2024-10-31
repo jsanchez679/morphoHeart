@@ -686,8 +686,9 @@ class Controller:
                             'heart_default': self.new_proj_win.heart_analysis.isChecked()}
                 
                 self.proj = mHC.Project(proj_dict, new=True)
-                self.new_proj_win.mH_settings['chs_all'] = self.ch_all
-                self.new_proj_win.mH_settings['params'] = self.mH_params
+                if self.proj.analysis['morphoHeart']:
+                    self.new_proj_win.mH_settings['chs_all'] = self.ch_all
+                    self.new_proj_win.mH_settings['params'] = self.mH_params
 
                 self.proj.set_settings(settings={'mH': {'settings':self.new_proj_win.mH_settings, 
                                                         'params': self.new_proj_win.mH_user_params},
@@ -819,10 +820,7 @@ class Controller:
             self.organ = loaded_organ
             print('-------------Loaded Organ:-------------')
             print('organ.workflow: ', self.organ.workflow)
-            print('self.organ.obj_temp: ',self.organ.obj_temp)
-            print('self.organ.mH_settings: ',self.organ.mH_settings)
-            print('self.organ.mH_settings[wf_info]: ',self.organ.mH_settings['wf_info'])
-            print('self.organ.submeshes: ', self.organ.submeshes)
+            print('self.organ.o__dict__:', self.organ.__dict__)
         else: 
             return loaded_organ
 

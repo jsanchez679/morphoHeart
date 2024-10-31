@@ -4651,10 +4651,13 @@ class LoadProj(QDialog):
 def get_proj_wf(proj): 
     flat_wf = flatdict.FlatDict(copy.deepcopy(proj.workflow))
     #Make sure keep keys works for morphoCell
-    proc_to_check_if_included = ['morphoHeart:MeshesProc:C-Centreline','morphoHeart:MeshesProc:D-Ballooning', 
-                                 'morphoHeart:MeshesProc:D-Thickness_int>ext','morphoHeart:MeshesProc:D-Thickness_ext>int', 
-                                 'morphoHeart:MeshesProc:E-Segments','morphoHeart:MeshesProc:E-Sections', 
-                                 'morphoHeart:MeshesProc:E-Segments_Sections']
+    if proj.analysis['morphoHeart']:
+        proc_to_check_if_included = ['morphoHeart:MeshesProc:C-Centreline','morphoHeart:MeshesProc:D-Ballooning', 
+                                    'morphoHeart:MeshesProc:D-Thickness_int>ext','morphoHeart:MeshesProc:D-Thickness_ext>int', 
+                                    'morphoHeart:MeshesProc:E-Segments','morphoHeart:MeshesProc:E-Sections', 
+                                    'morphoHeart:MeshesProc:E-Segments_Sections']
+    else: 
+        proc_to_check_if_included = []
     flat_wf_keys = flat_wf.keys()
     for proc in proc_to_check_if_included: 
         matching = [s for s in flat_wf_keys if proc in s]
@@ -4858,8 +4861,12 @@ def fill_table_with_organs(win, proj, table, blind_cB, all_cB):#notes_cB, mH_cB=
     table.horizontalHeader().setVisible(False)
 
     headerc = table.horizontalHeader()  
-    for col in range(len(all_labels.keys())):   
-        headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+    if len(all_labels.keys())<10:
+        for col in range(len(all_labels.keys())):   
+            headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
+    else: 
+        for col in range(len(all_labels.keys())):   
+            headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
 
     table.resizeColumnsToContents()
     table.resizeRowsToContents()
@@ -11987,7 +11994,7 @@ class MainWindow(QMainWindow):
         #Buttons
         self.cell_segments_open.clicked.connect(lambda: self.open_section(name='cell_segments'))
         # self.cell_segments_play.setStyleSheet(style_play)
-        self.cell_segments_play.setEnabled(False)
+        # self.cell_segments_play.setEnabled(False)
 
         # self.ind_segments_play.setStyleSheet(style_play)
         self.ind_segments_play.setEnabled(False)
@@ -12067,7 +12074,6 @@ class MainWindow(QMainWindow):
                     self.update_status(None, res, status_cut, override=True)
                 else: 
                     status_cut.setEnabled(False)
-                    self.update_status(None, res, status_cut, override=True)
                 
             else: 
                 getattr(self, 'label_segm_'+cutl+'_cell').setVisible(False)
@@ -12122,7 +12128,7 @@ class MainWindow(QMainWindow):
         #Buttons
         self.cell_zones_open.clicked.connect(lambda: self.open_section(name='cell_zones'))
         # self.cell_zones_play.setStyleSheet(style_play)
-        self.cell_zones_play.setEnabled(False)
+        # self.cell_zones_play.setEnabled(False)
 
         self.q_cell_zones.clicked.connect(lambda: self.help('cell_zones'))
         self.cell_zones_set.clicked.connect(lambda: self.set_cell_zones())
@@ -12349,8 +12355,8 @@ class MainWindow(QMainWindow):
                 else: 
                     all_done.append(False)
             
-            if all(all_done) and wf['Status'] == 'DONE':
-                self.cell_segments_play.setChecked(True)
+            # if all(all_done) and wf['Status'] == 'DONE':
+            #     self.cell_segments_play.setChecked(True)
                 # self.cell_segments_open.setChecked(True)
                 # self.open_section(name = 'cell_segments')
             
@@ -12446,8 +12452,8 @@ class MainWindow(QMainWindow):
                 wf_info['zone_cells']['background'] = 'silver'
 
             #Enable buttons? 
-            if wf['Status'] == 'DONE': 
-                getattr(self, 'cell_zones_play').setChecked(True)
+            # if wf['Status'] == 'DONE': 
+            #     getattr(self, 'cell_zones_play').setChecked(True)
             
             #Update Status in GUI
             self.update_status(wf, ['Status'], self.cell_zones_status)
@@ -12545,7 +12551,7 @@ class MainWindow(QMainWindow):
             self.reset_remove_cells.setChecked(False)
             return
         
-        cells = self.organ.cellsMC['chA']
+        cells = self.organ.mC_obj['chA']
         cells_position = cells.df_cells()
 
         n_cells = len(cells_position)
@@ -12553,7 +12559,7 @@ class MainWindow(QMainWindow):
         cells_position['deleted'] = deleted
         cells.save_cells(cells_position)
         
-        self.organ.cellsMC['chA'].set_cells(cells_position)
+        self.organ.mC_obj['chA'].set_cells(cells_position)
 
     def set_cell_segments(self): 
 
@@ -12570,7 +12576,7 @@ class MainWindow(QMainWindow):
 
         self.cell_segments_set.setChecked(True)
         print('self.gui_segm_cells: ', self.gui_segm_cells)
-        self.cell_segments_play.setEnabled(True) 
+        # self.cell_segments_play.setEnabled(True) 
 
         for cut in self.organ.mC_settings['setup']['segm_mC'].keys(): 
             if 'Cut' in cut: 
@@ -12662,7 +12668,7 @@ class MainWindow(QMainWindow):
 
             self.cell_zones_set.setChecked(True)
             print('self.gui_zone_cells: ', self.gui_zone_cells)
-            self.cell_zones_play.setEnabled(True) 
+            # self.cell_zones_play.setEnabled(True) 
             for num in ['zone1', 'zone2', 'zone3']: 
                 if num.title() in self.gui_zone_cells:
                     getattr(self, num+'_cell_play').setEnabled(True)
@@ -12714,7 +12720,10 @@ class MainWindow(QMainWindow):
 
         for i, item in df2save.items():
             name = item['name']
+            print('name:', name)
             df = item['df']
+            if isinstance(df, str):
+                df = pd.read_json(df, orient='table')
             df = df.reset_index()
 
             tab = QtWidgets.QWidget()
@@ -12789,7 +12798,7 @@ class MainWindow(QMainWindow):
         #Segments and IND
         if isinstance(self.organ.mC_settings['setup']['segm_mC'], dict):
             name = 'Segm'
-            cells_position = self.organ.cellsMC['chA'].df_cells()
+            cells_position = self.organ.mC_obj['chA'].df_cells()
             #Get df_segm / segm
             if 'mC_segm' in self.organ.mC_settings['measure'].keys():
                 if 'mC_segm' in self.organ.mC_settings['measure'].keys():
@@ -12824,6 +12833,8 @@ class MainWindow(QMainWindow):
             if 'mC_zone' in self.organ.mC_settings['measure'].keys():
                 for zz in self.organ.mC_settings['measure']['mC_zone']:
                     df2addz = self.organ.mC_settings['measure']['mC_zone'][zz]
+                    if isinstance(df2addz, str):
+                        df2addz= pd.read_json(df2addz, orient='table')
                     tab_name = zz.title()
                     df2save[num] = {'name': tab_name.replace(':', '_'), 
                                     'df': df2addz}
@@ -15016,7 +15027,7 @@ class MainWindow(QMainWindow):
         except: 
             pass
 
-        cells_position = self.organ.cellsMC['chA'].df_cells()
+        cells_position = self.organ.mC_obj['chA'].df_cells()
         if process == 'remove_cells': 
             color = self.organ.mC_settings['setup']['color_chs']['chA']
             color_class = [color]*len(cells_position)
@@ -15026,14 +15037,14 @@ class MainWindow(QMainWindow):
             cut = process.split('_')[0].title()
             segm_names = self.organ.mC_settings['setup']['segm_mC'][cut]['name_segments']
             user_names = '('+', '.join([segm_names[val] for val in segm_names])+')'
-            color_class = self.organ.cellsMC['chA'].get_colour_class(cut = cut, mtype = 'segm')
+            color_class = self.organ.mC_obj['chA'].get_colour_class(cut = cut, mtype = 'segm')
             txtf = self.organ.user_organName+' \n - ChA: '+cut+' '+user_names
 
         else: 
             print('process not defined')
             pass
 
-        cells = self.organ.cellsMC['chA'].colour_cells(sphs_pos = cells_position, 
+        cells = self.organ.mC_obj['chA'].colour_cells(sphs_pos = cells_position, 
                                                         color_class = color_class)
 
         #Add spheres that have segm names

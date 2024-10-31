@@ -1855,7 +1855,7 @@ def remove_cells(organ, vol_iso):
         names.append(organ.mC_settings['setup']['name_chs'][ch])
         colors.append(organ.mC_settings['setup']['color_chs'][ch])
 
-    sphs = organ.cellsMC['chA'].cells
+    sphs = organ.mC_obj['chA'].cells
     cells2remove = []
     silcont = [None]
     def remove_cells(evt):
@@ -1918,15 +1918,15 @@ def remove_cells(organ, vol_iso):
     plt.show(sphs, vols, msg, txt, zoom=0.8)
     
     # Read file
-    cells_position = organ.cellsMC['chA'].df_cells()
+    cells_position = organ.mC_obj['chA'].df_cells()
     deleted = cells_position['deleted']
 
     for cell in cells2remove: 
         deleted[cell] = 'YES'
     
     cells_position['deleted'] = deleted
-    organ.cellsMC['chA'].save_cells(cells_position)
-    organ.cellsMC['chA'].set_cells(cells_position)
+    organ.mC_obj['chA'].save_cells(cells_position)
+    organ.mC_obj['chA'].set_cells(cells_position)
 
 #%% - Measuring functions
 def measure_centreline(organ, nPoints):
@@ -3691,7 +3691,7 @@ def get_cells_within_planes(controller, organ, cells_position, cut):
         else: 
             sp_pos_classes = sp_pos_classes[0]
 
-    cells_position = organ.cellsMC['chA'].assign_class(cells_position, sp_pos_classes, col_name = 'Segment-'+cut)
+    cells_position = organ.mC_obj['chA'].assign_class(cells_position, sp_pos_classes, col_name = 'Segment-'+cut)
     #Get mean spheres so user can define which segment is which
     # - Create mean spheres
     sphs_mean = create_mean_sphs(cells_position, sp_pos_classes, color_segm, 
@@ -3715,14 +3715,14 @@ def get_cells_within_planes(controller, organ, cells_position, cut):
         color_class[n] = color_segm[final_class[val]['segm']]
 
     col_name = 'Segment-'+cut
-    cells_position = organ.cellsMC['chA'].assign_class(cells_position, segm_class, col_name = col_name)
-    cells_out = organ.cellsMC['chA'].colour_cells(sphs_pos = cells_position, 
+    cells_position = organ.mC_obj['chA'].assign_class(cells_position, segm_class, col_name = col_name)
+    cells_out = organ.mC_obj['chA'].colour_cells(sphs_pos = cells_position, 
                                                     color_class = color_class)
     segm_class = cells_position[col_name]
 
-    organ.cellsMC['chA'].cells = cells_out
+    organ.mC_obj['chA'].cells = cells_out
 
-    organ.cellsMC['chA'].save_cells(cells_position)
+    organ.mC_obj['chA'].save_cells(cells_position)
     
     return cells_out, segm_class
         
@@ -4312,7 +4312,7 @@ def create_segm_cells_from_df(df_cellsChamber, chamber):
 
 def extract_segm_IND(organ, cut, segm, n_closest_cells, segm_count, plot, process = 'IND'):
 
-    cell_distances = organ.cellsMC['chA'].df_cells()
+    cell_distances = organ.mC_obj['chA'].df_cells()
     df_segm = cell_distances[cell_distances['Segment-'+cut] == segm]
 
     # Find euclidian distance beteen all cells in chamber
@@ -4423,7 +4423,7 @@ def select_cell_for_zones(organ, cut, zone, segm_names, all_data):
     all_sphsf = sum(all_sphs,[])
 
     #Find the numbers of cells per segment
-    df_cells = organ.cellsMC['chA'].df_cells()
+    df_cells = organ.mC_obj['chA'].df_cells()
     col_name = 'Segment-'+cut
     
     segm_cells = {}; segm_ids = {}
