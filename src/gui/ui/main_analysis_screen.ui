@@ -1635,11 +1635,16 @@ QComboBox QAbstractItemView {
                       <string>13</string>
                      </property>
                      <property name="currentIndex">
-                      <number>12</number>
-                     </property>
-                     <property name="maxVisibleItems">
                       <number>13</number>
                      </property>
+                     <property name="maxVisibleItems">
+                      <number>14</number>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>0</string>
+                      </property>
+                     </item>
                      <item>
                       <property name="text">
                        <string>1</string>

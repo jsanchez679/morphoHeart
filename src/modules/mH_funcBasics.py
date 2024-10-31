@@ -60,7 +60,7 @@ def alert(sound:str):
             path = path_parentSounds / 'sounds' / sound_mp3
             playsound(str(path))
             if sound == 'error_beep': 
-                print('EEERROR')
+                print('ERRORRR!')
     except:# playsound.PlaysoundException: 
         print('Sound not played: ', sound)
         pass
@@ -309,5 +309,19 @@ def palette_rbg(name:str, num:int, rgb=True):
 
     return rgb_colors
 
+#Unique value in tuple
+def find_unique_index(tup):
+    if len(set(tup))==2:
+        if tup[0] == tup[1]:
+            return 2
+        elif tup[0] == tup[2]:
+            return 1
+        else:
+            return 0
+    else: 
+        print('Error: len(set(tup)) != 2')
+        alert('error_beep')
+        return list(tup).index(min(tup))
+    
 #%% Module loaded
 print('morphoHeart! - Loaded funcBasics')

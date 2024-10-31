@@ -16844,8 +16844,17 @@ def set_avehm(win):
         #Clean organs_out
         indx_to_remove = []
         for index, row in organs_out.iterrows(): 
-            if row['user_organName'] not in all_organsf: 
-                indx_to_remove.append(index)
+            if win.single_proj:
+                if row['user_organName'] not in all_organsf: 
+                    indx_to_remove.append(index)
+            else:
+                sp_organ = row['user_organName']
+                sp_proj = row['user_projName']
+                print(sp_organ, sp_proj)
+                org_proj = sp_organ+' ('+sp_proj+')'
+                if org_proj not in all_organsf: 
+                    indx_to_remove.append(index)
+
         for idx in indx_to_remove: 
             organs_out = organs_out.drop(index=idx)
 
@@ -16887,13 +16896,15 @@ def save_avehm(win):
     if win.select_avehm_path.isChecked() and hasattr(win, 'aveHM_dir'): 
         #Get Filename
         filename = win.ave_hm_filename.text()
-        print('win.organs_included.values: ', win.organs_included.values)
         if len(filename)<8:
             win.win_msg('*The filename of the average heatmap needs to have at least 8 characters.')
             return
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
             return
+        
+        print('win.organs_included.values: ', win.organs_included.values)
+        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
         if len(win.organs_included.values) <=0: 
             win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
             return
@@ -16903,7 +16914,6 @@ def save_avehm(win):
         filenamef = filename+ext
         dir_hm = win.aveHM_dir / filenamef
 
-        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
         win.win_msg('Creating average heatmap...')
 
         #Create the figure
@@ -17011,13 +17021,15 @@ def save_avehm_data(win):
     if win.select_avehmdata_path.isChecked() and hasattr(win, 'aveHMdata_dir'): 
         #Get Filename
         filename = win.ave_hmdata_filename.text()
-        print('win.organs_included.values: ', win.organs_included.values)
         if len(filename)<8:
             win.win_msg('*The filename of the average heatmap needs to have at least 8 characters.')
             return
         if not win.create_avehm.isChecked():
             win.win_msg('*Please create an average heatmap first to then proceed and save it.')
             return
+        
+        print('win.organs_included.values: ', win.organs_included.values)
+        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
         if len(win.organs_included.values) <=0: 
             win.win_msg('*No organs are included with the filtered settings set, please review, create the heatmap and try saving again.')
             return
@@ -17026,7 +17038,6 @@ def save_avehm_data(win):
         filenamef = filename+ext
         dir_hm = win.aveHMdata_dir / filenamef
 
-        df_concat, num_filthm, hm_sel, div_sel, opt_sel, min_max, cmap = set_avehm(win)
         df_concat.to_csv(dir_hm)
         win.win_msg('Average Heatmap Dataset "'+filenamef +'" was successfully saved!')
         alert('woohoo')
@@ -17243,7 +17254,6 @@ def select_video_path(win):
         btn.setChecked(True)
     else: 
         btn.setChecked(False)
-
 
 class PlotWindow(QDialog):
 

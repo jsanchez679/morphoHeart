@@ -28,7 +28,7 @@ import seaborn as sns
 
 #%% morphoHeart Imports - ##################################################
 from ..gui.gui_classes import *
-from .mH_funcBasics import alert, make_Paths, make_tuples, get_by_path, set_by_path, rename_directory
+from .mH_funcBasics import alert, make_Paths, make_tuples, get_by_path, set_by_path, rename_directory, find_unique_index
 from .mH_funcMeshes import (unit_vector, plot_organCLs, find_angle_btw_pts, new_normal_3DRot,
                             classify_segments_from_ext, create_subsegment, create_subsection, plot_grid, 
                             modify_cube, get_segments)
@@ -2489,7 +2489,8 @@ class ImChannel(): #channel
         s3_bits = np.zeros_like(s3_s, dtype='uint8')
         s3_new =  np.zeros_like(s3_s, dtype='uint8')
 
-        index = list(s3.shape_s3).index(min(s3.shape_s3))
+        index = find_unique_index(s3.shape_s3)
+        print('s3.shape_s3:',s3.shape_s3, ' - index:', index)
         if index == 2:
             for slc in range(s3.shape_s3[2]):
                 mask_slc = s3_mask_s[:,:,slc]
@@ -2688,7 +2689,8 @@ class ImChannelNS(): #channel
         s3_bits = np.zeros_like(extNS, dtype='uint8')
         s3_new =  np.zeros_like(extNS, dtype='uint8')
 
-        index = list(extNS.shape).index(min(extNS.shape))
+        index = find_unique_index(extNS.shape)
+        print('extNS.shape:',extNS.shape, ' - index:', index)
         if index == 2:
             for slc in range(extNS.shape[2]):
                 s3_intNS = intNS[:,:,slc]
