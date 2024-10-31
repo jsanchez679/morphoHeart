@@ -12685,7 +12685,9 @@ class MainWindow(QMainWindow):
     #Functions morphoCell
     def fill_cell_results(self, init=False): 
 
-        style = 'QScrollBar:horizontal {background-color: rgb(255, 255, 255); height: 12px;} QScrollBar::handle:horizontal {background-color: rgb(162, 0, 122); 	min-width: 30px; border-radius: 6px;} QScrollBar::handle:horizontal:hover {background-color:rgb(0, 0, 0);} QScrollBar:vertical {background-color: rgb(255, 255, 255); width: 12px;} QScrollBar::handle:vertical {background-color: rgb(162, 0, 122); min-height: 30px; border-radius: 6px;} QScrollBar::handle:vertical:hover {background-color:rgb(0, 0, 0);} QHeaderView::section {background-color: rgb(200, 200, 200); padding: 0px; font: bold 10pt "Calibri"; border-style: none; border-bottom: 1px solid #fffff8; border-right: 1px solid #fffff8;} QHeaderView::section:horizontal{border-top: 1px solid #fffff8;} QHeaderView::section:vertical{border-left: 1px solid #fffff8;} QTableView {font: 25 10pt "Calibri"; padding:0px; height: 20px;} QTableView::item:focus{border: 1px solid rgb(162, 0, 122); background-color: white; color: black;} '
+        style1 = 'QScrollBar:horizontal {background-color: rgb(255, 255, 255); height: 12px;} QScrollBar::handle:horizontal {background-color: rgb(162, 0, 122); 	min-width: 30px; border-radius: 6px;} QScrollBar::handle:horizontal:hover {background-color:rgb(0, 0, 0);} QScrollBar:vertical {background-color: rgb(255, 255, 255); width: 12px;} QScrollBar::handle:vertical {background-color: rgb(162, 0, 122); min-height: 30px; border-radius: 6px;} QScrollBar::handle:vertical:hover {background-color:rgb(0, 0, 0);} QHeaderView::section {background-color: rgb(200, 200, 200); padding: 0px; font: bold 10pt "Calibri"; border-style: none; border-bottom: 1px solid #fffff8; border-right: 1px solid #fffff8;} QHeaderView::section:horizontal{border-top: 1px solid #fffff8;} QHeaderView::section:vertical{border-left: 1px solid #fffff8;} QTableView {font: 25 10pt "Calibri"; padding:0px; height: 20px;} QTableView::item:focus{border: 1px solid rgb(162, 0, 122); background-color: white; color: black;} '
+        style2 = 'QScrollBar:vertical {background-color: rgb(255, 255, 255); width: 12px;} QScrollBar::handle:vertical {background-color: rgb(162, 0, 122); min-height: 30px; border-radius: 6px;} QScrollBar::handle:vertical:hover {background-color:rgb(0, 0, 0);} QHeaderView::section {background-color: rgb(200, 200, 200); padding: 0px;font: bold 10pt "Calibri"; border-style: none; border-bottom: 1px solid #fffff8; border-right: 1px solid #fffff8;}'
+        style = style1 + ' ' + style2
         df2save = self.save_cell_results(table=True)
         df2save.pop(0, None)
         tabs = self.tabWidget_cell_results # QTabWidget() 
@@ -12729,14 +12731,17 @@ class MainWindow(QMainWindow):
                     table.setItem(index, ii, item)
                     item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter | QtCore.Qt.AlignmentFlag.AlignHCenter)
 
+            
             headerc = table.horizontalHeader()  
             num_col = len(df.columns)
             for col in range(num_col):   
-                if col!= num_col-1:
+                if col== 0:#!= num_col-1:
                     headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
                 else: 
                     headerc.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
+            table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+            table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
         
         if init:
             tabs.removeTab(0)
