@@ -8083,21 +8083,27 @@ class MainWindow(QMainWindow):
             #Get value from slider
             value = getattr(self, wdg_name+'_slider').value()
             wdg_txt = getattr(self, wdg_name+'_value')
-            if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
-                for wdgn in ['level_'+ch_name,'manual_level_'+ch_name, 'select_level_'+ch_name]:
-                    wdg_val = getattr(self, wdgn+'_value')
-                    wdg_sl = getattr(self, wdgn+'_slider')
-                    if divider == 1:
-                        wdg_val.setText(str(value))
-                    else: 
-                        wdg_val.setText(str(value/divider))
-                    wdg_sl.setValue(float(value))
+            if ch_name not in ['chB', 'chC', 'chD']:
+                if getattr(self, 'unify_level_'+ch_name).isChecked() and 'level' in wdg_name:
+                    for wdgn in ['level_'+ch_name,'manual_level_'+ch_name, 'select_level_'+ch_name]:
+                        wdg_val = getattr(self, wdgn+'_value')
+                        wdg_sl = getattr(self, wdgn+'_slider')
+                        if divider == 1:
+                            wdg_val.setText(str(value))
+                        else: 
+                            wdg_val.setText(str(value/divider))
+                        wdg_sl.setValue(float(value))
 
-            else: 
-                if divider == 1:
-                    wdg_txt.setText(str(value))
                 else: 
-                    wdg_txt.setText(str(value/divider))
+                    if divider == 1:
+                        wdg_txt.setText(str(value))
+                    else: 
+                        wdg_txt.setText(str(value/divider))
+            else:
+                wdg_val = getattr(self, 'threshold_'+ch_name+'_value')
+                wdg_sld = getattr(self, 'threshold_'+ch_name+'_slider')
+                wdg_val.setText(str(value))
+                wdg_sld.setValue(float(value))
 
         else: #'value' == wdg_type: 
             #Get value from text
@@ -8110,11 +8116,15 @@ class MainWindow(QMainWindow):
                         value = slider.minimum()
                     elif float(value) > slider.maximum():
                         value = slider.maximum()
+                    else: 
+                        slider.setValue(float(value))
                 else: 
                     if float(value) < (slider.minimum()/divider): 
                         value = slider.minimum()
                     elif float(value) > (slider.maximum()/divider):
                         value = slider.maximum()
+                    else: 
+                        slider.setValue(float(value))
             except ValueError: 
                 value = slider.minimum()
             

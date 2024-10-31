@@ -3800,7 +3800,7 @@ def get_segm_mean_sph(controller, organ, cut, sphs_mean, color_segm):
                 valueAlpha = widget.GetRepresentation().GetValue()
                 iso_vols[2].alpha(valueAlpha)
 
-        txA = 'Instructions: Click each coloured sphere until it is coloured according to the segment it belongs to.'
+        txA = 'Instructions: Click each coloured sphere until it is coloured according to the segment it belongs to. Close the window when done'
         txB = '\n[Note: Colours will loop for each sphere as you click it ]'
         txt0 = vedo.Text2D(txA+txB, c=txt_color, font=txt_font, s=txt_size)
         lb = vedo.LegendBox(mks, markers=sym, font=txt_font, 

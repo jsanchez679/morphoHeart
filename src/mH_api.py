@@ -3047,3 +3047,5 @@ def run_zones(controller, zone):
     
     #Update Table
     controller.main_win.fill_cell_results() 
+
+    return True

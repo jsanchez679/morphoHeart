@@ -1613,37 +1613,37 @@ class Organ():
             all_info['obj_temp'] = obj_temp
             
         if self.analysis['morphoCell']:
-            if 'mC_settings' in all_info.keys():
-                #ABC what else is there to save from MC 
-                all_info['mC_settings'] = self.mC_settings
+            # if 'mC_settings' in all_info.keys():
+            #ABC what else is there to save from MC 
+            all_info['mC_settings'] = self.mC_settings
 
-                image_dictMC = copy.deepcopy(self.imChannelsMC)
-                for chMC in image_dictMC.keys():
-                    image_dictMC[chMC].pop('parent_organ', None)
-                all_info['imChannelMC'] = image_dictMC
+            image_dictMC = copy.deepcopy(self.imChannelsMC)
+            for chMC in image_dictMC.keys():
+                image_dictMC[chMC].pop('parent_organ', None)
+            all_info['imChannelMC'] = image_dictMC
 
-                try: 
-                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
-                                        'channel_no': self.cellsMC['chA']['channel_no'], 
-                                        'user_chName': self.cellsMC['chA']['user_chName'],
-                                        'dir_cells': self.cellsMC['chA']['dir_cells'],
-                                        'dir_cho': self.cellsMC['chA']['dir_cho'],
-                                        'dir_img': self.cellsMC['chA']['dir_img'],
-                                        'resolution': self.cellsMC['chA']['resolution'], 
-                                        'shape': self.cellsMC['chA']['shape']}}
-                    print('try saving cells')
-                except:
-                    print('except saving cells')
-                    cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
-                                    'channel_no': self.cellsMC['chA'].channel_no, 
-                                    'user_chName': self.cellsMC['chA'].user_chName,
-                                    'dir_cells': self.cellsMC['chA'].dir_cells,
-                                    'dir_cho': self.cellsMC['chA'].dir_cho,
-                                    'dir_img': self.cellsMC['chA'].dir_img,
-                                    'resolution': self.cellsMC['chA'].resolution, 
-                                    'shape': self.cellsMC['chA'].shape}}
+            try: 
+                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA']['parent_organ_name'], 
+                                    'channel_no': self.cellsMC['chA']['channel_no'], 
+                                    'user_chName': self.cellsMC['chA']['user_chName'],
+                                    'dir_cells': self.cellsMC['chA']['dir_cells'],
+                                    'dir_cho': self.cellsMC['chA']['dir_cho'],
+                                    'dir_img': self.cellsMC['chA']['dir_img'],
+                                    'resolution': self.cellsMC['chA']['resolution'], 
+                                    'shape': self.cellsMC['chA']['shape']}}
+                print('try saving cells')
+            except:
+                print('except saving cells')
+                cells_MC = {'chA': {'parent_organ_name': self.cellsMC['chA'].parent_organ_name,
+                                'channel_no': self.cellsMC['chA'].channel_no, 
+                                'user_chName': self.cellsMC['chA'].user_chName,
+                                'dir_cells': self.cellsMC['chA'].dir_cells,
+                                'dir_cho': self.cellsMC['chA'].dir_cho,
+                                'dir_img': self.cellsMC['chA'].dir_img,
+                                'resolution': self.cellsMC['chA'].resolution, 
+                                'shape': self.cellsMC['chA'].shape}}
 
-                all_info['cells_MC'] = cells_MC
+            all_info['cells_MC'] = cells_MC
 
         all_info['workflow'] = self.workflow
 
