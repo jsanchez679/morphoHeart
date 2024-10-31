@@ -4773,7 +4773,9 @@ def fill_table_with_organs(win, proj, table, blind_cB, all_cB):#notes_cB, mH_cB=
                 keys_wf[sp] = ['workflow']+wf_key.split(':')
         else: #morphoCell
             nn,proc,sp = wf_key.split(':')
-            keys_wf[proc] = ['workflow']+wf_key.split(':')
+            ignore_mC_proc = ['A-Set_Orientation','B-Regions','B-Segments_Sections','C-Measure']
+            if proc not in ignore_mC_proc:
+                keys_wf[proc] = ['workflow']+wf_key.split(':')
 
     # Workflow
     # - Get morphoHeart Labels
@@ -4795,7 +4797,7 @@ def fill_table_with_organs(win, proj, table, blind_cB, all_cB):#notes_cB, mH_cB=
     if len(mH_keys)>0:
         index_big.append(mH_keys[0]); big_labels.append('morphoHeart'); len_ind_big.append(len(mH_keys))
     if len(mC_keys)>0:
-        index_big.append(mC_keys[0]); big_labels.append('morphoCell'); len_ind_big.append(len(mC_keys))       
+        index_big.append(mC_keys[0]-1); big_labels.append('morphoCell'); len_ind_big.append(len(mC_keys))       
 
     table.setColumnCount(len(name_keys)+len(mH_keys)+len(mC_keys))
     all_labels = keys |  keys_wf
@@ -11872,15 +11874,15 @@ class MainWindow(QMainWindow):
         else:
             self.cell_segments_all_widget.setVisible(False)
 
-        if isinstance(self.organ.mC_settings['setup']['sect_mC'], dict):
-            self.init_sections_mC()
-        else:
-            self.cell_sections_all_widget.setVisible(False)
+        # if isinstance(self.organ.mC_settings['setup']['sect_mC'], dict):
+        #     self.init_sections_mC()
+        # else:
+        self.cell_sections_all_widget.setVisible(False)
 
-        if isinstance(self.organ.mC_settings['setup']['segm-sect_mC'], dict):
-            self.init_segm_sect_mC()
-        else:
-            self.cell_sections_all_widget.setVisible(False)
+        # if isinstance(self.organ.mC_settings['setup']['segm-sect_mC'], dict):
+        #     self.init_segm_sect_mC()
+        # else:
+        self.cell_segm_sect_all_widget.setVisible(False)
         
         if isinstance(self.organ.mC_settings['setup']['zone_mC'], dict): 
             self.init_zones_mC()

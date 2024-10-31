@@ -1278,7 +1278,7 @@ border: rgb(94, 94, 94);</string>
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
@@ -1469,6 +1469,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -1573,6 +1576,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -1748,6 +1754,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -1852,6 +1861,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -2027,6 +2039,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -2131,6 +2146,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -2306,6 +2324,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -2410,6 +2431,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -2625,6 +2649,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -2729,6 +2756,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>
@@ -2904,6 +2934,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -3078,6 +3111,9 @@ color: rgb(100, 100, 100);</string>
                     <property name="indent">
                      <number>2</number>
                     </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
+                    </property>
                    </widget>
                   </item>
                   <item>
@@ -3251,6 +3287,9 @@ color: rgb(100, 100, 100);</string>
                     </property>
                     <property name="indent">
                      <number>2</number>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::TextSelectableByMouse</set>
                     </property>
                    </widget>
                   </item>

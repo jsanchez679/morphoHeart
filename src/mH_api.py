@@ -2680,7 +2680,7 @@ def run_isosurface(controller, btn):
     workflow = controller.organ.workflow['morphoCell']
     res = fcM.create_iso_volume(organ = controller.organ, ch = btn)
     if not res: 
-        controller.main_win.win_msg('*Somthing went wrong when loading image file for '+btn.title()+'. Please check to continue.')
+        controller.main_win.win_msg('*Something went wrong when loading image file for '+btn.title()+'. Please check to continue.')
         getattr(controller.main_win, btn+'_play').setChecked(False)
         return 
     
