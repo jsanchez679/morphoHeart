@@ -41,7 +41,7 @@ class mH_Config():
         self.dev_plots = False
         self.dev_hm3d2d = False
 
-        self.link2docs = 'https://www.dropbox.com/scl/fi/ft7i6t8d0hc859t7ii9a3/User-Manual-v1o0o0.pdf?rlkey=ebyp3xyjhau78kc3tqu5td8s0&dl=0'
+        self.link2docs = 'https://drive.google.com/file/d/1-w9N3_SNzqNrpCAmTTvwc5br08KA6IbV/view?usp=drive_link'
         self.link2github = 'https://github.com/jsanchez679/morphoHeart'
         self.link2paper = 'https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'
         self.link2vedo_plotter = 'https://vedo.embl.es/docs/vedo/plotter.html#Plotter'
