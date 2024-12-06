@@ -1835,7 +1835,7 @@ class Organ():
         print('self.info[im_orientation]',im_orient)
         rotateY = False
         if str(self.info['custom_angle']) != '0': 
-            cust_angle = self.info['custom_angle']
+            cust_angle = float(self.info['custom_angle'])
             rotateY = True
 
         ext_ch = self.get_ext_int_chs()
