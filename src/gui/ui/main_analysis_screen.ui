@@ -2085,7 +2085,7 @@ QScrollBar::handle:horizontal:hover {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>589</width>
+                    <width>594</width>
                     <height>422</height>
                    </rect>
                   </property>
@@ -8787,6 +8787,9 @@ background-color: rgb(250, 250, 250);</string>
     <property name="title">
      <string>About</string>
     </property>
+    <addaction name="actionVideo_Tutorial_Combinatorial_Analysis"/>
+    <addaction name="actionVideo_Tutorial_Multiple_Project_Analysis"/>
+    <addaction name="separator"/>
     <addaction name="actionDocs_morphoHeart"/>
     <addaction name="actionGitHub_morphoHeart"/>
     <addaction name="actionAbout_morphoHeart"/>
@@ -8890,6 +8893,16 @@ background-color: rgb(250, 250, 250);</string>
      <family>Calibri Light</family>
      <pointsize>9</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionVideo_Tutorial_Combinatorial_Analysis">
+   <property name="text">
+    <string>Video Tutorial - Combinatorial Analysis </string>
+   </property>
+  </action>
+  <action name="actionVideo_Tutorial_Multiple_Project_Analysis">
+   <property name="text">
+    <string>Video Tutorial - Multiple Project Analysis </string>
    </property>
   </action>
  </widget>

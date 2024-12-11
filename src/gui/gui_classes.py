@@ -3331,6 +3331,11 @@ class SetMeasParam(QDialog):
         if self.parent.use_semgs_improve_hm2D: 
             self.improve_hm2D.setChecked(True)
 
+        #Buttons ?
+        self.q_ball.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+        self.q_centreline_meas.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+        self.q_hm3d2d.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+
     def improve2DHM(self): 
         if self.improve_hm2D.isChecked(): 
             self.parent.improve_hm2D.setChecked(True)
@@ -3435,7 +3440,7 @@ class SetMeasParam(QDialog):
     def set_meas_param_table(self): 
         #Set Measurement Parameters
         for key in self.params.keys():
-            getattr(self, 'q_param'+str(key)).setVisible(True)
+            getattr(self, 'q_param'+str(key)).setVisible(False)
             getattr(self, 'lab_param'+str(key)).setVisible(True)
             getattr(self, 'lab_param'+str(key)).setEnabled(True)
             getattr(self, 'lab_param'+str(key)).setText(self.params[key]['l'])
@@ -3843,7 +3848,7 @@ class SetMeasParam(QDialog):
             if int(key) > 5: 
                 getattr(self, 'lab_param'+str(key)).setVisible(True)
                 getattr(self, 'lab_param'+str(key)).setText(proj.mH_settings['setup']['params'][key]['l'])
-                getattr(self, 'q_param'+str(key)).setVisible(True)
+                getattr(self, 'q_param'+str(key)).setVisible(False)
                 for ch in ['ch1', 'ch2', 'ch3', 'ch4', 'chNS']: 
                     if ch in self.ch_all: 
                         for cont in ['int', 'tiss', 'ext']:
@@ -3965,6 +3970,12 @@ class NewOrgan(QDialog):
         self.browse_mask_ch4.clicked.connect(lambda: self.get_file_mask('ch4'))
 
         self.browse_mask_chA.clicked.connect(lambda: self.get_file_mask('chA'))
+
+        #Buttons ?
+        self.q_y_rot.setVisible(False)
+        self.q_new_organ_mH.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_organ']))
+        self.q_new_organ_mC.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['mC_organ']))
+
 
     def win_msg(self, msg, btn=None): 
         if msg[0] == '*':
@@ -4461,6 +4472,10 @@ class LoadProj(QDialog):
         set_filter_table_comb(win=self)
         self.filter_cB_comb.model().dataChanged.connect(lambda: reload_data(win = self, obj = self.filter_cB_comb, 
                                                                                 atype = 'comb'))
+
+        #Buttons ?
+        self.q_load_proj.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['load_proj']))
+        self.q_load_combAna.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['intro']))
 
     def win_msg(self, msg, btn=None): 
         if msg[0] == '*':
@@ -5062,6 +5077,9 @@ class Load_MultiProj(QDialog):
         set_filter_table_comb(win=self)
         self.filter_cB_comb.model().dataChanged.connect(lambda: reload_data(win = self, obj = self.filter_cB_comb, 
                                                                                 atype = 'comb'))
+
+        #Buttons ? 
+        self.q_orient.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['multi_proj']))
 
     def win_msg(self, msg, btn=None): 
         if msg[0] == '*':
@@ -5683,6 +5701,11 @@ class MeasSettings(QDialog):
         #Close button
         self.button_close.clicked.connect(lambda: self.close_window())
 
+        #Buttons ?
+        self.q_ball.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+        self.q_centreline_meas.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+        self.q_hm3d2d.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+
     def init_meas_selected(self):
 
         self.ch_all = self.proj.mH_settings['setup']['name_chs']
@@ -5703,6 +5726,7 @@ class MeasSettings(QDialog):
         for key in self.params.keys():
             param_short = self.params[key]['s']
             getattr(self, 'lab_param'+str(key)).setText(self.params[key]['l'])
+            getattr(self, 'q_param'+str(key)).setVisible(False)
             sp_meas = self.meas_sel[param_short]
             print('sp_meas:', sp_meas.keys())
             for ch_cont in sp_meas.keys(): 
@@ -6025,6 +6049,10 @@ class MainWindow(QMainWindow):
         #About menu
         self.actionDocs_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2docs))
         self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
+        # Video Tutorials
+        self.actionVideo_Tutorial_Intro_mH_Segment_Channels.triggered.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['intro']))
+        self.actionVideo_Tutorial_Intro_mH_Process.triggered.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['intro']))
+        self.actionVideo_Tutorial_Intro_Cellular_morphoCell.triggered.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['intro']))
 
         #Sounds
         layout = self.hL_sound_on_off 
@@ -6406,15 +6434,20 @@ class MainWindow(QMainWindow):
         self.color_palette_ch4.currentTextChanged.connect(lambda: self.set_plot_contour_settings('ch4'))
 
         #Q
-        self.q_level_ch1.clicked.connect(lambda: self.help('level'))
-        self.q_level_ch2.clicked.connect(lambda: self.help('level'))
-        self.q_level_ch3.clicked.connect(lambda: self.help('level'))
-        self.q_level_ch4.clicked.connect(lambda: self.help('level'))
+        self.q_level_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['intro']))
+        self.q_level_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['intro']))
+        self.q_level_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['intro']))
+        self.q_level_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['intro']))
 
-        self.q_min_cont_length_ch1.clicked.connect(lambda: self.help('min_contour_length'))
-        self.q_min_cont_length_ch2.clicked.connect(lambda: self.help('min_contour_length'))
-        self.q_min_cont_length_ch3.clicked.connect(lambda: self.help('min_contour_length'))
-        self.q_min_cont_length_ch4.clicked.connect(lambda: self.help('min_contour_length'))
+        self.q_min_cont_length_ch1.setVisible(False)#clicked.connect(lambda: self.help('min_contour_length'))
+        self.q_min_cont_length_ch2.setVisible(False)#.clicked.connect(lambda: self.help('min_contour_length'))
+        self.q_min_cont_length_ch3.setVisible(False)#.clicked.connect(lambda: self.help('min_contour_length'))
+        self.q_min_cont_length_ch4.setVisible(False)#.clicked.connect(lambda: self.help('min_contour_length'))
+
+        self.q_contours_palette_ch1.setVisible(False)
+        self.q_contours_palette_ch2.setVisible(False)
+        self.q_contours_palette_ch3.setVisible(False)
+        self.q_contours_palette_ch4.setVisible(False)
 
         #Slice 
         self.eg_slice_ch1.installEventFilter(self)
@@ -6500,6 +6533,12 @@ class MainWindow(QMainWindow):
         self.set_npy_mask_ch2.clicked.connect(lambda: self.set_mask_npy('ch2'))
         self.set_npy_mask_ch3.clicked.connect(lambda: self.set_mask_npy('ch3'))
         self.set_npy_mask_ch4.clicked.connect(lambda: self.set_mask_npy('ch4'))
+
+        # Buttons ?
+        self.q_masking_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['masking_ch']))
+        self.q_masking_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['masking_ch']))
+        self.q_masking_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['masking_ch']))
+        self.q_masking_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['masking_ch']))
 
         #Play
         # self.npy_mask_ch1_play.setStyleSheet(style_play)
@@ -6615,6 +6654,12 @@ class MainWindow(QMainWindow):
         self.autom_min_distance_ch2_slider.valueChanged.connect(lambda: self.slider_changed('autom_min_distance_ch2','slider'))
         self.autom_min_distance_ch3_slider.valueChanged.connect(lambda: self.slider_changed('autom_min_distance_ch3','slider'))
         self.autom_min_distance_ch4_slider.valueChanged.connect(lambda: self.slider_changed('autom_min_distance_ch4','slider'))
+
+        # Buttons ?
+        self.q_automatic_close_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_autom']))
+        self.q_automatic_close_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_autom']))
+        self.q_automatic_close_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_autom']))
+        self.q_automatic_close_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_autom']))
 
         #Text
         #>> min contour length
@@ -6742,6 +6787,17 @@ class MainWindow(QMainWindow):
         self.manual_min_intensity_ch2_slider.valueChanged.connect(lambda: self.slider_changed('manual_min_intensity_ch2','slider'))
         self.manual_min_intensity_ch3_slider.valueChanged.connect(lambda: self.slider_changed('manual_min_intensity_ch3','slider'))
         self.manual_min_intensity_ch4_slider.valueChanged.connect(lambda: self.slider_changed('manual_min_intensity_ch4','slider'))
+
+        # Buttons ?
+        self.q_manual_level_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_manual']))
+        self.q_manual_level_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_manual']))
+        self.q_manual_level_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_manual']))
+        self.q_manual_level_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_manual']))
+
+        self.q_manual_closing_tuples_ch1.setVisible(False)
+        self.q_manual_closing_tuples_ch2.setVisible(False)
+        self.q_manual_closing_tuples_ch3.setVisible(False)
+        self.q_manual_closing_tuples_ch4.setVisible(False)
 
         #Text
         self.manual_level_ch1_value.installEventFilter(self)
@@ -7092,6 +7148,22 @@ class MainWindow(QMainWindow):
         self.reset_select_ch3.clicked.connect(lambda: self.reset_values(ch ='ch3', proc='select'))
         self.reset_select_ch4.clicked.connect(lambda: self.reset_values(ch ='ch4', proc='select'))
 
+        # Buttons ?
+        self.q_select_close_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_select_close_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_select_close_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_select_close_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+
+        self.q_selecting_ch1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_selecting_ch2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_selecting_ch3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+        self.q_selecting_ch4.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['Segm_Tab']['cont_selecting']))
+
+        self.q_modify_select_ch1.setVisible(False)
+        self.q_modify_select_ch2.setVisible(False)
+        self.q_modify_select_ch3.setVisible(False)
+        self.q_modify_select_ch4.setVisible(False)
+
         #Tuple table
         for ch in ['ch1', 'ch2', 'ch3', 'ch4']:
             if ch in self.channels.keys(): 
@@ -7152,6 +7224,9 @@ class MainWindow(QMainWindow):
         #Open
         self.plots_panel_open.clicked.connect(lambda: self.open_section(name='plots_panel'))
         self.functions_btns_open.clicked.connect(lambda: self.open_section(name='functions_btns'))
+
+        #Button ?
+        self.q_plot.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['user_plots']))
 
     def set_im_proc(self, ch_name, close=True):
         im_ch = self.organ.obj_imChannels[ch_name]
@@ -8786,7 +8861,7 @@ class MainWindow(QMainWindow):
         self.keeplargest_play.setEnabled(False)
         self.keeplargest_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.keeplargest_plot.setEnabled(False)
-        self.q_keeplargest.clicked.connect(lambda: self.help('keeplargest'))
+        self.q_keeplargest.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['reconst_3D']))
         self.keeplargest_plot_ch1.clicked.connect(lambda: self.plot_meshes('ch1') )
         self.keeplargest_plot_ch2.clicked.connect(lambda: self.plot_meshes('ch2') )
         self.keeplargest_plot_ch3.clicked.connect(lambda: self.plot_meshes('ch3') )
@@ -8838,7 +8913,7 @@ class MainWindow(QMainWindow):
         self.cleanup_play.setEnabled(False)
         self.clean_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.clean_plot.setEnabled(False)
-        self.q_cleanup.clicked.connect(lambda: self.help('cleanup'))
+        self.q_cleanup.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['clean_3D']))
 
         #Hide plot2D option
         self.clean_plot2d.setVisible(False)
@@ -8889,7 +8964,7 @@ class MainWindow(QMainWindow):
         self.trimming_play.setEnabled(False)
         self.trimming_plot.clicked.connect(lambda: self.plot_meshes('all'))
         self.trimming_plot.setEnabled(False)
-        self.q_trimming.clicked.connect(lambda: self.help('trimming'))
+        self.q_trimming.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['trim_3D']))
 
         # Segmentation cleanup setup
         for chs in ['ch1', 'ch2', 'ch3', 'ch4']:
@@ -8925,7 +9000,7 @@ class MainWindow(QMainWindow):
         self.stack_orient_plot.clicked.connect(lambda: self.plot_orient(name = 'stack'))
         self.roi_orient_plot.clicked.connect(lambda: self.plot_orient(name = 'roi'))
 
-        self.q_orientation.clicked.connect(lambda: self.help('orientation'))
+        self.q_orientation.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['axes_3D']))
         self.orientation_set.clicked.connect(lambda: self.set_orientation())
         # self.orientation_play.setStyleSheet(style_play)
         self.orientation_play.setEnabled(False)
@@ -8959,7 +9034,7 @@ class MainWindow(QMainWindow):
         self.chNS_plot.setEnabled(False)
         # self.chNS_play.setStyleSheet(style_play)
         self.chNS_play.setEnabled(False)
-        self.q_chNS.clicked.connect(lambda: self.help('chNS'))
+        self.q_chNS.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['chNS_3D']))
         self.chNS_set.clicked.connect(lambda: self.set_chNS())
 
         #Hide plot2D option
@@ -9070,6 +9145,7 @@ class MainWindow(QMainWindow):
         #Buttons
         # self.measure_wholeAll_play.setStyleSheet(style_play)
         self.measure_whole_open.clicked.connect(lambda: self.open_section(name='measure_whole'))
+        self.q_measure_whole.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['meas_3D']))
 
     def init_centreline(self):
         #Buttons
@@ -9082,8 +9158,12 @@ class MainWindow(QMainWindow):
         self.centreline_vmtk_play.setEnabled(False)
         # self.centreline_select.setStyleSheet(style_play)
         self.centreline_select.setEnabled(False)
-        self.q_centreline.clicked.connect(lambda: self.help('centreline'))
+        self.q_centreline.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['centreline']))
         self.centreline_set.clicked.connect(lambda: self.set_centreline())
+        self.q_same_planes.setVisible(False)
+        self.q_tolerance.setVisible(False)
+        self.q_voronoi.setVisible(False)
+        self.q_nPoints.setVisible(False)
 
         cl_to_extract = self.organ.mH_settings['measure']['CL']
         # print(cl_to_extract, len(cl_to_extract))
@@ -9131,7 +9211,11 @@ class MainWindow(QMainWindow):
         # self.heatmaps3D_play.setEnabled(False)
         self.thickness_set.clicked.connect(lambda: self.set_thickness())
         self.thickness2D_set.clicked.connect(lambda: self.set_thickness2D())
-        self.q_heatmaps.clicked.connect(lambda: self.help('heatmaps'))
+        self.q_heatmaps3D.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['thickness']))
+        self.q_improve2dhm.setVisible(False)
+        self.q_cl_extension_hm2d.setVisible(False)
+        self.q_unrollinghm.setVisible(False)
+        self.q_heatmaps2D.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['heatmap_2D']))
 
         #Plot buttons
         # 3D
@@ -9371,7 +9455,8 @@ class MainWindow(QMainWindow):
         self.segments_open.clicked.connect(lambda: self.open_section(name='segments'))
         # self.segments_play.setStyleSheet(style_play)
         self.segments_play.setEnabled(False)
-        self.q_segments.clicked.connect(lambda: self.help('segments'))
+        self.q_segments.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['segm']))
+        self.q_ellips.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['orient_ellips']))
         self.segments_set.clicked.connect(lambda: self.set_segments())
 
         #Fill color
@@ -9564,7 +9649,7 @@ class MainWindow(QMainWindow):
         self.sections_open.clicked.connect(lambda: self.open_section(name='sections'))
         # self.sections_play.setStyleSheet(style_play)
         self.sections_play.setEnabled(False)
-        self.q_sections.clicked.connect(lambda: self.help('sections'))
+        self.q_sections.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['region']))
         self.sections_set.clicked.connect(lambda: self.set_sections())
 
         self.fillcolor_cut1_sect1.clicked.connect(lambda: self.color_picker(name = 'cut1_sect1'))
@@ -9712,7 +9797,7 @@ class MainWindow(QMainWindow):
         #Buttons
         self.segm_sect_open.clicked.connect(lambda: self.open_section(name='segm_sect'))
         # self.segm_sect_play.setStyleSheet(style_play)
-        self.q_segm_sect.clicked.connect(lambda: self.help('segm_sect'))
+        self.q_segm_sect.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['segm_region']))
         self.update_segm_sect.clicked.connect(lambda: self.update_segm_sect_play())
         # self.segm_sect_set.clicked.connect(lambda: self.set_segm_sect())
 
@@ -9936,6 +10021,9 @@ class MainWindow(QMainWindow):
     def init_user_param(self): 
 
         self.user_params_open.clicked.connect(lambda: self.open_section(name = 'user_params'))
+        self.q_user_param1.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['user_param']))
+        self.q_user_param2.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['user_param']))
+        self.q_user_param3.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['user_param']))
 
         user_params = self.organ.mH_settings['setup']['params']
         measure = self.organ.mH_settings['measure']
@@ -10030,6 +10118,9 @@ class MainWindow(QMainWindow):
 
         #Init measure_status
         self.user_measure_whole()
+
+        #Buttons ? 
+        self.q_results.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mH_Tab']['exp_res']))
 
     def init_plot_results(self):
         self.plot_open.clicked.connect(lambda: self.open_section(name = 'plot')) 
@@ -11922,7 +12013,7 @@ class MainWindow(QMainWindow):
         self.fillcolor_chD.clicked.connect(lambda: self.color_picker(name = 'chD'))
 
         self.isosurf_set.clicked.connect(lambda: self.set_isosuface())
-        self.q_isosurface.clicked.connect(lambda: self.help('isosurface'))
+        self.q_isosurface.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['mC_isosurf']))
 
         # - Threshold
         self.threshold_chB_value.installEventFilter(self)
@@ -11968,7 +12059,7 @@ class MainWindow(QMainWindow):
         self.reset_remove_cells.clicked.connect(lambda: self.reset_cells_to_original())
         # self.remove_cells_play.setStyleSheet(style_play)
         self.remove_cells_play.setEnabled(False)
-        self.q_remove_cells.clicked.connect(lambda: self.help('remove_cells'))
+        self.q_remove_cells.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['cell_remove']))
 
         label = getattr(self, 'rem_label_chA')
         label.setText('ChA: '+self.organ.mC_settings['setup']['name_chs']['chA'])
@@ -11998,7 +12089,8 @@ class MainWindow(QMainWindow):
 
         # self.ind_segments_play.setStyleSheet(style_play)
         self.ind_segments_play.setEnabled(False)
-        self.q_cell_segments.clicked.connect(lambda: self.help('cell_segments'))
+        self.q_cell_segments.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['cell_segm']))
+        self.q_cell_segm_IND.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['cell_segm']))
         self.cell_segments_set.clicked.connect(lambda: self.set_cell_segments())
         self.cell_ind_segments_set.clicked.connect(lambda: self.set_ind_cell_segments())
 
@@ -12130,7 +12222,7 @@ class MainWindow(QMainWindow):
         # self.cell_zones_play.setStyleSheet(style_play)
         # self.cell_zones_play.setEnabled(False)
 
-        self.q_cell_zones.clicked.connect(lambda: self.help('cell_zones'))
+        self.q_cell_zones.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['cell_zones']))
         self.cell_zones_set.clicked.connect(lambda: self.set_cell_zones())
 
         #Fill color
@@ -12276,6 +12368,9 @@ class MainWindow(QMainWindow):
         #Setup results
         self.fill_cell_results(init=True)
         self.results_cell_save.clicked.connect(lambda: self.save_cell_results())
+
+        #Buttons ?
+        self.q_results_mC.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['cell_export']))
 
         # #Get variable names
         # self.get_var_names()
@@ -15687,6 +15782,10 @@ class MultipAnalysisWindow(QMainWindow):
         #Window Message
         self.win_msg('Project and Organs were successfully loaded!')
 
+        #Buttons ? 
+        self.q_filters.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['ave_hm']))
+        self.q_plot.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['user_plots']))
+
     @pyqtSlot(int)
     def on_cB_theme_currentIndexChanged(self, theme):
         print('mH_config.theme:',mH_config.theme)
@@ -15757,8 +15856,13 @@ class MultipAnalysisWindow(QMainWindow):
         self.average_heatmaps_open.clicked.connect(lambda: self.open_section(name='average_heatmaps'))
 
         #About menu
+        self.actionVideo_Tutorial_Combinatorial_Analysis.triggered.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['intro']))
+        self.actionVideo_Tutorial_Multiple_Project_Analysis.triggered.connect(lambda: webbrowser.open(mH_config.dict_links['combAn']['multi_proj']))
+
+
         self.actionDocs_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2docs))
         self.actionGitHub_morphoHeart.triggered.connect(lambda: webbrowser.open(mH_config.link2github))
+
 
         #Sounds
         if self.single_proj:

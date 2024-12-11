@@ -7,6 +7,9 @@ morphoHeart_config
 #%% Imports - ########################################################
 import os
 from pathlib import Path
+from pandas import read_csv
+from collections import defaultdict
+
 
 #%% ##### - Authorship - #####################################################
 __author__     = 'Juliana Sanchez-Posada'
@@ -18,7 +21,7 @@ __website__    = 'https://github.com/jsanchez679/morphoHeart'
 #%% config class
 class mH_Config():
     def __init__(self):
-        self.version = '2.2.4'
+        self.version = '3.0'
         self.gui_sound = (True, 'All')
         self.theme = 'Light'
         self.heart_default = False
@@ -40,10 +43,18 @@ class mH_Config():
         self.dev = False
         self.dev_plots = False
         self.dev_hm3d2d = False
+        self.path_gui = Path(self.path_o).parent.parent / 'gui' 
 
-        self.link2docs = 'https://drive.google.com/file/d/1-w9N3_SNzqNrpCAmTTvwc5br08KA6IbV/view?usp=drive_link'
-        self.link2github = 'https://github.com/jsanchez679/morphoHeart'
-        self.link2paper = 'https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'
+        df_links = read_csv(self.path_gui / 'mH_links.csv', header=0, sep=';', usecols=["key0", "key1", "link"])
+        d = defaultdict(dict)
+        for a, b, c in df_links.itertuples(index=False):
+            d[a][b] = c
+
+        self.dict_links = dict(d)
+
+        self.link2docs = self.dict_links['General']['user_manual'] #'https://drive.google.com/file/d/1-w9N3_SNzqNrpCAmTTvwc5br08KA6IbV/view?usp=drive_link'
+        self.link2github = self.dict_links['General']['github'] #'https://github.com/jsanchez679/morphoHeart'
+        self.link2paper = self.dict_links['General']['pre_print'] #'https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'
         self.link2vedo_plotter = 'https://vedo.embl.es/docs/vedo/plotter.html#Plotter'
 
 mH_config = mH_Config()
