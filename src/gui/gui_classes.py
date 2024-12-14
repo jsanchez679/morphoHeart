@@ -841,6 +841,25 @@ class CreateNewProj(QDialog):
         self.cB_proj_as_template.stateChanged.connect(lambda: self.save_as_template())
         self.lineEdit_template_name.setValidator(QRegularExpressionValidator(self.reg_ex, self.lineEdit_template_name))
 
+        #Button ?
+        self.q_new_proj_mH.clicked.connect((lambda: webbrowser.open(mH_config.dict_links['General']['new_proj'])))
+        self.q_new_proj_mC.clicked.connect((lambda: webbrowser.open(mH_config.dict_links['mC_Tab']['mC_proj'])))
+        self.q_orient.setVisible(False)
+        self.q_mask.setVisible(False)
+        self.q_mask_2.setVisible(False)
+        self.q_negativeSpace.setVisible(False)
+        self.q_segm.setVisible(False)
+        self.q_segm_2.setVisible(False)
+        self.q_segm_3.setVisible(False)
+        self.q_segm_4.setVisible(False)
+        self.q_sect.setVisible(False)
+        self.q_sect_2.setVisible(False)
+        self.q_sect_3.setVisible(False)
+        self.q_operation.setVisible(False)
+        self.q_segm_hm2d.setVisible(False)
+        self.q_ellip.setVisible(False)
+        self.q_angles.setVisible(False)
+
     def win_msg(self, msg, btn=None): 
         if self.button_create_initial_proj.isEnabled(): 
             tE = self.tE_validate
@@ -3333,8 +3352,9 @@ class SetMeasParam(QDialog):
 
         #Buttons ?
         self.q_ball.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
-        self.q_centreline_meas.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
-        self.q_hm3d2d.clicked.connect(lambda: webbrowser.open(mH_config.dict_links['General']['new_proj']))
+        self.q_centreline_meas.setVisible(False)
+        self.q_hm3d2d.setVisible(False)
+        self.q_add_param.setVisible(False)
 
     def improve2DHM(self): 
         if self.improve_hm2D.isChecked(): 
@@ -5418,6 +5438,7 @@ class ProjSettings(QDialog):
         self.set_meas_param_all.clicked.connect(lambda: self.open_meas_param())
         #Close button
         self.button_close.clicked.connect(lambda: self.close_window())
+        self.blank_5.setFocus()
     
     def init_gral_proj(self, template=False): 
         if template != False: 
@@ -5783,6 +5804,10 @@ class MeasSettings(QDialog):
         except: 
             pass
 
+        getattr(self, 'q_ball').setVisible(False)
+        getattr(self, 'q_centreline_meas').setVisible(False)
+        getattr(self, 'q_hm3d2d').setVisible(False)
+
     def closeEvent(self, event):
         print('User pressed X: MeasSettings')
         event.accept()
@@ -5816,6 +5841,7 @@ class OrganSettings(QDialog):
 
         #Close button
         self.button_close.clicked.connect(lambda: self.close_window())
+        self.blank_5.setFocus()
 
     def init_gral_proj_and_organ(self): 
 

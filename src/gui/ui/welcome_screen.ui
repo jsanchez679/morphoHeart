@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>633</width>
-    <height>760</height>
+    <width>639</width>
+    <height>762</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -564,7 +564,7 @@ during embryonic development. Preprint (2024).</string>
       <widget class="QPushButton" name="btn_link2paper">
        <property name="minimumSize">
         <size>
-         <width>120</width>
+         <width>100</width>
          <height>40</height>
         </size>
        </property>
@@ -592,7 +592,7 @@ QPushButton:hover{
       <widget class="QPushButton" name="btn_link2docs">
        <property name="minimumSize">
         <size>
-         <width>120</width>
+         <width>100</width>
          <height>40</height>
         </size>
        </property>
@@ -620,7 +620,7 @@ QPushButton:hover{
       <widget class="QPushButton" name="btn_link2github">
        <property name="minimumSize">
         <size>
-         <width>120</width>
+         <width>100</width>
          <height>40</height>
         </size>
        </property>
