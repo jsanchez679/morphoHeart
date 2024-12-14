@@ -15,6 +15,6 @@ The user manual includes:
 ## ✏️ Cite us!
 Don't forget to cite morphoHeart's [paper](https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2) when you publish your results using the software!
 
-*Sánchez-Posada, J. & Noël, E. S. morphoHeart: a novel quantitative tool to perform integrated 3D morphometric analyses of heart and ECM morphology during embryonic development. Preprint (2024).*
+*Sánchez-Posada J, Derrick, CJ, Noël ES (2024) morphoHeart: a quantitative tool\nfor integrated 3D morphometric analyses of heart and ECM during embryonic\ndevelopment. PLoS Biology.*
 
 ### Happy *morphoHeart-ing* 🤓!
