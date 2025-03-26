@@ -54,7 +54,7 @@ class mH_Config():
 
         self.link2docs = self.dict_links['General']['user_manual'] #'https://drive.google.com/file/d/1-w9N3_SNzqNrpCAmTTvwc5br08KA6IbV/view?usp=drive_link'
         self.link2github = self.dict_links['General']['github'] #'https://github.com/jsanchez679/morphoHeart'
-        self.link2paper = self.dict_links['General']['pre_print'] #'https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'
+        self.link2paper = 'https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3002995' #self.dict_links['General']['pre_print'] #'https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2'
         self.link2vedo_plotter = 'https://vedo.embl.es/docs/vedo/plotter.html#Plotter'
 
 mH_config = mH_Config()

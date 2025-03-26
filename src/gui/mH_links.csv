@@ -3,7 +3,7 @@ General;github;GitHub Repo: ;https://github.com/jsanchez679/morphoHeart;
 General;licence;License: ;https://github.com/jsanchez679/morphoHeart/blob/main/LICENSE.md;
 General;pre_print;Pre-print: ;https://www.biorxiv.org/content/10.1101/2024.02.19.580991v2;
 General;user_manual;User Manual;https://drive.google.com/file/d/1-w9N3_SNzqNrpCAmTTvwc5br08KA6IbV/view?usp=drive_link;
-General;paper;PLOS Biology: ;;
+General;paper;PLOS Biology: ;https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3002995;
 General;ex_proj_init_mH;Example Project (morphoHeart Initialised): ;https://drive.google.com/file/d/1KD_jeal37770hpBq7lnmNCeNBGMi2CAL/view?usp=drive_link;
 General;raw_mH;RAW Data (morphoHeart):;https://drive.google.com/file/d/1dZucaB9QTWvr3DId219RXeXUE1fXI_if/view?usp=drive_link;
 General;ex_proj_finish_mH;Example Project (morphoHeart Finalised): ;https://drive.google.com/file/d/1jFi3HhF35C0fO5kaRTvHtLdaspOhLZU6/view?usp=drive_link;
@@ -49,4 +49,3 @@ combAn;intro;Comb. Analysis within a Project – Intro;https://drive.google.com/
 combAn;user_plots;Comb.  Analysis within a Project – User Specific Plots;https://drive.google.com/file/d/1fqfLuANp0Ij8GP-u7ASSWFzsEeq-Kl7c/view?usp=drive_link;
 combAn;ave_hm;Comb. Analysis within a Project – Average Heatmaps;https://drive.google.com/file/d/1Aa2y814v3e0rJsDZOswDIHphSBu9JU6g/view?usp=drive_link;
 combAn;multi_proj;Multi-Project Analysis ;https://drive.google.com/file/d/1tNIt8-4hK_eun8xKHXJEQgBdLdY6UShb/view?usp=drive_link;
-;;;;
