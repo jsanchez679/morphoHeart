@@ -885,6 +885,7 @@ def get_trimming_planes(organ, gui_trim, win):
             else: 
                 no_cut.append(ch+'_'+cont)
     print('settings:', settings)
+    settings['process'] = 'trimming'
 
     # User user input to select which meshes need to be cut
     cuts_names = {'top': {'heart_def': 'outflow tract','other': 'top'},
@@ -914,6 +915,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut bottom
         while not happy: 
+            settings['direction'] = 'bottom'
             plane_bott, pl_dict_bott = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['bottom'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)  
@@ -937,6 +939,7 @@ def get_trimming_planes(organ, gui_trim, win):
         happy = False
         #Define plane to cut top
         while not happy: 
+            settings['direction'] = 'top'
             plane_top, pl_dict_top = fcM.get_plane(filename=filename, 
                                                 txt = 'cut '+cuts_names['top'][name_dict],
                                                 meshes = meshes, settings=settings)#, win=win)
@@ -1431,10 +1434,12 @@ def run_heatmaps3D(controller, btn):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'DONE')
                         all_all_done.append('DONE')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     elif any(flag == 'DONE' for flag in all_done):
                         proc_wft = ['MeshesProc', proc, 'Status']
                         controller.organ.update_mHworkflow(process = proc_wft, update = 'Initialised')
                         all_all_done.append('Initialised')
+                        controller.main_win.cb_binaryhm.setEnabled(True)
                     else: 
                         pass
                 else: 
@@ -2037,9 +2042,10 @@ def reduce_space(controller, info):
     title = 'Are you sure you want to reduce space in disk...' 
     if info == 'segm':
         msg = ['Are you sure you want to reduce organ size by removing all unnecessary segments (*.vtk files) from disk? If so, select  -OK-, else select  -Cancel-.',
-                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layers from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
+                '[Note: This process will delete all the saved file segments from internal and middle channels, as well as the internal and tissue layer segments from the external and independent channels. The measurements already obtained from them are saved, and you can plot the segment meshes whenever you want, but they will be re-created every time instead of being loaded].']
     
-    prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), wdg_size=[[433,50],[433,100]],
+    prompt = Prompt_ok_cancel(title, msg, win_size = (450, 300), 
+                              wdg_size=[[433,50],[433,100]],
                               parent=controller.main_win)
     prompt.exec()
     print('output:', prompt.output)
@@ -2674,7 +2680,7 @@ def run_isosurface(controller, btn):
     workflow = controller.organ.workflow['morphoCell']
     res = fcM.create_iso_volume(organ = controller.organ, ch = btn)
     if not res: 
-        controller.main_win.win_msg('*Somthing went wrong when loading image file for '+btn.title()+'. Please check to continue.')
+        controller.main_win.win_msg('*Something went wrong when loading image file for '+btn.title()+'. Please check to continue.')
         getattr(controller.main_win, btn+'_play').setChecked(False)
         return 
     
@@ -2702,12 +2708,15 @@ def run_remove_cells(controller):
     #set_process(controller, 'remove_cells_mC')
     workflow = controller.organ.workflow['morphoCell']
     # Check which channels want to be seen
-    controller.organ.cellsMC['chA'].remove_cells()
+    controller.organ.mC_obj['chA'].remove_cells()
     
     getattr(controller.main_win, 'remove_cells_play').setChecked(True)
     proc_wft = ['A-CleanCells', 'Status']
     controller.organ.update_mCworkflow(process = proc_wft, update = 'DONE')
-    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)    
+    controller.main_win.update_status(workflow, proc_wft, controller.main_win.remove_cells_status)   
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
 
 def run_segments_mC(controller, btn): 
 
@@ -2731,7 +2740,7 @@ def run_segments_mC(controller, btn):
         print('\n- Dividing Cells into segments '+user_names)
         controller.main_win.win_msg('Dividing Cells into segments '+user_names)
         
-        cells_position = controller.organ.cellsMC['chA'].df_cells()
+        cells_position = controller.organ.mC_obj['chA'].df_cells()
         column_name = 'Segment-'+cut
         run_all = False; run_reclass = False; cells_out = None
         if len(controller.organ.mC_settings['wf_info']['segments_cells'][cut]['cut_info']) > 0: 
@@ -2764,17 +2773,17 @@ def run_segments_mC(controller, btn):
         if run_all or run_reclass: 
             if cells_out == None: 
                 segm_class = cells_position['Segment-'+cut]
-                color_class = controller.organ.cellsMC['chA'].get_colour_class(cut, mtype='segm')
-                cells_out = controller.organ.cellsMC['chA'].colour_cells(sphs_pos = cells_position, 
+                color_class = controller.organ.mC_obj['chA'].get_colour_class(cut, mtype='segm')
+                cells_out = controller.organ.mC_obj['chA'].colour_cells(sphs_pos = cells_position, 
                                                                         color_class = color_class)
             
             cells_out, segm_classf = fcM.modify_cell_class(organ = controller.organ, 
                                                             cells = cells_out, cut=cut, 
                                                             cells_class = segm_class)
             
-            controller.organ.cellsMC['chA'].cells = cells_out
-            cells_position = controller.organ.cellsMC['chA'].assign_class(cells_position, segm_classf, col_name = 'Segment-'+cut)
-            controller.organ.cellsMC['chA'].save_cells(cells_position)
+            controller.organ.mC_obj['chA'].cells = cells_out
+            cells_position = controller.organ.mC_obj['chA'].assign_class(cells_position, segm_classf, col_name = 'Segment-'+cut)
+            controller.organ.mC_obj['chA'].save_cells(cells_position)
 
             fcM.count_cells(controller.organ, cells_position, cut, mtype = 'segm', col_name = 'Segment-'+cut)
 
@@ -2800,6 +2809,8 @@ def run_segments_mC(controller, btn):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_segments_status)
+    #Update Table
+    controller.main_win.fill_cell_results() 
             
 def get_segm_planes(organ, cut, win): 
 
@@ -2820,7 +2831,7 @@ def get_segm_planes(organ, cut, win):
             try: 
                 pl_centre = iso_vols[0].center_of_mass()
             except: # this except doesn't work - find the boundaries of the spheres in get_plane?
-                cells_position = organ.cellsMC['chA'].df_cells()
+                cells_position = organ.mC_obj['chA'].df_cells()
                 filt_segm = cells_position[["Position X", "Position Y", "Position Z"]]
                 pl_centre = list(filt_segm.mean())
 
@@ -2871,6 +2882,8 @@ def run_IND_segm(controller, plot=True):
             #Add prompt that asks which option to select
             if len(df_clusters_ALL) > 1:
                 items = {}
+                if len(df_clusters_ALL)>6:
+                    df_clusters_ALL = df_clusters_ALL[0:6]
                 for opt in range(len(df_clusters_ALL)): 
                     items[opt] = {'opt': 'Option '+str(opt+1)}
                 title = 'Clustering Options for '+cut+'-'+segm.title()
@@ -2905,6 +2918,10 @@ def run_IND_segm(controller, plot=True):
             
             #Enable plot button
             getattr(controller.main_win, cut.lower()+'_IND_'+ss+'_plot').setEnabled(True)
+
+    #Update Table
+    controller.main_win.fill_cell_results() 
+    controller.main_win.ind_segments_play.setChecked(True)
 
 def run_zones(controller, zone): 
     
@@ -3030,4 +3047,8 @@ def run_zones(controller, zone):
         controller.organ.update_mCworkflow(process = proc_wft, update = 'NI')
 
     controller.main_win.update_status(workflow, proc_wft, controller.main_win.cell_zones_status)
-            
+    
+    #Update Table
+    controller.main_win.fill_cell_results() 
+
+    return True

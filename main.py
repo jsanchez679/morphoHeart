@@ -163,7 +163,6 @@ class Controller:
         win = getattr(self, parent_win)
         if parent_win == 'new_organ_win':
             if self.new_organ_win.button_create_new_organ.isChecked():
-
                 pass# self.new_organ_win.close()
             else: 
                 error_txt = '*You need to first create the organ to continue.'
@@ -196,6 +195,8 @@ class Controller:
             self.main_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
             self.init_main_win()
         win.close()
+        if parent_win == 'new_organ_win':
+            setattr(self, parent_win, None)
         self.main_win.show()
 
     def show_analysis_window(self, parent_win:str, single_proj:bool): 
@@ -203,9 +204,34 @@ class Controller:
         win = getattr(self, parent_win)
         print('win.multi_organs_added:', win.multi_organs_added, '\n', len(win.multi_organs_added))
         if len(win.multi_organs_added) > 0:
-            win.win_msg('Loading Organs in Analysis Window...')
-            df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj)
-            # win.close()
+            win.win_msg('Loading Organs...')
+            ave_hm = win.cB_only_avehm.isChecked()
+            if len(win.multi_organs_added)>12 and not ave_hm: 
+                title = 'Loading these many organs take up too much space in disk...'
+                num = str(len(win.multi_organs_added))
+                msg = ["Loading these many organs (n="+num+") take up too much space in disk. If you want to create average heatmaps of all these organs make sure you have ticked the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system.",
+                       "If you want to create plots and videos, please try and load a smaller number of organs at once to reduce the load to your system. Select  -OK-  if you still want to try and load these many organs (if it fails, you might need to restart morphoHeart), else select  -Cancel-."]
+                
+                prompt = Prompt_ok_cancel(title, msg, win_size=[600, 300], 
+                                          wdg_size=[[500,70],[500,100]], parent=win)
+                prompt.textEdit1.setStyleSheet('QTextEdit {background-color: rgba(0,0,0,0); font: 25 11pt "Calibri Light"; font-family: "Calibri Light";}')
+                prompt.exec()
+                print('output:', prompt.output)
+                if not prompt.output:
+                    return 
+
+            print('Loading '+str(len(win.multi_organs_added))+ ' organs...')
+            try:
+                df_pando, dict_projs, dict_organs = self.load_multip_proj_and_organs(proj_org = win.multi_organs_added, single_proj=single_proj, 
+                                                                                        parent_win = win, ave_hm=ave_hm)
+            except: #RuntimeError: 
+                title = 'Runtime Error...'
+                msg = "morphoHeart was unable to load all these organs in this system. If you want to plot and create videos try to load a smaller number of organs. If you want to create average heatmaps, tick the 'Only Analysis of Average Heatmaps' checkbox, so that a reduced version gets loaded into the system." 
+                prompt = Prompt_ok(title, msg, parent=win)
+                prompt.exec()
+                print('output:',prompt.output, '\n')
+                return
+            
         else: 
             error_txt = '*Please add organs to "Organs Added to Analysis" table to include in the combinatorial analysis.'
             win.win_msg(error_txt, win.go_to_analysis_window)
@@ -213,16 +239,12 @@ class Controller:
         
         #Create Main Project Window and show
         if self.multip_analysis_win == None:
-            if single_proj: 
-                self.multip_analysis_win = MultipAnalysisWindow(projs = dict_projs, organs = dict_organs, df_pando= df_pando, controller=self) 
-                self.init_multip_analysis_win()
-                win.close()
-                self.multip_analysis_win.show()
-            else:
-                pass 
-                # self.multip_analysis_win = MainWindow(proj = self.proj, organ = self.organ, controller=self) 
-                # self.init_multip_analysis_win()
-                # self.multip_analysis_win.show()
+            self.multip_analysis_win = MultipAnalysisWindow(projs = dict_projs, organs = dict_organs, 
+                                                            df_pando= df_pando, controller=self, 
+                                                            single_proj=single_proj, ave_hm=ave_hm) 
+            self.init_multip_analysis_win()
+        win.close()
+        self.multip_analysis_win.show()
     
     def show_load_closed_stacks(self):
         if self.load_s3s == None:
@@ -636,7 +658,6 @@ class Controller:
 
         self.multip_analysis_win.button_see_proj_settings.clicked.connect(lambda: self.show_proj_settings(parent_win=self.main_win))
         self.multip_analysis_win.actionAbout_morphoHeart.triggered.connect(self.show_about)
-        #Action buttons
         
     #Functions related to API  
     # Project Related  
@@ -665,8 +686,9 @@ class Controller:
                             'heart_default': self.new_proj_win.heart_analysis.isChecked()}
                 
                 self.proj = mHC.Project(proj_dict, new=True)
-                self.new_proj_win.mH_settings['chs_all'] = self.ch_all
-                self.new_proj_win.mH_settings['params'] = self.mH_params
+                if self.proj.analysis['morphoHeart']:
+                    self.new_proj_win.mH_settings['chs_all'] = self.ch_all
+                    self.new_proj_win.mH_settings['params'] = self.mH_params
 
                 self.proj.set_settings(settings={'mH': {'settings':self.new_proj_win.mH_settings, 
                                                         'params': self.new_proj_win.mH_user_params},
@@ -772,7 +794,7 @@ class Controller:
                     organ_dict = {'settings': organ_settings, 
                                 'img_dirs': self.new_organ_win.img_dirs}
 
-                    self.organ = mHC.Organ(project=self.proj, organ_dict=organ_dict, new = True)
+                    self.organ = mHC.Organ(project=self.proj, organ_dict=organ_dict, new = True, ave_hm=False)
                     self.new_organ_win.lab_filled_organ_dir.setText(str(self.organ.dir_res()))
 
                     self.proj.add_organ(self.organ)
@@ -789,22 +811,20 @@ class Controller:
             self.new_organ_win.button_create_new_organ.setChecked(False)
             return 
     
-    def load_organ(self, proj, organ_to_load, single_organ=True):
-        loaded_organ = proj.load_organ(organ_to_load = organ_to_load)
+    def load_organ(self, proj, organ_to_load, single_organ=True, ave_hm=False):
+        loaded_organ = proj.load_organ(organ_to_load = organ_to_load, 
+                                       single_organ=single_organ, ave_hm=ave_hm)
         if not hasattr(loaded_organ, 'obj_temp'):
             loaded_organ.obj_temp = {}
         if single_organ: 
             self.organ = loaded_organ
             print('-------------Loaded Organ:-------------')
             print('organ.workflow: ', self.organ.workflow)
-            print('self.organ.obj_temp: ',self.organ.obj_temp)
-            print('self.organ.mH_settings: ',self.organ.mH_settings)
-            print('self.organ.mH_settings[wf_info]: ',self.organ.mH_settings['wf_info'])
-            print('self.organ.submeshes: ', self.organ.submeshes)
+            print('self.organ.o__dict__:', self.organ.__dict__)
         else: 
             return loaded_organ
 
-    def load_multip_proj_and_organs(self, proj_org, single_proj):
+    def load_multip_proj_and_organs(self, proj_org, single_proj, parent_win, ave_hm=False):
         
         #Transform the list of dictionaries into a dataframe
         df_pando = pd.DataFrame(proj_org) 
@@ -812,6 +832,7 @@ class Controller:
         proj_info = df_pando[['user_projName', 'proj_path']]
         unique_proj_info = proj_info.drop_duplicates()
         dict_projs = {}
+        
         for nn, row in unique_proj_info.iterrows(): 
             proj_name = row['user_projName']
             proj_path = row['proj_path']
@@ -823,10 +844,13 @@ class Controller:
                              'proj': proj}
         # print('dict_projs:', dict_projs)
 
-        dict_organs = {}
+        parent_win.prog_bar.setValue(0)
         proj_num = []
+        dict_organs = {}
+        n=0
+        parent_win.prog_bar.setRange(0,len(df_pando))
         for index, row in df_pando.iterrows():
-            # print(index, row)
+            print(index, row)
             #Get values from organ
             org_proj_name = row['user_projName']
             org_proj_path = row['proj_path']
@@ -837,11 +861,21 @@ class Controller:
                     proj_num.append(nk)
                     break
             org_name = row['user_organName']
-            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, single_organ=False)
+            # self.organ_name.setText(org_name)
+            organ = self.load_organ(proj = dict_projs[nk]['proj'], organ_to_load = org_name, 
+                                            single_organ=False, ave_hm=ave_hm)
             dict_organs[index] = {'organ_name': org_name, 
                                   'organ': organ}
+            if not single_proj: 
+                dict_organs[index]['proj_name'] = row['user_projName']
+                dict_organs[index]['proj_num'] = nk
+            n += 1
+            parent_win.prog_bar.setValue(n)
+        
         df_pando['proj_num'] = proj_num
-
+        parent_win.win_msg('All organs have been loaded!')
+       
+        print('df_pando:', df_pando)
         return df_pando, dict_projs, dict_organs
 
     #Channel segmentation related

@@ -28,7 +28,7 @@ import seaborn as sns
 
 #%% morphoHeart Imports - ##################################################
 from ..gui.gui_classes import *
-from .mH_funcBasics import alert, make_Paths, make_tuples, get_by_path, set_by_path, rename_directory
+from .mH_funcBasics import alert, make_Paths, make_tuples, get_by_path, set_by_path, rename_directory, find_unique_index
 from .mH_funcMeshes import (unit_vector, plot_organCLs, find_angle_btw_pts, new_normal_3DRot,
                             classify_segments_from_ext, create_subsegment, create_subsection, plot_grid, 
                             modify_cube, get_segments)
@@ -146,8 +146,9 @@ class Project():
             self.analysis = load_dict['analysis']
             
             self.mH_settings = load_dict['mH_settings']
-            json_str = self.mH_settings['df_res'] 
-            self.mH_settings['df_res'] = pd.read_json(json_str, orient='table')
+            if self.mH_settings != None: 
+                json_str = self.mH_settings['df_res'] 
+                self.mH_settings['df_res'] = pd.read_json(json_str, orient='table')
             self.mH_channels = load_dict['mH_channels']
             self.mH_segments = load_dict['mH_segments']
             self.mH_sections = load_dict['mH_sections']
@@ -223,6 +224,9 @@ class Project():
                         self.mH_sections[key]= mH_settings['sect'][key]['name_sections']
             else: 
                 self.mH_sections = False
+        
+            self.clean_False(user_param = mH_params)
+            self.set_mH_methods()
         else: 
             self.mH_settings = None
             self.mH_channels = None
@@ -230,8 +234,6 @@ class Project():
             self.mH_sections = None
             self.mH_methods = None
 
-        self.clean_False(user_param = mH_params)
-        self.set_mH_methods()
 
     def set_mC_settings(self, mC_settings:dict, mC_params:dict):# 
         
@@ -249,7 +251,7 @@ class Project():
             #Add attribute with info regarding segments
             if isinstance(mC_settings['segm_mC'], dict):
                 self.mC_segments = {}
-                for key in mC_settings['segm_mC']: 
+                for key in mC_settings['segm_mC'].keys(): 
                     if 'Cut' in key:
                         self.mC_segments[key]= mC_settings['segm_mC'][key]['name_segments']
             else: 
@@ -267,14 +269,13 @@ class Project():
             #Add attribute with info regarding zones
             if isinstance(mC_settings['zone_mC'], dict): 
                 self.mC_zones = {}
-                for key in mC_settings['zone_mC']: 
-                    if 'Cut' in key:
+                for key in mC_settings['zone_mC'].keys(): 
+                    if 'Zone' in key and not 'Zones' in key:
                         self.mC_zones[key]= mC_settings['zone_mC'][key]['name_zones']
             else: 
                 self.mC_zones = False
             
             self.mC_settings['measure'] = {}
-
             self.set_mC_methods()
 
         else: 
@@ -325,7 +326,7 @@ class Project():
         self.mH_methods = methods
 
     def set_mC_methods(self): 
-        methods = ['A-Set_Orientation', 'A-SetExtraChs', 'A-CleanCells']
+        methods = ['A-SetExtraChs', 'A-CleanCells']
         if self.mC_segments != None and self.mC_segments != False: 
             methods.append('B-Segments')
         if self.mC_sections != None and self.mC_sections != False: 
@@ -334,7 +335,7 @@ class Project():
             methods.append('B-Segments_Regions')
         if self.mC_zones != None: 
             methods.append('B-Zones')
-        methods.append('C-Measure')
+        # methods.append('C-Measure')
         
         self.mC_methods = methods
 
@@ -355,9 +356,9 @@ class Project():
         workflow = dict()
         dict_mH = dict()
         dict_mC = dict()
-        mH_param2meas = self.mH_settings['measure']
        
         if self.analysis['morphoHeart']: 
+            mH_param2meas = self.mH_settings['measure']
             mH_channels = sorted(self.mH_channels)
     
             dict_ImProc = dict()
@@ -619,9 +620,9 @@ class Project():
             
             #Zones #check if status: NI are being created for all zones
             if 'B-Zones' in self.mC_methods: 
-                for cuts in self.mC_settings['setup']['zone_mC'].keys():
-                    if 'Cut' in cuts and not 'In2' in cuts:
-                        dict_mC['B-Zones'][cuts] = {'Status': 'NI'}
+                for zone in self.mC_settings['setup']['zone_mC'].keys():
+                    if 'Zone' in zone and not 'In2' in zone:
+                        dict_mC['B-Zones'][zone] = {'Status': 'NI'}
         
         workflow['morphoHeart'] = dict_mH
         workflow['morphoCell'] = dict_mC
@@ -906,7 +907,9 @@ class Project():
             if isinstance(out_dict[keyi], flatdict.FlatDict):
                 out_dict[keyi] = out_dict[keyi].as_dict()
         
-        out_dict['morphoHeart']['MeshesProc']['F-Measure']['Status'] = organ.measure_status
+        if self.analysis['morphoHeart']:
+            out_dict['morphoHeart']['MeshesProc']['F-Measure']['Status'] = organ.measure_status
+            
         print('out_dict: ', out_dict)
         return out_dict
 
@@ -917,7 +920,7 @@ class Project():
         self.organs = organs
         self.save_project()
 
-    def load_organ(self, organ_to_load:str):#
+    def load_organ(self, organ_to_load:str, single_organ=True, ave_hm=False):#
 
         organ_folder = self.organs[organ_to_load]['user_organName']
         dir_res = Path(self.dir_proj) / organ_folder
@@ -928,7 +931,7 @@ class Project():
                 print(">> "+jsonDict_name+": Opening JSON encoded data")
                 dict_out = json.load(read_file)
             organ_dict = {'load_dict': dict_out}
-            organ = Organ(project=self, organ_dict=organ_dict, new=False)
+            organ = Organ(project=self, organ_dict=organ_dict, new=False, ave_hm=ave_hm)
         else: 
             organ = None
             print('>> Error: No organ name with name ',self.organs[organ_to_load]['user_organName'],' was found!\n Directory: ',str(json2open_dir))
@@ -939,7 +942,7 @@ class Project():
 class Organ():
     'Organ Class'
     
-    def __init__(self, project:Project, organ_dict:dict, new:bool):# 
+    def __init__(self, project:Project, organ_dict:dict, new:bool, ave_hm:bool):# 
         
         self.parent_project = project
         self.on_hold = False
@@ -972,10 +975,11 @@ class Organ():
                     self.objects['Spheres']['cut4cl'] = {'bottom': {}, 'top':{}}
                     self.objects['Centreline'] = {}
             if self.analysis['morphoCell']: #ABC 
-                self.mC_settings = copy.deepcopy(project.mC_settings)
-                self.imChannelsMC = {}
-                self.obj_imChannelsMC = {}
-                self.cellsMC = {}
+                if len(project.mC_settings['setup'])>0:
+                    self.mC_settings = copy.deepcopy(project.mC_settings)
+                    self.imChannelsMC = {}
+                    self.obj_imChannelsMC = {}
+                    self.cellsMC = {}
 
             self.workflow = copy.deepcopy(project.workflow) 
             self.create_folders(project.analysis) 
@@ -983,7 +987,7 @@ class Organ():
         else: 
             print('\nLoading organ!')
             load_dict = organ_dict['load_dict']
-            self.load_organ(load_dict=load_dict)
+            self.load_organ(load_dict=load_dict, ave_hm=ave_hm)
 
     def create_mHName(self): #
         now_str = datetime.now().strftime('%Y%m%d%H%M')
@@ -999,11 +1003,12 @@ class Organ():
             channelsMC = [key for key in self.parent_project.mC_channels.keys()]
             for ch_nameMC in channelsMC:
                 if ch_nameMC != 'chA':
-                    im_chMC = self.create_mCch(ch_name=ch_nameMC)
+                    _ = self.create_mCch(ch_name=ch_nameMC)
                 else:
-                    cells_ch = self.create_cells(ch_name=ch_nameMC)
+                    obj_mC = self.create_cells(ch_name=ch_nameMC)
+                    self.mC_obj = {ch_nameMC: obj_mC}
 
-    def load_organ(self, load_dict:dict):#
+    def load_organ(self, load_dict:dict, ave_hm:bool):#
         load_dict = make_Paths(load_dict)
 
         self.info = load_dict['Organ']
@@ -1021,21 +1026,22 @@ class Organ():
         if self.analysis['morphoHeart']:
             tuple_keys = [['mH_settings','setup','chNS','ch_ext'], 
                             ['mH_settings','setup','chNS','ch_int'],]
+            for ch in load_dict['imChannels'].keys():
+                tuple_keys.append(['imChannels', ch, 'shape'])
+                tuple_keys.append(['imChannels', ch, 'shape_s3'])
+                for cont in load_dict['imChannels'][ch]['contStack'].keys():
+                    tuple_keys.append(['imChannels', ch, 'contStack',cont,'shape_s3'])
         else: 
             tuple_keys = []
-        
-        for ch in load_dict['imChannels'].keys():
-            tuple_keys.append(['imChannels', ch, 'shape'])
-            tuple_keys.append(['imChannels', ch, 'shape_s3'])
-            for cont in load_dict['imChannels'][ch]['contStack'].keys():
-                tuple_keys.append(['imChannels', ch, 'contStack',cont,'shape_s3'])
         
         load_dict = make_tuples(load_dict, tuple_keys)
         
         # Workflow
         self.workflow = load_dict['workflow']
+        
+        if 'objects' in load_dict.keys():
+            self.objects = load_dict['objects']
 
-        self.objects = load_dict['objects']
         if self.analysis['morphoHeart']:
             # mH_Settings
             self.mH_settings = load_dict['mH_settings']
@@ -1049,7 +1055,10 @@ class Organ():
             self.load_objImChannelNS()
             # meshes
             self.meshes = load_dict['meshes']
-            self.load_objMeshes()
+            if not ave_hm: 
+                self.load_objMeshes()
+            else: 
+                self.obj_meshes = {}
             # submeshes
             if 'submeshes' in load_dict.keys():
                 submeshes_dict = load_dict['submeshes']
@@ -1057,47 +1066,53 @@ class Organ():
                 list_colors = [key.split(':') for key in flat_subm_dict if 'color' in key]
                 submeshes_dict_new = make_tuples(submeshes_dict, list_colors)
                 self.submeshes = submeshes_dict_new
-                self.load_objSubmeshes(submeshes_dict)
+                if not ave_hm: 
+                    self.load_objSubmeshes(submeshes_dict)
+                    print('>>>> Loaded submeshes: ', self.submeshes)
+                else: 
+                    self.obj_subm = {}
             else: 
                 self.submeshes = {}
-            print('>>>> Loaded submeshes: ', self.submeshes)
+            
             #obj_temp
             if 'obj_temp' in load_dict.keys():
                 self.obj_temp = load_dict['obj_temp']
                 print('organ.obj_temp:', self.obj_temp)
             
+            if 'orientation' in self.mH_settings['wf_info'].keys():
+                self.load_orient_cubes()
+
         if self.analysis['morphoCell']:
             # mC_Settings
-            self.mC_settings = load_dict['mC_settings']
-            try: 
-                zz_names = {}
-                for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
-                    zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
-                self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
-                print('Modified mC_settings - name_zones')
-            except:
-                pass
+            if 'mC_settings' in load_dict.keys():
+                if len(load_dict['mC_settings']['setup'])>0:
+                    self.mC_settings = load_dict['mC_settings']
+                    try: 
+                        zz_names = {}
+                        for zii in self.mC_settings['setup']['zone_mC']['Zone1']['name_zones']: 
+                            zz_names[zii] = self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'][zii].strip()
+                        self.mC_settings['setup']['zone_mC']['Zone1']['name_zones'] = zz_names
+                        print('Modified mC_settings - name_zones')
+                    except:
+                        pass
 
-            if 'measure' not in self.mC_settings: 
-                self.mC_settings['measure'] = {} 
+                    if 'measure' not in self.mC_settings: 
+                        self.mC_settings['measure'] = {} 
 
-            if 'imChannelMC' in load_dict.keys():
-                self.imChannelsMC = load_dict['imChannelMC']
-                self.load_objImChannelMC()
-            if 'cells_MC' in load_dict.keys(): 
-                self.cellsMC = load_dict['cells_MC']
-                self.load_objCells()
+                    if 'imChannelMC' in load_dict.keys():
+                        self.imChannelsMC = load_dict['imChannelMC']
+                        self.load_objImChannelMC()
+                    if 'cells_MC' in load_dict.keys(): 
+                        self.cellsMC = load_dict['cells_MC']
+                        self.load_objCells()
 
-            if 'B-Zones' in self.workflow['morphoCell']: 
-                if len(self.workflow['morphoCell']['B-Zones']) == 1: 
-                    print('Adding wf to Zones')
-                    #Get all zones and add Status NI to all
-                    zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
-                    for zone in zone_all: 
-                        self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
-        
-        if 'orientation' in self.mH_settings['wf_info'].keys():
-            self.load_orient_cubes()
+                    if 'B-Zones' in self.workflow['morphoCell']: 
+                        if len(self.workflow['morphoCell']['B-Zones']) == 1: 
+                            print('Adding wf to Zones')
+                            #Get all zones and add Status NI to all
+                            zone_all = [zone for zone in self.mC_settings['setup']['zone_mC'] if '2Zones' not in zone]
+                            for zone in zone_all: 
+                                self.workflow['morphoCell']['B-Zones'][zone] = {'Status': 'NI'}
         
     def load_orient_cubes(self):
         #Stack
@@ -1263,7 +1278,7 @@ class Organ():
     def load_objCells(self): 
         
         cells = Cells(organ=self)
-        self.cellsMC = {'chA': cells}
+        self.mC_obj = {'chA': cells}
 
     def create_folders(self, analysis):#
         if analysis['morphoHeart']: #ABC
@@ -1566,7 +1581,8 @@ class Organ():
 
     def save_organ(self, alert_on=True):#
         print('Saving organ')
-        print('self.obj_temp:', self.obj_temp)
+        if self.analysis['morphoHeart']:
+            print('self.obj_temp:', self.obj_temp)
         all_info = {}
         all_info['Organ'] = self.info
         all_info['img_dirs'] = self.img_dirs
@@ -1603,6 +1619,7 @@ class Organ():
             all_info['obj_temp'] = obj_temp
             
         if self.analysis['morphoCell']:
+            # if 'mC_settings' in all_info.keys():
             #ABC what else is there to save from MC 
             all_info['mC_settings'] = self.mC_settings
 
@@ -1818,7 +1835,7 @@ class Organ():
         print('self.info[im_orientation]',im_orient)
         rotateY = False
         if str(self.info['custom_angle']) != '0': 
-            cust_angle = self.info['custom_angle']
+            cust_angle = float(self.info['custom_angle'])
             rotateY = True
 
         ext_ch = self.get_ext_int_chs()
@@ -1906,6 +1923,8 @@ class Organ():
         angle = find_angle_btw_pts(pts, ref_vectF)
         if angle > 90: 
             angle = angle - 90
+            if angle > 45: 
+                angle = 90 - angle
         
         pos = cl_mesh.mesh.center_of_mass()
         side = max(self.get_maj_bounds())  
@@ -2476,7 +2495,8 @@ class ImChannel(): #channel
         s3_bits = np.zeros_like(s3_s, dtype='uint8')
         s3_new =  np.zeros_like(s3_s, dtype='uint8')
 
-        index = list(s3.shape_s3).index(min(s3.shape_s3))
+        index = find_unique_index(s3.shape_s3)
+        print('s3.shape_s3:',s3.shape_s3, ' - index:', index)
         if index == 2:
             for slc in range(s3.shape_s3[2]):
                 mask_slc = s3_mask_s[:,:,slc]
@@ -2675,7 +2695,8 @@ class ImChannelNS(): #channel
         s3_bits = np.zeros_like(extNS, dtype='uint8')
         s3_new =  np.zeros_like(extNS, dtype='uint8')
 
-        index = list(extNS.shape).index(min(extNS.shape))
+        index = find_unique_index(extNS.shape)
+        print('extNS.shape:',extNS.shape, ' - index:', index)
         if index == 2:
             for slc in range(extNS.shape[2]):
                 s3_intNS = intNS[:,:,slc]
@@ -2961,7 +2982,7 @@ class Mesh_mH():
             print('>> Reload mesh - ', self.name)
             new = False
             self.reload_mesh(mesh_prop, new_set)
-            
+        
         self.mesh.color(self.color)
         self.mesh.alpha(self.alpha)
         if new or new_set: 
@@ -3015,11 +3036,20 @@ class Mesh_mH():
 
         if self.channel_no != 'chNS': 
             color = self.parent_organ.mH_settings['setup']['color_chs'][self.channel_no][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type]
         else:
             color = self.parent_organ.mH_settings['setup'][self.channel_no]['color_chns'][self.mesh_type]
-            self.alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
+            alpha = self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type]
         
+        if isinstance(alpha, list):
+            alpha = 0.05
+            if self.channel_no != 'chNS': 
+                self.parent_organ.mH_settings['setup']['alpha'][self.channel_no][self.mesh_type] = alpha
+            else:  
+                self.parent_organ.mH_settings['setup'][self.channel_no]['alpha'][self.mesh_type] = alpha
+        self.alpha = alpha
+        
+        print('self.alpha:', self.alpha)
         if isinstance(color, str) and '[' in color: 
             rr,gg,bb = color[1:-1].split(',')
             color = [int(rr), int(gg), int(bb)]
@@ -3260,7 +3290,6 @@ class Mesh_mH():
             if dir_mesh.is_file() and dir_npy.is_file():
                 name = 'Thickness'
                 title = self.legend+'\n'+name+' [um]\n('+n_type.replace('TO','>')+')'
-                print('fix this!!! ')
                 if n_type == 'intTOext': 
                     short = 'th_i2e['+self.name.replace('_', '-')+']'
                 else:
@@ -3413,7 +3442,7 @@ class Mesh_mH():
         
         pl_linLine_unitNormal = unit_vector(pl_normal)
         maj_bound =(max(self.parent_organ.get_maj_bounds())/2)*2
-        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound
+        pl_linLine_unitNormal120 = pl_linLine_unitNormal*maj_bound*2
 
         if clRib_type == 'ext2sides': # Names are switched but it works
             x_cl, y_cl, z_cl = pl_linLine_unitNormal120
@@ -3423,7 +3452,7 @@ class Mesh_mH():
             cl_ribbon = cl_ribbon.wireframe(True).legend("rib_ExtCL(2-sides)")
     
         elif clRib_type == 'ext1side':
-            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*15
+            x_ucl, y_ucl, z_ucl = pl_linLine_unitNormal*maj_bound
             cl_ribbon = []
             for i in range(10):
                 kspl_ext_DA = kspl_ext.clone().x(i*x_ucl).y(i*y_ucl).z(i*z_ucl)
@@ -4076,7 +4105,7 @@ class Cells():
             col_name = 'Segment-'+cut
             type_name = 'segm_mC'
 
-        cells_position = self.parent_organ.cellsMC['chA'].df_cells()
+        cells_position = self.parent_organ.mC_obj['chA'].df_cells()
         segm_colors = self.parent_organ.mC_settings['setup'][type_name][cut]['colors']
         segm_class = cells_position[col_name]
         color_class = np.empty(len(cells_position), dtype='object')
